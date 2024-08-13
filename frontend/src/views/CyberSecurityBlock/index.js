@@ -175,7 +175,7 @@ export default function CyberSecurityBlock() {
         //   }
         // };
         addNode(newNode);
-        console.log('newNode', newNode);
+        // console.log('newNode', newNode);
       }
 
       // if (parsedTemplate) {

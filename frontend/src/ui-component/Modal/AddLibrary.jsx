@@ -61,7 +61,7 @@ const AddLibrary = ({ open, handleClose, savedTemplate, setNodes, setEdges }) =>
       properties: templateDetails?.properties
     };
 
-    console.log('newTemplate', newTemplate);
+    // console.log('newTemplate', newTemplate);
     setTimeout(() => {
       fetchAPI();
     });

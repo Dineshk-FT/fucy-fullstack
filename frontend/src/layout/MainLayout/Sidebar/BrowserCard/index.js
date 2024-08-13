@@ -1,11 +1,14 @@
 // material-ui
 import {
-    styled
-    // , useTheme
+  styled
+  // , useTheme
 } from '@mui/material/styles';
-import { Card, CardContent,
-    //  Menu, MenuItem,
-      Typography } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  //  Menu, MenuItem,
+  Typography
+} from '@mui/material';
 // import { TreeView } from '@mui/x-tree-view/TreeView';
 // import { TreeItem } from '@mui/x-tree-view/TreeItem';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -58,37 +61,32 @@ import CyberSecurityModal from '../../../../ui-component/Modal/CyberSecurityModa
 // import { makeStyles } from '@mui/styles';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const Accordion = styled((props) => (
-    <MuiAccordion disableGutters elevation={0} square {...props} />
-  ))(() => ({
-    // border: `1px solid ${theme.palette.divider}`,
-    '&:not(:last-child)': {
-      borderBottom: 0,
-    },
-    '&::before': {
-      display: 'none',
-    },
-  }));
-  
-  const AccordionSummary = styled((props) => (
-    <MuiAccordionSummary
-      expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem' }} />}
-      {...props}
-    />
-  ))(() => ({
-    flexDirection: 'row-reverse',
-    '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-      transform: 'rotate(90deg)',
-    },
-    '& .MuiAccordionSummary-content': {
-      marginLeft: 1,
-    },
-  }));
-  
-  const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-    padding: theme.spacing(2),
-    // borderTop: '1px solid rgba(0, 0, 0, .125)',
-  }));
+const Accordion = styled((props) => <MuiAccordion disableGutters elevation={0} square {...props} />)(() => ({
+  // border: `1px solid ${theme.palette.divider}`,
+  '&:not(:last-child)': {
+    borderBottom: 0
+  },
+  '&::before': {
+    display: 'none'
+  }
+}));
+
+const AccordionSummary = styled((props) => (
+  <MuiAccordionSummary expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem' }} />} {...props} />
+))(() => ({
+  flexDirection: 'row-reverse',
+  '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+    transform: 'rotate(90deg)'
+  },
+  '& .MuiAccordionSummary-content': {
+    marginLeft: 1
+  }
+}));
+
+const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+  padding: theme.spacing(2)
+  // borderTop: '1px solid rgba(0, 0, 0, .125)',
+}));
 // const useStyles = makeStyles(() => ({
 //     accordion: {
 //         width: 'auto',
@@ -98,7 +96,6 @@ const Accordion = styled((props) => (
 //         }
 //     },
 // }));
-
 
 // const imageComponents = {
 //     AttackIcon,
@@ -115,8 +112,6 @@ const Accordion = styled((props) => (
 //     ModelIcon
 // };
 
-
-
 // const iconComponents = {
 //     SecurityIcon,
 //     DriveFileMoveIcon,
@@ -131,25 +126,25 @@ const Accordion = styled((props) => (
 // };
 
 const CardStyle = styled(Card)(() =>
-    // { theme }
-    ({
-        // background: theme.palette.primary.light,
-        marginBottom: '22px',
-        overflow: 'hidden',
-        position: 'relative',
-        height: '40vh',
-        boxShadow: 'inset 0px 0px 7px gray',
-        '&:after': {
-            content: '""',
-            position: 'absolute',
-            // width: '157px',
-            // height: '157px',
-            // background: theme.palette.primary[200],
-            borderRadius: '50%',
-            top: '-105px',
-            right: '-96px'
-        }
-    })
+  // { theme }
+  ({
+    // background: theme.palette.primary.light,
+    marginBottom: '22px',
+    overflow: 'hidden',
+    position: 'relative',
+    height: '40vh',
+    boxShadow: 'inset 0px 0px 7px gray',
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      // width: '157px',
+      // height: '157px',
+      // background: theme.palette.primary[200],
+      borderRadius: '50%',
+      top: '-105px',
+      right: '-96px'
+    }
+  })
 );
 
 // const useStyles = makeStyles((theme) => ({
@@ -170,183 +165,185 @@ const CardStyle = styled(Card)(() =>
 // });
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const BrowserCard = ({ modals,
-     template,
-    //   handleClick
-     }) => {
-        // const classes = useStyles();
-        const [expanded, setExpanded] = useState('');
+const BrowserCard = ({
+  modals,
+  template
+  //   handleClick
+}) => {
+  // const classes = useStyles();
+  const [expanded, setExpanded] = useState('');
 
   const handleChange = (newExpanded) => {
-    console.log('newExpanded', newExpanded)
+    // console.log('newExpanded', newExpanded)
     setExpanded(newExpanded);
   };
-    // const { addNode } = useStore(selector);
-    // const classes = useStyles();
-    // const navigate = useNavigate();
-    // const dispatch = useDispatch();
-    // const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
-    const [name, setName] = useState('');
-    const [ModalDetails, setModalDetails] = useState([]);
-    // const [anchorEl, setAnchorEl] = useState(null);
-    const [openCyberModal, setOpenCyberModal] = useState(false);
+  // const { addNode } = useStore(selector);
+  // const classes = useStyles();
+  // const navigate = useNavigate();
+  // const dispatch = useDispatch();
+  // const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
+  const [name, setName] = useState('');
+  const [ModalDetails, setModalDetails] = useState([]);
+  // const [anchorEl, setAnchorEl] = useState(null);
+  const [openCyberModal, setOpenCyberModal] = useState(false);
 
-    // console.log('ModalDetails', ModalDetails)
-    // const openRight = Boolean(anchorEl);
+  // console.log('ModalDetails', ModalDetails)
+  // const openRight = Boolean(anchorEl);
 
-    // const getLabel = (icon, name) => {
-    //     const IconComponent = iconComponents[icon];
-    //     return (
-    //         <div className={classes.labelRoot}>
-    //             {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
-    //             <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-    //                 {name}
-    //             </Typography>
-    //         </div>
-    //     );
-    // };
-    // const getImageLabel = (icon, name) => {
-    //     const Image = imageComponents[icon];
-    //     return (
-    //         <div className={classes.labelRoot}>
-    //             {Image ? <img src={Image} alt={name} style={{height:'18px', width:'18px'}}/> : null}
-    //             <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-    //                 {name}
-    //             </Typography>
-    //         </div>
-    //     );
-    // };
+  // const getLabel = (icon, name) => {
+  //     const IconComponent = iconComponents[icon];
+  //     return (
+  //         <div className={classes.labelRoot}>
+  //             {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
+  //             <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+  //                 {name}
+  //             </Typography>
+  //         </div>
+  //     );
+  // };
+  // const getImageLabel = (icon, name) => {
+  //     const Image = imageComponents[icon];
+  //     return (
+  //         <div className={classes.labelRoot}>
+  //             {Image ? <img src={Image} alt={name} style={{height:'18px', width:'18px'}}/> : null}
+  //             <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+  //                 {name}
+  //             </Typography>
+  //         </div>
+  //     );
+  // };
 
+  // const threatType = (value) => {
+  //     // console.log('value', value)
+  //     switch (value) {
+  //         case 'Integrity':
+  //             return 'Tampering';
+  //         case 'Confidentiality':
+  //             return 'Information Disclosure';
+  //         case 'Availability':
+  //             return 'Denial';
+  //         case 'Authenticity':
+  //             return 'Spoofing';
+  //         case 'Authorization':
+  //             return 'Elevation of Privilage';
+  //         case 'Non-repudiation':
+  //             return 'Rejection';
+  //         default:
+  //             return '';
+  //     }
+  // };
+  // const openAddModal = (name) => {
+  //     console.log('name', name);
+  //     setAnchorEl(null);
+  //     setName(name);
+  //     setOpenCyberModal(true);
+  // };
+  const handleCloseCyberModal = () => {
+    setOpenCyberModal(false);
+    setName('');
+  };
+  // const handleCloseRight = () => {
+  //     setAnchorEl(null);
+  // };
+  // const [Modal,setModal] = useState([]);
+  const [open, setOpen] = useState(false);
 
-    // const threatType = (value) => {
-    //     // console.log('value', value)
-    //     switch (value) {
-    //         case 'Integrity':
-    //             return 'Tampering';
-    //         case 'Confidentiality':
-    //             return 'Information Disclosure';
-    //         case 'Availability':
-    //             return 'Denial';
-    //         case 'Authenticity':
-    //             return 'Spoofing';
-    //         case 'Authorization':
-    //             return 'Elevation of Privilage';
-    //         case 'Non-repudiation':
-    //             return 'Rejection';
-    //         default:
-    //             return '';
-    //     }
-    // };
-    // const openAddModal = (name) => {
-    //     console.log('name', name);
-    //     setAnchorEl(null);
-    //     setName(name);
-    //     setOpenCyberModal(true);
-    // };
-    const handleCloseCyberModal = () => {
-        setOpenCyberModal(false);
-        setName('');
-    };
-    // const handleCloseRight = () => {
-    //     setAnchorEl(null);
-    // };
-    // const [Modal,setModal] = useState([]);
-    const [open, setOpen] = useState(false);
+  // console.log('template', template);
 
-    // console.log('template', template);
+  useEffect(() => {
+    setModalDetails(modals);
+  }, [modals]);
+  // const theme = useTheme();
+  // const handleOpenModal = () => {
+  //     setOpen(true);
+  // };
 
-    useEffect(() => {
-        setModalDetails(modals);
-    }, [modals]);
-    // const theme = useTheme();
-    // const handleOpenModal = () => {
-    //     setOpen(true);
-    // };
+  const handleClose = () => {
+    setOpen(false);
+  };
 
-    const handleClose = () => {
-        setOpen(false);
-    };
+  // const handleNavigate = (id) => {
+  //     navigate(`/Modals/${id}`, { replace: true });
+  //     dispatch(closeAll());
+  // };
+  // const handleSwicthDsTable = (name) => {
+  //     console.log('name', name);
+  //     if (name.includes('Damage')) {
+  //         dispatch(DsTableOpen());
+  //     }
+  //     if (name.includes('Threat')) {
+  //         dispatch(TsTableOpen());
+  //     }
+  //     if (name.includes('CyberSecurity')) {
+  //         dispatch(cyberBlockOpen());
+  //     }
+  // };
 
-    // const handleNavigate = (id) => {
-    //     navigate(`/Modals/${id}`, { replace: true });
-    //     dispatch(closeAll());
-    // };
-    // const handleSwicthDsTable = (name) => {
-    //     console.log('name', name);
-    //     if (name.includes('Damage')) {
-    //         dispatch(DsTableOpen());
-    //     }
-    //     if (name.includes('Threat')) {
-    //         dispatch(TsTableOpen());
-    //     }
-    //     if (name.includes('CyberSecurity')) {
-    //         dispatch(cyberBlockOpen());
-    //     }
-    // };
+  // const handleSwicthTsTable = () => {
+  //     // console.log('clicked');
+  // };
 
-    // const handleSwicthTsTable = () => {
-    //     // console.log('clicked');
-    // };
+  // const handleOpenActionTree = () => {
+  //     dispatch(AttackTreePageOpen());
+  // };
 
-    // const handleOpenActionTree = () => {
-    //     dispatch(AttackTreePageOpen());
-    // };
+  // const handleAttackTree = (at_scene) => {
+  //     // console.log('at_scene', at_scene);
+  //     dispatch(setAttackScene(at_scene));
+  // };
 
-    // const handleAttackTree = (at_scene) => {
-    //     // console.log('at_scene', at_scene);
-    //     dispatch(setAttackScene(at_scene));
-    // };
+  // const handleRightClick = (e, name) => {
+  //     console.log('e', e);
+  //     e.preventDefault();
+  //     if (name.toLowerCase().includes('cybersecurity')) {
+  //         setAnchorEl(name);
+  //     }
+  // };
 
-    // const handleRightClick = (e, name) => {
-    //     console.log('e', e);
-    //     e.preventDefault();
-    //     if (name.toLowerCase().includes('cybersecurity')) {
-    //         setAnchorEl(name);
-    //     }
-    // };
+  // const onDragStart = (event, item) => {
+  //     // console.log('event', event);
+  //     // console.log('item', item);
+  //     const parseFile = JSON.stringify(item);
+  //     event.dataTransfer.setData('application/cyber', parseFile);
+  //     event.dataTransfer.effectAllowed = 'move';
+  // };
 
-    // const onDragStart = (event, item) => {
-    //     // console.log('event', event);
-    //     // console.log('item', item);
-    //     const parseFile = JSON.stringify(item);
-    //     event.dataTransfer.setData('application/cyber', parseFile);
-    //     event.dataTransfer.effectAllowed = 'move';
-    // };
-
-    // const handleDragStart = (event,req) => {
-    //     // Initiating drag with req data
-    //     onDragStart(event, req);
-    // };
-    // const handleAddComponent = (name, comp) => {
-    //     // console.log('name', name);
-    //     // console.log('comp', comp);
-    //     if (isCyberBlockOpen) {
-    //         const newNode = {
-    //             id: uid(),
-    //             type: `cyber_${name}`,
-    //             position: {
-    //                 x: 100,
-    //                 y: 100
-    //             },
-    //             data: {
-    //                 label: comp?.name
-    //             }
-    //         };
-    //         addNode(newNode);
-    //     }
-    // };
-    // const handleOpenTable = (name) => {
-    //     // console.log('name', name)
-    //     if (name.includes('CyberSecurity Controls')) {
-    //         dispatch(cyberTableOpen());
-    //     }
-    // };
-    return (
-        <>
-            <Typography variant="h4" sx={{color:colorTheme.tabContentClr}}>Models</Typography>
-            <CardStyle sx={{ overflowY: 'auto' }}>
-                <CardContent sx={{ p: 2 }}>
-                    {/* <TreeView
+  // const handleDragStart = (event,req) => {
+  //     // Initiating drag with req data
+  //     onDragStart(event, req);
+  // };
+  // const handleAddComponent = (name, comp) => {
+  //     // console.log('name', name);
+  //     // console.log('comp', comp);
+  //     if (isCyberBlockOpen) {
+  //         const newNode = {
+  //             id: uid(),
+  //             type: `cyber_${name}`,
+  //             position: {
+  //                 x: 100,
+  //                 y: 100
+  //             },
+  //             data: {
+  //                 label: comp?.name
+  //             }
+  //         };
+  //         addNode(newNode);
+  //     }
+  // };
+  // const handleOpenTable = (name) => {
+  //     // console.log('name', name)
+  //     if (name.includes('CyberSecurity Controls')) {
+  //         dispatch(cyberTableOpen());
+  //     }
+  // };
+  return (
+    <>
+      <Typography variant="h4" sx={{ color: colorTheme.tabContentClr }}>
+        Models
+      </Typography>
+      <CardStyle sx={{ overflowY: 'auto' }}>
+        <CardContent sx={{ p: 2 }}>
+          {/* <TreeView
                         aria-label="file system navigator"
                         defaultCollapseIcon={<ExpandMoreIcon />}
                         defaultExpandIcon={<ChevronRightIcon />}
@@ -548,29 +545,29 @@ const BrowserCard = ({ modals,
                         </Menu>
                         <TreeItem icon={<AddIcon />} onClick={handleOpenModal} label={'Add'} />
                     </TreeView> */}
-                        {ModalDetails &&
-                            ModalDetails?.map((modal) => {
-                                return (
-                                <Accordion
-                                key={modal?.id}
-                                expanded={expanded === modal?.id} 
-                                onChange={()=>handleChange(modal?.id)}
-                        >
-                            <AccordionSummary sx={{
-                                '& .MuiAccordionSummary-content':{ margin:'0px'}}} aria-controls="panel1bh-content" id="panel1bh-header">
-                                <Typography sx={{ width: '50%', flexShrink: 0 }}>{modal?.name} </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-
-                            </AccordionDetails>
-                        </Accordion>
-                                )})}
-                </CardContent>
-            </CardStyle>
-            {open && <AddModal open={open} handleClose={handleClose} />}
-            <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
-        </>
-    );
+          {ModalDetails &&
+            ModalDetails?.map((modal) => {
+              return (
+                <Accordion key={modal?.id} expanded={expanded === modal?.id} onChange={() => handleChange(modal?.id)}>
+                  <AccordionSummary
+                    sx={{
+                      '& .MuiAccordionSummary-content': { margin: '0px' }
+                    }}
+                    aria-controls="panel1bh-content"
+                    id="panel1bh-header"
+                  >
+                    <Typography sx={{ width: '50%', flexShrink: 0 }}>{modal?.name} </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails></AccordionDetails>
+                </Accordion>
+              );
+            })}
+        </CardContent>
+      </CardStyle>
+      {open && <AddModal open={open} handleClose={handleClose} />}
+      <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
+    </>
+  );
 };
 
 export default BrowserCard;
