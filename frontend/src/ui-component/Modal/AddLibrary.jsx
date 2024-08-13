@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, { useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -60,7 +61,6 @@ const AddLibrary = ({ open, handleClose, savedTemplate, setNodes, setEdges }) =>
       template: savedTemplate,
       properties: templateDetails?.properties
     };
-
     // console.log('newTemplate', newTemplate);
     setTimeout(() => {
       fetchAPI();
