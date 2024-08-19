@@ -1,16 +1,8 @@
 /* eslint-disable */
 import React, { useCallback } from 'react';
 import { TreeItem } from '@mui/x-tree-view';
-import { makeStyles } from '@mui/styles';
 
-const useStyles = makeStyles({
-  root: {
-    flexGrow: 1,
-    maxWidth: 400
-  }
-});
-
-export default function DraggableTreeItem({ nodeId, label, onDragStart }) {
+export default function DraggableTreeItem({ nodeId, label, onDragStart, draggable }) {
   const ref = useCallback(
     (elt) => {
       if (elt) {
@@ -22,5 +14,5 @@ export default function DraggableTreeItem({ nodeId, label, onDragStart }) {
     [onDragStart]
   );
 
-  return <TreeItem nodeId={nodeId} label={label} ref={ref} draggable={true} onDragStart={onDragStart} />;
+  return <TreeItem nodeId={nodeId} label={label} ref={ref} draggable={draggable} onDragStart={onDragStart} />;
 }

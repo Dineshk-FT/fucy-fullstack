@@ -2,7 +2,8 @@ import React, {
   // useState,
   useCallback,
   useLayoutEffect,
-  useEffect
+  useEffect,
+  useState
 } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
@@ -133,7 +134,7 @@ const nodetypes = {
 };
 // const flowKey = "example-flow";
 
-export default function Home({ attackScene }) {
+export default function AttackBlock({ attackScene }) {
   const {
     nodes,
     edges,
@@ -152,8 +153,61 @@ export default function Home({ attackScene }) {
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const { id } = useParams();
-  // console.log('attackScene', attackScene);
-  // console.log('modal', modal);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+
+  const onDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      // const file = event.dataTransfer.getData("application/parseFile");
+      const cyber = event.dataTransfer.getData('application/cyber');
+      // console.log('cyber', cyber);
+      // console.log('cyber', cyber);
+      let parsedNode;
+      // let parsedTemplate;
+      if (cyber) {
+        parsedNode = JSON.parse(cyber);
+      }
+      // console.log('parsedNode', parsedNode);
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY
+      });
+      if (parsedNode) {
+        const newNode = {
+          id: uid(),
+          position,
+          type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
+          dragged: parsedNode?.dragged ? parsedNode?.dragged : false,
+          width: 300,
+          height: 70,
+          data: {
+            label: parsedNode?.label,
+            style: {
+              backgroundColor: 'transparent',
+              fontSize: '16px',
+              fontFamily: 'Inter',
+              fontStyle: 'normal',
+              fontWeight: 500,
+              textAlign: 'center',
+              // color: 'white',
+              textDecoration: 'none',
+              borderColor: 'black',
+              borderWidth: '2px',
+              borderStyle: 'solid'
+            }
+          }
+        };
+        addAttackNode(newNode);
+        // console.log('newNode', newNode);
+      }
+    },
+    [reactFlowInstance]
+  );
 
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
@@ -242,9 +296,9 @@ export default function Home({ attackScene }) {
           nodeTypes={nodetypes}
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
-          // onInit={setReactFlowInstance}
-          // onDrop={onDrop}
-          // onDragOver={onDragOver}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
           fitView
         >
           <Panel

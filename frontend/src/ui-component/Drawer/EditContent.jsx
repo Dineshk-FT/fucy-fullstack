@@ -10,7 +10,7 @@ const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorizati
 const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, setDetails, modal, updateModal }) => {
   const [value, setValue] = useState('1');
 
-  console.log('selectedNode', selectedNode);
+  // console.log('selectedNode', selectedNode);
   const handleUpdate = () => {
     const mod = { ...modal };
     const Nodestate = [...nodes];

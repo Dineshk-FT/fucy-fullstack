@@ -138,13 +138,14 @@ const useStyles = makeStyles((theme) => ({
 
 const selector = (state) => ({
   addNode: state.addCyberNode,
-  getModals: state.getModals
+  getModals: state.getModals,
+  nodes: state.attackNodes
 });
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ modals }) => {
   const color = ColorTheme();
-  const { addNode, getModals } = useStore(selector);
+  const { addNode, getModals, nodes } = useStore(selector);
   const classes = useStyles();
   // const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -154,6 +155,11 @@ const BrowserCard = ({ modals }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openCyberModal, setOpenCyberModal] = useState(false);
   const openRight = Boolean(anchorEl);
+
+  const isDragged = nodes.some(dragCheck);
+  function dragCheck(node) {
+    return node.dragged;
+  }
 
   const getLabel = (icon, name) => {
     const IconComponent = iconComponents[icon];
@@ -251,9 +257,9 @@ const BrowserCard = ({ modals }) => {
     if (name.includes('Threat')) {
       dispatch(TsTableOpen());
     }
-    if (name.includes('CyberSecurity')) {
-      dispatch(cyberBlockOpen());
-    }
+    // if (name.includes('CyberSecurity')) {
+    //   dispatch(cyberBlockOpen());
+    // }
   };
 
   // const handleSwicthTsTable = () => {
@@ -335,7 +341,7 @@ const BrowserCard = ({ modals }) => {
                     nodeId={modal?._id}
                     // label={getLabel('DriveFileMoveIcon', modal?.name)}
                     label={getTitleLabel('ModelIcon', modal?.name, modal?._id)}
-                    onClick={handleNavigate}
+                    // onClick={handleNavigate}
                     sx={{
                       '& .Mui-selected': {
                         backgroundColor: 'none !important'
@@ -406,12 +412,18 @@ const BrowserCard = ({ modals }) => {
                                         const label = `[TS00${prin}${pin}] ${threatType(pp)} for the loss of ${pp} of ${
                                           pr?.name
                                         } for Damage Scene ${dt?.id}`;
+                                        const Details = {
+                                          label: label,
+                                          type: 'default',
+                                          dragged: true
+                                        };
                                         return (
                                           <DraggableTreeItem
+                                            draggable={!isDragged}
                                             key={`${dt?.id}${prin}${pin}`}
                                             nodeId={`${dt?.id}${prin}${pin}`}
                                             label={label}
-                                            onDragStart={(e) => onDragStart(e, label)}
+                                            onDragStart={(e) => onDragStart(e, Details)}
                                           />
                                           // <TreeItem
                                           //   key={`${dt?.id}${prin}${pin}`}
