@@ -13,12 +13,18 @@ import ReactFlow, {
 import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
-import CustomNode from '../../ui-component/custom/CustomNode';
-import DefaultNode from '../../ui-component/custom/DefaultNode';
-import InputNode from '../../ui-component/custom/InputNode';
-import OutputNode from '../../ui-component/custom/OutputNode';
-import CircularNode from '../../ui-component/custom/CircularNode';
-import DiagonalNode from '../../ui-component/custom/DiagonalNode ';
+import {
+  CustomNode,
+  DefaultNode,
+  InputNode,
+  OutputNode,
+  CircularNode,
+  DiagonalNode,
+  MicroController,
+  CustomGroupNode,
+  CustomEdge,
+  MultiHandleNode
+} from '../../ui-component/custom';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
@@ -33,17 +39,13 @@ import CyberSecurityBlock from '../CyberSecurityBlock';
 import CyberSecurityTable from '../../ui-component/Table/CybersecurityTable';
 import ELK from 'elkjs/lib/elk.bundled';
 import Memory from '../../ui-component/custom/Memory';
-import MicroController from '../../ui-component/custom/Microcontroller';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import CustomGroupNode from '../../ui-component/custom/GroupNode';
-import CustomEdge from '../../ui-component/custom/CustomEdge';
 import { drawerClose, drawerOpen, leftDrawerClose, leftDrawerOpen } from '../../store/slices/CurrentIdSlice';
 import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
-import MultiHandleNode from '../../ui-component/custom/MultiHandleNode';
 import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 
 const elk = new ELK();
@@ -508,6 +510,11 @@ export default function MainCanvas() {
         subs: [
           {
             id: uid(),
+            name: 'Attack',
+            scenes: []
+          },
+          {
+            id: uid(),
             name: 'Attack Trees',
             scenes: []
           },
@@ -696,7 +703,7 @@ export default function MainCanvas() {
           download={handleDownload}
           createGroup={createGroup}
         />
-        <ReactFlowProvider>
+        <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}
             edges={edges}

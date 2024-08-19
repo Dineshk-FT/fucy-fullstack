@@ -1,0 +1,12 @@
+export { default as AttackIcon } from './attack.png';
+export { default as ItemIcon } from './item.png';
+export { default as DamageIcon } from './damage.png';
+export { default as ThreatIcon } from './threat.png';
+export { default as CybersecurityIcon } from './cybersecurity.png';
+export { default as SystemIcon } from './system.png';
+export { default as CatalogIcon } from './catalog.png';
+export { default as RiskIcon } from './risk.png';
+export { default as DocumentIcon } from './document.png';
+export { default as ReportIcon } from './report.png';
+export { default as LayoutIcon } from './layout.png';
+export { default as ModelIcon } from './model.png';

@@ -39,22 +39,25 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import { ReceiptItem } from 'iconsax-react';
-import AttackIcon from '../../../../assets/icons/attack.png';
-import ItemIcon from '../../../../assets/icons/item.png';
-import DamageIcon from '../../../../assets/icons/damage.png';
-import ThreatIcon from '../../../../assets/icons/threat.png';
-import CybersecurityIcon from '../../../../assets/icons/cybersecurity.png';
-import SystemIcon from '../../../../assets/icons/system.png';
-import CatalogIcon from '../../../../assets/icons/catalog.png';
-import RiskIcon from '../../../../assets/icons/risk.png';
-import DocumentIcon from '../../../../assets/icons/document.png';
-import ReportIcon from '../../../../assets/icons/report.png';
-import LayoutIcon from '../../../../assets/icons/layout.png';
-import ModelIcon from '../../../../assets/icons/model.png';
+import {
+  ItemIcon,
+  AttackIcon,
+  DamageIcon,
+  ThreatIcon,
+  CybersecurityIcon,
+  CatalogIcon,
+  SystemIcon,
+  RiskIcon,
+  DocumentIcon,
+  ReportIcon,
+  LayoutIcon,
+  ModelIcon
+} from '../../../../assets/icons';
 import ColorTheme from '../../../../store/ColorTheme';
 import { NavLink } from 'react-router-dom';
 import DraggableItem from './DraggableItem';
 import DraggableTreeItem from './DraggableItem';
+import CommonModal from '../../../../ui-component/Modal/CommonModal';
 
 const imageComponents = {
   AttackIcon,
@@ -154,6 +157,7 @@ const BrowserCard = ({ modals }) => {
   const [ModalDetails, setModalDetails] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openCyberModal, setOpenCyberModal] = useState(false);
+  const [openAttackModal, setOpenAttackModal] = useState(false);
   const openRight = Boolean(anchorEl);
 
   const isDragged = nodes.some(dragCheck);
@@ -319,12 +323,20 @@ const BrowserCard = ({ modals }) => {
       dispatch(cyberTableOpen());
     }
   };
+
+  const handleAddAttack = (e, name) => {
+    e.preventDefault();
+    if (name === 'Attack') {
+      setOpenAttackModal(true);
+      // console.log('e', e);
+      // console.log('name', name);
+    }
+  };
   return (
     <>
       <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
         Projects
       </Typography>
-      <DraggableItem />
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
@@ -524,9 +536,17 @@ const BrowserCard = ({ modals }) => {
                                 nodeId={`2${sub?.name}`}
                                 label={getLabel('SwipeRightAltIcon', sub?.name)}
                                 onDoubleClick={handleOpenActionTree}
+                                onContextMenu={(e) => handleAddAttack(e, sub?.name)}
                               >
                                 {sub?.scenes?.map((at_scene) => {
-                                  return (
+                                  return sub?.name === 'Attack' ? (
+                                    <DraggableTreeItem
+                                      key={at_scene?.id}
+                                      itemId={at_scene?.id}
+                                      label={at_scene?.name}
+                                      onDragStart={(e) => onDragStart(e, at_scene?.name)}
+                                    />
+                                  ) : (
                                     <TreeItem
                                       key={at_scene?.id}
                                       nodeId={at_scene?.id}
@@ -567,6 +587,7 @@ const BrowserCard = ({ modals }) => {
       </CardStyle>
       {open && <AddModal getModals={getModals} open={open} handleClose={handleClose} />}
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
+      <CommonModal open={openAttackModal} handleClose={() => setOpenAttackModal(false)} getModals={getModals} />
     </>
   );
 };

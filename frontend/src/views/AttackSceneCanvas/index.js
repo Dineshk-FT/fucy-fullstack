@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, {
   // useState,
   useCallback,
@@ -15,24 +16,14 @@ import ReactFlow, {
 import '../index.css';
 import 'reactflow/dist/style.css';
 // import { v4 as uid } from "uuid";
-import CustomNode from '../../ui-component/custom/CustomNode';
-import DefaultNode from '../../ui-component/custom/DefaultNode';
-import InputNode from '../../ui-component/custom/InputNode';
-import OutputNode from '../../ui-component/custom/OutputNode';
-import CircularNode from '../../ui-component/custom/CircularNode';
-import DiagonalNode from '../../ui-component/custom/DiagonalNode ';
-import AttackTreeNode from '../../ui-component/CustomGates/AttackTreeNode';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 // import { useSelector } from 'react-redux';
-import ORGate from '../../ui-component/CustomGates/ORGate';
-import ANDGate from '../../ui-component/CustomGates/ANDGate';
-import TransferGate from '../../ui-component/CustomGates/TransferGate';
-import VotingGate from '../../ui-component/CustomGates/VotingGate';
+import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalNode } from '../../ui-component/custom';
+import { AttackTreeNode, ORGate, ANDGate, TransferGate, VotingGate, Event } from '../../ui-component/CustomGates';
 import { Button } from '@mui/material';
 import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
-import Event from '../../ui-component/CustomGates/Event';
 import { useDispatch } from 'react-redux';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import ELK from 'elkjs/lib/elk.bundled';
@@ -229,35 +220,6 @@ export default function AttackBlock({ attackScene }) {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
   }, []);
 
-  useEffect(() => {
-    getModalById(id);
-    if (attackScene?.template) {
-      setNodes(attackScene?.template?.nodes);
-      setEdges(attackScene?.template?.edges);
-    } else {
-      const newNode = {
-        id: attackScene?.id,
-        type: 'attack_tree_node',
-        position: {
-          x: 100,
-          y: 100
-        },
-        data: {
-          label: attackScene?.name
-        }
-      };
-      setTimeout(() => {
-        addAttackNode(newNode);
-      }, 500);
-    }
-
-    return () => {
-      if (attackScene?.template) {
-        setNodes(attackScene?.template?.nodes);
-        setEdges(attackScene?.template?.edges);
-      }
-    };
-  }, [attackScene]);
   // console.log('nodes', nodes);
   const handleSave = () => {
     const atScene = { ...attackScene };
