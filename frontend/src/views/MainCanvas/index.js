@@ -444,8 +444,9 @@ export default function MainCanvas() {
     let Details = nodes
       ?.filter((nd) => nd?.type !== 'group')
       ?.map((node) => ({
+        id: uid(),
         name: node?.data?.label,
-        props: node?.properties
+        props: node?.properties.map((pr) => ({ name: pr, id: uid() }))
       }));
 
     // const DamageDetails = nodes

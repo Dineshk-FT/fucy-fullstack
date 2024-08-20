@@ -181,8 +181,8 @@ export default function SelectLosses({
                                 fontSize: '13px'
                               }
                             }}
-                            control={<Checkbox size="small" onChange={(e) => handleChange(e, pr, item)} />}
-                            label={`Loss of ${pr}`}
+                            control={<Checkbox size="small" onChange={(e) => handleChange(e, pr.name, item)} />}
+                            label={`Loss of ${pr.name}`}
                           />
                         </FormGroup>
                       }

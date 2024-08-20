@@ -505,25 +505,29 @@ const BrowserCard = ({ modals }) => {
                             ))
                           : scene?.Details?.map((value, i) => (
                               <TreeItem key={`1${i}`} nodeId={`1${i}`} label={`[000${i}] ${value?.name}`}>
-                                {value?.props.map((pr) => (
-                                  <TreeItem
-                                    key={value?.name}
-                                    nodeId={value?.name}
-                                    label={
-                                      <div
-                                        style={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          marginLeft: '-31px',
-                                          gap: 2
-                                        }}
-                                      >
-                                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                                        {`Loss of ${pr}`}
-                                      </div>
-                                    }
-                                  ></TreeItem>
-                                ))}
+                                {value?.props.map((pr) => {
+                                  // console.log('pr', pr);
+                                  return (
+                                    <DraggableTreeItem
+                                      key={pr?.id}
+                                      nodeId={pr?.id}
+                                      onDragStart={(e) => onDragStart(e, { label: `Loss of ${pr.name} of ${value?.name}` })}
+                                      label={
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            marginLeft: '-31px',
+                                            gap: 2
+                                          }}
+                                        >
+                                          <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                                          {`Loss of ${pr.name}`}
+                                        </div>
+                                      }
+                                    ></DraggableTreeItem>
+                                  );
+                                })}
                               </TreeItem>
                             ))}
                         {scene?.name === 'Attack Path Analysis and Attack Feasability Rating' &&

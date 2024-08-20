@@ -223,9 +223,10 @@ export default function AttackBlock({ attackScene }) {
   // console.log('nodes', nodes);
   const handleSave = () => {
     const atScene = { ...attackScene };
+    console.log('atScene', atScene);
     const mod = { ...modal };
     const selected = mod?.scenarios[3]?.subs[0]?.scenes?.find((ite) => ite.id === atScene?.id);
-    // console.log('selected', selected);
+    console.log('selected', selected);
     selected.template = {
       id: uid(),
       nodes: nodes,
