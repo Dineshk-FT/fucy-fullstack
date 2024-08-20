@@ -89,7 +89,7 @@ export default function Tstable() {
         ?.map((dt) =>
           dt?.cyberLosses?.map((loss, prin) =>
             loss?.props?.map((prp, pin) => {
-              console.log('prp', prp);
+              // console.log('prp', prp);
               return {
                 id: `TS0${prin}${pin}`,
                 name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.id}`,

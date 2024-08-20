@@ -295,7 +295,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   updateModal: async (newModal) => {
-    console.log('newModal', newModal);
+    // console.log('newModal', newModal);
     // const res = await axios.patch(`${configuration.apiBaseUrl}Modals/${newModal?.id}`, newModal);
     const res = await axios.put(`${configuration.backendUrl}update_model/${newModal?._id}`, newModal);
 

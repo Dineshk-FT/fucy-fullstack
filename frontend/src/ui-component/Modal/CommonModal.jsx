@@ -48,7 +48,7 @@ export default function CommonModal({ open, handleClose, getModals }) {
     };
     Scene.push(newScene);
 
-    console.log('modal', mod);
+    // console.log('modal', mod);
     update(mod)
       .then((res) => {
         if (res) {

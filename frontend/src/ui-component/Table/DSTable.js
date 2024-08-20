@@ -319,7 +319,7 @@ export default function DsTable() {
     // console.log('ratio', ratio)
     return avgImpact(ratio);
   }, []);
-  console.log('rows', filtered);
+  // console.log('rows', filtered);
   // console.log('selectedRow', selectedRow)
   return (
     <Box

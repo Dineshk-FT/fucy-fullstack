@@ -289,10 +289,7 @@ const BrowserCard = ({ modals }) => {
   const onDragStart = (event, item) => {
     // console.log('event', event);
     // console.log('item', item);
-    const details = {
-      label: item
-    };
-    const parseFile = JSON.stringify(details);
+    const parseFile = JSON.stringify(item);
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -548,7 +545,7 @@ const BrowserCard = ({ modals }) => {
                                       itemId={at_scene?.id}
                                       label={at_scene?.name}
                                       draggable={true}
-                                      onDragStart={(e) => onDragStart(e, at_scene?.name)}
+                                      onDragStart={(e) => onDragStart(e, { label: at_scene?.name })}
                                     />
                                   ) : (
                                     <TreeItem
