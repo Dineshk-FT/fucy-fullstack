@@ -5,7 +5,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 from bson import ObjectId
 
-clientMongo = MongoClient('mongodb://localhost:27017')
+# clientMongo = MongoClient('mongodb://localhost:27017')
+clientMongo = MongoClient('mongodb+srv://sureshpatil:W0cJnrfCr6ImA8Ca@cluster0.iwg05za.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 db = clientMongo['MY_DB']
 
 @app.route('/', methods=['GET'])

@@ -87,7 +87,7 @@ export default function AddPropertiesGate({ open, handleClose, updateNode }) {
   };
   return (
     <Dialog open={open} onClose={CloseModel} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
-      <DialogTitle id="alert-dialog-title">{'Add New '}</DialogTitle>
+      <DialogTitle id="alert-dialog-title">{'Add Details'}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
           <FormControl sx={{ width: 350 }}>

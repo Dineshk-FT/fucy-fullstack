@@ -55,7 +55,6 @@ import {
 } from '../../../../assets/icons';
 import ColorTheme from '../../../../store/ColorTheme';
 import { NavLink } from 'react-router-dom';
-import DraggableItem from './DraggableItem';
 import DraggableTreeItem from './DraggableItem';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 
@@ -290,7 +289,10 @@ const BrowserCard = ({ modals }) => {
   const onDragStart = (event, item) => {
     // console.log('event', event);
     // console.log('item', item);
-    const parseFile = JSON.stringify(item);
+    const details = {
+      label: item
+    };
+    const parseFile = JSON.stringify(details);
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -539,11 +541,13 @@ const BrowserCard = ({ modals }) => {
                                 onContextMenu={(e) => handleAddAttack(e, sub?.name)}
                               >
                                 {sub?.scenes?.map((at_scene) => {
-                                  return sub?.name === 'Attack' ? (
+                                  // console.log('sub?.name', sub?.name);
+                                  return sub?.name == 'Attack' ? (
                                     <DraggableTreeItem
                                       key={at_scene?.id}
                                       itemId={at_scene?.id}
                                       label={at_scene?.name}
+                                      draggable={true}
                                       onDragStart={(e) => onDragStart(e, at_scene?.name)}
                                     />
                                   ) : (

@@ -150,13 +150,13 @@ export default function AttackBlock({ attackScene }) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+  console.log('nodes', nodes);
 
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
       // const file = event.dataTransfer.getData("application/parseFile");
       const cyber = event.dataTransfer.getData('application/cyber');
-      // console.log('cyber', cyber);
       // console.log('cyber', cyber);
       let parsedNode;
       // let parsedTemplate;
