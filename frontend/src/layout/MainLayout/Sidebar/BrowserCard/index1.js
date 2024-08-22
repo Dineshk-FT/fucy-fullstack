@@ -23,7 +23,8 @@ import {
   cyberBlockOpen,
   cyberTableOpen,
   setAttackScene,
-  DerivationTableOpen
+  DerivationTableOpen,
+  attackTableOpen
 } from '../../../../store/slices/CurrentIdSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import CyberSecurityModal from '../../../../ui-component/Modal/CyberSecurityModal';
@@ -232,6 +233,7 @@ const BrowserCard = ({ modals }) => {
   };
   // const [Modal,setModal] = useState([]);
   const [open, setOpen] = useState(false);
+  const [subName, setSubName] = useState('');
 
   // console.log('template', template);
 
@@ -269,8 +271,15 @@ const BrowserCard = ({ modals }) => {
   //     // console.log('clicked');
   // };
 
-  const handleOpenActionTree = () => {
-    dispatch(AttackTreePageOpen());
+  const handleOpenActionTree = (name, sub) => {
+    // console.log('name', name);
+    if (sub) {
+      dispatch(AttackTreePageOpen());
+    }
+    if (name === 'Attack') {
+      // console.log('first');
+      dispatch(attackTableOpen());
+    }
   };
 
   const handleAttackTree = (at_scene) => {
@@ -325,11 +334,15 @@ const BrowserCard = ({ modals }) => {
 
   const handleAddAttack = (e, name) => {
     e.preventDefault();
-    if (name === 'Attack') {
+    if (name === 'Attack' || name === 'Attack Trees') {
       setOpenAttackModal(true);
-      // console.log('e', e);
-      // console.log('name', name);
+      setSubName(name);
     }
+  };
+
+  const handleAttackTreeClose = () => {
+    setName('');
+    setOpenAttackModal(false);
   };
   return (
     <>
@@ -538,15 +551,16 @@ const BrowserCard = ({ modals }) => {
                                 key={`2${sub?.name}`}
                                 nodeId={`2${sub?.name}`}
                                 label={getLabel('SwipeRightAltIcon', sub?.name)}
-                                onDoubleClick={handleOpenActionTree}
+                                onDoubleClick={() => handleOpenActionTree(sub?.name)}
                                 onContextMenu={(e) => handleAddAttack(e, sub?.name)}
                               >
                                 {sub?.scenes?.map((at_scene) => {
                                   // console.log('sub?.name', sub?.name);
+                                  // console.log('at_scene', at_scene);
                                   return sub?.name == 'Attack' ? (
                                     <DraggableTreeItem
                                       key={at_scene?.id}
-                                      itemId={at_scene?.id}
+                                      nodeId={at_scene?.id}
                                       label={at_scene?.name}
                                       draggable={true}
                                       onDragStart={(e) => onDragStart(e, { label: at_scene?.name })}
@@ -556,6 +570,7 @@ const BrowserCard = ({ modals }) => {
                                       key={at_scene?.id}
                                       nodeId={at_scene?.id}
                                       label={at_scene?.name}
+                                      onDoubleClick={() => handleOpenActionTree(at_scene?.name, sub?.name)}
                                       onClick={() => handleAttackTree(at_scene)}
                                     ></TreeItem>
                                   );
@@ -592,7 +607,7 @@ const BrowserCard = ({ modals }) => {
       </CardStyle>
       {open && <AddModal getModals={getModals} open={open} handleClose={handleClose} />}
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
-      <CommonModal open={openAttackModal} handleClose={() => setOpenAttackModal(false)} getModals={getModals} />
+      <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModals={getModals} name={subName} />
     </>
   );
 };

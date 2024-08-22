@@ -4,7 +4,8 @@ import React, {
   useCallback,
   useLayoutEffect,
   useEffect,
-  useState
+  useState,
+  useContext
 } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
@@ -15,18 +16,16 @@ import ReactFlow, {
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
-// import { v4 as uid } from "uuid";
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-// import { useSelector } from 'react-redux';
 import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalNode } from '../../ui-component/custom';
 import { AttackTreeNode, ORGate, ANDGate, TransferGate, VotingGate, Event } from '../../ui-component/CustomGates';
 import { Button } from '@mui/material';
-import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
 import { useDispatch } from 'react-redux';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import ELK from 'elkjs/lib/elk.bundled';
+import toast, { Toaster } from 'react-hot-toast';
 
 const elk = new ELK();
 
@@ -143,7 +142,7 @@ export default function AttackBlock({ attackScene }) {
     getModals
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
-  const { id } = useParams();
+  const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
   const onDragOver = useCallback((event) => {
@@ -174,7 +173,7 @@ export default function AttackBlock({ attackScene }) {
           position,
           type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
           dragged: parsedNode?.dragged ? parsedNode?.dragged : false,
-          width: 300,
+          width: 100,
           height: 70,
           data: {
             label: parsedNode?.label,
@@ -216,16 +215,23 @@ export default function AttackBlock({ attackScene }) {
     [nodes, edges]
   );
 
+  // console.log('attackScene', attackScene);
   useLayoutEffect(() => {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
   }, []);
 
+  useEffect(() => {
+    if (attackScene) {
+      setNodes(attackScene?.template?.nodes ?? []);
+      setEdges(attackScene?.template?.edges ?? []);
+    }
+  }, [attackScene]);
   // console.log('nodes', nodes);
   const handleSave = () => {
     const atScene = { ...attackScene };
     console.log('atScene', atScene);
     const mod = { ...modal };
-    const selected = mod?.scenarios[3]?.subs[0]?.scenes?.find((ite) => ite.id === atScene?.id);
+    const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
     console.log('selected', selected);
     selected.template = {
       id: uid(),
@@ -237,13 +243,17 @@ export default function AttackBlock({ attackScene }) {
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            alert('Added successfully');
+            notify(attackScene?.template ? 'Updated Successfully' : 'Added Successfully', 'success');
             // window.location.reload();
             getModals();
           }, 500);
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        if (err) {
+          notify('Something Went Wrong', 'error');
+        }
+      });
   };
 
   return (
@@ -292,6 +302,7 @@ export default function AttackBlock({ attackScene }) {
         </ReactFlow>
         {/* </div> */}
       </ReactFlowProvider>
+      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 }

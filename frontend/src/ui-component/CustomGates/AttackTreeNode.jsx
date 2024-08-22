@@ -1,31 +1,22 @@
-import React from 'react'
-import { Handle, Position } from 'reactflow';
+import React from 'react';
+import { Handle, Position, NodeResizer } from 'reactflow';
 
-const AttackTreeNode = ({data,isConnectable}) => {
+const AttackTreeNode = ({ data, isConnectable, type }) => {
   return (
     <>
-    <div
-    className={`attack_tree_node`}
-    // style={{ 
-    //   backgroundColor:`${data['bgColor']}`
-    //   }}
-  >
-    <Handle
-      className="handle"
-      type="target"
-      position={Position.Top}
-      isConnectable={isConnectable}
-    />
-      <div>{data?.label}</div>
-    <Handle
-      className="handle"
-      type="range"
-      position={Position.Bottom}
-      isConnectable={isConnectable}
-    />
-  </div>
-</>
-  )
-}
+      <NodeResizer />
+      <div
+        className={`my-custom-node ${type}`}
+        style={{
+          ...data?.style
+        }}
+      >
+        <Handle className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
+        <div>{data?.label}</div>
+        <Handle className="handle" type="range" position={Position.Bottom} isConnectable={isConnectable} />
+      </div>
+    </>
+  );
+};
 
-export default AttackTreeNode
+export default AttackTreeNode;

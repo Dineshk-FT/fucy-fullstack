@@ -225,6 +225,7 @@ export default function DsTable() {
   };
 
   const handleChange = (e, row) => {
+    console.log('e.target', e.target);
     const Rows = [...rows];
     const editRow = Rows.find((ele) => ele.id === row.id);
     const { name, value } = e.target;

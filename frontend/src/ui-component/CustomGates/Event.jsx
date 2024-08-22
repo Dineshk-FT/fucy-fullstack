@@ -1,60 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import useStore from '../../Zustand/store';
-import AddPropertiesGate from '../Modal/AddPropertiesGate';
-import { colorPickerTab } from './colorPicker';
+import { shallow } from 'zustand/shallow';
+import { Box, Menu, MenuItem, TextField } from '@mui/material';
 
 const selector = (state) => ({
-    update: state.updateAttackNode
+  update: state.updateAttackNode,
+  getModals: state.getModals,
+  modal: state.modal,
+  updateModal: state.updateModal
 });
+
 export default function Event(props) {
-    const { update } = useStore(selector);
-    const [inputValue, setInputValue] = useState('');
-    const [open, setOpen] = useState(false);
-    const handleopenModal = (e) => {
-        e.preventDefault();
-        // console.log('props', props)
-        setOpen(true);
-    };
+  const { update, modal, updateModal, getModals } = useStore(selector, shallow);
+  const [inputValue, setInputValue] = useState(props.data.label);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openRight = Boolean(anchorEl);
 
-    const handleClose = () => {
-        setOpen(false);
-    };
-    // console.log('data', data);
+  const handleOpenModal = (e) => {
+    e.preventDefault();
+    setAnchorEl(e.currentTarget);
+  };
 
-    useEffect(() => {
-        if (props.data.label) {
-            setInputValue(props?.data?.label);
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleClick = () => {
+    const mod = { ...modal };
+    const Scene = mod?.scenarios[3]?.subs[0]?.scenes;
+    const selected = mod?.scenarios[3]?.subs[0]?.scenes.find((item) => item.id === props?.id);
+    if (!selected) {
+      Scene.push({ id: props.id, name: inputValue });
+      console.log('mod', mod);
+      updateModal(mod).then((res) => {
+        if (res) {
+          getModals();
         }
-    }, [props.data]);
-    const handleChange = (e) => {
-        const { value } = e.target;
-        // console.log('value', value)
-        setInputValue(value);
-        update(props?.id, value);
-    };
+      });
+    }
+  };
 
-    return (
-        <>
-            <Handle type="target" position={Position.Top} style={{ top: '-12px', opacity: 0 }} />
-            <div onContextMenu={handleopenModal}>
-                <input
-                    type="text"
-                    value={inputValue}
-                    style={{
-                        borderRadius: '4px',
-                        width: `${Math.max(100, inputValue.length * 7)}px`,
-                        minWidth: '100px',
-                        maxWidth: 'auto',
-                        textAlign: 'center',
-                        background: 'transparent',
-                        border: `1px solid ${colorPickerTab(props?.data?.status)}`
-                    }}
-                    onChange={handleChange}
-                />
-            </div>
-            <Handle type="source" position={Position.Bottom} style={{ bottom: '-12px', opacity: 0 }} />
-            {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}
-        </>
-    );
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setInputValue(value);
+    update(props?.id, value);
+  };
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} />
+      <Box onContextMenu={handleOpenModal} sx={{ p: 2, border: '1px dashed grey', minWidth: 100, color: 'gray' }}>
+        <TextField value={inputValue} onChange={handleChange} variant="outlined" fullWidth />
+      </Box>
+      <Handle type="source" position={Position.Bottom} />
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={openRight}
+        onClose={handleClose}
+        MenuListProps={{
+          'aria-labelledby': 'basic-button'
+        }}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right'
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right'
+        }}
+      >
+        <MenuItem onClick={handleClick}>Convert to Attack</MenuItem>
+      </Menu>
+    </>
+  );
 }

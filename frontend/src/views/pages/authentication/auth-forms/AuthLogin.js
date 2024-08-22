@@ -35,6 +35,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import Google from '../../../../assets/images/icons/social-google.svg';
 import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
+import { closeAll } from '../../../../store/slices/CurrentIdSlice';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
 
@@ -61,8 +62,9 @@ const FirebaseLogin = ({ ...others }) => {
 
   const handleLogin = () => {
     sessionStorage.setItem('isLoggedIn', true);
-    window.location.href = '/home';
-    dispatch(changeCanvasPage('home'));
+    window.location.href = '/Models';
+    dispatch(changeCanvasPage('canvas'));
+    dispatch(closeAll());
   };
 
   return (

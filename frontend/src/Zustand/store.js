@@ -221,7 +221,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   //fetch or GET section
   fetchAPI: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}template`);
-    const res = await axios.post(`${configuration?.backendUrl}/get_details/templates`);
+    const res = await axios.post(`${configuration?.backendUrl}get_details/templates`);
     set({
       template: res.data
     });
@@ -340,7 +340,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     data.append('new_node', JSON.stringify(newNode.new_node));
 
     // const res = await axios.post(`${configuration.backendUrl}createComponent`,newTemplate)
-    const res = await axios.post(`${configuration.backendUrl}/add/node`, data);
+    const res = await axios.post(`${configuration.backendUrl}add/node`, data);
     // console.log('res', res);
     return res;
   },
@@ -423,7 +423,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     let data = new FormData();
     data.append('name', newModal?.name);
     try {
-      const res = await axios.post(`${configuration.backendUrl}/add/Models`, data);
+      const res = await axios.post(`${configuration.backendUrl}add/Models`, data);
       if (res) {
         return res;
       }

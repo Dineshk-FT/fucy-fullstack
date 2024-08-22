@@ -47,6 +47,7 @@ import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
 import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
+import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 
 const elk = new ELK();
 
@@ -192,7 +193,8 @@ export default function MainCanvas() {
     isCyberTableOpen,
     isRightDrawerOpen,
     isLeftDrawerOpen,
-    isDerivationTableOpen
+    isDerivationTableOpen,
+    isAttackTableOpen
   } = useSelector((state) => state?.currentId);
 
   const onLayout = useCallback(
@@ -688,6 +690,7 @@ export default function MainCanvas() {
   if (isAttackTreeOpen) return <AttackTree modal={modal} />;
   if (isCyberBlockOpen) return <CyberSecurityBlock />;
   if (isCyberTableOpen) return <CyberSecurityTable />;
+  if (isAttackTableOpen) return <AttackTreeTable />;
 
   return (
     <>

@@ -141,9 +141,9 @@ iframe#webpack-dev-server-client-overlay {
   color: black;
   text-shadow: none;
   padding: 5px;
-  & .react-flow__handle {
+  /* & .react-flow__handle {
     opacity: 0;
-  }
+  } */
 }
 
 .cyber_goal {

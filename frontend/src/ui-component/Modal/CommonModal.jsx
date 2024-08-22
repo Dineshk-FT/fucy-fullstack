@@ -27,7 +27,7 @@ const selector = (state) => ({
   update: state.updateModal,
   modal: state.modal
 });
-export default function CommonModal({ open, handleClose, getModals }) {
+export default function CommonModal({ open, handleClose, getModals, name }) {
   const { notify } = React.useContext(ToasterContext);
   const { id } = useParams();
   const { getModalById, update, modal } = useStore(selector, shallow);
@@ -41,7 +41,13 @@ export default function CommonModal({ open, handleClose, getModals }) {
 
   const handleCreate = () => {
     const mod = { ...modal };
-    const Scene = mod?.scenarios[3]?.subs[0]?.scenes;
+    let Scene;
+    if (name === 'Attack') {
+      Scene = mod?.scenarios[3]?.subs[0]?.scenes;
+    }
+    if (name === 'Attack Trees') {
+      Scene = mod?.scenarios[3]?.subs[1]?.scenes;
+    }
     const newScene = {
       id: uid(),
       ...templateDetails
@@ -79,7 +85,7 @@ export default function CommonModal({ open, handleClose, getModals }) {
   return (
     <React.Fragment>
       <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={onClose} aria-describedby="alert-dialog-slide-description">
-        <DialogTitle sx={{ fontSize: 20, fontFamily: 'Inter' }}>{'Add New Attack'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 20, fontFamily: 'Inter' }}>{`Add New ${name}`}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
