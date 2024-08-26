@@ -23,10 +23,10 @@ const AttackTree = ({ modal }) => {
         {!isLevelOpen && <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1 }} onClick={handleBack} />}
         <Paper elevation={3} sx={{ height: '83svh' }}>
           <Grid container sx={{ height: 'inherit' }}>
-            <Grid item sx={{ border: '1px solid black' }} sm={8} md={8} lg={8}>
+            <Grid item sx={{ border: '1px solid black' }} sm={8} md={9} lg={9.5}>
               {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} /> : <Levels />}
             </Grid>
-            <Grid item sx={{ border: '1px solid black' }} sm={4} md={4} lg={4}>
+            <Grid item sx={{ border: '1px solid black' }} sm={4} md={3} lg={2.5}>
               <Properties />
             </Grid>
           </Grid>

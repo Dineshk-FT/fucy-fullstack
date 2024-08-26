@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -36,6 +37,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Google from '../../../../assets/images/icons/social-google.svg';
 import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
+import { login } from '../../../../API/api';
+import toast, { Toaster } from 'react-hot-toast';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
 
@@ -43,6 +46,7 @@ const FirebaseLogin = ({ ...others }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const scriptedRef = useScriptRef();
+  const notify = (message, status) => toast[status](message);
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const customization = useSelector((state) => state.customization);
   const [checked, setChecked] = useState(true);
@@ -60,11 +64,22 @@ const FirebaseLogin = ({ ...others }) => {
     event.preventDefault();
   };
 
-  const handleLogin = () => {
-    sessionStorage.setItem('isLoggedIn', true);
-    window.location.href = '/Models';
-    dispatch(changeCanvasPage('canvas'));
-    dispatch(closeAll());
+  const handleLogin = (email, password) => {
+    dispatch(login({ username: email, password }))
+      .then((res) => {
+        if (res.payload.status === 200 || res.payload.status === 201) {
+          notify(res.payload.data.message, 'success');
+          setTimeout(() => {
+            sessionStorage.setItem('isLoggedIn', true);
+            window.location.href = '/Models';
+            dispatch(changeCanvasPage('canvas'));
+            dispatch(closeAll());
+          }, 600);
+        } else {
+          notify(res.payload.data.error, 'error');
+        }
+      })
+      .catch((err) => console.log('err', err));
   };
 
   return (
@@ -130,12 +145,13 @@ const FirebaseLogin = ({ ...others }) => {
 
       <Formik
         initialValues={{
-          email: 'info@codedthemes.com',
-          password: '123456',
+          email: '',
+          password: '',
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+          // email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+          email: Yup.string().max(255).required('Email is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
@@ -228,7 +244,7 @@ const FirebaseLogin = ({ ...others }) => {
                 <Button
                   disableElevation
                   disabled={isSubmitting}
-                  onClick={handleLogin}
+                  onClick={() => handleLogin(values?.email, values?.password)}
                   fullWidth
                   size="large"
                   type="submit"
@@ -242,6 +258,7 @@ const FirebaseLogin = ({ ...others }) => {
           </form>
         )}
       </Formik>
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 };

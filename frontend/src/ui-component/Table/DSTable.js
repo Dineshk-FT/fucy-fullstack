@@ -1,17 +1,28 @@
+/*eslint-disable*/
 import * as React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router';
 import CircleIcon from '@mui/icons-material/Circle';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { Button, Checkbox, FormControl, MenuItem, Select, TextField, Typography, styled } from '@mui/material';
+import { tableCellClasses } from '@mui/material/TableCell';
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+  styled,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -118,7 +129,7 @@ export default function DsTable() {
 
   const notify = (message, status) => toast[status](message);
 
-  const Head = React.useCallback(() => {
+  const Head = React.useMemo(() => {
     if (stakeHolder) {
       return [
         { id: 1, name: 'ID' },
@@ -179,8 +190,6 @@ export default function DsTable() {
 
   const handleSearch = (e) => {
     const { value } = e.target;
-    // console.log('value', value);
-    // console.log("valuerows", rows);
     if (value.length > 0) {
       const filterValue = rows.filter((rw) => {
         if (rw.name.toLowerCase().includes(value) || rw.Description.toLowerCase().includes(value)) {
@@ -198,20 +207,17 @@ export default function DsTable() {
   React.useEffect(() => {
     if (modal.scenarios) {
       const mod2 = modal?.scenarios[1]?.subs[1]?.scenes?.map((ls) => ({
-        id: ls?.id,
-        name: ls?.name,
-        Description: ls?.Description,
+        ID: ls?.id,
+        Name: ls?.name,
+        'Description/ Scalability': ls?.Description,
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         impacts: {
-          Financial: ls?.impacts?.Financial ? ls?.impacts?.Financial : '',
-          Safety: ls?.impacts?.Safety ? ls?.impacts?.Safety : '',
-          Operational: ls?.impacts?.Operational ? ls?.impacts?.Operational : '',
-          Privacy: ls?.impacts?.Privacy ? ls?.impacts?.Privacy : ''
+          'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
+          'Safety Impact': ls?.impacts['Safety Impact'] ?? '',
+          'Operational Impact': ls?.impacts['Operational Impact'] ?? '',
+          'Privacy Impact': ls?.impacts['Privacy Impact'] ?? ''
         }
       }));
-      // console.log('mod2', mod2)
-      // const combained = mod1.concat(mod2);
-      // console.log('combained', combained)
       setRows(mod2);
       setFiltered(mod2);
     }
@@ -225,7 +231,7 @@ export default function DsTable() {
   };
 
   const handleChange = (e, row) => {
-    console.log('e.target', e.target);
+    // console.log('e.target', e.target);
     const Rows = [...rows];
     const editRow = Rows.find((ele) => ele.id === row.id);
     const { name, value } = e.target;
@@ -235,13 +241,11 @@ export default function DsTable() {
     const Index = Rows.findIndex((it) => it.id === editRow.id);
     Rows[Index] = editRow;
     setRows(Rows);
-    // console.log('Rows', Rows)
     const updated = Rows?.map((rw) => {
       //eslint-disable-next-line
       const { Description, ...rest } = rw;
       return rest;
     });
-    // console.log('updated', updated);
     const mod = { ...modal };
     const losses = mod?.scenarios[1]?.subs[0].losses;
     const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
@@ -264,12 +268,8 @@ export default function DsTable() {
         })
       )
       .flat();
-    //     console.log('updatedLoss', updatedLoss)
-    // console.log('updatedLossEdit', updatedLossEdit)
     mod.scenarios[1].subs[0].losses = updatedLoss;
     mod.scenarios[1].subs[1].scenes = updatedLossEdit;
-    // losses.losses = updated;
-    // console.log('modal121232', mod)
     update(mod)
       .then((res) => {
         if (res) {
@@ -280,9 +280,18 @@ export default function DsTable() {
       })
       .catch((err) => console.log('err', err));
   };
-  // console.log('rows', rows);
 
-  // console.log('modal12', modal);
+  const checkforLabel = (item) => {
+    if (
+      item.name === 'Safety Impact' ||
+      item.name === 'Financial Impact' ||
+      item.name === 'Operational Impact' ||
+      item.name === 'Privacy Impact'
+    ) {
+      return true;
+    }
+    return false;
+  };
 
   const options = [
     { value: 'Severe', label: 'Severe' },
@@ -320,6 +329,107 @@ export default function DsTable() {
     // console.log('ratio', ratio)
     return avgImpact(ratio);
   }, []);
+
+  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    return (
+      <>
+        <StyledTableRow
+          key={row.name}
+          data={row}
+          sx={{
+            '&:last-child td, &:last-child th': { border: 0 },
+            '&:nth-of-type(even)': {
+              backgroundColor: '#F4F8FE'
+            },
+            backgroundColor: isChild ? '#F4F8FE' : ''
+          }}
+        >
+          {Head?.map((item, index) => {
+            let cellContent;
+            switch (true) {
+              case checkforLabel(item):
+                cellContent = (
+                  <SelectableCell
+                    key={index}
+                    item={item}
+                    row={row}
+                    handleChange={handleChange}
+                    name={item.name}
+                    options={options}
+                    colorPickerTab={colorPickerTab}
+                    impact={row?.impacts[item.name]}
+                  />
+                );
+                break;
+
+              case item.name === 'Losses of Cybersecurity Properties':
+                cellContent = (
+                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)}>
+                    {row?.cyberLosses?.map((loss) => (
+                      <div key={loss} style={{ marginBottom: '5px' }}>
+                        {loss?.props.map((pr, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 5
+                            }}
+                          >
+                            <CircleIcon sx={{ fontSize: 14, color: colorPicker(pr) }} />
+                            <span
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '15px',
+                                width: 'max-content'
+                              }}
+                            >
+                              Loss of {pr}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    ))}
+                  </StyledTableCell>
+                );
+                break;
+              case item.name === 'Overall Impact':
+                cellContent = (
+                  <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(OverallImpact(row?.impacts)) }}>
+                    {OverallImpact(row?.impacts)}
+                  </StyledTableCell>
+                );
+                break;
+
+              case item.name.includes('Evaluated'):
+                cellContent = (
+                  <StyledTableCell component="th" scope="row">
+                    <Checkbox {...label} />
+                  </StyledTableCell>
+                );
+                break;
+
+              case typeof row[item.name] !== 'object':
+                cellContent = (
+                  <StyledTableCell key={index} align={'left'}>
+                    {row[item.name] ? row[item.name] : '-'}
+                  </StyledTableCell>
+                );
+                break;
+
+              default:
+                cellContent = null;
+                break;
+            }
+
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+          })}
+        </StyledTableRow>
+      </>
+    );
+  };
+
   // console.log('rows', filtered);
   // console.log('selectedRow', selectedRow)
   return (
@@ -357,185 +467,14 @@ export default function DsTable() {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              {Head()?.map((hd) => (
+              {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.map((row) => (
-              <StyledTableRow key={row?.id}>
-                <StyledTableCell component="th" scope="row">
-                  {row?.id?.slice(0, 6)}
-                </StyledTableCell>
-                <StyledTableCell component="th" scop e="row">
-                  <Typography sx={{ width: 'max-content' }}>{row?.name}</Typography>
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <Typography sx={{ width: 'max-content' }}>{row?.name}</Typography>
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <div className={classes.div}>{row?.Description}</div>
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenCl(row)}>
-                  {row?.cyberLosses?.map((loss) => (
-                    <div key={loss} style={{ marginBottom: '5px' }}>
-                      {loss?.props.map((pr, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 5
-                          }}
-                        >
-                          <CircleIcon sx={{ fontSize: 14, color: colorPicker(pr) }} />
-                          <span
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '15px',
-                              width: 'max-content'
-                            }}
-                          >
-                            Loss of {pr}
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      gap: 8,
-                      width: 'max-content'
-                    }}
-                  >
-                    {row?.cyberLosses?.map((loss) => (
-                      <span key={loss} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
-                        {loss?.name}
-                      </span>
-                    ))}
-                  </div>
-                </StyledTableCell>
-                {stakeHolder && (
-                  <StyledTableCell component="th" scope="row">
-                    -
-                  </StyledTableCell>
-                )}
-                {stakeHolder && (
-                  <StyledTableCell component="th" scope="row">
-                    -
-                  </StyledTableCell>
-                )}
-                {stakeHolder && (
-                  <StyledTableCell component="th" scope="row">
-                    -
-                  </StyledTableCell>
-                )}
-                {stakeHolder && (
-                  <StyledTableCell component="th" scope="row">
-                    -
-                  </StyledTableCell>
-                )}
-                {stakeHolder && (
-                  <StyledTableCell component="th" scope="row">
-                    -
-                  </StyledTableCell>
-                )}
-                {/* <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(row?.impacts?.Safety) }}>
-                                    <FormControl
-                                        sx={{
-                                            width: 130,
-                                            background: 'transparent',
-                                            '& .MuiInputBase-root': {
-                                                backgroundColor: 'transparent'
-                                            },
-                                            '& .MuiSelect-select': {
-                                                backgroundColor: 'transparent'
-                                            },
-                                            '& .MuiSvgIcon-root': {
-                                                display: 'none'
-                                            },
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                border: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Select
-                                            labelId="demo-simple-select-label"
-                                            id="demo-simple-select"
-                                            name="Safety"
-                                            value={row?.impacts?.Safety}
-                                            onChange={(e) => handleChange(e, row)}
-                                        >
-                                            {options.map((item) => (
-                                                <MenuItem key={item?.value} value={item?.value}>
-                                                    {item?.label}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                </StyledTableCell> */}
-
-                <SelectableCell
-                  row={row}
-                  options={options}
-                  handleChange={handleChange}
-                  colorPickerTab={colorPickerTab}
-                  impact={row?.impacts?.Safety}
-                  name="Safety"
-                />
-                <SelectableCell
-                  row={row}
-                  options={options}
-                  handleChange={handleChange}
-                  colorPickerTab={colorPickerTab}
-                  impact={row?.impacts?.Financial}
-                  name="Financial"
-                />
-                <SelectableCell
-                  row={row}
-                  options={options}
-                  handleChange={handleChange}
-                  colorPickerTab={colorPickerTab}
-                  impact={row?.impacts?.Operational}
-                  name="Operational"
-                />
-                <SelectableCell
-                  row={row}
-                  options={options}
-                  handleChange={handleChange}
-                  colorPickerTab={colorPickerTab}
-                  impact={row?.impacts?.Privacy}
-                  name="Privacy"
-                />
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(OverallImpact(row?.impacts)) }}>
-                  {OverallImpact(row?.impacts)}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <Checkbox {...label} />
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <Checkbox {...label} />
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-              </StyledTableRow>
+            {filtered?.map((row, rowkey) => (
+              <RenderTableRow row={row} rowKey={rowkey} />
             ))}
           </TableBody>
         </Table>

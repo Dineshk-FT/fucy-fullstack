@@ -76,31 +76,31 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 const options = {
   'Elapsed Time': [
-    { value: 1, label: '<= 1 month' },
-    { value: 2, label: '<= 1 week' },
-    { value: 3, label: '<= 1 day' }
+    { value: '<= 1 month', label: '<= 1 month' },
+    { value: '<= 1 week', label: '<= 1 week' },
+    { value: '<= 1 day', label: '<= 1 day' }
   ],
   Expertise: [
-    { value: 1, label: 'Proficient' },
-    { value: 2, label: 'Expert' },
-    { value: 3, label: 'Multiple experts' }
+    { value: 'Proficient', label: 'Proficient' },
+    { value: 'Expert', label: 'Expert' },
+    { value: 'Multiple experts', label: 'Multiple experts' }
   ],
   'Knowledge of the Item': [
-    { value: 1, label: 'Restricted Information' },
-    { value: 2, label: 'Confidential Information' }
+    { value: 'Restricted Information', label: 'Restricted Information' },
+    { value: 'Confidential Information', label: 'Confidential Information' }
   ],
   'Window of Opportunity': [
-    { value: 1, label: 'Easy' },
-    { value: 2, label: 'Moderate' },
-    { value: 3, label: 'Difficult' }
+    { value: 'Easy', label: 'Easy' },
+    { value: 'Moderate', label: 'Moderate' },
+    { value: 'Difficult', label: 'Difficult' }
   ],
   Equipment: [
-    { value: 1, label: 'Standard' },
-    { value: 2, label: 'Specialized' }
+    { value: 'Standard', label: 'Standard' },
+    { value: 'Specialized', label: 'Specialized' }
   ]
 };
 
-const SelectableCell = ({ item, row, handleChange }) => {
+const SelectableCell = ({ item, row, handleChange, name }) => {
   return (
     <StyledTableCell component="th" scope="row">
       <FormControl
@@ -121,7 +121,13 @@ const SelectableCell = ({ item, row, handleChange }) => {
           }
         }}
       >
-        <Select labelId="demo-simple-select-label" id="demo-simple-select" onChange={(e) => handleChange(e, row)}>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={row[item.name]}
+          onChange={(e) => handleChange(e, row)}
+          name={name}
+        >
           {options[item.name]?.map((item) => (
             <MenuItem key={item?.value} value={item?.value}>
               {item?.label}
@@ -152,23 +158,28 @@ export default function AttackTreeTable() {
       const mod1 = modal?.scenarios[3]?.subs[0]?.scenes?.map((dt) => {
         // console.log('prp', prp);
         return {
-          ID: dt.id.slice(0, 5),
+          ID: dt.id,
           Name: dt.name,
           Description: `This is the description for ${dt.name}`
         };
       });
 
-      const mod2 = modal?.scenarios[2]?.subs[1]?.scenes;
-      // console.log('mod2', mod2)
-      const combained = mod1.concat(mod2);
-      setRows(combained);
-      setFiltered(combained);
+      setRows(mod1);
+      setFiltered(mod1);
     }
   }, [modal]);
 
   const handleChange = (e, row) => {
-    console.log('e.target', e.target);
-    console.log('row', row);
+    // console.log('e.target', e.target);
+    // console.log('row', row);
+    const Rows = [...rows];
+    const editRow = Rows.find((ele) => ele.id === row.id);
+    const Index = Rows.findIndex((it) => it.id === editRow.id);
+    const { name, value } = e.target;
+    editRow[`${name}`] = value;
+    // console.log('editRow', editRow);
+    Rows[Index] = editRow;
+    setRows(Rows);
   };
 
   // console.log('rows', rows);
@@ -180,8 +191,9 @@ export default function AttackTreeTable() {
   const handleSearch = (e) => {
     const { value } = e.target;
     if (value.length > 0) {
+      // console.log('rows', rows);
       const filterValue = rows.filter((rw) => {
-        if (rw.name.toLowerCase().includes(value) || rw.Description.toLowerCase().includes(value)) {
+        if (rw?.Name?.toLowerCase().includes(value) || rw?.Description?.toLowerCase().includes(value)) {
           return rw;
         }
       });
@@ -193,6 +205,7 @@ export default function AttackTreeTable() {
     setSearchTerm(value);
   };
 
+  // console.log('filtered', filtered);
   const checkforLabel = (item) => {
     if (
       item.name === 'Expertise' ||
@@ -224,7 +237,7 @@ export default function AttackTreeTable() {
             return (
               <React.Fragment key={index}>
                 {checkforLabel(item) ? (
-                  <SelectableCell item={item} row={row} handleChange={handleChange} />
+                  <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
                 ) : (
                   <StyledTableCell key={index} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}
@@ -251,7 +264,7 @@ export default function AttackTreeTable() {
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>Attack Tree Table</Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={3} my={2}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"

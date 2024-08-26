@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -66,7 +67,7 @@ export default function DsDerivationTable() {
     getModalById(id);
   }, [id]);
 
-  const Head = React.useCallback(() => {
+  const Head = React.useMemo(() => {
     return [
       { id: 1, name: 'Task/Requirement' },
       { id: 2, name: 'Checked' },
@@ -78,11 +79,20 @@ export default function DsDerivationTable() {
 
   React.useEffect(() => {
     if (modal.scenarios) {
-      const mod = modal?.scenarios[1]?.subs[0]?.Details;
+      const mod = modal?.scenarios[1]?.subs[0]?.Details?.map((dt) => {
+        // console.log('prp', prp);
+        return {
+          'Task/Requirement': dt?.task,
+          'Losses of Cybersecurity Properties': dt?.loss,
+          Assets: dt?.assets,
+          'Damage Scenarios': dt?.Damage
+        };
+      });
       setRows(mod);
       setFiltered(mod);
     }
   }, [modal]);
+  // console.log('rows', rows);
 
   const handleSearch = (e) => {
     const { value } = e.target;
@@ -104,6 +114,51 @@ export default function DsDerivationTable() {
 
   const handleBack = () => {
     dispatch(closeAll());
+  };
+
+  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    return (
+      <>
+        <StyledTableRow
+          key={row.name}
+          data={row}
+          sx={{
+            '&:last-child td, &:last-child th': { border: 0 },
+            '&:nth-of-type(even)': {
+              backgroundColor: '#F4F8FE'
+            },
+            backgroundColor: isChild ? '#F4F8FE' : ''
+          }}
+        >
+          {Head?.map((item, index) => {
+            let cellContent;
+            switch (true) {
+              case item.name === 'Checked':
+                cellContent = (
+                  <StyledTableCell component="th" scope="row">
+                    <Checkbox {...label} />
+                  </StyledTableCell>
+                );
+                break;
+
+              case typeof row[item.name] !== 'object':
+                cellContent = (
+                  <StyledTableCell key={index} align={'left'}>
+                    {row[item.name] ? row[item.name] : '-'}
+                  </StyledTableCell>
+                );
+                break;
+
+              default:
+                cellContent = null;
+                break;
+            }
+
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+          })}
+        </StyledTableRow>
+      </>
+    );
   };
   return (
     <>
@@ -138,31 +193,33 @@ export default function DsDerivationTable() {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
-                {Head()?.map((hd) => (
+                {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered?.map((row) => (
-                <StyledTableRow key={row?.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <StyledTableCell component="td" scope="row">
-                    <Typography sx={{ width: 'max-content' }}>{row?.task}</Typography>
-                  </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
-                    <Checkbox {...label} />
-                  </StyledTableCell>
-                  <StyledTableCell component="td" scope="row">
-                    {row?.loss}
-                  </StyledTableCell>
-                  <StyledTableCell component="td" scope="row">
-                    {row?.assets}
-                  </StyledTableCell>
+              {filtered?.map((row, rowkey) => (
+                <RenderTableRow row={row} rowKey={rowkey} />
 
-                  <StyledTableCell component="td" scope="row">
-                    <div className={classes.div}>{row?.Damage}</div>
-                  </StyledTableCell>
-                </StyledTableRow>
+                // <StyledTableRow key={row?.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                //   <StyledTableCell component="td" scope="row">
+                //     <Typography sx={{ width: 'max-content' }}>{row?.task}</Typography>
+                //   </StyledTableCell>
+                //   <StyledTableCell component="th" scope="row">
+                //     <Checkbox {...label} />
+                //   </StyledTableCell>
+                //   <StyledTableCell component="td" scope="row">
+                //     {row?.loss}
+                //   </StyledTableCell>
+                //   <StyledTableCell component="td" scope="row">
+                //     {row?.assets}
+                //   </StyledTableCell>
+
+                //   <StyledTableCell component="td" scope="row">
+                //     <div className={classes.div}>{row?.Damage}</div>
+                //   </StyledTableCell>
+                // </StyledTableRow>
               ))}
             </TableBody>
           </Table>

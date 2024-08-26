@@ -1,16 +1,23 @@
+/*eslint-disable*/
 import * as React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { Button, TextField, Typography, styled } from '@mui/material';
+import { tableCellClasses } from '@mui/material/TableCell';
+import {
+  Button,
+  TextField,
+  Typography,
+  styled,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -91,11 +98,11 @@ export default function Tstable() {
             loss?.props?.map((prp, pin) => {
               // console.log('prp', prp);
               return {
-                id: `TS0${prin}${pin}`,
-                name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.id}`,
-                Description: `This is ${threatType(prp)} occured due to ${prp} in ${loss?.name} for Damage Scene ${dt?.id}`,
+                ID: `TS0${prin}${pin}`,
+                Name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.id}`,
+                Description: `${threatType(prp)} occured due to ${prp} in ${loss?.name} for Damage Scene ${dt?.id}`,
                 losses: [],
-                cyber_loss: prp
+                'Losses of Cybersecurity Properties': prp
               };
             })
           )
@@ -136,6 +143,69 @@ export default function Tstable() {
     }
 
     setSearchTerm(value);
+  };
+
+  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    return (
+      <>
+        <StyledTableRow
+          key={row.name}
+          data={row}
+          sx={{
+            '&:last-child td, &:last-child th': { border: 0 },
+            '&:nth-of-type(even)': {
+              backgroundColor: '#F4F8FE'
+            },
+            backgroundColor: isChild ? '#F4F8FE' : ''
+          }}
+        >
+          {Head?.map((item, index) => {
+            let cellContent;
+            switch (true) {
+              case item.name === 'Losses of Cybersecurity Properties':
+                cellContent = (
+                  <StyledTableCell component="th" scope="row">
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5
+                      }}
+                    >
+                      <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
+                      <span
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '15px',
+                          width: 'max-content'
+                        }}
+                      >
+                        Loss of {row[item.name]}
+                      </span>
+                    </span>
+                  </StyledTableCell>
+                );
+                break;
+
+              case typeof row[item.name] !== 'object':
+                cellContent = (
+                  <StyledTableCell key={index} align={'left'}>
+                    {row[item.name] ? row[item.name] : '-'}
+                  </StyledTableCell>
+                );
+                break;
+
+              default:
+                cellContent = null;
+                break;
+            }
+
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+          })}
+        </StyledTableRow>
+      </>
+    );
   };
   // console.log('selectedRow', selectedRow)
   return (
@@ -179,64 +249,8 @@ export default function Tstable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.map((row) => (
-              <StyledTableRow key={row?.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                <StyledTableCell component="td" scope="row">
-                  {row?.id?.slice(0, 6)}
-                </StyledTableCell>
-                <StyledTableCell component="td" scope="row">
-                  <Typography sx={{ width: 'max-content' }}>{row?.name}</Typography>
-                </StyledTableCell>
-                <StyledTableCell component="td" scope="row"></StyledTableCell>
-                <StyledTableCell component="td" scope="row">
-                  <div className={classes.div}>{row?.Description}</div>
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5
-                    }}
-                  >
-                    <CircleIcon sx={{ fontSize: 14, color: colorPicker(row?.cyber_loss) }} />
-                    <span
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '15px',
-                        width: 'max-content'
-                      }}
-                    >
-                      Loss of {row?.cyber_loss}
-                    </span>
-                  </span>
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  -
-                </StyledTableCell>
-              </StyledTableRow>
+            {filtered?.map((row, rowkey) => (
+              <RenderTableRow row={row} rowKey={rowkey} />
             ))}
           </TableBody>
         </Table>

@@ -1,7 +1,8 @@
 export const configuration = {
   apiBaseUrl: `http://localhost:4000/`,
   // backendUrl: `http://localhost:5000/`,
-  backendUrl: `https://fucybackend-djfpgndsddbybbdm.eastus-01.azurewebsites.net/`,
+  // backendUrl: `https://fucybackend-djfpgndsddbybbdm.eastus-01.azurewebsites.net/`,
+  backendUrl:process.env.REACT_APP_API_URL,
 
   fileLimit: 10240, //10 MB
   allowedFileFormats: '.txt,.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.csv',

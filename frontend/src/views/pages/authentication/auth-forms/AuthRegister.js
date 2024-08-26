@@ -1,6 +1,7 @@
+/*eslint-disable*/
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -35,12 +36,17 @@ import { strengthColor, strengthIndicator } from '../../../../utils/password-str
 // assets
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { register } from '../../../../API/api';
+import toast, { Toaster } from 'react-hot-toast';
 
 // ===========================|| FIREBASE - REGISTER ||=========================== //
 
 const FirebaseRegister = ({ ...others }) => {
   const theme = useTheme();
   const scriptedRef = useScriptRef();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const notify = (message, status) => toast[status](message);
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const customization = useSelector((state) => state.customization);
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +77,21 @@ const FirebaseRegister = ({ ...others }) => {
     changePassword('123456');
   }, []);
 
+  const handleRegister = (values) => {
+    dispatch(register(values))
+      .then((res) => {
+        console.log('res', res);
+        if (res.payload.status === 200 || res.payload.status === 201) {
+          notify(res.payload.data.message, 'success');
+          setTimeout(() => {
+            navigate('/login');
+          }, 600);
+        } else {
+          notify(res.payload.data.error, 'error');
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
   return (
     <>
       <Grid container direction="column" justifyContent="center" spacing={2}>
@@ -128,10 +149,13 @@ const FirebaseRegister = ({ ...others }) => {
         initialValues={{
           email: '',
           password: '',
+          fname: '',
+          lname: '',
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+          // email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+          email: Yup.string().max(255).required('Email/Username is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
@@ -160,7 +184,9 @@ const FirebaseRegister = ({ ...others }) => {
                   margin="normal"
                   name="fname"
                   type="text"
-                  defaultValue=""
+                  value={values.fname}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
                   sx={{ ...theme.typography.customInput }}
                 />
               </Grid>
@@ -171,7 +197,9 @@ const FirebaseRegister = ({ ...others }) => {
                   margin="normal"
                   name="lname"
                   type="text"
-                  defaultValue=""
+                  value={values.lname}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
                   sx={{ ...theme.typography.customInput }}
                 />
               </Grid>
@@ -271,7 +299,16 @@ const FirebaseRegister = ({ ...others }) => {
 
             <Box sx={{ mt: 2 }}>
               <AnimateButton>
-                <Button disableElevation disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="secondary">
+                <Button
+                  disableElevation
+                  onClick={() => handleRegister(values)}
+                  disabled={isSubmitting}
+                  fullWidth
+                  size="large"
+                  type="submit"
+                  variant="contained"
+                  color="secondary"
+                >
                   Sign up
                 </Button>
               </AnimateButton>
@@ -279,6 +316,7 @@ const FirebaseRegister = ({ ...others }) => {
           </form>
         )}
       </Formik>
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 };
