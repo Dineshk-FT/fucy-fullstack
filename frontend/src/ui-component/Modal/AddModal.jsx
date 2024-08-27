@@ -84,7 +84,7 @@ export default function AddModal({ open, handleClose, getModals }) {
           // const { id } = res.data;
           // dispatch(storeCurrentId(id));
           setTimeout(() => {
-            notify(res.data.message, 'success');
+            notify(res.message, 'success');
             // navigate(`/Models/${id}`);
             // window.location.href = `/Modals/${id}`;
             getModals();

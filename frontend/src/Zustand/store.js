@@ -5,6 +5,23 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 
+export const createHeaders = () => {
+  const userId = sessionStorage.getItem('user-id');
+
+  let headers = {};
+
+  if (!userId) {
+    console.error('No  user Id found');
+  } else {
+    // headers['Content-Type'] = `application/json`;
+    headers['user-id'] = userId;
+  }
+
+  headers['Cache-Control'] = 'no-cache';
+
+  return { headers };
+};
+
 const useStore = createWithEqualityFn((set, get) => ({
   attackNodes: [],
   attackEdges: [],
@@ -22,6 +39,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   component: [],
 
   //Normal Nodes
+
   onNodesChange: (changes) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes)
@@ -220,27 +238,36 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   //fetch or GET section
   fetchAPI: async () => {
-    // const res = await axios.get(`${configuration.apiBaseUrl}template`);
-    const res = await axios.post(`${configuration?.backendUrl}get_details/templates`);
-    set({
-      template: res.data
-    });
+    try {
+      const options = {
+        method: 'POST',
+        ...createHeaders(),
+        url: `${configuration?.backendUrl}get_details/templates`
+      };
+      const res = await axios(options);
+      set({
+        template: res.data
+      });
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
   },
 
   getSidebarNode: async () => {
-    const res = await axios.post(`${configuration.backendUrl}get_details/sidebarNode`);
-    // console.log('res', res);
-    set({
-      sidebarNodes: res.data
-    });
+    try {
+      const options = {
+        method: 'POST',
+        ...createHeaders(),
+        url: `${configuration.backendUrl}get_details/sidebarNode`
+      };
+      const res = await axios(options);
+      set({
+        sidebarNodes: res.data
+      });
+    } catch (error) {
+      console.error('Error fetching sidebar nodes:', error);
+    }
   },
-
-  // getSidebarNode: async () => {
-  //   const res = await axios.get(`${configuration.apiBaseUrl}sidebarNode`);
-  //   set({
-  //     sidebarNodes: res.data
-  //   });
-  // },
 
   getTemplate: async (id) => {
     const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
@@ -253,7 +280,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   getModals: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
-    const res = await axios.get(`${configuration.backendUrl}get_details/Models`);
+    const res = await axios.get(`${configuration.backendUrl}get_details/Models`, createHeaders());
     set({
       Modals: res.data
     });
@@ -327,8 +354,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     let data = new FormData();
     data.append('name', newTemplate?.Name);
 
-    // const res = await axios.post(`${configuration.backendUrl}createComponent`,newTemplate)
-    const res = await axios.post(`${configuration.backendUrl}add/sidebarNode`, (data = data));
+    const requestOptions = {
+      method: 'POST',
+      ...createHeaders(),
+      body: data
+    };
+    const res = await fetch(`${configuration.backendUrl}add/sidebarNode`, requestOptions);
     // console.log('res', res);
     return res;
   },
@@ -419,19 +450,23 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   createModal: async (newModal) => {
+    console.log('newModal', newModal);
     const FormData = require('form-data');
     let data = new FormData();
     data.append('name', newModal?.name);
+
     try {
-      const res = await axios.post(`${configuration.backendUrl}add/Models`, data);
-      if (res) {
-        return res;
-      }
+      const URL = `${configuration.backendUrl}add/models`;
+      const response = await axios.post(URL, data, {
+        ...createHeaders(),
+        maxRedirects: 5
+      });
+      return response.data;
     } catch (err) {
       console.log('err', err);
+      throw err; // Re-throwing the error to handle it in calling code if needed
     }
   },
-
   //Delete Section
 
   deleteNode: async (id) => {

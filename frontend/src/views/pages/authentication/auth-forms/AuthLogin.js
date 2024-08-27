@@ -68,9 +68,11 @@ const FirebaseLogin = ({ ...others }) => {
     dispatch(login({ username: email, password }))
       .then((res) => {
         if (res.payload.status === 200 || res.payload.status === 201) {
-          notify(res.payload.data.message, 'success');
+          // console.log('res', res);
+          notify('Login Successfully', 'success');
           setTimeout(() => {
-            sessionStorage.setItem('isLoggedIn', true);
+            // sessionStorage.setItem('isLoggedIn', true);
+            sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = '/Models';
             dispatch(changeCanvasPage('canvas'));
             dispatch(closeAll());
