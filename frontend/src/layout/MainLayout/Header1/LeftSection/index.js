@@ -34,7 +34,7 @@ export default function LeftSection() {
       name: 'File',
       options: [
         { label: 'New', action: () => console.log('New') },
-        { label: 'Open', action: () => console.log('Open') },
+        { label: 'Open', action: () => handleOpen('Open') },
         { label: 'Save', action: () => console.log('Save') },
         { label: 'Exit', action: () => console.log('Exit') }
       ]
@@ -135,6 +135,10 @@ export default function LeftSection() {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedMenu(null);
+  };
+
+  const handleOpen = (name) => {
+    console.log('name', name);
   };
 
   return (

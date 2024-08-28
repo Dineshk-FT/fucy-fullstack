@@ -28,13 +28,14 @@ import Header1 from './Header1';
 // import Customization from '../Customization';
 
 // styles
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open, isclose, color }) => {
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open, isclose, color, drawerOpen }) => {
   // console.log('color', color)
   // console.log('isclose', isclose)
   return {
     ...theme.typography.mainContent,
     background: color?.canvaSurroundsBG,
     marginTop: navbarHeight,
+    paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
     // border: '1px solid gray',
     maxWidth: 'auto', // minHeight:'inherit',
     minHeight: isclose == true ? `100svh` : `93svh`,
@@ -155,7 +156,7 @@ const MainLayout = ({ children }) => {
         <Sidebar1 drawerOpen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         {/* -------------------- main content -------------------------*/}
-        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color}>
+        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} drawerOpen={leftDrawerOpened}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
           <Outlet />

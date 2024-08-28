@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import { Link } from 'react-router-dom';
 
 // material-ui
@@ -28,9 +29,12 @@ const Register = () => {
               <AuthCardWrapper>
                 <Grid container spacing={2} alignItems="center" justifyContent="center">
                   <Grid item sx={{ mb: 3 }}>
-                    <Link to="#">
+                    {/* <Link to="#">
                       <Logo />
-                    </Link>
+                    </Link> */}
+                    <Typography component="h4" sx={{ fontSize: 24, fontWeight: 600, color: '#5FBDFF' }} mt={1}>
+                      FUCY TECH
+                    </Typography>
                   </Grid>
                   <Grid item xs={12}>
                     <Grid container direction={matchDownSM ? 'column-reverse' : 'row'} alignItems="center" justifyContent="center">

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 const RequireAuth = ({ children }) => {
-  const isLoggedIn = useSelector((state) => state?.userDetails);
+  const { isLoggedIn } = useSelector((state) => state?.userDetails);
   const navigate = useNavigate();
 
   useEffect(() => {

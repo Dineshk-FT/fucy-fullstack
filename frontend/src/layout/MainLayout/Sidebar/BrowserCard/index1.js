@@ -350,7 +350,7 @@ const BrowserCard = ({ modals }) => {
   // console.log('ModalDetails', ModalDetails);
   return (
     <>
-      <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
+      <Typography variant="h4" sx={{ color: color?.tabContentClr }} my={1}>
         Projects
       </Typography>
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>

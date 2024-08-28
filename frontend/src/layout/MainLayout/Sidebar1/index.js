@@ -1,32 +1,29 @@
-/*eslint-disable*/
-import React, { useState, useEffect, createContext, useRef } from 'react';
+import React, { useEffect, createContext } from 'react';
 import PropTypes from 'prop-types';
+
+// material-ui
 import { useTheme } from '@mui/material/styles';
-import { Box, Drawer, Tabs, Tab, Popper, Typography } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import InfoIcon from '@mui/icons-material/Info';
-// import CancelIcon from '@mui/icons-material/Cancel';
+import { Box, Drawer, useMediaQuery } from '@mui/material';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 // third-party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { BrowserView, MobileView } from 'react-device-detect';
 
 // project imports
-// import LogoSection from '../LogoSection';
-import { drawerWidth, height, navbarHeight, sidebarWidth } from '../../../store/constant';
+import LogoSection from '../LogoSection';
+import { drawerWidth, navbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
-import useStore from '../../../Zustand/store';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearProperties } from '../../../store/slices/PageSectionSlice';
+// import BrowserCard from './BrowserCard';
 import BrowserCard from '../Sidebar/BrowserCard/index1';
 import MenuCard from '../Sidebar/MenuCard';
+import useStore from '../../../Zustand/store';
+import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
-import MenuList from '../Header1/MenuList';
+import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import toast, { Toaster } from 'react-hot-toast';
 
 export const ToasterContext = createContext();
-
-// ==============================|| SIDEBAR DRAWER ||============================== //
 const useStyles = makeStyles(() => ({
   icon: {
     fontSize: 22,
@@ -35,135 +32,61 @@ const useStyles = makeStyles(() => ({
     right: 0,
     cursor: 'pointer', // Indicate that it's clickable
     zIndex: 1400
+    // margin: '5px'
   }
 }));
+// ==============================|| SIDEBAR DRAWER ||============================== //
+
 const selector = (state) => ({
   template: state.template,
   modals: state.Modals,
   fetchAPI: state.fetchAPI,
   fetchModals: state.getModals
 });
-
-export default function Sidebar1({ drawerOpen, drawerToggle, window }) {
+const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const classes = useStyles();
-  const color = ColorTheme();
+
   const dispatch = useDispatch();
-  const [selectedTab, setSelectedTab] = useState(0); // Set initial tab to Home
-  const anchorRef = useRef(null); // Create a reference for the anchor element
-  const [anchorEl, setAnchorEl] = useState(null); // Start with no anchor initially
-  const [open, setOpen] = useState(true);
+  const color = ColorTheme();
   const { template, fetchAPI, fetchModals, modals } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const { Properties } = useSelector((state) => state?.pageName);
+  const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
-
   useEffect(() => {
     fetchAPI();
     fetchModals();
     dispatch(clearProperties());
-
-    // Set the initial anchor element to open the Popper
-    if (anchorRef.current) {
-      setAnchorEl(anchorRef.current);
-    }
-  }, [fetchAPI, fetchModals, dispatch]);
-
-  const handleTabClick = (event, newValue) => {
-    setSelectedTab(newValue);
-    setAnchorEl(event.currentTarget);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-    setSelectedTab(null);
-    setOpen(false);
-  };
-
-  const renderComponent = () => {
-    switch (selectedTab) {
-      case 0:
-        return (
-          <>
-            <BrowserCard template={template} modals={modals} />
-            {Properties && Properties.length > 0 && <MenuCard properties={Properties} />}
-          </>
-        );
-
-      case 1:
-        return (
-          <Typography>
-            <MenuList />
-          </Typography>
-        );
-
-      default:
-        return null;
-    }
-  };
+  }, []);
 
   const drawer = (
     <>
-      <Box
-        sx={
-          {
-            // display: { xs: 'block', md: 'none' },
-          }
-        }
-      >
-        <Box sx={{ display: 'flex', p: 2, mx: 'auto' }}>{/* <LogoSection /> */}</Box>
+      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+        <Box sx={{ display: 'flex', p: 2, mx: 'auto' }}>
+          <LogoSection />
+        </Box>
       </Box>
       <BrowserView>
         <PerfectScrollbar
           component="div"
           style={{
+            // marginTop: '3rem',
             height: 'calc(80vh - 88px)',
+            paddingLeft: '16px',
+            paddingRight: '16px',
             marginTop: '1.4rem'
           }}
         >
-          <Tabs
-            orientation="vertical"
-            value={selectedTab}
-            onChange={handleTabClick}
-            aria-label="Sidebar Tabs"
-            indicatorColor="primary"
-            sx={{
-              '& .MuiTabs-flexContainer': {
-                display: 'flex',
-                flexDirection: 'column'
-              }
-            }}
-          >
-            <Tab
-              icon={<HomeIcon />}
-              aria-label="Home"
-              sx={{ minWidth: 'auto' }}
-              ref={anchorRef} // Assign the reference to the Home tab
-            />
-            {/* <Tab icon={<InfoIcon />} aria-label="Info" sx={{ minWidth: 'auto' }} /> */}
-          </Tabs>
-          <Popper
-            open={open}
-            anchorEl={anchorEl}
-            placement="right-start"
-            sx={{
-              zIndex: 1300, // Ensure the Popper is above other elements
-              width: sidebarWidth, // Adjust width as needed
-              marginTop: navbarHeight, // Adjust to position below the navbar
-              boxShadow: '0px 0px 10px gray',
-              borderRadius: '8px'
-            }}
-          >
-            <Box sx={{ p: 2, bgcolor: 'background.paper', height: 'auto', maxHeight: '75svh', borderRadius: '8px' }}>
-              <KeyboardDoubleArrowLeftIcon onClick={handleClose} className={classes.icon} />
-              {renderComponent()}
-            </Box>
-          </Popper>
+          <BrowserCard template={template} modals={modals} />
+          {Properties && Properties?.length > 0 && <MenuCard properties={Properties} />}
         </PerfectScrollbar>
+        <KeyboardDoubleArrowLeftIcon onClick={drawerToggle} className={classes.icon} sx={{ margin: '5px', color: color?.iconColor }} />
       </BrowserView>
       <MobileView>
-        <Box sx={{ px: 2 }}></Box>
+        <Box sx={{ px: 2 }}>
+          <MenuCard />
+        </Box>
       </MobileView>
     </>
   );
@@ -176,26 +99,36 @@ export default function Sidebar1({ drawerOpen, drawerToggle, window }) {
         component="nav"
         sx={{
           flexShrink: { md: 0 },
-          width: drawerWidth,
+          width: drawerOpen ? drawerWidth : 'auto',
           background: color?.sidebarBG,
-          mt: `${navbarHeight}px`,
-          height: height
+          mt: !drawerOpen ? navbarHeight : '0px'
         }}
         aria-label="mailbox folders"
       >
+        {!drawerOpen && (
+          <KeyboardDoubleArrowRightIcon
+            onClick={drawerToggle}
+            className={classes.icon}
+            sx={{ position: 'relative', left: '0px', marginTop: `${navbarHeight}px`, color: color?.iconColor }}
+          />
+        )}
+
         <Drawer
           container={container}
-          variant={'persistent'}
+          variant={matchUpMd ? 'persistent' : 'temporary'}
           anchor="left"
-          open={true}
-          // onClose={drawerToggle}
+          open={drawerOpen}
+          onClose={drawerToggle}
           sx={{
+            transition: 'width 2s',
             '& .MuiDrawer-paper': {
-              borderRight: `1px solid ${color?.tabBG}`,
               width: drawerWidth,
+              // background: theme.palette.background.default,
               background: color?.sidebarBG,
               color: theme.palette.text.primary,
-              top: !isNavbarClose ? navbarHeight : '0px'
+              [theme.breakpoints.up('md')]: {
+                top: !isNavbarClose ? navbarHeight : '0px'
+              }
             }
           }}
           ModalProps={{ keepMounted: true }}
@@ -207,10 +140,12 @@ export default function Sidebar1({ drawerOpen, drawerToggle, window }) {
       </Box>
     </ToasterContext.Provider>
   );
-}
+};
 
-Sidebar1.propTypes = {
+Sidebar.propTypes = {
   drawerOpen: PropTypes.bool,
   drawerToggle: PropTypes.func,
   window: PropTypes.object
 };
+
+export default Sidebar;

@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import Loadable from '../ui-component/Loadable';
 import MainLayout from '../layout/MainLayout';
-// import RequireAuth from './Protected';
+import RequireAuth from './Protected';
 
 const Home = Loadable(lazy(() => import('../views/HomePage')));
 const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
@@ -62,9 +62,9 @@ const commonRoutes = [
 const MainRoutes = {
   path: '/',
   element: (
-    // <RequireAuth>
-    <MainLayout />
-    // </RequireAuth>
+    <RequireAuth>
+      <MainLayout />
+    </RequireAuth>
   ),
   children: commonRoutes
 };
