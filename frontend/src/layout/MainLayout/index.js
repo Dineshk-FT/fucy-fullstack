@@ -35,7 +35,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
     ...theme.typography.mainContent,
     background: color?.canvaSurroundsBG,
     marginTop: navbarHeight,
-    paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
+    paddingLeft: !drawerOpen ? '2rem' : 'auto',
     // border: '1px solid gray',
     maxWidth: 'auto', // minHeight:'inherit',
     minHeight: isclose == true ? `100svh` : `93svh`,
@@ -56,12 +56,14 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
       [theme.breakpoints.down('md')]: {
         // marginLeft: '20px',
         width: `calc(100% - ${drawerWidth}px)`,
-        padding: '16px'
+        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
+        padding: '16px 16px 16px auto'
       },
       [theme.breakpoints.down('sm')]: {
         marginLeft: '10px',
         width: `calc(100% - ${drawerWidth}px)`,
-        padding: '16px',
+        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
+        padding: '16px 16px 16px auto',
         marginRight: '10px'
       }
     }),

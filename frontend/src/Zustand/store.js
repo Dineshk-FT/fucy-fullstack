@@ -456,7 +456,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   createModal: async (newModal) => {
-    console.log('newModal', newModal);
+    // console.log('newModal', newModal);
     const FormData = require('form-data');
     let data = new FormData();
     data.append('name', newModal?.name);

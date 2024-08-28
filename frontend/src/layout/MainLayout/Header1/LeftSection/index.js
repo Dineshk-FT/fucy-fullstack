@@ -14,6 +14,9 @@ import DamageIcon from '../../../../assets/icons/damage.png';
 import ThreatIcon from '../../../../assets/icons/threat.png';
 import CybersecurityIcon from '../../../../assets/icons/cybersecurity.png';
 import RiskIcon from '../../../../assets/icons/risk.png';
+import SelectProject from '../../../../ui-component/Modal/SelectProject';
+import useStore from '../../../../Zustand/store';
+import AddModal from '../../../../ui-component/Modal/AddModal';
 
 const imageComponents = {
   AttackIcon,
@@ -24,16 +27,25 @@ const imageComponents = {
   RiskIcon
 };
 
+const selector = (state) => ({
+  Modals: state.Modals,
+  getModals: state.getModals
+});
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
+  const { Modals, getModals } = useStore(selector);
   const [selectedMenu, setSelectedMenu] = useState(null);
+  const [open, setOpen] = useState({
+    New: false,
+    Open: false
+  });
 
   const menuItems = [
     {
       name: 'File',
       options: [
-        { label: 'New', action: () => console.log('New') },
+        { label: 'New', action: () => handleOpen('New') },
         { label: 'Open', action: () => handleOpen('Open') },
         { label: 'Save', action: () => console.log('Save') },
         { label: 'Exit', action: () => console.log('Exit') }
@@ -106,6 +118,13 @@ export default function LeftSection() {
           icon: 'CybersecurityIcon'
         }
       ]
+    },
+    {
+      name: 'Library',
+      options: [
+        { label: 'Component', action: () => console.log('Image') },
+        { label: 'System', action: () => console.log('Table') }
+      ]
     }
   ];
 
@@ -119,7 +138,7 @@ export default function LeftSection() {
       <Box display="flex" alignItems="center" justifyContent="flex-start" gap={2}>
         {Image ? <img src={Image} alt={item.label} style={{ height: '20px', width: '20px' }} /> : null}
         <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: color?.tabContentClr, fontFamily: 'Inter' }}>
+          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
             {displayLabel}
           </Typography>
         </Tooltip>
@@ -138,7 +157,17 @@ export default function LeftSection() {
   };
 
   const handleOpen = (name) => {
-    console.log('name', name);
+    setOpen((state) => ({
+      ...state,
+      [`${name}`]: true
+    }));
+  };
+
+  const handleClose = () => {
+    setOpen({
+      New: false,
+      Open: false
+    });
   };
 
   return (
@@ -225,6 +254,8 @@ export default function LeftSection() {
           </ClickAwayListener>
         </Box>
       ))}
+      {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Modals={Modals} />}
+      {open?.New && <AddModal getModals={getModals} open={open?.New} handleClose={handleClose} />}
     </Box>
   );
 }

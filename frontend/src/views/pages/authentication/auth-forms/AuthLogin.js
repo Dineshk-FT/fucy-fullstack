@@ -73,7 +73,7 @@ const FirebaseLogin = ({ ...others }) => {
           setTimeout(() => {
             // sessionStorage.setItem('isLoggedIn', true);
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
-            window.location.href = '/Models';
+            window.location.href = `/Models/${res?.payload?.data?.model_id}`;
             dispatch(changeCanvasPage('canvas'));
             dispatch(closeAll());
           }, 600);

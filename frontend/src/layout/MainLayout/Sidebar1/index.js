@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 // material-ui
 import { useTheme } from '@mui/material/styles';
 import { Box, Drawer, useMediaQuery } from '@mui/material';
-import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import ArrowCircleLeftTwoToneIcon from '@mui/icons-material/ArrowCircleLeftTwoTone';
+import ArrowCircleRightTwoToneIcon from '@mui/icons-material/ArrowCircleRightTwoTone';
 // third-party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { BrowserView, MobileView } from 'react-device-detect';
@@ -26,7 +26,7 @@ import toast, { Toaster } from 'react-hot-toast';
 export const ToasterContext = createContext();
 const useStyles = makeStyles(() => ({
   icon: {
-    fontSize: 22,
+    fontSize: 24,
     position: 'absolute',
     top: 0,
     right: 0,
@@ -81,7 +81,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           <BrowserCard template={template} modals={modals} />
           {Properties && Properties?.length > 0 && <MenuCard properties={Properties} />}
         </PerfectScrollbar>
-        <KeyboardDoubleArrowLeftIcon onClick={drawerToggle} className={classes.icon} sx={{ margin: '5px', color: color?.iconColor }} />
+        <ArrowCircleLeftTwoToneIcon onClick={drawerToggle} className={classes.icon} sx={{ margin: '5px', color: color?.iconColor }} />
       </BrowserView>
       <MobileView>
         <Box sx={{ px: 2 }}>
@@ -106,7 +106,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         aria-label="mailbox folders"
       >
         {!drawerOpen && (
-          <KeyboardDoubleArrowRightIcon
+          <ArrowCircleRightTwoToneIcon
             onClick={drawerToggle}
             className={classes.icon}
             sx={{ position: 'relative', left: '0px', marginTop: `${navbarHeight}px`, color: color?.iconColor }}

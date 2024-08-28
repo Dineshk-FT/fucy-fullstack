@@ -6,12 +6,6 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  // Chip,
-  // FormControl,
-  // InputLabel,
-  // MenuItem,
-  // OutlinedInput,
-  // Select,
   Box,
   TextField,
   Slide
@@ -19,11 +13,8 @@ import {
 } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-// import { storeCurrentId } from '../../store/slices/CurrentIdSlice';
-// import { useDispatch } from 'react-redux';
-import { ToasterContext } from '../../layout/MainLayout/Sidebar1';
-// import { useNavigate } from 'react-router';
-// import { useNavigate } from 'react-router';
+import toast, { Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -52,11 +43,9 @@ const selector = (state) => ({
 
 export default function AddModal({ open, handleClose, getModals }) {
   // const dispatch = useDispatch();
-  // const navigate = useNavigate();
-
-  const { notify } = React.useContext(ToasterContext);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const { create } = useStore(selector, shallow);
+  const notify = (message, status) => toast[status](message);
   // const theme = useTheme();
   const [templateDetails, setTemplateDetails] = React.useState({
     name: ''
@@ -85,7 +74,7 @@ export default function AddModal({ open, handleClose, getModals }) {
           // dispatch(storeCurrentId(id));
           setTimeout(() => {
             notify(res.message, 'success');
-            // navigate(`/Models/${id}`);
+            navigate(`/Models/${res?.model_id}`);
             // window.location.href = `/Modals/${id}`;
             getModals();
             handleClose();
@@ -164,6 +153,7 @@ export default function AddModal({ open, handleClose, getModals }) {
           </Button>
         </DialogActions>
       </Dialog>
+      <Toaster position="top-right" reverseOrder={false} />
     </React.Fragment>
   );
 }
