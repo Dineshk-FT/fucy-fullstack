@@ -211,17 +211,21 @@ export default function DsTable() {
         Name: ls?.name,
         'Description/ Scalability': ls?.Description,
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
-        impacts: {
-          'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
-          'Safety Impact': ls?.impacts['Safety Impact'] ?? '',
-          'Operational Impact': ls?.impacts['Operational Impact'] ?? '',
-          'Privacy Impact': ls?.impacts['Privacy Impact'] ?? ''
-        }
+        impacts: ls?.impacts
+          ? {
+              'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
+              'Safety Impact': ls?.impacts['Safety Impact'] ?? '',
+              'Operational Impact': ls?.impacts['Operational Impact'] ?? '',
+              'Privacy Impact': ls?.impacts['Privacy Impact'] ?? ''
+            }
+          : {}
       }));
       setRows(mod2);
       setFiltered(mod2);
     }
   }, [modal]);
+
+  // console.log('rows', rows);
 
   const handleOpenModalDs = () => {
     setOpenDs(true);
@@ -320,12 +324,14 @@ export default function DsTable() {
     const avgImpact = (ratio) => {
       return ratio === 1 ? 'Negligible' : ratio === 2 ? 'Moderate' : ratio === 3 ? 'Major' : ratio === 4 ? 'Severe' : '';
     };
-    const val = Object.values(impact).map((it) => {
+    const val = Object.values(impact)?.map((it) => {
       return pattern(it);
     });
-    // console.log('val', val)
-    const sum = val.reduce((a, b) => a + b);
-    const ratio = sum > 0 ? Math.floor(impact && sum / Object.values(impact).length) : 0;
+    let ratio;
+    if (val.length) {
+      const sum = val?.reduce((a, b) => a + b);
+      ratio = sum > 0 ? Math.floor(impact && sum / Object.values(impact).length) : 0;
+    }
     // console.log('ratio', ratio)
     return avgImpact(ratio);
   }, []);
@@ -474,7 +480,7 @@ export default function DsTable() {
           </TableHead>
           <TableBody>
             {filtered?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} />
+              <RenderTableRow key={rowkey} row={row} rowKey={rowkey} />
             ))}
           </TableBody>
         </Table>

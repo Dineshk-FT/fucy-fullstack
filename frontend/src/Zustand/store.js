@@ -280,7 +280,13 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   getModals: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
-    const res = await axios.get(`${configuration.backendUrl}get_details/Models`, createHeaders());
+    const options = {
+      method: 'POST',
+      ...createHeaders(),
+      url: `${configuration.backendUrl}get_details/models`
+    };
+    const res = await axios(options);
+
     set({
       Modals: res.data
     });
@@ -289,7 +295,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModalById: async (id) => {
     if (id) {
       // const res = await axios.get(`${configuration.apiBaseUrl}Modals/${id}`);
-      const res = await axios.get(`${configuration.backendUrl}get_details/Models/${id}`);
+      const res = await axios.post(`${configuration.backendUrl}get_details/models/${id}`);
 
       // console.log('res.data ...', res.data);
       set({

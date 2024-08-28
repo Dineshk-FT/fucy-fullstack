@@ -125,20 +125,21 @@ export default function SelectLosses({
     //     console.log('updatedLoss', updatedLoss)
     // console.log('updatedLossEdit', updatedLossEdit)
 
-    (threat.losses = cybersec), setRows(Rows);
+    threat.losses = cybersec;
+    setRows(Rows);
     // console.log('threat', threat)
     // console.log('mod', mod);
-    update(mod)
-      .then((res) => {
-        if (res) {
-          setTimeout(() => {
-            getModalById(id);
-            getModals();
-          }, 500);
-        }
-      })
-      .catch((err) => console.log('err', err));
-    handleClose();
+    // update(mod)
+    //   .then((res) => {
+    //     if (res) {
+    //       setTimeout(() => {
+    //         getModalById(id);
+    //         getModals();
+    //       }, 500);
+    //     }
+    //   })
+    //   .catch((err) => console.log('err', err));
+    // handleClose();
   };
   return (
     <React.Fragment>

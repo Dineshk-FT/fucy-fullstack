@@ -238,6 +238,7 @@ const BrowserCard = ({ modals }) => {
   // console.log('template', template);
 
   useEffect(() => {
+    // console.log('modals', modals);
     setModalDetails(modals);
   }, [modals]);
   // const theme = useTheme();
@@ -271,12 +272,13 @@ const BrowserCard = ({ modals }) => {
   //     // console.log('clicked');
   // };
 
-  const handleOpenActionTree = (name, sub) => {
+  const handleOpenActionTree = (scene, sub) => {
     // console.log('name', name);
     if (sub) {
       dispatch(AttackTreePageOpen());
+      dispatch(setAttackScene(at_scene));
     }
-    if (name === 'Attack') {
+    if (scene.name === 'Attack') {
       // console.log('first');
       dispatch(attackTableOpen());
     }
@@ -344,6 +346,8 @@ const BrowserCard = ({ modals }) => {
     setName('');
     setOpenAttackModal(false);
   };
+
+  // console.log('ModalDetails', ModalDetails);
   return (
     <>
       <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
@@ -570,7 +574,7 @@ const BrowserCard = ({ modals }) => {
                                       key={at_scene?.id}
                                       nodeId={at_scene?.id}
                                       label={at_scene?.name}
-                                      onDoubleClick={() => handleOpenActionTree(at_scene?.name, sub?.name)}
+                                      onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
                                       onClick={() => handleAttackTree(at_scene)}
                                     ></TreeItem>
                                   );
