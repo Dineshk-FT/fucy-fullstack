@@ -1,22 +1,15 @@
+/* eslint-disable */
 import React, { useState } from 'react';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
+import { Tooltip, Typography, Box, ClickAwayListener, Popper, Paper } from '@mui/material';
 import ColorTheme from '../../../../store/ColorTheme';
 import { NavLink } from 'react-router-dom';
+import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../../../assets/icons';
 import InfoIcon from '@mui/icons-material/Info';
-import Tooltip from '@mui/material/Tooltip';
-import AttackIcon from '../../../../assets/icons/attack.png';
-import ItemIcon from '../../../../assets/icons/item.png';
-import DamageIcon from '../../../../assets/icons/damage.png';
-import ThreatIcon from '../../../../assets/icons/threat.png';
-import CybersecurityIcon from '../../../../assets/icons/cybersecurity.png';
-import RiskIcon from '../../../../assets/icons/risk.png';
 import SelectProject from '../../../../ui-component/Modal/SelectProject';
 import useStore from '../../../../Zustand/store';
 import AddModal from '../../../../ui-component/Modal/AddModal';
+import Components from '../../../../views/NodeList';
+import TemplateList from '../../../../views/Libraries';
 
 const imageComponents = {
   AttackIcon,
@@ -31,6 +24,7 @@ const selector = (state) => ({
   Modals: state.Modals,
   getModals: state.getModals
 });
+
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -40,6 +34,8 @@ export default function LeftSection() {
     New: false,
     Open: false
   });
+  const [subMenuAnchorEl, setSubMenuAnchorEl] = useState(null);
+  const [selectedSubMenu, setSelectedSubMenu] = useState(null);
 
   const menuItems = [
     {
@@ -122,8 +118,25 @@ export default function LeftSection() {
     {
       name: 'Library',
       options: [
-        { label: 'Component', action: () => console.log('Image') },
-        { label: 'System', action: () => console.log('Table') }
+        {
+          label: 'Component',
+          action: () => console.log('Component'),
+          subLevel: (
+            <Box mt={2}>
+              <Components />
+            </Box>
+          )
+        },
+        {
+          label: 'System',
+          action: () => console.log('System'),
+          subLevel: (
+            <Box mt={2}>
+              {/* <TemplateList /> */}
+              <Components />
+            </Box>
+          )
+        }
       ]
     }
   ];
@@ -154,6 +167,13 @@ export default function LeftSection() {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedMenu(null);
+    setSubMenuAnchorEl(null);
+    setSelectedSubMenu(null);
+  };
+
+  const handleSubMenuOpen = (event, subIndex) => {
+    setSubMenuAnchorEl(event.currentTarget);
+    setSelectedSubMenu(subIndex);
   };
 
   const handleOpen = (name) => {
@@ -216,40 +236,49 @@ export default function LeftSection() {
                   {item.icon}
                 </Box>
               )}
-              <Menu
-                anchorEl={selectedMenu === index ? anchorEl : null}
+              <Popper
                 open={selectedMenu === index && Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left'
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left'
-                }}
-                MenuListProps={{
-                  onMouseLeave: handleMenuClose // Close menu when mouse leaves
-                }}
+                anchorEl={anchorEl}
+                placement="bottom-start"
+                disablePortal={false}
+                onMouseLeave={handleMenuClose}
                 sx={{
-                  pointerEvents: 'none'
-                }}
-                PaperProps={{
-                  sx: { pointerEvents: 'auto' } // Allows menu to respond to mouse events
+                  zIndex: 1200
                 }}
               >
-                {item.options.map((option, i) => (
-                  <MenuItem
-                    key={i}
-                    onClick={() => {
-                      option.action && option.action(); // Ensure option.action exists before invoking
-                      handleMenuClose();
-                    }}
-                  >
-                    {item.icon ? getImageLabel(option) : option.label}
-                  </MenuItem>
-                ))}
-              </Menu>
+                <Paper sx={{ pointerEvents: 'auto', background: '#E5E4E2', border: '1px solid', borderRadius: 0 }}>
+                  {item.options.map((option, i) => (
+                    <Box
+                      key={i}
+                      sx={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      onMouseEnter={option.subLevel ? (e) => handleSubMenuOpen(e, i) : undefined}
+                      onClick={() => {
+                        option.action && option.action(); // Ensure option.action exists before invoking
+                        handleMenuClose();
+                      }}
+                    >
+                      {item.icon ? getImageLabel(option) : option.label}
+                      {option.subLevel && (
+                        <Popper
+                          open={selectedSubMenu === i && Boolean(subMenuAnchorEl)}
+                          anchorEl={subMenuAnchorEl}
+                          placement="right-start"
+                          disablePortal={false}
+                          sx={{
+                            zIndex: 1300,
+                            width: '100px',
+                            mx: 2
+                          }}
+                        >
+                          <Paper sx={{ pointerEvents: 'auto', background: '#E5E4E2', border: '1px solid', borderRadius: 0 }}>
+                            {option.subLevel}
+                          </Paper>
+                        </Popper>
+                      )}
+                    </Box>
+                  ))}
+                </Paper>
+              </Popper>
             </div>
           </ClickAwayListener>
         </Box>

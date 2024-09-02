@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { styled } from '@mui/material/styles';
-import { Card, CardContent, Menu, MenuItem, Typography } from '@mui/material';
+import { Card, CardContent, ClickAwayListener, Menu, MenuItem, Paper, Popper, Typography } from '@mui/material';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -50,6 +50,8 @@ import ColorTheme from '../../../../store/ColorTheme';
 import { NavLink, useParams } from 'react-router-dom';
 import DraggableTreeItem from './DraggableItem';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
+import AddNewNode from '../../../../ui-component/Modal/AddNewNode';
+import AddNewComponentLibrary from '../../../../ui-component/Modal/AddNewComponentLibrary';
 
 const imageComponents = {
   AttackIcon,
@@ -120,36 +122,72 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 600,
     fontFamily: 'Inter',
     color: 'inherit'
+  },
+  paper: {
+    background: '#E5E4E2',
+    border: '1px solid',
+    borderRadius: 0
   }
 }));
-const options = {};
+
 const selector = (state) => ({
   addNode: state.addCyberNode,
   getModals: state.getModals,
   getModalById: state.getModalById,
   nodes: state.attackNodes,
-  modal: state.modal
+  modal: state.modal,
+  getSidebarNode: state.getSidebarNode
 });
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ modals }) => {
   const color = ColorTheme();
   const { id } = useParams();
-  const { addNode, getModals, nodes, modal, getModalById } = useStore(selector);
+  const { addNode, getModals, nodes, modal, getModalById, getSidebarNode } = useStore(selector);
   const classes = useStyles();
   const dispatch = useDispatch();
   const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
   const [name, setName] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
+  const [openNewComponent, setopenNewComponent] = useState(false);
+  const [openNewNode, setOpenNewNode] = useState(false);
   const [openCyberModal, setOpenCyberModal] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
+  const [selectedItem, setSelectedItem] = useState({});
   const openRight = Boolean(anchorEl);
 
   const isDragged = nodes.some(dragCheck);
   function dragCheck(node) {
     return node.dragged;
   }
+
+  const [anchorItemEl, setAnchorItemEl] = useState(null);
+  const [openItemRight, setOpenItemRight] = useState(false);
+
+  const handleNodes = (e, name) => {
+    if (name === 'Item Modal & Assets') {
+      e.preventDefault();
+      console.log('name', name);
+      setAnchorItemEl(e.currentTarget);
+      setOpenItemRight((prev) => !prev);
+    }
+  };
+
+  const handleOpen = (item) => {
+    setOpen(true);
+    setSelectedItem(item);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedItem({});
+  };
+
+  const handleCloseItem = () => {
+    setOpenItemRight(false);
+    setAnchorItemEl(null);
+  };
 
   useEffect(() => {
     getModalById(id);
@@ -222,10 +260,6 @@ const BrowserCard = ({ modals }) => {
     setAnchorEl(null);
   };
 
-  const handleNavigate = () => {
-    // navigate(`/Modals/${id}`, { replace: true });
-    dispatch(closeAll());
-  };
   const handleSwicthDsTable = (name) => {
     if (name.includes('Derivations')) {
       dispatch(DerivationTableOpen());
@@ -340,7 +374,7 @@ const BrowserCard = ({ modals }) => {
                   nodeId={scene?.id}
                   // label={getLabel('FolderIcon', scene?.name)}
                   label={getImageLabel(scene?.icon, scene?.name)}
-                  // onContextMenu={(e) => handleRightClick(e, scene?.name)}
+                  onContextMenu={(e) => handleNodes(e, scene?.name)}
                   sx={{
                     ml: -0.8,
                     '& .MuiTreeItem-label': {
@@ -539,20 +573,44 @@ const BrowserCard = ({ modals }) => {
               }}
               sx={{
                 '& .MuiPaper-root': {
-                  top: '22rem !important',
-                  left: '14rem !important'
+                  // top: '22rem !important',
+                  // left: '14rem !important'
                 }
               }}
             >
               <MenuItem onClick={() => openAddModal('Goals')}>Add Goals</MenuItem>
               <MenuItem onClick={() => openAddModal('Require')}>Add Requirements</MenuItem>
             </Menu>
+            <Popper
+              id="basic-popper"
+              open={openItemRight}
+              anchorEl={anchorItemEl}
+              placement="right"
+              sx={{ zIndex: 1400 }}
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [-10, -50] // Adjust these values as needed
+                  }
+                }
+              ]}
+            >
+              <ClickAwayListener onClickAway={handleCloseItem}>
+                <Paper className={classes.paper}>
+                  <MenuItem onClick={() => openAddModal('Node')}>Add Node</MenuItem>
+                  <MenuItem onClick={() => setopenNewComponent(true)}>Add Component</MenuItem>
+                </Paper>
+              </ClickAwayListener>
+            </Popper>
           </TreeView>
         </CardContent>
       </CardStyle>
 
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModals={getModals} name={subName} />
+      <AddNewNode open={openNewNode} handleClose={handleClose} getSidebarNode={getSidebarNode} selectedItem={selectedItem} />
+      <AddNewComponentLibrary open={openNewComponent} handleClose={() => setopenNewComponent(false)} />
     </>
   );
 };

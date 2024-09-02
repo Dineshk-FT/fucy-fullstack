@@ -19,6 +19,7 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
     selected.data.label = details?.name;
     selected.properties = details?.properties;
     selected.isAsset = details?.isAsset;
+    console.log('selected', selected);
     Nodestate[index] = selected;
     mod.template.nodes = Nodestate;
     // console.log('mod', mod);
@@ -51,7 +52,7 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
     Nodestate[index] = selected;
     setNodes(Nodestate);
   };
-  // console.log('nodes', nodes);
+  console.log('nodes', nodes);
   useEffect(() => {
     setDetails({
       ...details,

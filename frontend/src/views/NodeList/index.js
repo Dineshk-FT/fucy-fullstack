@@ -17,10 +17,16 @@ import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibr
 
 const useStyles = makeStyles(() => ({
   paper: {
-    color: '#1d97fc',
-    padding: '5px',
-    border: '1px solid #1e88e5',
-    boxShadow: '0px 0px 4px 2px #90caf9'
+    // color: '#1d97fc',
+    // padding: '5px',
+    // border: '1px solid #1e88e5',
+    // boxShadow: '0px 0px 4px 2px #90caf9'
+    pointerEvents: 'auto',
+    background: '#E5E4E2',
+    border: '1px solid',
+    borderRadius: 0,
+    marginLeft: '1.0rem',
+    zIndex: 1300
   }
 }));
 
@@ -103,7 +109,7 @@ const Components = () => {
             <Typography variant="h6" color={'#1d97fc'}>
               {item?.name}
             </Typography>
-            <Popper open={openModal && hoveredItem === item} anchorEl={anchorEl} placement="right" transition disablePortal>
+            <Popper open={openModal && hoveredItem === item} anchorEl={anchorEl} placement="right-start" transition disablePortal={false}>
               {({ TransitionProps }) => (
                 <Grow
                   {...TransitionProps}
@@ -119,11 +125,11 @@ const Components = () => {
                             {node?.data['label']}
                           </MenuItem>
                         ))}
-                        <MenuItem>
+                        {/* <MenuItem>
                           <Button onClick={() => handleOpen(item)} variant="outlined" fullWidth>
                             + Add
                           </Button>
-                        </MenuItem>
+                        </MenuItem> */}
                       </MenuList>
                     </ClickAwayListener>
                   </Paper>
@@ -132,7 +138,7 @@ const Components = () => {
             </Popper>
           </Box>
         ))}
-        <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer' }} onClick={() => setOpenAdd(true)} />
+        {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer' }} onClick={() => setOpenAdd(true)} /> */}
       </Box>
       <AddNewNode open={open} handleClose={handleClose} getSidebarNode={getSidebarNode} selectedItem={selectedItem} />
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />

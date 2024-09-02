@@ -72,7 +72,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           component="div"
           style={{
             // marginTop: '3rem',
-            height: 'calc(80vh - 88px)',
+            // height: 'calc(80vh - 88px)',
             paddingLeft: '16px',
             paddingRight: '16px',
             marginTop: '1.4rem'

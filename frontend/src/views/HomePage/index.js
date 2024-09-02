@@ -5,12 +5,14 @@ import CompliancePage from '../Landing/ComplianceSection';
 import WhyComponent from '../Landing/WhySection';
 import { useDispatch } from 'react-redux';
 import { changePage } from '../../store/slices/PageSectionSlice';
-import {changeCanvasPage} from '../../store/slices/CanvasSlice' 
+import { changeCanvasPage } from '../../store/slices/CanvasSlice';
+import { logout } from '../../store/slices/UserDetailsSlice';
 export default function HomePage() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(changePage('home'));
     dispatch(changeCanvasPage('home'));
+    dispatch(logout());
   }, []);
   return (
     <>
