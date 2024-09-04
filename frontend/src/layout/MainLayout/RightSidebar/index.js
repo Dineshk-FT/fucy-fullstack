@@ -27,12 +27,15 @@ export default function RightDrawer({
   state,
   drawerOpen,
   drawerClose,
-  selectedNode,
+  selectedElement,
   nodes,
+  edges,
+  setEdges,
   setNodes,
-  setSelectedNode,
+  setSelectedElement,
   modal,
-  updateModal
+  updateModal,
+  RefreshAPI
 }) {
   const [details, setDetails] = React.useState({
     name: '',
@@ -78,14 +81,17 @@ export default function RightDrawer({
         )}
         <Box sx={{ display: state ? 'block' : 'none', width: state ? 'inherit' : '0px', overflow: 'auto', marginTop: '1rem' }}>
           <EditContent
-            selectedNode={selectedNode}
+            selectedElement={selectedElement}
             nodes={nodes}
+            edges={edges}
+            setEdges={setEdges}
             setNodes={setNodes}
-            setSelectedNode={setSelectedNode}
+            setSelectedElement={setSelectedElement}
             details={details}
             setDetails={setDetails}
             modal={modal}
             updateModal={updateModal}
+            RefreshAPI={RefreshAPI}
           />
         </Box>
       </Box>

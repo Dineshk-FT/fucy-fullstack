@@ -51,8 +51,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
   onConnect: (connection) => {
+    // console.log('connection', connection);
+    const Connect = { ...connection };
+    Connect.data = { label: '' };
     set({
-      edges: addEdge(connection, get().edges)
+      edges: addEdge(Connect, get().edges)
     });
   },
   setNodes: (newNodes) => {

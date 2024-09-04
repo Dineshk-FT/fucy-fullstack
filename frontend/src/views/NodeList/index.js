@@ -105,7 +105,17 @@ const Components = () => {
             onMouseEnter={(e) => handleMouseEnter(e, item)}
             onMouseLeave={handleMouseLeave}
           >
-            <Avatar {...stringAvatar(item?.name)} variant="rounded" sx={{ width: 56, height: 56 }} />
+            <Avatar
+              {...stringAvatar(item?.name)}
+              variant="rounded"
+              sx={{
+                width: 56,
+                height: 56,
+                '&:hover': {
+                  backgroundColor: 'gray'
+                }
+              }}
+            />
             <Typography variant="h6" color={'#1d97fc'}>
               {item?.name}
             </Typography>

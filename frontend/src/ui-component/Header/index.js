@@ -36,9 +36,9 @@ const useStyles = makeStyles(() => ({
   }
 }));
 export default function Header({
-  selectedNode,
+  selectedElement,
   nodes,
-  setSelectedNode,
+  setSelectedElement,
   setNodes,
   horizontal,
   vertical,
@@ -51,7 +51,7 @@ export default function Header({
   const classes = useStyles();
   const { iconColor } = color;
   // console.log('nodes', nodes);
-  // console.log('selectedNode', selectedNode);
+  // console.log('selectedElement', selectedElement);
   const [highlight, setHighlight] = useState({
     bold: false,
     italic: false,
@@ -78,30 +78,30 @@ export default function Header({
   useEffect(() => {
     setStyles({
       ...styles,
-      backgroundColor: selectedNode?.data?.style?.backgroundColor,
-      fontSize: number(selectedNode?.data?.style?.fontSize) ?? 12,
-      fontFamily: selectedNode?.data?.style?.fontFamily ?? 'Inter',
-      fontStyle: selectedNode?.data?.style?.fontStyle ?? 'normal',
-      textAlign: selectedNode?.data?.style?.textAlign ?? 'center',
-      color: selectedNode?.data?.style?.color ?? 'white',
-      fontWeight: selectedNode?.data?.style?.fontWeight ?? 500,
-      textDecoration: selectedNode?.data?.style?.textDecoration ?? 'none',
-      borderColor: selectedNode?.data?.style?.borderColor ?? 'none',
-      borderWidth: selectedNode?.data?.style?.borderWidth ?? '2px',
-      borderStyle: selectedNode?.data?.style?.borderStyle ?? 'solid'
+      backgroundColor: selectedElement?.data?.style?.backgroundColor,
+      fontSize: number(selectedElement?.data?.style?.fontSize) ?? 12,
+      fontFamily: selectedElement?.data?.style?.fontFamily ?? 'Inter',
+      fontStyle: selectedElement?.data?.style?.fontStyle ?? 'normal',
+      textAlign: selectedElement?.data?.style?.textAlign ?? 'center',
+      color: selectedElement?.data?.style?.color ?? 'white',
+      fontWeight: selectedElement?.data?.style?.fontWeight ?? 500,
+      textDecoration: selectedElement?.data?.style?.textDecoration ?? 'none',
+      borderColor: selectedElement?.data?.style?.borderColor ?? 'none',
+      borderWidth: selectedElement?.data?.style?.borderWidth ?? '2px',
+      borderStyle: selectedElement?.data?.style?.borderStyle ?? 'solid'
     });
     setHighlight({
       ...highlight,
-      bold: selectedNode?.data?.style?.fontSize === 700 ? true : false,
-      italic: selectedNode?.data?.style?.fontStyle === 'italic' ? true : false,
-      decor: selectedNode?.data?.style?.textDecoration === 'underline' ? true : false
+      bold: selectedElement?.data?.style?.fontSize === 700 ? true : false,
+      italic: selectedElement?.data?.style?.fontStyle === 'italic' ? true : false,
+      decor: selectedElement?.data?.style?.textDecoration === 'underline' ? true : false
     });
-  }, [selectedNode]);
+  }, [selectedElement]);
   // console.log('style', styles)
 
   const handleFontStyle = (name) => {
     const list = [...nodes];
-    const nodeIndex = list.findIndex((nd) => nd?.id === selectedNode?.id);
+    const nodeIndex = list.findIndex((nd) => nd?.id === selectedElement?.id);
 
     if (nodeIndex === -1) return; // Exit if no matching node is found
 
@@ -133,7 +133,7 @@ export default function Header({
       }));
     }
 
-    setSelectedNode(node);
+    setSelectedElement(node);
     list[nodeIndex] = node;
     setNodes(list);
   };
@@ -141,20 +141,20 @@ export default function Header({
   // console.log('fontSize', typeof styles?.fontSize);
   const handleFontSizeChange = (event) => {
     const list = [...nodes];
-    const node = list?.find((nd) => nd?.id === selectedNode?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedNode?.id);
+    const node = list?.find((nd) => nd?.id === selectedElement?.id);
+    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
     setStyles((state) => ({ ...state, fontSize: parseInt(event.target.value, 10) }));
     style.fontSize = event.target.value;
-    setSelectedNode(node);
+    setSelectedElement(node);
     list[Index] = node;
     setNodes(list);
   };
 
   const changeFontSize = (name) => {
     const list = [...nodes];
-    const node = list?.find((nd) => nd?.id === selectedNode?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedNode?.id);
+    const node = list?.find((nd) => nd?.id === selectedElement?.id);
+    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
     if (name === 'inc') {
       setStyles((state) => ({ ...state, fontSize: state.fontSize + 2 }));
@@ -163,7 +163,7 @@ export default function Header({
       setStyles((state) => ({ ...state, fontSize: state.fontSize - 2 }));
       style.fontSize = `${styles.fontSize - 2}px`;
     }
-    setSelectedNode(node);
+    setSelectedElement(node);
     list[Index] = node;
     setNodes(list);
   };
@@ -174,8 +174,8 @@ export default function Header({
     // console.log('event', event.target.value)
     // console.log('name', name)
     const list = [...nodes];
-    const node = list?.find((nd) => nd?.id === selectedNode?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedNode?.id);
+    const node = list?.find((nd) => nd?.id === selectedElement?.id);
+    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
     if (name === 'font') {
       setStyles((state) => ({ ...state, fontFamily: event.target.value }));
@@ -190,7 +190,7 @@ export default function Header({
       setStyles({ ...styles, color: event.target.value });
       style.color = event.target.value;
     }
-    setSelectedNode(node);
+    setSelectedElement(node);
     list[Index] = node;
     setNodes(list);
   };

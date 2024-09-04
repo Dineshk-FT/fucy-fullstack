@@ -164,7 +164,7 @@ export default function MainCanvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
-  const [selectedNode, setSelectedNode] = useState({});
+  const [selectedElement, setSelectedElement] = useState({});
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState('');
@@ -398,6 +398,11 @@ export default function MainCanvas() {
     [reactFlowInstance]
   );
 
+  const RefreshAPI = () => {
+    getModalById(id);
+    getModals();
+  };
+
   const handleClose = () => {
     setOpenTemplate(false);
   };
@@ -614,7 +619,7 @@ export default function MainCanvas() {
             setMessage('Saved Successfully');
             setSuccess(true);
             handleClose();
-            getModals();
+            RefreshAPI();
           }, 500);
         }
       })
@@ -637,7 +642,7 @@ export default function MainCanvas() {
     // console.log('node', node);
     e.preventDefault();
     if (node.type !== 'group') {
-      setSelectedNode(node);
+      setSelectedElement(node);
       toggleDrawerOpen('MainCanvasTab');
       dispatch(setProperties(node?.properties));
     }
@@ -653,7 +658,7 @@ export default function MainCanvas() {
       }
     }
     if (node.type !== 'group') {
-      setSelectedNode(node);
+      setSelectedElement(node);
       dispatch(setProperties(node?.properties));
 
       if (!grp.length) {
@@ -696,10 +701,10 @@ export default function MainCanvas() {
     <>
       <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}>
         <Header
-          selectedNode={selectedNode}
+          selectedElement={selectedElement}
           nodes={nodes}
           setNodes={setNodes}
-          setSelectedNode={setSelectedNode}
+          setSelectedElement={setSelectedElement}
           horizontal={() => onLayout({ direction: 'RIGHT' })}
           vertical={() => onLayout({ direction: 'DOWN' })}
           handleClear={handleClear}
@@ -730,6 +735,7 @@ export default function MainCanvas() {
             onNodeClick={handleSelectNode}
             // onContextMenu={createGroup}
             onNodeContextMenu={handleSidebarOpen}
+            // onEdgeContextMenu={handleSidebarOpen}
           >
             <Controls />
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
@@ -739,12 +745,15 @@ export default function MainCanvas() {
               state={isRightDrawerOpen}
               drawerOpen={toggleDrawerOpen}
               drawerClose={toggleDrawerClose}
-              selectedNode={selectedNode}
-              setSelectedNode={setSelectedNode}
+              selectedElement={selectedElement}
+              setSelectedElement={setSelectedElement}
               nodes={nodes}
+              edges={edges}
+              setEdges={setEdges}
               setNodes={setNodes}
               modal={modal}
               updateModal={updateModal}
+              RefreshAPI={RefreshAPI}
             />
           </ReactFlow>
         </ReactFlowProvider>

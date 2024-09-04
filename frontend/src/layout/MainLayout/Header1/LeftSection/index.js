@@ -250,7 +250,15 @@ export default function LeftSection() {
                   {item.options.map((option, i) => (
                     <Box
                       key={i}
-                      sx={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      sx={{
+                        padding: '8px 16px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.08)'
+                        }
+                      }}
                       onMouseEnter={option.subLevel ? (e) => handleSubMenuOpen(e, i) : undefined}
                       onClick={() => {
                         option.action && option.action(); // Ensure option.action exists before invoking

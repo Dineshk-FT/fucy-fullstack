@@ -1,35 +1,66 @@
+/*eslint-disable*/
 import React, { useEffect, useState } from 'react';
 import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
+const notify = (message, status) => toast[status](message);
 
-const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, setDetails, modal, updateModal }) => {
+const EditContent = ({
+  selectedElement,
+  nodes,
+  setNodes,
+  edges,
+  setEdges,
+  setSelectedElement,
+  details,
+  setDetails,
+  modal,
+  updateModal,
+  RefreshAPI
+}) => {
   const [value, setValue] = useState('1');
 
-  // console.log('selectedNode', selectedNode);
+  // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {
     const mod = { ...modal };
     const Nodestate = [...nodes];
-    const selected = nodes?.find((nd) => nd?.id === selectedNode?.id);
-    const index = nodes?.findIndex((nd) => nd?.id === selectedNode?.id);
-    selected.data.label = details?.name;
-    selected.properties = details?.properties;
-    selected.isAsset = details?.isAsset;
-    console.log('selected', selected);
-    Nodestate[index] = selected;
-    mod.template.nodes = Nodestate;
+    const edgeState = [...edges];
+    if (selectedElement.target) {
+      // console.log('selectedElement', selectedElement);
+      const selected = edges?.find((nd) => nd?.id === selectedElement?.id);
+      const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
+      selected.data.label = details?.name;
+      selected.properties = details?.properties;
+      console.log('selected', selected);
+      edgeState[index] = selected;
+      mod.template.edges = edgeState;
+      console.log('edgeState', edgeState);
+    } else {
+      const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
+      const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
+      selected.data.label = details?.name;
+      selected.properties = details?.properties;
+      selected.isAsset = details?.isAsset;
+      // console.log('selected', selected);
+      Nodestate[index] = selected;
+      mod.template.nodes = Nodestate;
+    }
     // console.log('mod', mod);
-    updateModal(mod);
-    // .then((res) => {
-    //   console.log('res', res);
-    // })
-    // .catch((err) => {
-    //   console.log('err', err);
-    // });
+    updateModal(mod)
+      .then((res) => {
+        // console.log('res', res);
+        notify('Updated Successfully', 'success');
+        RefreshAPI();
+      })
+      .catch((err) => {
+        console.log('err', err);
+        notify('Something went wrong', 'error');
+      });
   };
   const handleDelete = (valueToDelete) => () => {
     setDetails((prevDetails) => ({
@@ -43,24 +74,30 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
   };
 
   const handleChecked = (event) => {
-    // console.log('selectedNode', selectedNode);
-
     const Nodestate = [...nodes];
-    const selected = nodes?.find((nd) => nd?.id === selectedNode?.id);
-    const index = nodes?.findIndex((nd) => nd?.id === selectedNode?.id);
-    selected.isAsset = event.target.checked;
-    Nodestate[index] = selected;
-    setNodes(Nodestate);
+    const edgeState = [...edges];
+    if (selectedElement.target) {
+      const selected = edges?.find((nd) => nd?.id === selectedElement?.id);
+      const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
+      edgeState[index] = selected;
+      setEdges(Nodestate);
+    } else {
+      const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
+      const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
+      selected.isAsset = event.target.checked;
+      Nodestate[index] = selected;
+      setNodes(Nodestate);
+    }
   };
-  console.log('nodes', nodes);
+  // console.log('nodes', nodes);
   useEffect(() => {
     setDetails({
       ...details,
-      name: selectedNode?.data?.label ?? '',
-      properties: selectedNode?.properties ?? []
-      // bgColor: selectedNode?.data?.style?.backgroundColor ? selectedNode?.data?.style?.backgroundColor : '#000000'
+      name: selectedElement?.data?.label ?? '',
+      properties: selectedElement?.properties ?? []
+      // bgColor: selectedElement?.data?.style?.backgroundColor ? selectedElement?.data?.style?.backgroundColor : '#000000'
     });
-  }, [selectedNode]);
+  }, [selectedElement]);
 
   // console.log('details', details)
 
@@ -72,23 +109,29 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
   };
 
   const handleStyle = (e, name) => {
-    // console.log('name', name)
-    // console.log('e', e.target.value)
     const list = [...nodes];
-    const node = list?.find((nd) => nd?.id === selectedNode?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedNode?.id);
-    // const {style} = node.data;
-    if (name === 'name') {
-      setDetails({ ...details, name: e.target.value });
-      node.data.label = e.target.value;
+    const edgeState = [...edges];
+    if (selectedElement.target) {
+      const edge = edgeState?.find((nd) => nd?.id === selectedElement?.id);
+      const Index = edgeState?.findIndex((nd) => nd?.id === selectedElement?.id);
+      if (name === 'name') {
+        setDetails({ ...details, name: e.target.value });
+        edge.data.label = e.target.value;
+      }
+      setSelectedElement(edge);
+      edgeState[Index] = edge;
+      setEdges(edgeState);
+    } else {
+      const node = list?.find((nd) => nd?.id === selectedElement?.id);
+      const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
+      if (name === 'name') {
+        setDetails({ ...details, name: e.target.value });
+        node.data.label = e.target.value;
+      }
+      setSelectedElement(node);
+      list[Index] = node;
+      setNodes(list);
     }
-    // else {
-    //     setDetails({ ...details, bgColor: e.target.value });
-    //     style.backgroundColor = e.target.value;
-    // }
-    setSelectedNode(node);
-    list[Index] = node;
-    setNodes(list);
   };
 
   // console.log('details', details);
@@ -137,7 +180,9 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
               }
               renderInput={(params) => <TextField {...params} variant="outlined" />}
             />
-            <FormControlLabel control={<Checkbox onChange={handleChecked} checked={selectedNode?.isAsset} />} label="Asset" />
+            {!selectedElement?.target && (
+              <FormControlLabel control={<Checkbox onChange={handleChecked} checked={selectedElement?.isAsset} />} label="Asset" />
+            )}
             <Button variant="outlined" onClick={handleUpdate}>
               Update
             </Button>
@@ -146,6 +191,7 @@ const EditContent = ({ selectedNode, nodes, setNodes, setSelectedNode, details, 
         <TabPanel value="2">Diagram</TabPanel>
         <TabPanel value="3">Style</TabPanel>
       </TabContext>
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 };
