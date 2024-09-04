@@ -43,7 +43,7 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem }) => {
+const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) => {
   const theme = useTheme();
   const [newNode, setNewNode] = useState({
     nodeName: '',
@@ -56,6 +56,7 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem }) => {
   const [message, setMessage] = React.useState('');
   const { nodeState, updateNode, createNode } = useStore(selector);
 
+  // console.log('modal', modal);
   //Name & type for the new Node
   const handleChange = (event) => {
     const {

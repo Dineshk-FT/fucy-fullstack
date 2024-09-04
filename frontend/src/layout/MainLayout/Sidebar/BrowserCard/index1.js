@@ -51,7 +51,7 @@ import { NavLink, useParams } from 'react-router-dom';
 import DraggableTreeItem from './DraggableItem';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import AddNewNode from '../../../../ui-component/Modal/AddNewNode';
-import AddNewComponentLibrary from '../../../../ui-component/Modal/AddNewComponentLibrary';
+import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 
 const imageComponents = {
   AttackIcon,
@@ -149,12 +149,13 @@ const BrowserCard = ({ modals }) => {
   const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
   const [name, setName] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
-  const [openNewComponent, setopenNewComponent] = useState(false);
+  const [openNodelist, setOpenNodelist] = useState(false);
   const [openNewNode, setOpenNewNode] = useState(false);
   const [openCyberModal, setOpenCyberModal] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
   const [selectedItem, setSelectedItem] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
   const openRight = Boolean(anchorEl);
 
   const isDragged = nodes.some(dragCheck);
@@ -168,7 +169,7 @@ const BrowserCard = ({ modals }) => {
   const handleNodes = (e, name) => {
     if (name === 'Item Modal & Assets') {
       e.preventDefault();
-      console.log('name', name);
+      // console.log('name', name);
       setAnchorItemEl(e.currentTarget);
       setOpenItemRight((prev) => !prev);
     }
@@ -343,6 +344,15 @@ const BrowserCard = ({ modals }) => {
     setOpenAttackModal(false);
   };
 
+  const handleAddNewNode = () => {
+    setOpenNewNode(true);
+    setOpenItemRight(false);
+  };
+
+  const handleOpenSelectNode = () => {
+    setOpenNodelist(true);
+    setOpenItemRight(false);
+  };
   // console.log('ModalDetails', ModalDetails);
   return (
     <>
@@ -598,8 +608,8 @@ const BrowserCard = ({ modals }) => {
             >
               <ClickAwayListener onClickAway={handleCloseItem}>
                 <Paper className={classes.paper}>
-                  <MenuItem onClick={() => openAddModal('Node')}>Add Node</MenuItem>
-                  <MenuItem onClick={() => setopenNewComponent(true)}>Add Component</MenuItem>
+                  <MenuItem onClick={handleAddNewNode}>create & Add Node</MenuItem>
+                  <MenuItem onClick={handleOpenSelectNode}>Add Node</MenuItem>
                 </Paper>
               </ClickAwayListener>
             </Popper>
@@ -609,8 +619,15 @@ const BrowserCard = ({ modals }) => {
 
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModals={getModals} name={subName} />
-      <AddNewNode open={openNewNode} handleClose={handleClose} getSidebarNode={getSidebarNode} selectedItem={selectedItem} />
-      <AddNewComponentLibrary open={openNewComponent} handleClose={() => setopenNewComponent(false)} />
+      <AddNewNode
+        open={openNewNode}
+        handleClose={() => setOpenNewNode(false)}
+        getSidebarNode={getSidebarNode}
+        selectedItem={selectedItem}
+        modal={modal}
+        // id={selectedId}
+      />
+      <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
     </>
   );
 };
