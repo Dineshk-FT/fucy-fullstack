@@ -32,8 +32,8 @@ const useStyles = makeStyles(() => ({
 
 const selector = (state) => ({
   sidebarNodes: state.sidebarNodes,
-  getSidebarNode: state.getSidebarNode,
-  deleteNode: state.deleteNode
+  getSidebarNode: state.getSidebarNode
+  // deleteNode: state.deleteNode
   // getComponent: state.getComponent
 });
 

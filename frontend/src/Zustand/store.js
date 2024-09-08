@@ -459,10 +459,12 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   createModal: async (newModal) => {
-    // console.log('newModal', newModal);
+    console.log('newModal', newModal);
     const FormData = require('form-data');
     let data = new FormData();
     data.append('name', newModal?.name);
+    data.append('scenarios', JSON.stringify(newModal?.scenarios));
+    console.log('data', data);
 
     try {
       const URL = `${configuration.backendUrl}add/models`;
@@ -470,6 +472,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         ...createHeaders(),
         maxRedirects: 5
       });
+      console.log('response', response);
       return response.data;
     } catch (err) {
       console.log('err', err);

@@ -8,15 +8,20 @@ const RequireAuth = ({ children }) => {
 
   useEffect(() => {
     const isAuthenticated = checkIfUserIsAuthenticated();
+    console.log('first', window.location.pathname);
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated && window.location.pathname === '/home') {
+      console.log(1);
+      navigate('/home');
+    }
+
+    if (!isAuthenticated && window.location.pathname !== '/home') {
+      console.log(2);
       navigate('/login');
     }
   }, [navigate]);
 
   const checkIfUserIsAuthenticated = () => {
-    // const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    // console.log('isLoggedIn', isLoggedIn)
     return isLoggedIn;
   };
 

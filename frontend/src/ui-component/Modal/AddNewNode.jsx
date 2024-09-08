@@ -1,21 +1,25 @@
 /* eslint-disable */
 import React, { useState } from 'react';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Button } from '@mui/material';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import OutlinedInput from '@mui/material/OutlinedInput';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
-import Chip from '@mui/material/Chip';
+import {
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  TextField,
+  Box,
+  OutlinedInput,
+  InputLabel,
+  MenuItem,
+  FormControl,
+  Select,
+  Chip
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
 import AlertMessage from '../Alert';
+import { updatedModalState } from '../../utils/Constraints';
+import { v4 as uid } from 'uuid';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -31,10 +35,11 @@ const MenuProps = {
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
-  nodeState: state.sidebarNodes,
-  updateNode: state.updateSidebarNodes,
-  // create: state.createComponent,
-  createNode: state.createNode
+  updateModal: state.updateModal,
+  createNode: state.createNode,
+  setNodes: state.setNodes,
+  nodes: state.nodes,
+  edges: state.edges
 });
 
 function getStyles(name, nodes, theme) {
@@ -49,12 +54,12 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
     nodeName: '',
     type: '',
     properties: [],
-    bgColor: '#dadada'
+    bgColor: ''
   });
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [message, setMessage] = React.useState('');
-  const { nodeState, updateNode, createNode } = useStore(selector);
+  const { createNode, updateModal, setNodes, nodes, edges } = useStore(selector);
 
   // console.log('modal', modal);
   //Name & type for the new Node
@@ -70,15 +75,34 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
     }
   };
 
+  // console.log('nodes', nodes);
+
   // For Adding new Node
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataNode = {
-      data: { label: newNode.nodeName, bgColor: newNode.bgColor },
+      data: {
+        id: uid(),
+        label: newNode.nodeName,
+        style: {
+          backgroundColor: '#dadada',
+          fontSize: '12px',
+          fontFamily: 'Inter',
+          fontStyle: 'normal',
+          textAlign: 'center',
+          color: 'black',
+          fontWeight: 500,
+          textDecoration: 'none',
+          borderColor: 'gray',
+          borderWidth: '2px',
+          borderStyle: 'solid'
+        }
+      },
       type: newNode.type,
       properties: newNode.properties,
       width: 120,
-      height: 50
+      height: 50,
+      isAsset: false
     };
     const details = {
       id: selectedItem?._id,
@@ -87,25 +111,53 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
     // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
     // selectedsection?.nodes?.push(dataNode);
     // console.log('selectedsection', selectedsection);
-    createNode(details)
-      // updateNode(selectedsection)
-      .then((res) => {
-        // console.log('res', res);
-        if (res.data) {
-          setTimeout(() => {
-            setOpenMsg(true);
-            setMessage('Node created Successfully');
-            setSuccess(true);
-            getSidebarNode();
-          }, []);
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        setOpenMsg(true);
-        setSuccess(false);
-        setMessage('Something went wrong');
-      });
+    if (modal) {
+      const Details = {
+        ...dataNode,
+        position: { x: 495, y: 250 }
+      };
+      const list = [...nodes, Details];
+      setNodes(list);
+      const mod = { ...modal };
+      updateModal(updatedModalState(mod, list, edges))
+        .then((res) => {
+          console.log('res', res);
+          if (res.data) {
+            setTimeout(() => {
+              setOpenMsg(true);
+              setMessage('Node created Successfully');
+              setSuccess(true);
+              getSidebarNode();
+            }, []);
+          }
+        })
+        .catch((err) => {
+          console.log('err', err);
+          setOpenMsg(true);
+          setSuccess(false);
+          setMessage('Something went wrong');
+        });
+    } else {
+      createNode(details)
+        // updateNode(selectedsection)
+        .then((res) => {
+          // console.log('res', res);
+          if (res.data) {
+            setTimeout(() => {
+              setOpenMsg(true);
+              setMessage('Node created Successfully');
+              setSuccess(true);
+              getSidebarNode();
+            }, []);
+          }
+        })
+        .catch((err) => {
+          console.log('err', err);
+          setOpenMsg(true);
+          setSuccess(false);
+          setMessage('Something went wrong');
+        });
+    }
 
     handleClose();
     setNewNode({

@@ -53,7 +53,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const notify = (message, status) => toast[status](message);
 
   // State to track the width of the ResizableBox
-  const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 240 : 60);
+  const [sidebarWidth, setSidebarWidth] = useState(matchUpMd && drawerOpen ? 400 : 0);
 
   useEffect(() => {
     fetchAPI();
@@ -71,7 +71,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
     if (drawerOpen) {
       setSidebarWidth(0); // Set width to 0 when closing
     } else {
-      setSidebarWidth(240); // Set default width when opening (you can adjust the value as needed)
+      setSidebarWidth(400); // Set default width when opening (you can adjust the value as needed)
     }
     drawerToggle();
   };

@@ -15,6 +15,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import { v4 as uid } from 'uuid';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -62,16 +63,156 @@ export default function AddModal({ open, handleClose, getModals }) {
   // };
 
   const handleCreate = () => {
+    const scenarios = [
+      {
+        id: uid(),
+        name: 'Item Modal & Assets',
+        icon: 'ItemIcon',
+        Details: []
+      },
+      {
+        id: uid(),
+        name: 'Damage Scenarios Identification and Impact Ratings',
+        icon: 'DamageIcon',
+        subs: [
+          {
+            id: uid(),
+            name: 'Damage Scenarios Derivations',
+            Details: []
+          },
+          {
+            id: uid(),
+            name: 'Damage Scenarios - Collection & Impact Ratings',
+            scenes: [],
+            Details: []
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'Threat Scenarios Identification',
+        icon: 'ThreatIcon',
+        subs: [
+          {
+            id: uid(),
+            name: 'Threat Scenarios',
+            Details: [],
+            losses: []
+          },
+          {
+            id: uid(),
+            name: 'Derived Threat Scenarios',
+            scenes: []
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'Attack Path Analysis and Attack Feasability Rating',
+        icon: 'AttackIcon',
+        subs: [
+          {
+            id: uid(),
+            name: 'Attack',
+            scenes: []
+          },
+          {
+            id: uid(),
+            name: 'Attack Trees',
+            scenes: []
+          },
+          {
+            id: uid(),
+            name: 'Vulnerability Analysis',
+            scenes: []
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'CyberSecurity Goals, Claims and Requirements',
+        icon: 'CybersecurityIcon',
+        subs: [
+          {
+            id: uid(),
+            name: 'CyberSecurity Goals and Requirements',
+            subs: [
+              {
+                id: uid(),
+                name: 'CyberSecurity Goals',
+                scenes: []
+              },
+              {
+                id: uid(),
+                name: 'CyberSecurity Requirements',
+                scenes: []
+              }
+            ]
+          },
+          {
+            id: uid(),
+            name: 'CyberSecurity Controls',
+            scenes: []
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'System Design',
+        icon: 'SystemIcon',
+        subs: [
+          {
+            id: uid(),
+            name: 'Hardware Models'
+          },
+          {
+            id: uid(),
+            name: 'Software Models'
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'Catalogs',
+        icon: 'CatalogIcon',
+        subs: [
+          {
+            name: 'UNICE R.155 Annex 5(WP.29)',
+            scenes: []
+          }
+        ]
+      },
+      {
+        id: uid(),
+        name: 'Risk Determination and Risk Treatment Decision',
+        icon: 'RiskIcon'
+      },
+      {
+        id: uid(),
+        name: 'Documents',
+        icon: 'DocumentIcon'
+      },
+      {
+        id: uid(),
+        name: 'Reporting',
+        icon: 'ReportIcon',
+        scenes: []
+      },
+      {
+        id: uid(),
+        name: 'Layouts',
+        icon: 'LayoutIcon',
+        scenes: []
+      }
+    ];
     const newModal = {
-      ...templateDetails
+      ...templateDetails,
+      scenarios: scenarios
     };
 
     create(newModal)
       .then((res) => {
         if (res) {
-          // console.log('res in create', res);
-          // const { id } = res.data;
-          // dispatch(storeCurrentId(id));
           setTimeout(() => {
             notify(res.message, 'success');
             navigate(`/Models/${res?.model_id}`);

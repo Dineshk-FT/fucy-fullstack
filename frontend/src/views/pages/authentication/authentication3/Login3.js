@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -34,9 +34,9 @@ const Login = () => {
                     {/* <Link to="#" style={{ textDecoration: 'none' }}>
                       <Logo />
                     </Link> */}
-                    <Typography component="h4" sx={{ fontSize: 24, fontWeight: 600, color: '#5FBDFF' }} mt={1}>
+                    <NavLink to="/home" style={{ fontSize: 24, fontWeight: 600, color: '#5FBDFF', textDecoration: 'none' }} mt={1}>
                       FUCY TECH
-                    </Typography>
+                    </NavLink>
                   </Grid>
                   <Grid item xs={12}>
                     <Grid container direction={matchDownSM ? 'column-reverse' : 'row'} alignItems="center" justifyContent="center">

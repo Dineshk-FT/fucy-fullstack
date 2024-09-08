@@ -619,14 +619,16 @@ const BrowserCard = ({ modals }) => {
 
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModals={getModals} name={subName} />
-      <AddNewNode
-        open={openNewNode}
-        handleClose={() => setOpenNewNode(false)}
-        getSidebarNode={getSidebarNode}
-        selectedItem={selectedItem}
-        modal={modal}
-        // id={selectedId}
-      />
+      {openNewNode && (
+        <AddNewNode
+          open={openNewNode}
+          handleClose={() => setOpenNewNode(false)}
+          getSidebarNode={getSidebarNode}
+          selectedItem={selectedItem}
+          modal={modal}
+          // id={selectedId}
+        />
+      )}
       <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
     </>
   );

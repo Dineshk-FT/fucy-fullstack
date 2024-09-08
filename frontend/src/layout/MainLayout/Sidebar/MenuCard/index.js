@@ -1,23 +1,22 @@
-
-
 // material-ui
-import { styled
-    // , useTheme 
+import {
+  styled
+  // , useTheme
 } from '@mui/material/styles';
 import {
-    // Avatar,
-    Card,
-    CardContent,
-    Typography,
-    // Grid,
-    // LinearProgress,
-    List,
-    ListItem,
-    // ListItemAvatar,
-    ListItemText,
-    // linearProgressClasses
+  // Avatar,
+  Card,
+  CardContent,
+  Typography,
+  // Grid,
+  // LinearProgress,
+  List,
+  ListItem,
+  // ListItemAvatar,
+  ListItemText
+  // linearProgressClasses
 } from '@mui/material';
-import  ColorTheme  from '../../../../store/ColorTheme';
+import ColorTheme from '../../../../store/ColorTheme';
 
 // assets
 // import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
@@ -35,33 +34,33 @@ import  ColorTheme  from '../../../../store/ColorTheme';
 //     }
 // }));
 
-const CardStyle = styled(Card)((
-    // { theme }
-    ) => ({
+const CardStyle = styled(Card)(() =>
+  // { theme }
+  ({
     // background: theme.palette.primary.light,
     // border:'1px solid',
-    boxShadow:'inset 0px 0px 7px gray',
+    boxShadow: 'inset 0px 0px 7px gray',
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height:'20vh',
+    height: '20vh',
     '&:after': {
-        content: '""',
-        position: 'absolute',
-        // width: '157px',
-        // height: '157px',
-        // background: theme.palette.primary[200],
-        borderRadius: '50%',
-        top: '-105px',
-        right: '-96px'
+      content: '""',
+      position: 'absolute',
+      // width: '157px',
+      // height: '157px',
+      // background: theme.palette.primary[200],
+      borderRadius: '50%',
+      top: '-105px',
+      right: '-96px'
     }
-}));
+  })
+);
 
 // ==============================|| PROGRESS BAR WITH LABEL ||============================== //
 
 // function LinearProgressWithLabel({ value, ...others }) {
 //     const theme = useTheme();
-
 
 //     return (
 //         <Grid container direction="column" spacing={1} sx={{ mt: 1.5 }}>
@@ -86,38 +85,38 @@ const CardStyle = styled(Card)((
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const MenuCard = ({properties}) => {
-// console.log('ColorTheme', ColorTheme())
+const MenuCard = ({ properties }) => {
+  const color = ColorTheme();
 
-    // console.log('properties here', properties)
-    // const theme = useTheme();
+  // console.log('properties here', properties)
+  // const theme = useTheme();
 
-    return (
-        <>
-            <Typography variant='h4' sx={{color:ColorTheme().tabContentClr}}>Properties </Typography>
-        <CardStyle sx={{backgroundColor:ColorTheme()?.sidebarInnerBG}}>
-            <CardContent sx={{ p: 2 }}>
-                
-                <List sx={{ p: 0, m: 0 }}>
-                    <ListItem alignItems="flex-start" disableGutters sx={{ p: 0,display:'flex',flexDirection:'column' }}>
-               {properties?.map((item,i)=>(
-
-                        <ListItemText
-                        key={i}
-                            sx={{ mt: 0 }}
-                            primary={
-                                <Typography variant="subtitle1" sx={{ color: ColorTheme()?.sidebarContent }}>
-                               {i+1}. {item}
-                                </Typography>
-                            }
-                        />
-               ))}
-                    </ListItem>
-                </List>
-            </CardContent>
-        </CardStyle>
-        </>
-    );
+  return (
+    <>
+      <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
+        Properties{' '}
+      </Typography>
+      <CardStyle sx={{ backgroundColor: color?.sidebarInnerBG }}>
+        <CardContent sx={{ p: 2 }}>
+          <List sx={{ p: 0, m: 0 }}>
+            <ListItem alignItems="flex-start" disableGutters sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+              {properties?.map((item, i) => (
+                <ListItemText
+                  key={i}
+                  sx={{ mt: 0 }}
+                  primary={
+                    <Typography variant="subtitle1" sx={{ color: color?.sidebarContent }}>
+                      {i + 1}. {item}
+                    </Typography>
+                  }
+                />
+              ))}
+            </ListItem>
+          </List>
+        </CardContent>
+      </CardStyle>
+    </>
+  );
 };
 
 export default MenuCard;

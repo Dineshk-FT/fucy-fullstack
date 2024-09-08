@@ -37,6 +37,7 @@ export default function RightDrawer({
   updateModal,
   RefreshAPI
 }) {
+  const color = ColorTheme();
   const [details, setDetails] = React.useState({
     name: '',
     properties: []
@@ -72,11 +73,11 @@ export default function RightDrawer({
       >
         {!state ? (
           <Box onClick={drawerOpen} className={classes.arrow}>
-            <ArrowSquareLeft size="20px" color={ColorTheme()?.iconColor} />
+            <ArrowSquareLeft size="20px" color={color?.iconColor} />
           </Box>
         ) : (
           <Box onClick={handleClose} className={classes.arrow}>
-            <ArrowSquareRight size="20px" color={ColorTheme()?.iconColor} />
+            <ArrowSquareRight size="20px" color={color?.iconColor} />
           </Box>
         )}
         <Box sx={{ display: state ? 'block' : 'none', width: state ? 'inherit' : '0px', overflow: 'auto', marginTop: '1rem' }}>

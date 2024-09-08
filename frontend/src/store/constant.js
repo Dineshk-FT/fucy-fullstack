@@ -6,7 +6,7 @@ export const sidebarWidth = 400;
 export const appDrawerWidth = 320;
 export const navbarHeight = 50;
 export const height = '93svh';
-//  export const colorTheme = {
+//  export const ColorTheme = {
 //     navBG:'#a2a8d3' ,
 //     tabBG:'#e7eaf6',
 //     sidebarBG:'#e7eaf6',

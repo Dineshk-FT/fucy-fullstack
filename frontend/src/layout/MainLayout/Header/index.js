@@ -20,71 +20,72 @@ import { useNavigate } from 'react-router';
 // ==============================|| MAIN NAVBAR / HEADER ||============================== //
 
 const Header = ({ handleLeftDrawerToggle }) => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const handleClick=()=>{
-        // console.log('clicked')
-        dispatch(changeCanvasPage('home'));
-        navigate('/home', { replace: true });
-        // setTimeout(() => {
-            // window.location.href = '/home';
-        // }, 200);
-    }
+  const color = ColorTheme();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const handleClick = () => {
+    // console.log('clicked')
+    dispatch(changeCanvasPage('home'));
+    navigate('/home', { replace: true });
+    // setTimeout(() => {
+    // window.location.href = '/home';
+    // }, 200);
+  };
 
-    return (
-        <>
-            {/* logo & toggler button */}
-            <Box
-                sx={{
-                    width: 228,
-                    marginBottom: '4.5rem',
-                    display:  'flex' ,
-                    flexDirection:'column',
-                    alignItems:'center',
-                    gap:2,
-                    [theme.breakpoints.down('md')]: {
-                        width: 'auto',
-                        mb: 4,
-                        mr: 2
-                    },
-                    [theme.breakpoints.up('md')]: {
-                        width: 'auto',
-                        mb: 4,
-                        mr: 2
-                    }
-                }}
-            >
-                {/* <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
+  return (
+    <>
+      {/* logo & toggler button */}
+      <Box
+        sx={{
+          width: 228,
+          marginBottom: '4.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2,
+          [theme.breakpoints.down('md')]: {
+            width: 'auto',
+            mb: 4,
+            mr: 2
+          },
+          [theme.breakpoints.up('md')]: {
+            width: 'auto',
+            mb: 4,
+            mr: 2
+          }
+        }}
+      >
+        {/* <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
                     <LogoSection />
                 </Box> */}
-                <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
-                    <Avatar
-                        variant="rounded"
-                        sx={{
-                            ...theme.typography.commonAvatar,
-                            ...theme.typography.mediumAvatar,
-                            transition: 'all .2s ease-in-out',
-                            background: 'white',
-                            color: 'black',
-                            '&:hover': {
-                                background: 'black',
-                                color: 'white'
-                            }
-                        }}
-                        onClick={handleLeftDrawerToggle}
-                        color="inherit"
-                    >
-                        <IconMenu2 stroke={1.5} size="1.3rem" />
-                    </Avatar>
-                </ButtonBase>
-                <Box onClick={handleClick}>
-                <ArrowBackIcon sx={{color:ColorTheme().title}}/>
-                </Box>
-            </Box>
-            <MenuList />
-        </>
-    );
+        <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+          <Avatar
+            variant="rounded"
+            sx={{
+              ...theme.typography.commonAvatar,
+              ...theme.typography.mediumAvatar,
+              transition: 'all .2s ease-in-out',
+              background: 'white',
+              color: 'black',
+              '&:hover': {
+                background: 'black',
+                color: 'white'
+              }
+            }}
+            onClick={handleLeftDrawerToggle}
+            color="inherit"
+          >
+            <IconMenu2 stroke={1.5} size="1.3rem" />
+          </Avatar>
+        </ButtonBase>
+        <Box onClick={handleClick}>
+          <ArrowBackIcon sx={{ color: color?.title }} />
+        </Box>
+      </Box>
+      <MenuList />
+    </>
+  );
 };
 
 export default Header;

@@ -79,7 +79,7 @@ export default function Header({
     setStyles({
       ...styles,
       backgroundColor: selectedElement?.data?.style?.backgroundColor,
-      fontSize: number(selectedElement?.data?.style?.fontSize) ?? 12,
+      fontSize: selectedElement?.data?.style?.fontSize ? number(selectedElement?.data?.style?.fontSize) : 12,
       fontFamily: selectedElement?.data?.style?.fontFamily ?? 'Inter',
       fontStyle: selectedElement?.data?.style?.fontStyle ?? 'normal',
       textAlign: selectedElement?.data?.style?.textAlign ?? 'center',

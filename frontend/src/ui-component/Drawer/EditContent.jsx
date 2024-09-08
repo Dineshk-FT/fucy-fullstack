@@ -74,21 +74,17 @@ const EditContent = ({
   };
 
   const handleChecked = (event) => {
+    const mod = { ...modal };
     const Nodestate = [...nodes];
-    const edgeState = [...edges];
-    if (selectedElement.target) {
-      const selected = edges?.find((nd) => nd?.id === selectedElement?.id);
-      const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
-      edgeState[index] = selected;
-      setEdges(Nodestate);
-    } else {
-      const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
-      const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
-      selected.isAsset = event.target.checked;
-      Nodestate[index] = selected;
-      setNodes(Nodestate);
-    }
+    const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
+    const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
+    selected.isAsset = event.target.checked;
+    Nodestate[index] = selected;
+    mod.template.nodes = Nodestate;
+    updateModal(mod);
   };
+
+  // console.log('selectedElement', selectedElement);
   // console.log('nodes', nodes);
   useEffect(() => {
     setDetails({
@@ -181,7 +177,10 @@ const EditContent = ({
               renderInput={(params) => <TextField {...params} variant="outlined" />}
             />
             {!selectedElement?.target && (
-              <FormControlLabel control={<Checkbox onChange={handleChecked} checked={selectedElement?.isAsset} />} label="Asset" />
+              <FormControlLabel
+                control={<Checkbox onChange={handleChecked} checked={selectedElement?.isAsset ? true : false} />}
+                label="Asset"
+              />
             )}
             <Button variant="outlined" onClick={handleUpdate}>
               Update
