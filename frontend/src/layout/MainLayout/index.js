@@ -100,9 +100,9 @@ const MainLayout = ({ children }) => {
   const { isNavbarClose, isDark } = useSelector((state) => state?.currentId);
   const { isCanvasPage } = useSelector((state) => state?.canvas);
 
-  useEffect(() => {
-    dispatch({ type: SET_MENU, opened: !matchDownMd });
-  }, [matchDownMd]);
+  // useEffect(() => {
+  //   dispatch({ type: SET_MENU, opened: !matchDownMd });
+  // }, [matchDownMd]);
 
   const dispatch = useDispatch();
   const handleLeftDrawerToggle = () => {

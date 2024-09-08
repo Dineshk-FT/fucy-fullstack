@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import useStore from '../../Zustand/store';
 import AddIcon from '@mui/icons-material/Add';
 import AddNewNode from '../../ui-component/Modal/AddNewNode';
-import { Avatar, Button, Typography } from '@mui/material';
+import { Avatar, Button, Fab, Typography } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
 import Paper from '@mui/material/Paper';
@@ -135,11 +135,11 @@ const Components = () => {
                             {node?.data['label']}
                           </MenuItem>
                         ))}
-                        {/* <MenuItem>
+                        <MenuItem>
                           <Button onClick={() => handleOpen(item)} variant="outlined" fullWidth>
                             + Add
                           </Button>
-                        </MenuItem> */}
+                        </MenuItem>
                       </MenuList>
                     </ClickAwayListener>
                   </Paper>
@@ -148,7 +148,27 @@ const Components = () => {
             </Popper>
           </Box>
         ))}
-        {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer' }} onClick={() => setOpenAdd(true)} /> */}
+        <Fab
+          size="small"
+          color="primary"
+          variant="outlined"
+          aria-label="add"
+          onClick={() => setOpenAdd(true)}
+          sx={{
+            mb: 1.5,
+            width: '35px',
+            height: '25px',
+            background: 'transparent',
+            color: '#2196f3',
+            border: '2px solid #2196f3',
+            '&:hover': {
+              color: 'white'
+            }
+          }}
+        >
+          <AddIcon />
+        </Fab>
+        {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer', my: 1, border: '1px solid' }} /> */}
       </Box>
       <AddNewNode open={open} handleClose={handleClose} getSidebarNode={getSidebarNode} selectedItem={selectedItem} />
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
