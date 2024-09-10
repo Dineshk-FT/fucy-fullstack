@@ -13,13 +13,15 @@ import {
   MenuItem,
   FormControl,
   Select,
-  Chip
+  Chip,
+  Typography
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
 import AlertMessage from '../Alert';
 import { updatedModalState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
+import PaperComponent from './PaperComponent';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -81,8 +83,8 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataNode = {
+      id: uid(),
       data: {
-        id: uid(),
         label: newNode.nodeName,
         style: {
           backgroundColor: '#dadada',
@@ -121,7 +123,7 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
       const mod = { ...modal };
       updateModal(updatedModalState(mod, list, edges))
         .then((res) => {
-          console.log('res', res);
+          // console.log('res', res);
           if (res.data) {
             setTimeout(() => {
               setOpenMsg(true);
@@ -148,6 +150,7 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
               setMessage('Node created Successfully');
               setSuccess(true);
               getSidebarNode();
+              handleClose();
             }, []);
           }
         })
@@ -159,7 +162,6 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
         });
     }
 
-    handleClose();
     setNewNode({
       nodeName: '',
       type: '',
@@ -181,8 +183,12 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
   // console.log('newNode', newNode);
   return (
     <>
-      <Dialog open={open} onClose={CloseModel} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
-        <DialogTitle id="alert-dialog-title">{'Add New '}</DialogTitle>
+      <Dialog open={open} onClose={CloseModel} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
+        <DialogTitle id="draggable-dialog-title">
+          <Typography variant="h4" color="primary">
+            {'Add New '}
+          </Typography>
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
             <TextField id="outlined-basic" label="Name" name="nodeName" variant="outlined" onChange={handleChange} />

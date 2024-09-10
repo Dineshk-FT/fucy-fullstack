@@ -155,16 +155,15 @@ const BrowserCard = ({ modals }) => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
   const [selectedItem, setSelectedItem] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
+  // const [selectedId, setSelectedId] = useState(null);
   const openRight = Boolean(anchorEl);
+  const [anchorItemEl, setAnchorItemEl] = useState(null);
+  const [openItemRight, setOpenItemRight] = useState(false);
 
   const isDragged = nodes.some(dragCheck);
   function dragCheck(node) {
     return node.dragged;
   }
-
-  const [anchorItemEl, setAnchorItemEl] = useState(null);
-  const [openItemRight, setOpenItemRight] = useState(false);
 
   const handleNodes = (e, name) => {
     if (name === 'Item Modal & Assets') {
@@ -608,8 +607,8 @@ const BrowserCard = ({ modals }) => {
             >
               <ClickAwayListener onClickAway={handleCloseItem}>
                 <Paper className={classes.paper}>
-                  <MenuItem onClick={handleAddNewNode}>create & Add Node</MenuItem>
-                  <MenuItem onClick={handleOpenSelectNode}>Add Node</MenuItem>
+                  <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
+                  <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
                 </Paper>
               </ClickAwayListener>
             </Popper>

@@ -2,7 +2,9 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   isCanvasPage: '',
-  selectedBlock: {}
+  selectedBlock: {},
+  initialDialogOpen: false,
+  propertiesTabOpen: false
 };
 
 const CanvasSlice = createSlice({
@@ -14,9 +16,22 @@ const CanvasSlice = createSlice({
     },
     setSelectedBlock: (state, action) => {
       return { ...state, selectedBlock: action.payload };
+    },
+    OpenInitialDialog: (state) => {
+      return { ...state, initialDialogOpen: true };
+    },
+    CloseInitialDialog: (state) => {
+      return { ...state, initialDialogOpen: false };
+    },
+    OpenPropertiesTab: (state) => {
+      return { ...state, propertiesTabOpen: true };
+    },
+    ClosePropertiesTab: (state) => {
+      return { ...state, propertiesTabOpen: false };
     }
   }
 });
 
-export const { changeCanvasPage, setSelectedBlock } = CanvasSlice.actions;
+export const { changeCanvasPage, setSelectedBlock, OpenInitialDialog, CloseInitialDialog, OpenPropertiesTab, ClosePropertiesTab } =
+  CanvasSlice.actions;
 export default CanvasSlice.reducer;

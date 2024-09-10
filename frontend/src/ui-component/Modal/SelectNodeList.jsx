@@ -1,12 +1,13 @@
 /* eslint-disable */
 import * as React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Typography } from '@mui/material';
 import NodeList from '../../views/NodeList/NodeList';
 import { v4 as uid } from 'uuid';
 import useStore from '../../Zustand/store';
 import { useParams } from 'react-router';
 import toast, { Toaster } from 'react-hot-toast';
 import { updatedModalState } from '../../utils/Constraints';
+import PaperComponent from './PaperComponent';
 
 const notify = (message, status) => toast[status](message);
 
@@ -76,23 +77,18 @@ export default function SelectNodeList({ open, handleClose }) {
       <Dialog
         open={open}
         onClose={onClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        PaperComponent={PaperComponent}
+        aria-labelledby="draggable-dialog-title"
         sx={{
           '& .MuiPaper-root': {
-            width: '-webkit-fill-available'
+            width: 450
           }
         }}
       >
-        <DialogTitle
-          id="alert-dialog-title"
-          sx={{
-            fontSize: 20,
-            fontFamily: 'Inter',
-            fontWeight: 600
-          }}
-        >
-          {'Add Node'}
+        <DialogTitle sx={{ cursor: 'move' }} id="draggable-dialog-title">
+          <Typography variant="h3" color="primary">
+            {'Add Node'}
+          </Typography>
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">

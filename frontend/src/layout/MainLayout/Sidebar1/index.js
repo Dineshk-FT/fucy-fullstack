@@ -15,11 +15,13 @@ import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
 import LogoSection from '../LogoSection';
 import BrowserCard from '../Sidebar/BrowserCard/index1';
-import MenuCard from '../Sidebar/MenuCard';
 import { drawerWidth, navbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
+import MenuCard from '../Sidebar/MenuCard/index1';
+import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import { ClosePropertiesTab } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -51,9 +53,9 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const { Properties } = useSelector((state) => state?.pageName);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
-
+  const { propertiesTabOpen } = useSelector((state) => state?.canvas);
   // State to track the width of the ResizableBox
-  const [sidebarWidth, setSidebarWidth] = useState(matchUpMd && drawerOpen ? 400 : 0);
+  const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 400 : 0);
 
   useEffect(() => {
     fetchAPI();
@@ -93,7 +95,16 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           }}
         >
           <BrowserCard template={template} modals={modals} />
-          {Properties && Properties?.length > 0 && <MenuCard properties={Properties} />}
+          {propertiesTabOpen && (
+            <Box mx={1} display="flex">
+              <Box>
+                <MenuCard />
+              </Box>
+              <Box mt={2} sx={{ cursor: 'pointer' }} onClick={() => dispatch(ClosePropertiesTab())}>
+                <CancelTwoToneIcon />
+              </Box>
+            </Box>
+          )}
         </PerfectScrollbar>
         <ArrowCircleLeftTwoToneIcon
           onClick={handleDrawerToggle} // Use handleDrawerToggle here
@@ -163,6 +174,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             onClose={handleDrawerToggle} // Use handleDrawerToggle here
             sx={{
               '& .MuiDrawer-paper': {
+                height: '-webkit-fill-available',
                 width: sidebarWidth, // Apply the dynamic width
                 background: color?.sidebarBG,
                 color: theme.palette.text.primary,

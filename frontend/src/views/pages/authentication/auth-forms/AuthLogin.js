@@ -35,7 +35,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import Google from '../../../../assets/images/icons/social-google.svg';
-import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
+import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
 import { login } from '../../../../API/api';
 import toast, { Toaster } from 'react-hot-toast';
@@ -75,6 +75,7 @@ const FirebaseLogin = ({ ...others }) => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
             dispatch(changeCanvasPage('canvas'));
+            dispatch(OpenInitialDialog());
             dispatch(closeAll());
           }, 600);
         } else {

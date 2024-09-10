@@ -27,33 +27,39 @@ const EditContent = ({
 
   // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {
-    const mod = { ...modal };
-    const Nodestate = [...nodes];
-    const edgeState = [...edges];
+    const mod = JSON.parse(JSON.stringify(modal));
+    const Nodestate = JSON.parse(JSON.stringify(nodes));
+    const edgeState = JSON.parse(JSON.stringify(edges));
+
     if (selectedElement.target) {
-      // console.log('selectedElement', selectedElement);
-      const selected = edges?.find((nd) => nd?.id === selectedElement?.id);
       const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
-      selected.data.label = details?.name;
-      selected.properties = details?.properties;
-      // console.log('selected', selected);
-      edgeState[index] = selected;
-      mod.template.edges = edgeState;
-      // console.log('edgeState', edgeState);
+      if (index !== -1) {
+        // Create a shallow copy of the selected edge object
+        const selected = { ...edges[index], data: { ...edges[index].data } };
+        selected.data.label = details?.name;
+        selected.properties = details?.properties;
+
+        // Update edgeState with the new selected edge
+        edgeState[index] = selected;
+        mod.template.edges = edgeState;
+      }
     } else {
-      const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
       const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
-      selected.data.label = details?.name;
-      selected.properties = details?.properties;
-      selected.isAsset = details?.isAsset;
-      // console.log('selected', selected);
-      Nodestate[index] = selected;
-      mod.template.nodes = Nodestate;
+      if (index !== -1) {
+        // Create a shallow copy of the selected node object
+        const selected = { ...nodes[index], data: { ...nodes[index].data } };
+        selected.data.label = details?.name;
+        selected.properties = details?.properties;
+        selected.isAsset = details?.isAsset;
+
+        // Update Nodestate with the new selected node
+        Nodestate[index] = selected;
+        mod.template.nodes = Nodestate;
+      }
     }
-    // console.log('mod', mod);
+
     updateModal(mod)
       .then((res) => {
-        // console.log('res', res);
         notify('Updated Successfully', 'success');
         RefreshAPI();
       })
@@ -62,6 +68,7 @@ const EditContent = ({
         notify('Something went wrong', 'error');
       });
   };
+
   const handleDelete = (valueToDelete) => () => {
     setDetails((prevDetails) => ({
       ...prevDetails,
@@ -74,11 +81,13 @@ const EditContent = ({
   };
 
   const handleChecked = (event) => {
-    const mod = { ...modal };
-    const Nodestate = [...nodes];
+    const { checked } = event.target;
+    const mod = JSON.parse(JSON.stringify(modal));
+    const Nodestate = JSON.parse(JSON.stringify(nodes));
     const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
     const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
-    selected.isAsset = event.target.checked;
+    // console.log('checked', checked);
+    selected.isAsset = checked;
     Nodestate[index] = selected;
     mod.template.nodes = Nodestate;
     setSelectedElement(selected);
@@ -97,6 +106,7 @@ const EditContent = ({
     });
   }, [selectedElement]);
 
+  // console.log('details', details);
   // console.log('details', details)
 
   const handleChange = (event, newValue) => {
@@ -107,14 +117,16 @@ const EditContent = ({
   };
 
   const handleStyle = (e, name) => {
-    const list = [...nodes];
+    const { value } = e.target;
+    // const list = [...nodes];
+    const list = JSON.parse(JSON.stringify(nodes));
     const edgeState = [...edges];
     if (selectedElement.target) {
       const edge = edgeState?.find((nd) => nd?.id === selectedElement?.id);
       const Index = edgeState?.findIndex((nd) => nd?.id === selectedElement?.id);
       if (name === 'name') {
-        setDetails({ ...details, name: e.target.value });
-        edge.data.label = e.target.value;
+        setDetails({ ...details, name: value });
+        edge.data.label = value;
       }
       setSelectedElement(edge);
       edgeState[Index] = edge;
@@ -122,15 +134,15 @@ const EditContent = ({
     } else {
       const node = list?.find((nd) => nd?.id === selectedElement?.id);
       const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
-      if (name === 'name') {
-        setDetails({ ...details, name: e.target.value });
-        node.data.label = e.target.value;
-      }
+      setDetails({ ...details, name: value });
+      node.data.label = value;
+
       setSelectedElement(node);
       list[Index] = node;
       setNodes(list);
     }
   };
+  // console.log('nodes', nodes);
 
   // console.log('details', details);
   return (

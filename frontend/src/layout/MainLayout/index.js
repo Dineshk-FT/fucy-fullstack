@@ -24,6 +24,7 @@ import Footer from '../../views/Landing/Footer';
 import HeaderSection from '../../views/Landing/HeaderSection';
 import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
+import InitialModal from '../../ui-component/Modal/InitialModal';
 
 // import Customization from '../Customization';
 
@@ -164,6 +165,7 @@ const MainLayout = ({ children }) => {
           <Outlet />
         </Main>
       </Box>
+      <InitialModal />
     </>
   );
 };

@@ -100,7 +100,7 @@ export default function Header({
   // console.log('style', styles)
 
   const handleFontStyle = (name) => {
-    const list = [...nodes];
+    const list = JSON.parse(JSON.stringify(nodes));
     const nodeIndex = list.findIndex((nd) => nd?.id === selectedElement?.id);
 
     if (nodeIndex === -1) return; // Exit if no matching node is found
@@ -121,11 +121,9 @@ export default function Header({
     };
 
     const currentHighlight = highlight[highlightKey[name]];
-
     if (styleUpdates[name]) {
       const { key, values } = styleUpdates[name];
       style[key] = currentHighlight ? values[1] : values[0];
-
       setStyles((state) => ({ ...state, [key]: style[key] }));
       setHighlight((state) => ({
         ...state,
@@ -140,7 +138,7 @@ export default function Header({
 
   // console.log('fontSize', typeof styles?.fontSize);
   const handleFontSizeChange = (event) => {
-    const list = [...nodes];
+    const list = JSON.parse(JSON.stringify(nodes));
     const node = list?.find((nd) => nd?.id === selectedElement?.id);
     const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
@@ -152,7 +150,7 @@ export default function Header({
   };
 
   const changeFontSize = (name) => {
-    const list = [...nodes];
+    const list = JSON.parse(JSON.stringify(nodes));
     const node = list?.find((nd) => nd?.id === selectedElement?.id);
     const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
@@ -168,12 +166,13 @@ export default function Header({
     setNodes(list);
   };
 
+  console.log('nodes', nodes);
   //   console.log('nodes', nodes)
 
   const handleChange = (event, name) => {
     // console.log('event', event.target.value)
     // console.log('name', name)
-    const list = [...nodes];
+    const list = JSON.parse(JSON.stringify(nodes));
     const node = list?.find((nd) => nd?.id === selectedElement?.id);
     const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
     const { style } = node.data;
