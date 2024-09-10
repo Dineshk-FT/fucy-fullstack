@@ -1,3 +1,4 @@
+/*eslint-disable*/
 // material-ui
 import {
   styled
@@ -13,10 +14,15 @@ import {
   List,
   ListItem,
   // ListItemAvatar,
-  ListItemText
+  ListItemText,
+  Autocomplete,
+  Chip,
+  TextField
   // linearProgressClasses
 } from '@mui/material';
 import ColorTheme from '../../../../store/ColorTheme';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 // assets
 // import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
@@ -33,6 +39,8 @@ import ColorTheme from '../../../../store/ColorTheme';
 //         backgroundColor: theme.palette.primary.main
 //     }
 // }));
+
+const options = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const CardStyle = styled(Card)(() =>
   // { theme }
@@ -85,18 +93,30 @@ const CardStyle = styled(Card)(() =>
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const MenuCard = ({ properties }) => {
+const MenuCard = () => {
   const color = ColorTheme();
+  const [properties, setProperties] = useState([]);
+  const { selectedBlock } = useSelector((state) => state?.canvas);
 
   // console.log('properties here', properties)
   // const theme = useTheme();
+  useEffect(() => {
+    setProperties(selectedBlock?.properties ?? []);
+  }, [selectedBlock]);
 
+  const handleChange = (event, newValue) => {
+    setProperties(newValue);
+  };
+
+  const handleDelete = (valueToDelete) => () => {
+    setDetails((prevDetails) => prevDetails.filter((property) => property !== valueToDelete));
+  };
   return (
     <>
       <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
         Properties{' '}
       </Typography>
-      <CardStyle sx={{ backgroundColor: color?.sidebarInnerBG }}>
+      {/* <CardStyle sx={{ backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2 }}>
           <List sx={{ p: 0, m: 0 }}>
             <ListItem alignItems="flex-start" disableGutters sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
@@ -114,7 +134,25 @@ const MenuCard = ({ properties }) => {
             </ListItem>
           </List>
         </CardContent>
-      </CardStyle>
+      </CardStyle> */}
+      <Autocomplete
+        multiple
+        id="tags-filled"
+        options={options}
+        value={properties}
+        onChange={handleChange}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            padding: '3px'
+          }
+        }}
+        renderTags={(value, getTagProps) =>
+          value.map((option, index) => (
+            <Chip key={option} variant="outlined" label={option} {...getTagProps({ index })} onDelete={handleDelete(option)} />
+          ))
+        }
+        renderInput={(params) => <TextField {...params} variant="outlined" />}
+      />
     </>
   );
 };

@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  isCanvasPage: ''
+  isCanvasPage: '',
+  selectedBlock: {}
 };
 
 const CanvasSlice = createSlice({
@@ -10,9 +11,12 @@ const CanvasSlice = createSlice({
   reducers: {
     changeCanvasPage: (state, action) => {
       return { ...state, isCanvasPage: action.payload };
+    },
+    setSelectedBlock: (state, action) => {
+      return { ...state, selectedBlock: action.payload };
     }
   }
 });
 
-export const { changeCanvasPage } = CanvasSlice.actions;
+export const { changeCanvasPage, setSelectedBlock } = CanvasSlice.actions;
 export default CanvasSlice.reducer;

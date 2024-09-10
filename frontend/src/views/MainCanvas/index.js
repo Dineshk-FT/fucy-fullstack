@@ -49,6 +49,7 @@ import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
 import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 import { updatedModalState } from '../../utils/Constraints';
+import { setSelectedBlock } from '../../store/slices/CanvasSlice';
 
 const elk = new ELK();
 
@@ -466,6 +467,7 @@ export default function MainCanvas() {
     e.preventDefault();
     if (node.type !== 'group') {
       setSelectedElement(node);
+      dispatch(setSelectedBlock(node));
       toggleDrawerOpen('MainCanvasTab');
       dispatch(setProperties(node?.properties));
     }
@@ -482,6 +484,7 @@ export default function MainCanvas() {
     }
     if (node.type !== 'group') {
       setSelectedElement(node);
+      dispatch(setSelectedBlock(node));
       dispatch(setProperties(node?.properties));
 
       if (!grp.length) {

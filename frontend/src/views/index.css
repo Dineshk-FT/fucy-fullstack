@@ -68,9 +68,8 @@ iframe#webpack-dev-server-client-overlay {
 }
 
 .selected {
-  /* border: 2px solid black !important; */
   border-radius: 5px !important;
-  box-shadow: black 0px 1px 6px 3px !important;
+  box-shadow: gray 0px 1px 13px 3px !important;
 }
 
 .library {

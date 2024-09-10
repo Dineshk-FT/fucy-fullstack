@@ -36,10 +36,10 @@ const EditContent = ({
       const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
       selected.data.label = details?.name;
       selected.properties = details?.properties;
-      console.log('selected', selected);
+      // console.log('selected', selected);
       edgeState[index] = selected;
       mod.template.edges = edgeState;
-      console.log('edgeState', edgeState);
+      // console.log('edgeState', edgeState);
     } else {
       const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
       const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
@@ -81,6 +81,8 @@ const EditContent = ({
     selected.isAsset = event.target.checked;
     Nodestate[index] = selected;
     mod.template.nodes = Nodestate;
+    setSelectedElement(selected);
+    // console.log('mod', mod);
     updateModal(mod);
   };
 
@@ -177,10 +179,7 @@ const EditContent = ({
               renderInput={(params) => <TextField {...params} variant="outlined" />}
             />
             {!selectedElement?.target && (
-              <FormControlLabel
-                control={<Checkbox onChange={handleChecked} checked={selectedElement?.isAsset ? true : false} />}
-                label="Asset"
-              />
+              <FormControlLabel control={<Checkbox onChange={handleChecked} checked={Boolean(selectedElement?.isAsset)} />} label="Asset" />
             )}
             <Button variant="outlined" onClick={handleUpdate}>
               Update
