@@ -17,6 +17,7 @@ import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
+import AddIcon from '@mui/icons-material/Add';
 
 const useStyles = makeStyles(() => ({
   header: {
@@ -166,7 +167,6 @@ export default function Header({
     setNodes(list);
   };
 
-  console.log('nodes', nodes);
   //   console.log('nodes', nodes)
 
   const handleChange = (event, name) => {
@@ -194,11 +194,18 @@ export default function Header({
     setNodes(list);
   };
 
-  const details = [
+  const handleDragStart = (event, item) => {
+    const parseFile = JSON.stringify(item?.title);
+    event.dataTransfer.setData('application/group', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+  const segments = [
     {
       id: 1,
       title: 'Grouping',
       onclick: () => createGroup,
+      onDragStart: handleDragStart,
+      isDraggable: true,
       component: <GridOnIcon />
     },
     {
@@ -240,6 +247,7 @@ export default function Header({
                 <ArrowForward color={iconColor} /> */}
         <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
         <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
+        <AddIcon />
         <FormatBoldIcon
           onClick={() => handleFontStyle('bold')}
           sx={{
@@ -313,10 +321,15 @@ export default function Header({
           <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
         </label>
 
-        {details.map((item) => (
+        {segments?.map((item) => (
           <React.Fragment key={item?.id}>
             <Tooltip title={item?.title}>
-              <Typography sx={{ color: iconColor, alignSelf: 'end' }} onClick={item?.onclick()}>
+              <Typography
+                sx={{ color: iconColor, alignSelf: 'end' }}
+                onClick={item?.onclick()}
+                onDragStart={(e) => item?.onDragStart(e, item)}
+                draggable={item?.isDraggable}
+              >
                 {item?.component}
               </Typography>
             </Tooltip>

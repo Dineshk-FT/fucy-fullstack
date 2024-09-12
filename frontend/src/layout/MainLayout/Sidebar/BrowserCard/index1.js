@@ -52,6 +52,7 @@ import DraggableTreeItem from './DraggableItem';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import AddNewNode from '../../../../ui-component/Modal/AddNewNode';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
+import { threatType } from '../../../../ui-component/Table/constraints';
 
 const imageComponents = {
   AttackIcon,
@@ -155,6 +156,7 @@ const BrowserCard = ({ modals }) => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
   const [selectedItem, setSelectedItem] = useState({});
+  const { selectedBlock } = useSelector((state) => state?.canvas);
   // const [selectedId, setSelectedId] = useState(null);
   const openRight = Boolean(anchorEl);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
@@ -193,6 +195,7 @@ const BrowserCard = ({ modals }) => {
     getModalById(id);
   }, []);
 
+  // console.log('selectedBlock', selectedBlock);
   const getLabel = (icon, name) => {
     const IconComponent = iconComponents[icon];
     return (
@@ -227,25 +230,6 @@ const BrowserCard = ({ modals }) => {
     );
   };
 
-  const threatType = (value) => {
-    // console.log('value', value)
-    switch (value) {
-      case 'Integrity':
-        return 'Tampering';
-      case 'Confidentiality':
-        return 'Information Disclosure';
-      case 'Availability':
-        return 'Denial';
-      case 'Authenticity':
-        return 'Spoofing';
-      case 'Authorization':
-        return 'Elevation of Privilage';
-      case 'Non-repudiation':
-        return 'Rejection';
-      default:
-        return '';
-    }
-  };
   const openAddModal = (name) => {
     // console.log('name', name);
     setAnchorEl(null);
@@ -507,7 +491,12 @@ const BrowserCard = ({ modals }) => {
                         </TreeItem>
                       ))
                     : scene?.Details?.map((value, i) => (
-                        <TreeItem key={`1${i}`} nodeId={`1${i}`} label={`[000${i}] ${value?.name}`}>
+                        <TreeItem
+                          key={`1${i}`}
+                          nodeId={`1${i}`}
+                          label={`[000${i}] ${value?.name}`}
+                          sx={{ backgroundColor: selectedBlock?.id === value?.nodeId ? 'wheat' : 'inherit' }}
+                        >
                           {value?.props.map((pr) => {
                             // console.log('pr', pr);
                             return (

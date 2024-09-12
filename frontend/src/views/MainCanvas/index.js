@@ -172,6 +172,7 @@ export default function MainCanvas() {
   const [message, setMessage] = useState('');
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
+  const { propertiesTabOpen } = useSelector((state) => state?.canvas);
 
   // console.log('modal', modal);
   useEffect(() => {
@@ -307,17 +308,20 @@ export default function MainCanvas() {
       event.preventDefault();
       const file = event.dataTransfer.getData('application/parseFile');
       const template = event.dataTransfer.getData('application/template');
+      const group = event.dataTransfer.getData('application/group');
       let parsedNode;
       let parsedTemplate;
-      if (file) {
-        parsedNode = JSON.parse(file);
-      } else {
-        parsedTemplate = JSON.parse(template);
-      }
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
       });
+      if (file) {
+        parsedNode = JSON.parse(file);
+      } else if (group) {
+        createGroup(position);
+      } else {
+        parsedTemplate = JSON.parse(template);
+      }
       if (parsedNode) {
         const newNode = {
           id: uid(),
@@ -498,15 +502,17 @@ export default function MainCanvas() {
   };
 
   const createGroup = (e) => {
-    e.preventDefault();
+    if (!e.x) {
+      e.preventDefault();
+    }
     const newNode = {
       id: uid(),
       type: 'group',
       height: 280,
       width: 250,
       position: {
-        x: e.clientX,
-        y: e.clientY
+        x: e.x ?? e.clientX,
+        y: e.y ?? e.clientY
       },
       data: {
         label: 'group'
@@ -515,7 +521,7 @@ export default function MainCanvas() {
     dragAdd(newNode);
   };
 
-  // console.log('nodes', nodes);
+  console.log('nodes', nodes);
   if (isDsTableOpen) return <DsTable />;
   if (isDerivationTableOpen) return <DsDerivationTable />;
   if (isTsTableOpen) return <Tstable />;
@@ -527,18 +533,20 @@ export default function MainCanvas() {
   return (
     <>
       <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}>
-        <Header
-          selectedElement={selectedElement}
-          nodes={nodes}
-          setNodes={setNodes}
-          setSelectedElement={setSelectedElement}
-          horizontal={() => onLayout({ direction: 'RIGHT' })}
-          vertical={() => onLayout({ direction: 'DOWN' })}
-          handleClear={handleClear}
-          handleSave={handleSaveToModal}
-          download={handleDownload}
-          createGroup={createGroup}
-        />
+        {propertiesTabOpen && (
+          <Header
+            selectedElement={selectedElement}
+            nodes={nodes}
+            setNodes={setNodes}
+            setSelectedElement={setSelectedElement}
+            horizontal={() => onLayout({ direction: 'RIGHT' })}
+            vertical={() => onLayout({ direction: 'DOWN' })}
+            handleClear={handleClear}
+            handleSave={handleSaveToModal}
+            download={handleDownload}
+            createGroup={createGroup}
+          />
+        )}
         <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}
@@ -568,7 +576,7 @@ export default function MainCanvas() {
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
             {/* <LeftDrawer state={isLeftDrawerOpen} drawerOpen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
-            <RightDrawer
+            {/* <RightDrawer
               state={isRightDrawerOpen}
               drawerOpen={toggleDrawerOpen}
               drawerClose={toggleDrawerClose}
@@ -581,7 +589,7 @@ export default function MainCanvas() {
               modal={modal}
               updateModal={updateModal}
               RefreshAPI={RefreshAPI}
-            />
+            /> */}
           </ReactFlow>
         </ReactFlowProvider>
         {openTemplate && (
