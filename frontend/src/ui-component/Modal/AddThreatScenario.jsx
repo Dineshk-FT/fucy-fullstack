@@ -21,13 +21,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  update: state.updateModal,
-  getModals: state.getModals,
-  getModalById: state.getModalById
+  update: state.updateModel,
+  getModels: state.getModels,
+  getModelById: state.getModelById
 });
 
-export default function AddThreatScenarios({ open, handleClose, modal, id }) {
-  const { update, getModalById, getModals } = useStore(selector, shallow);
+export default function AddThreatScenarios({ open, handleClose, model, id }) {
+  const { update, getModelById, getModels } = useStore(selector, shallow);
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [message, setMessage] = React.useState('');
@@ -38,7 +38,7 @@ export default function AddThreatScenarios({ open, handleClose, modal, id }) {
   });
 
   const handleCreate = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     const temp = { ...templateDetails };
     temp.id = uid();
     mod.scenarios[2].subs[1].scenes.push(temp);
@@ -51,8 +51,8 @@ export default function AddThreatScenarios({ open, handleClose, modal, id }) {
             // alert('Threat Scenario added');
             // window.location.reload();
             handleClose();
-            getModalById(id);
-            getModals();
+            getModelById(id);
+            getModels();
             setOpenMsg(true);
             setMessage('Threat scene created Successfully');
             setSuccess(true);

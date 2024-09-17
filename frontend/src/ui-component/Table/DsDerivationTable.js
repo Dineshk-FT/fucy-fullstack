@@ -48,9 +48,9 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  modal: state.modal,
-  getModalById: state.getModalById,
-  getModals: state.getModals
+  model: state.model,
+  getModelById: state.getModelById,
+  getModels: state.getModels
 });
 
 export default function DsDerivationTable() {
@@ -58,13 +58,13 @@ export default function DsDerivationTable() {
   const dispatch = useDispatch();
   const classes = useStyles();
   const { id } = useParams();
-  const { modal, getModalById } = useStore(selector, shallow);
+  const { model, getModelById } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
 
   React.useEffect(() => {
-    getModalById(id);
+    getModelById(id);
   }, [id]);
 
   const Head = React.useMemo(() => {
@@ -78,8 +78,8 @@ export default function DsDerivationTable() {
   }, []);
 
   React.useEffect(() => {
-    if (modal.scenarios) {
-      const mod = modal?.scenarios[1]?.subs[0]?.Details?.map((dt) => {
+    if (model.scenarios) {
+      const mod = model?.scenarios[1]?.subs[0]?.Details?.map((dt) => {
         // console.log('prp', prp);
         return {
           'Task/Requirement': dt?.task,
@@ -91,7 +91,7 @@ export default function DsDerivationTable() {
       setRows(mod);
       setFiltered(mod);
     }
-  }, [modal]);
+  }, [model]);
   // console.log('rows', rows);
 
   const handleSearch = (e) => {

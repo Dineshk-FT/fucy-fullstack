@@ -19,15 +19,15 @@ const EditContent = ({
   setSelectedElement,
   details,
   setDetails,
-  modal,
-  updateModal,
+  model,
+  updateModel,
   RefreshAPI
 }) => {
   const [value, setValue] = useState('1');
 
   // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {
-    const mod = JSON.parse(JSON.stringify(modal));
+    const mod = JSON.parse(JSON.stringify(model));
     const Nodestate = JSON.parse(JSON.stringify(nodes));
     const edgeState = JSON.parse(JSON.stringify(edges));
 
@@ -58,7 +58,7 @@ const EditContent = ({
       }
     }
 
-    updateModal(mod)
+    updateModel(mod)
       .then((res) => {
         notify('Updated Successfully', 'success');
         RefreshAPI();
@@ -82,7 +82,7 @@ const EditContent = ({
 
   const handleChecked = (event) => {
     const { checked } = event.target;
-    const mod = JSON.parse(JSON.stringify(modal));
+    const mod = JSON.parse(JSON.stringify(model));
     const Nodestate = JSON.parse(JSON.stringify(nodes));
     const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
     const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
@@ -92,7 +92,7 @@ const EditContent = ({
     mod.template.nodes = Nodestate;
     setSelectedElement(selected);
     // console.log('mod', mod);
-    updateModal(mod);
+    updateModel(mod);
   };
 
   // console.log('selectedElement', selectedElement);

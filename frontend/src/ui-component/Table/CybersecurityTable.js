@@ -20,8 +20,8 @@ import Checkbox from '@mui/material/Checkbox';
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 const selector = (state) => ({
-  modal: state.modal,
-  getModal: state.getModalById
+  model: state.model,
+  getModel: state.getModelById
 });
 const Head = [
   { id: 0, name: 'Enable' },
@@ -79,19 +79,18 @@ export default function CyberSecurityTable() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = React.useState(false);
-  const { modal, getModal } = useStore(selector, shallow);
+  const { model, getModel } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
 
   React.useEffect(() => {
-    getModal(id);
+    getModel(id);
   }, [id]);
 
   React.useEffect(() => {
-    if (modal.scenarios) {
-      // console.log('modal in effect', modal?.scenarios[1]?.subs[1]?.scenes)
-      setRows(modal?.scenarios[4]?.subs[1]?.scenes);
+    if (model.scenarios) {
+      setRows(model?.scenarios[4]?.subs[1]?.scenes);
     }
-  }, [modal]);
+  }, [model]);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -142,7 +141,7 @@ export default function CyberSecurityTable() {
           </TableBody>
         </Table>
       </TableContainer>
-      <AddCyberControl open={openTs} handleClose={handleCloseTs} modal={modal} />
+      <AddCyberControl open={openTs} handleClose={handleCloseTs} model={model} />
     </>
   );
 }

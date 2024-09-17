@@ -28,8 +28,8 @@ import { colorPicker, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
-  modal: state.modal,
-  getModal: state.getModalById
+  model: state.model,
+  getModel: state.getModelById
 });
 
 const Head = [
@@ -81,18 +81,18 @@ export default function Tstable() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = React.useState(false);
-  const { modal, getModal } = useStore(selector, shallow);
+  const { model, getModel } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
 
   React.useEffect(() => {
-    getModal(id);
+    getModel(id);
   }, [id]);
 
   React.useEffect(() => {
-    if (modal.scenarios) {
-      const mod1 = modal?.scenarios[2]?.subs[0]?.losses
+    if (model.scenarios) {
+      const mod1 = model?.scenarios[2]?.subs[0]?.losses
         ?.map((dt) =>
           dt?.cyberLosses?.map((loss, prin) =>
             loss?.props?.map((prp, pin) => {
@@ -108,13 +108,13 @@ export default function Tstable() {
           )
         )
         .flat(2);
-      const mod2 = modal?.scenarios[2]?.subs[1]?.scenes;
+      const mod2 = model?.scenarios[2]?.subs[1]?.scenes;
       // console.log('mod2', mod2)
       const combained = mod1.concat(mod2);
       setRows(combained);
       setFiltered(combained);
     }
-  }, [modal]);
+  }, [model]);
   // console.log('rows', rows);
 
   const handleOpenModalTs = () => {
@@ -255,7 +255,7 @@ export default function Tstable() {
           </TableBody>
         </Table>
       </TableContainer>
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} modal={modal} id={id} />
+      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
     </Box>
   );
 }

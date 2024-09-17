@@ -1,6 +1,6 @@
 import { v4 as uid } from 'uuid';
 
-export const updatedModalState = (mod, nodes, edges) => {
+export const updatedModelState = (mod, nodes, edges) => {
   let Derivations = nodes
     ?.filter((nd) => nd?.type !== 'group')
     ?.map((node) => {

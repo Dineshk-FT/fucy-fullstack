@@ -22,7 +22,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  create: state.createModal
+  create: state.createModel
 });
 // const ITEM_HEIGHT = 48;
 // const ITEM_PADDING_TOP = 8;
@@ -42,7 +42,7 @@ const selector = (state) => ({
 // }
 // const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
-export default function AddModal({ open, handleClose, getModals }) {
+export default function AddModel({ open, handleClose, getModels }) {
   // const dispatch = useDispatch();
   const navigate = useNavigate();
   const { create } = useStore(selector, shallow);
@@ -66,7 +66,7 @@ export default function AddModal({ open, handleClose, getModals }) {
     const scenarios = [
       {
         id: uid(),
-        name: 'Item Modal & Assets',
+        name: 'Item Model & Assets',
         icon: 'ItemIcon',
         Details: []
       },
@@ -205,19 +205,19 @@ export default function AddModal({ open, handleClose, getModals }) {
         scenes: []
       }
     ];
-    const newModal = {
+    const newModel = {
       ...templateDetails,
       scenarios: scenarios
     };
 
-    create(newModal)
+    create(newModel)
       .then((res) => {
         if (res) {
           setTimeout(() => {
             notify(res.message ?? 'Model created successfully', 'success');
             navigate(`/Models/${res?.model_id}`);
             // window.location.href = `/Modals/${id}`;
-            getModals();
+            getModels();
             handleClose();
           }, 500);
         }

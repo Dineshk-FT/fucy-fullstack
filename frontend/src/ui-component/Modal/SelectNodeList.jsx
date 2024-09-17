@@ -6,24 +6,24 @@ import { v4 as uid } from 'uuid';
 import useStore from '../../Zustand/store';
 import { useParams } from 'react-router';
 import toast, { Toaster } from 'react-hot-toast';
-import { updatedModalState } from '../../utils/Constraints';
+import { updatedModelState } from '../../utils/Constraints';
 import PaperComponent from './PaperComponent';
 
 const notify = (message, status) => toast[status](message);
 
 const selector = (state) => ({
-  getModalById: state.getModalById,
-  modal: state.modal,
+  getModelById: state.getModelById,
+  model: state.model,
   setNodes: state.setNodes,
   nodes: state.nodes,
   edges: state.edges,
-  updateModal: state.updateModal
+  updateModel: state.updateModel
 });
 
 export default function SelectNodeList({ open, handleClose }) {
   const [selected, setSelected] = React.useState({});
   const { id } = useParams();
-  const { modal, nodes, edges, setNodes, getModalById, updateModal } = useStore(selector);
+  const { model, nodes, edges, setNodes, getModelById, updateModel } = useStore(selector);
 
   const handleAdd = () => {
     if (selected) {
@@ -48,14 +48,14 @@ export default function SelectNodeList({ open, handleClose }) {
 
       const list = [...nodes, Details];
       setNodes(list);
-      const mod = { ...modal };
-      updateModal(updatedModalState(mod, list, edges))
+      const mod = { ...model };
+      updateModel(updatedModelState(mod, list, edges))
         .then((res) => {
           // console.log('res', res);
           if (res.data) {
             setTimeout(() => {
               notify('Updated Successfully', 'success');
-              getModalById(id);
+              getModelById(id);
               handleClose();
             }, []);
           }

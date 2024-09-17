@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { CloseInitialDialog } from '../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import SelectProject from './SelectProject';
-import AddModal from './AddModal';
+import AddModel from './AddModal';
 import useStore from '../../Zustand/store';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import PaperComponent from './PaperComponent';
@@ -19,14 +19,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const selector = (state) => ({
-  Modals: state.Modals,
-  getModals: state.getModals
+  Models: state.Models,
+  getModels: state.getModels
 });
 
 const InitialModal = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { Modals, getModals } = useStore(selector);
+  const { Models, getModels } = useStore(selector);
   const [open, setOpen] = useState({
     New: false,
     Open: false
@@ -75,8 +75,8 @@ const InitialModal = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Modals={Modals} />}
-      {open?.New && <AddModal getModals={getModals} open={open?.New} handleClose={handleClose} />}
+      {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Models={Models} />}
+      {open?.New && <AddModel getModels={getModels} open={open?.New} handleClose={handleClose} />}
     </>
   );
 };

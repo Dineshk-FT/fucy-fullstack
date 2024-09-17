@@ -15,13 +15,13 @@ import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 export default function SelectLosses({
   open,
   handleClose,
-  modal,
+  model,
   rows,
   setRows,
   selectedRow,
   setSelectedRow,
-  getModalById,
-  getModals,
+  getModelById,
+  getModels,
   id,
   update
 }) {
@@ -83,7 +83,7 @@ export default function SelectLosses({
   };
 
   const handleClick = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     const Rows = [...rows];
     const losses = mod?.scenarios[1]?.subs[0].losses;
     const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
@@ -133,8 +133,8 @@ export default function SelectLosses({
     //   .then((res) => {
     //     if (res) {
     //       setTimeout(() => {
-    //         getModalById(id);
-    //         getModals();
+    //         getModelById(id);
+    //         getModels();
     //       }, 500);
     //     }
     //   })
@@ -167,7 +167,7 @@ export default function SelectLosses({
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-              {modal?.scenarios[1]?.subs[1]?.Details?.map((item, i) => (
+              {model?.scenarios[1]?.subs[1]?.Details?.map((item, i) => (
                 <TreeItem key={`a${i}`} nodeId={`a${i}`} label={item?.name}>
                   {item?.props?.map((pr, ind) => (
                     <TreeItem

@@ -28,9 +28,9 @@ const selector = (state) => ({
   addNode: state.addCyberNode,
   setNodes: state.setCyberNodes,
   setEdges: state.setCyberEdges,
-  modal: state.modal,
-  getModalById: state.getModalById,
-  update: state.updateModal
+  model: state.model,
+  getModelById: state.getModelById,
+  update: state.updateModel
 });
 
 //Edge line styling
@@ -71,8 +71,8 @@ export default function CyberSecurityBlock() {
     addNode,
     setNodes,
     setEdges,
-    getModalById
-    // modal,
+    getModelById
+    // model,
     // update
   } = useStore(selector, shallow);
   // const dispatch = useDispatch();
@@ -83,13 +83,13 @@ export default function CyberSecurityBlock() {
   useEffect(() => {
     setNodes([]);
     setEdges([]);
-    getModalById(id);
+    getModelById(id);
   }, [id]);
 
   // console.log('nodes', nodes);
 
   const handleSave = () => {
-    // const mod = {...modal};
+    // const mod = {...model};
     // const selected = mod?.scenarios[4]?.subs[1]
     // selected.template = {
     //   id:uid(),

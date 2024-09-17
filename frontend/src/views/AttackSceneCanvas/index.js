@@ -79,10 +79,10 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
-  modal: state.modal,
-  getModalById: state.getModalById,
-  getModals: state.getModals,
-  update: state.updateModal
+  model: state.model,
+  getModelById: state.getModelById,
+  getModels: state.getModels,
+  update: state.updateModel
 });
 
 //Edge line styling
@@ -136,10 +136,10 @@ export default function AttackBlock({ attackScene }) {
     addAttackNode,
     setNodes,
     setEdges,
-    getModalById,
-    modal,
+    getModelById,
+    model,
     update,
-    getModals
+    getModels
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -230,7 +230,7 @@ export default function AttackBlock({ attackScene }) {
   const handleSave = () => {
     const atScene = { ...attackScene };
     console.log('atScene', atScene);
-    const mod = { ...modal };
+    const mod = { ...model };
     const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
     console.log('selected', selected);
     selected.template = {
@@ -245,7 +245,7 @@ export default function AttackBlock({ attackScene }) {
           setTimeout(() => {
             notify(attackScene?.template ? 'Updated Successfully' : 'Added Successfully', 'success');
             // window.location.reload();
-            getModals();
+            getModels();
           }, 500);
         }
       })

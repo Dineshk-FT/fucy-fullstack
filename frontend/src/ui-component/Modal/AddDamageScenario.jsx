@@ -20,14 +20,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  update: state.updateModal,
-  getModalById: state.getModalById,
-  getModals: state.getModals
+  update: state.updateModel,
+  getModelById: state.getModelById,
+  getModels: state.getModels
 });
 
-export default function AddDamageScenarios({ open, handleClose, modal, id, rows, notify }) {
+export default function AddDamageScenarios({ open, handleClose, model, id, rows, notify }) {
   // console.log('rows', rows);
-  const { update, getModalById, getModals } = useStore(selector, shallow);
+  const { update, getModelById, getModels } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
     id: '',
     name: '',
@@ -36,7 +36,7 @@ export default function AddDamageScenarios({ open, handleClose, modal, id, rows,
   });
 
   const handleCreate = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     const temp = { ...templateDetails };
     const len = rows.length;
     temp.id = `DS00${len + 1}`;
@@ -48,8 +48,8 @@ export default function AddDamageScenarios({ open, handleClose, modal, id, rows,
             notify('Damage Scene added', 'success');
             // window.location.reload();
             handleClose();
-            getModalById(id);
-            getModals();
+            getModelById(id);
+            getModels();
             setTemplateDetails({
               id: '',
               name: '',

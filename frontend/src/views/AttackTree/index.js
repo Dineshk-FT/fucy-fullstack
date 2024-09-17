@@ -8,8 +8,7 @@ import AttackBlock from '../AttackSceneCanvas';
 import Properties from './Properties';
 import Levels from '../AttackSceneCanvas/Levels';
 
-const AttackTree = ({ modal }) => {
-  // console.log('modal in attack tree', modal);
+const AttackTree = () => {
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   // console.log('attackScene', attackScene)
   const dispatch = useDispatch();

@@ -6,13 +6,13 @@ import { Box, Menu, MenuItem, TextField } from '@mui/material';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
-  getModals: state.getModals,
-  modal: state.modal,
-  updateModal: state.updateModal
+  getModels: state.getModels,
+  model: state.model,
+  updateModel: state.updateModel
 });
 
 export default function Event(props) {
-  const { update, modal, updateModal, getModals } = useStore(selector, shallow);
+  const { update, model, updateModel, getModels } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
@@ -27,15 +27,15 @@ export default function Event(props) {
   };
 
   const handleClick = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     const Scene = mod?.scenarios[3]?.subs[0]?.scenes;
     const selected = mod?.scenarios[3]?.subs[0]?.scenes.find((item) => item.id === props?.id);
     if (!selected) {
       Scene.push({ id: props.id, name: inputValue });
       console.log('mod', mod);
-      updateModal(mod).then((res) => {
+      updateModel(mod).then((res) => {
         if (res) {
-          getModals();
+          getModels();
         }
       });
     }

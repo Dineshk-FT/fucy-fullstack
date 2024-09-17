@@ -34,10 +34,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab } from './constraints';
 
 const selector = (state) => ({
-  modal: state.modal,
-  getModalById: state.getModalById,
-  getModals: state.getModals,
-  update: state.updateModal
+  model: state.model,
+  getModelById: state.getModelById,
+  getModels: state.getModels,
+  update: state.updateModel
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -111,7 +111,7 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { modal, getModals, getModalById, update } = useStore(selector, shallow);
+  const { model, getModels, getModelById, update } = useStore(selector, shallow);
   const [stakeHolder] = React.useState(false);
   const classes = useStyles();
   const { id } = useParams();
@@ -124,7 +124,7 @@ export default function DsTable() {
   const [filtered, setFiltered] = React.useState([]);
 
   React.useEffect(() => {
-    getModalById(id);
+    getModelById(id);
   }, [id]);
 
   const notify = (message, status) => toast[status](message);
@@ -205,8 +205,8 @@ export default function DsTable() {
   };
 
   React.useEffect(() => {
-    if (modal.scenarios) {
-      const mod2 = modal?.scenarios[1]?.subs[1]?.scenes?.map((ls) => ({
+    if (model.scenarios) {
+      const mod2 = model?.scenarios[1]?.subs[1]?.scenes?.map((ls) => ({
         ID: ls?.id,
         Name: ls?.name,
         'Description/ Scalability': ls?.Description,
@@ -223,7 +223,7 @@ export default function DsTable() {
       setRows(mod2);
       setFiltered(mod2);
     }
-  }, [modal]);
+  }, [model]);
 
   // console.log('rows', rows);
 
@@ -250,7 +250,7 @@ export default function DsTable() {
       const { Description, ...rest } = rw;
       return rest;
     });
-    const mod = { ...modal };
+    const mod = { ...model };
     const losses = mod?.scenarios[1]?.subs[0].losses;
     const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
     // console.log('lossesEdit', lossesEdit);
@@ -278,7 +278,7 @@ export default function DsTable() {
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            getModalById(id);
+            getModelById(id);
           }, 500);
         }
       })
@@ -485,19 +485,19 @@ export default function DsTable() {
           </TableBody>
         </Table>
       </TableContainer>
-      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} modal={modal} id={id} rows={rows} notify={notify} />}
+      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} id={id} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses
           open={openCl}
           handleClose={handleCloseCl}
-          modal={modal}
+          model={model}
           rows={rows}
           setRows={setRows}
           selectedRow={selectedRow}
           setSelectedRow={setSelectedRow}
           update={update}
-          getModalById={getModalById}
-          getModals={getModals}
+          getModelById={getModelById}
+          getModels={getModels}
           id={id}
         />
       )}

@@ -21,14 +21,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  update: state.updateModal,
-  getModals: state.getModals,
-  getModal: state.getModalById,
-  modal: state.modal
+  update: state.updateModel,
+  getModels: state.getModels,
+  getModel: state.getModelById,
+  model: state.model
 });
 
 export default function CyberSecurityModal({ open, handleClose, name }) {
-  const { update, getModal, modal } = useStore(selector, shallow);
+  const { update, getModel, model } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
     name: '',
     Description: ''
@@ -37,12 +37,12 @@ export default function CyberSecurityModal({ open, handleClose, name }) {
   const { id } = useParams();
 
   React.useEffect(() => {
-    getModal(id);
+    getModel(id);
   }, [id]);
 
   // console.log('name', name);
   const handleCreate = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     let cyber = mod.scenarios[4].subs[0];
     if (name === 'Goals') {
       cyber?.subs[0]?.scenes.push({
@@ -67,7 +67,7 @@ export default function CyberSecurityModal({ open, handleClose, name }) {
               name: '',
               Description: ''
             });
-            getModals();
+            getModels();
           }, 500);
         }
       })

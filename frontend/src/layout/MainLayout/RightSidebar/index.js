@@ -33,8 +33,8 @@ export default function RightDrawer({
   setEdges,
   setNodes,
   setSelectedElement,
-  modal,
-  updateModal,
+  model,
+  updateModel,
   RefreshAPI
 }) {
   const color = ColorTheme();
@@ -90,8 +90,8 @@ export default function RightDrawer({
             setSelectedElement={setSelectedElement}
             details={details}
             setDetails={setDetails}
-            modal={modal}
-            updateModal={updateModal}
+            model={model}
+            updateModel={updateModel}
             RefreshAPI={RefreshAPI}
           />
         </Box>

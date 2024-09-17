@@ -32,8 +32,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   sidebarNodes: [],
   template: [],
   selectedTemplate: {},
-  Modals: [],
-  modal: {},
+  Models: [],
+  model: {},
   DamageScenaris: [],
   scenerio: {},
   component: [],
@@ -281,7 +281,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
-  getModals: async () => {
+  getModels: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
     const options = {
       method: 'POST',
@@ -291,18 +291,18 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await axios(options);
 
     set({
-      Modals: res.data
+      Models: res.data
     });
   },
 
-  getModalById: async (id) => {
+  getModelById: async (id) => {
     if (id) {
       // const res = await axios.get(`${configuration.apiBaseUrl}Modals/${id}`);
       const res = await axios.post(`${configuration.backendUrl}get_details/models/${id}`);
 
       // console.log('res.data ...', res.data);
       set({
-        modal: res.data
+        model: res.data
       });
     }
   },
@@ -330,10 +330,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
   },
 
-  updateModal: async (newModal) => {
+  updateModel: async (newModel) => {
     // console.log('newModal', newModal);
     // const res = await axios.patch(`${configuration.apiBaseUrl}Modals/${newModal?.id}`, newModal);
-    const res = await axios.put(`${configuration.backendUrl}update_model/${newModal?._id}`, newModal);
+    const res = await axios.put(`${configuration.backendUrl}update_model/${newModel?._id}`, newModel);
 
     // console.log('res', res);
     if (res) {
@@ -458,12 +458,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
-  createModal: async (newModal) => {
-    // console.log('newModal', newModal);
+  createModel: async (newModel) => {
     const FormData = require('form-data');
     let data = new FormData();
-    data.append('name', newModal?.name);
-    data.append('scenarios', JSON.stringify(newModal?.scenarios));
+    data.append('name', newModel?.name);
+    data.append('scenarios', JSON.stringify(newModel?.scenarios));
 
     try {
       const URL = `${configuration.backendUrl}add/models`;

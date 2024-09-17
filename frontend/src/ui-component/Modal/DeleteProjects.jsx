@@ -14,14 +14,14 @@ import {
 import { useNavigate } from 'react-router';
 import toast, { Toaster } from 'react-hot-toast';
 
-export default function DeleteProject({ open, handleClose, Modals, deleteModels }) {
+export default function DeleteProject({ open, handleClose, Models, deleteModels }) {
   const [selectedModels, setSelectedModels] = React.useState([]);
   const notify = (message, status) => toast[status](message);
   const navigate = useNavigate();
 
-  const handleModalClick = (id) => {
+  const handleModelClick = (id) => {
     setSelectedModels((prevSelected) =>
-      prevSelected.includes(id) ? prevSelected.filter((modalId) => modalId !== id) : [...prevSelected, id]
+      prevSelected.includes(id) ? prevSelected.filter((modelId) => modelId !== id) : [...prevSelected, id]
     );
   };
   const handleDelete = () => {
@@ -66,22 +66,22 @@ export default function DeleteProject({ open, handleClose, Modals, deleteModels 
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <List>
-              {Modals?.map((modal) => (
+              {Models?.map((model) => (
                 <ListItemButton
-                  key={modal?._id}
+                  key={model?._id}
                   button
-                  selected={selectedModels.includes(modal?._id)}
-                  onClick={() => handleModalClick(modal?._id)}
+                  selected={selectedModels.includes(model?._id)}
+                  onClick={() => handleModelClick(model?._id)}
                   sx={{
-                    backgroundColor: selectedModels.includes(modal?._id) ? '#fd5c63 !important' : 'inherit',
-                    color: selectedModels.includes(modal?._id) ? 'white !important' : 'blacl !important',
+                    backgroundColor: selectedModels.includes(model?._id) ? '#fd5c63 !important' : 'inherit',
+                    color: selectedModels.includes(model?._id) ? 'white !important' : 'blacl !important',
                     '&:hover': {
-                      backgroundColor: selectedModels.includes(modal?._id) ? 'darkred !important' : 'action.hover',
-                      color: selectedModels.includes(modal?._id) ? 'white !important' : 'inherit'
+                      backgroundColor: selectedModels.includes(model?._id) ? 'darkred !important' : 'action.hover',
+                      color: selectedModels.includes(model?._id) ? 'white !important' : 'inherit'
                     }
                   }}
                 >
-                  <ListItemText sx={{ '& .MuiTypography-root': { color: 'inherit !important' } }} primary={modal?.name} />
+                  <ListItemText sx={{ '& .MuiTypography-root': { color: 'inherit !important' } }} primary={model?.name} />
                 </ListItemButton>
               ))}
             </List>

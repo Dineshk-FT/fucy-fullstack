@@ -37,16 +37,16 @@ const useStyles = makeStyles(() => ({
 
 const selector = (state) => ({
   template: state.template,
-  modals: state.Modals,
+  models: state.Models,
   fetchAPI: state.fetchAPI,
-  fetchModals: state.getModals
+  fetchModels: state.getModels
 });
 
 const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, fetchAPI, fetchModals, modals } = useStore(selector);
+  const { template, fetchAPI, fetchModels, models } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const { Properties } = useSelector((state) => state?.pageName);
@@ -58,7 +58,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
 
   useEffect(() => {
     fetchAPI();
-    fetchModals();
+    fetchModels();
     dispatch(clearProperties());
   }, []);
 
@@ -93,7 +93,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             marginTop: '1.4rem'
           }}
         >
-          <BrowserCard template={template} modals={modals} />
+          <BrowserCard template={template} models={models} />
           {propertiesTabOpen && (
             <Box mx={1} display="flex">
               <Box>

@@ -23,24 +23,24 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  getModalById: state.getModalById,
-  update: state.updateModal,
-  modal: state.modal
+  getModelById: state.getModelById,
+  update: state.updateModel,
+  model: state.model
 });
-export default function CommonModal({ open, handleClose, getModals, name }) {
+export default function CommonModal({ open, handleClose, getModels, name }) {
   const { notify } = React.useContext(ToasterContext);
   const { id } = useParams();
-  const { getModalById, update, modal } = useStore(selector, shallow);
+  const { getModelById, update, model } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
     name: ''
   });
 
   React.useEffect(() => {
-    getModalById(id);
+    getModelById(id);
   }, []);
 
   const handleCreate = () => {
-    const mod = { ...modal };
+    const mod = { ...model };
     let Scene;
     if (name === 'Attack') {
       Scene = mod?.scenarios[3]?.subs[0]?.scenes;
@@ -53,14 +53,12 @@ export default function CommonModal({ open, handleClose, getModals, name }) {
       ...templateDetails
     };
     Scene.push(newScene);
-
-    // console.log('modal', mod);
     update(mod)
       .then((res) => {
         if (res) {
           setTimeout(() => {
             notify(res.data.message, 'success');
-            getModals();
+            getModels();
             handleClose();
           }, 500);
         }

@@ -20,9 +20,9 @@ import { colorPicker, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
-  modal: state.modal,
-  getModal: state.getModalById,
-  update: state.updateModal
+  model: state.model,
+  getModel: state.getModelById,
+  update: state.updateModel
 });
 
 const Head = [
@@ -144,18 +144,18 @@ export default function AttackTreeTable() {
   const classes = useStyles();
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { modal, getModal, update } = useStore(selector, shallow);
+  const { model, getModel, update } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
 
   React.useEffect(() => {
-    getModal(id);
+    getModel(id);
   }, [id]);
 
   React.useEffect(() => {
-    if (modal.scenarios) {
-      const mod1 = modal?.scenarios[3]?.subs[0]?.scenes?.map((dt) => {
+    if (model.scenarios) {
+      const mod1 = model?.scenarios[3]?.subs[0]?.scenes?.map((dt) => {
         // console.log('prp', prp);
         return {
           ID: dt.id,
@@ -167,7 +167,7 @@ export default function AttackTreeTable() {
       setRows(mod1);
       setFiltered(mod1);
     }
-  }, [modal]);
+  }, [model]);
 
   const handleChange = (e, row) => {
     // console.log('e.target', e.target);

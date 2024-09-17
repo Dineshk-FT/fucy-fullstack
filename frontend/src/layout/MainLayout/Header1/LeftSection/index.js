@@ -7,7 +7,7 @@ import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIc
 import InfoIcon from '@mui/icons-material/Info';
 import SelectProject from '../../../../ui-component/Modal/SelectProject';
 import useStore from '../../../../Zustand/store';
-import AddModal from '../../../../ui-component/Modal/AddModal';
+import AddModel from '../../../../ui-component/Modal/AddModal';
 import Components from '../../../../views/NodeList';
 import TemplateList from '../../../../views/Libraries';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
@@ -22,15 +22,15 @@ const imageComponents = {
 };
 
 const selector = (state) => ({
-  Modals: state.Modals,
-  getModals: state.getModals,
+  Models: state.Models,
+  getModels: state.getModels,
   deleteModels: state.deleteModels
 });
 
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { Modals, getModals, deleteModels } = useStore(selector);
+  const { Models, getModels, deleteModels } = useStore(selector);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [open, setOpen] = useState({
     New: false,
@@ -296,9 +296,9 @@ export default function LeftSection() {
           {/* </ClickAwayListener> */}
         </Box>
       ))}
-      {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Modals={Modals} />}
-      {open?.New && <AddModal getModals={getModals} open={open?.New} handleClose={handleClose} />}
-      {open?.Delete && <DeleteProject Modals={Modals} open={open?.Delete} handleClose={handleClose} deleteModels={deleteModels} />}
+      {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Models={Models} />}
+      {open?.New && <AddModel getModels={getModels} open={open?.New} handleClose={handleClose} />}
+      {open?.Delete && <DeleteProject Models={Models} open={open?.Delete} handleClose={handleClose} deleteModels={deleteModels} />}
     </Box>
   );
 }

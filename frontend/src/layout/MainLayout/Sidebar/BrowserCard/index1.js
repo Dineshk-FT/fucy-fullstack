@@ -133,18 +133,18 @@ const useStyles = makeStyles((theme) => ({
 
 const selector = (state) => ({
   addNode: state.addCyberNode,
-  getModals: state.getModals,
-  getModalById: state.getModalById,
+  getModels: state.getModels,
+  getModelById: state.getModelById,
   nodes: state.attackNodes,
-  modal: state.modal,
+  model: state.model,
   getSidebarNode: state.getSidebarNode
 });
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const BrowserCard = ({ modals }) => {
+const BrowserCard = ({ models }) => {
   const color = ColorTheme();
   const { id } = useParams();
-  const { addNode, getModals, nodes, modal, getModalById, getSidebarNode } = useStore(selector);
+  const { addNode, getModels, nodes, model, getModelById, getSidebarNode } = useStore(selector);
   const classes = useStyles();
   const dispatch = useDispatch();
   const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
@@ -168,7 +168,7 @@ const BrowserCard = ({ modals }) => {
   }
 
   const handleNodes = (e, name) => {
-    if (name === 'Item Modal & Assets') {
+    if (name === 'Item Model & Assets') {
       e.preventDefault();
       // console.log('name', name);
       setAnchorItemEl(e.currentTarget);
@@ -192,7 +192,7 @@ const BrowserCard = ({ modals }) => {
   };
 
   useEffect(() => {
-    getModalById(id);
+    getModelById(id);
   }, []);
 
   // console.log('selectedBlock', selectedBlock);
@@ -339,7 +339,7 @@ const BrowserCard = ({ modals }) => {
     setOpenNodelist(true);
     setOpenItemRight(false);
   };
-  // console.log('ModalDetails', ModalDetails);
+
   return (
     <>
       <Typography variant="h4" sx={{ color: color?.tabContentClr }} my={1}>
@@ -353,10 +353,10 @@ const BrowserCard = ({ modals }) => {
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
           >
             <TreeItem
-              key={modal?._id}
-              nodeId={modal?._id}
+              key={model?._id}
+              nodeId={model?._id}
               // label={getLabel('DriveFileMoveIcon', modal?.name)}
-              label={getTitleLabel('ModelIcon', modal?.name, modal?._id)}
+              label={getTitleLabel('ModelIcon', model?.name, model?._id)}
               // onClick={handleNavigate}
               sx={{
                 '& .Mui-selected': {
@@ -364,7 +364,7 @@ const BrowserCard = ({ modals }) => {
                 }
               }}
             >
-              {modal?.scenarios?.map((scene) => (
+              {model?.scenarios?.map((scene) => (
                 <TreeItem
                   key={scene?.name}
                   nodeId={scene?.id}
@@ -609,14 +609,14 @@ const BrowserCard = ({ modals }) => {
       </CardStyle>
 
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
-      <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModals={getModals} name={subName} />
+      <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModels={getModels} name={subName} />
       {openNewNode && (
         <AddNewNode
           open={openNewNode}
           handleClose={() => setOpenNewNode(false)}
           getSidebarNode={getSidebarNode}
           selectedItem={selectedItem}
-          modal={modal}
+          model={model}
           // id={selectedId}
         />
       )}

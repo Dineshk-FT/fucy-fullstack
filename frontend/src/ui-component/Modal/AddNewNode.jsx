@@ -19,7 +19,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
 import AlertMessage from '../Alert';
-import { updatedModalState } from '../../utils/Constraints';
+import { updatedModelState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
 import PaperComponent from './PaperComponent';
 
@@ -37,7 +37,7 @@ const MenuProps = {
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
-  updateModal: state.updateModal,
+  updateModel: state.updateModel,
   createNode: state.createNode,
   setNodes: state.setNodes,
   nodes: state.nodes,
@@ -50,7 +50,7 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) => {
+const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, model }) => {
   const theme = useTheme();
   const [newNode, setNewNode] = useState({
     nodeName: '',
@@ -61,9 +61,8 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [message, setMessage] = React.useState('');
-  const { createNode, updateModal, setNodes, nodes, edges } = useStore(selector);
+  const { createNode, updateModel, setNodes, nodes, edges } = useStore(selector);
 
-  // console.log('modal', modal);
   //Name & type for the new Node
   const handleChange = (event) => {
     const {
@@ -113,15 +112,15 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
     // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
     // selectedsection?.nodes?.push(dataNode);
     // console.log('selectedsection', selectedsection);
-    if (modal) {
+    if (model) {
       const Details = {
         ...dataNode,
         position: { x: 495, y: 250 }
       };
       const list = [...nodes, Details];
       setNodes(list);
-      const mod = { ...modal };
-      updateModal(updatedModalState(mod, list, edges))
+      const mod = { ...model };
+      updateModel(updatedModelState(mod, list, edges))
         .then((res) => {
           // console.log('res', res);
           if (res.data) {

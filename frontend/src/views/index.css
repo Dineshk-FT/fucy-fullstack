@@ -58,6 +58,9 @@ iframe#webpack-dev-server-client-overlay {
   width: initial;
   z-index: 1 !important;
 }
+.react-flow__edge {
+  z-index: 1 !important;
+}
 .react-flow__node-group {
   border: 3px solid darkgray !important;
   min-width: 300px;
@@ -69,7 +72,7 @@ iframe#webpack-dev-server-client-overlay {
   z-index: 0 !important;
   &.selected {
     border: 3px solid #5fbdff !important;
-    z-index: 0 !important;
+    /* z-index: 0 !important; */
   }
 }
 

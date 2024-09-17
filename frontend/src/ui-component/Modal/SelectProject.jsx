@@ -13,15 +13,15 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router';
 
-export default function SelectProject({ open, handleClose, Modals }) {
-  const [selectedModal, setSelectedModal] = React.useState(null);
+export default function SelectProject({ open, handleClose, Models }) {
+  const [selectedModel, setSelectedModel] = React.useState(null);
   const navigate = useNavigate();
 
-  const handleModalClick = (id) => {
-    setSelectedModal(id);
+  const handleModelClick = (id) => {
+    setSelectedModel(id);
   };
   const handleClick = () => {
-    navigate(`/Models/${selectedModal}`);
+    navigate(`/Models/${selectedModel}`);
     handleClose();
   };
   return (
@@ -51,21 +51,21 @@ export default function SelectProject({ open, handleClose, Modals }) {
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <List>
-              {Modals?.map((modal) => (
+              {Models?.map((model) => (
                 <ListItemButton
-                  key={modal?._id}
+                  key={model?._id}
                   button
-                  selected={selectedModal === modal?._id}
-                  onClick={() => handleModalClick(modal?._id)}
+                  selected={selectedModel === model?._id}
+                  onClick={() => handleModelClick(model?._id)}
                   sx={{
-                    backgroundColor: selectedModal === modal?._id ? 'primary.main' : 'inherit',
-                    color: selectedModal === modal?._id ? 'white' : 'inherit',
+                    backgroundColor: selectedModel === model?._id ? 'primary.main' : 'inherit',
+                    color: selectedModel === model?._id ? 'white' : 'inherit',
                     '&:hover': {
-                      backgroundColor: selectedModal === modal?._id ? 'primary.dark' : 'action.hover'
+                      backgroundColor: selectedModel === model?._id ? 'primary.dark' : 'action.hover'
                     }
                   }}
                 >
-                  <ListItemText primary={modal?.name} />
+                  <ListItemText primary={model?.name} />
                 </ListItemButton>
               ))}
             </List>

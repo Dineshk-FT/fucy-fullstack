@@ -48,7 +48,7 @@ import ColorTheme from '../../store/ColorTheme';
 import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
 import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
-import { updatedModalState } from '../../utils/Constraints';
+import { updatedModelState } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 
 const elk = new ELK();
@@ -100,10 +100,10 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
-  modal: state.modal,
-  getModals: state.getModals,
-  getModalById: state.getModalById,
-  updateModal: state.updateModal,
+  model: state.model,
+  getModels: state.getModels,
+  getModelById: state.getModelById,
+  updateModel: state.updateModel,
   getIntersectingNodes: state.getIntersectingNodes,
   getGroupedNodes: state.getGroupedNodes
 });
@@ -154,10 +154,10 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
-    getModalById,
-    modal,
-    getModals,
-    updateModal,
+    getModelById,
+    model,
+    getModels,
+    updateModel,
     getIntersectingNodes
   } = useStore(selector, shallow);
   const { id } = useParams();
@@ -174,19 +174,18 @@ export default function MainCanvas() {
   const [groupList, setGroupList] = useState([]);
   const { propertiesTabOpen } = useSelector((state) => state?.canvas);
 
-  // console.log('modal', modal);
   useEffect(() => {
-    getModalById(id);
+    getModelById(id);
   }, [id]);
 
   useEffect(() => {
-    const template = modal?.template;
+    const template = model?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
     setTimeout(() => {
       onRestore(template);
     }, 100);
-  }, [modal]);
+  }, [model]);
 
   const {
     isDsTableOpen,
@@ -405,8 +404,8 @@ export default function MainCanvas() {
   );
 
   const RefreshAPI = () => {
-    getModalById(id);
-    getModals();
+    getModelById(id);
+    getModels();
   };
 
   const handleClose = () => {
@@ -437,9 +436,9 @@ export default function MainCanvas() {
     setEdges([]);
   };
 
-  const handleSaveToModal = () => {
-    let mod = { ...modal };
-    updateModal(updatedModalState(mod, nodes, edges))
+  const handleSaveToModel = () => {
+    let mod = { ...model };
+    updateModel(updatedModelState(mod, nodes, edges))
       .then((res) => {
         if (res) {
           setTimeout(() => {
@@ -525,7 +524,7 @@ export default function MainCanvas() {
   if (isDsTableOpen) return <DsTable />;
   if (isDerivationTableOpen) return <DsDerivationTable />;
   if (isTsTableOpen) return <Tstable />;
-  if (isAttackTreeOpen) return <AttackTree modal={modal} />;
+  if (isAttackTreeOpen) return <AttackTree model={model} />;
   if (isCyberBlockOpen) return <CyberSecurityBlock />;
   if (isCyberTableOpen) return <CyberSecurityTable />;
   if (isAttackTableOpen) return <AttackTreeTable />;
@@ -542,7 +541,7 @@ export default function MainCanvas() {
             horizontal={() => onLayout({ direction: 'RIGHT' })}
             vertical={() => onLayout({ direction: 'DOWN' })}
             handleClear={handleClear}
-            handleSave={handleSaveToModal}
+            handleSave={handleSaveToModel}
             download={handleDownload}
             createGroup={createGroup}
           />

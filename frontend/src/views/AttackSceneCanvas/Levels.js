@@ -42,9 +42,9 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
-  modal: state.modal,
-  getModalById: state.getModalById,
-  updateModal: state.updateModal
+  model: state.model,
+  getModelById: state.getModelById,
+  updateModel: state.updateModel
 });
 
 //Edge line styling
