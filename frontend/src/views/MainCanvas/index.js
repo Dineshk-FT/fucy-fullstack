@@ -334,7 +334,7 @@ export default function MainCanvas() {
           data: {
             label: parsedNode.data['label'],
             style: {
-              backgroundColor: parsedNode.data['bgColor'],
+              backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
               fontSize: '16px',
               fontFamily: 'Inter',
               fontStyle: 'normal',
@@ -521,7 +521,7 @@ export default function MainCanvas() {
     dragAdd(newNode);
   };
 
-  console.log('nodes', nodes);
+  // console.log('nodes', nodes);
   if (isDsTableOpen) return <DsTable />;
   if (isDerivationTableOpen) return <DsDerivationTable />;
   if (isTsTableOpen) return <Tstable />;

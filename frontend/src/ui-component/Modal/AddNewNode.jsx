@@ -140,6 +140,7 @@ const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, modal }) 
           setMessage('Something went wrong');
         });
     } else {
+      // console.log('details', details);
       createNode(details)
         // updateNode(selectedsection)
         .then((res) => {

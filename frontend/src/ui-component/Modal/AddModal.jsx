@@ -214,7 +214,7 @@ export default function AddModal({ open, handleClose, getModals }) {
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            notify(res.message, 'success');
+            notify(res.message ?? 'Model created successfully', 'success');
             navigate(`/Models/${res?.model_id}`);
             // window.location.href = `/Modals/${id}`;
             getModals();
@@ -223,7 +223,7 @@ export default function AddModal({ open, handleClose, getModals }) {
         }
       })
       .catch((err) => {
-        'err', err;
+        console.log('err', err);
         notify('Something Went Wrong', 'error');
       });
     setTemplateDetails((state) => ({

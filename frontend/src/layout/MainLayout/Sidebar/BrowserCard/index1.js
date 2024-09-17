@@ -257,20 +257,23 @@ const BrowserCard = ({ modals }) => {
   };
 
   const handleOpenActionTree = (scene, sub) => {
-    // console.log('name', name);
+    // console.log('scene', scene);
+    // console.log('sub', sub);
     if (sub) {
       dispatch(AttackTreePageOpen());
-      dispatch(setAttackScene(at_scene));
+      dispatch(setAttackScene(scene));
     }
-    if (scene.name === 'Attack') {
+    if (scene === 'Attack') {
       // console.log('first');
       dispatch(attackTableOpen());
     }
   };
 
-  const handleAttackTree = (at_scene) => {
-    // console.log('at_scene', at_scene);
+  const handleAttackTree = (at_scene, name) => {
     dispatch(setAttackScene(at_scene));
+    if (name) {
+      dispatch(AttackTreePageOpen());
+    }
   };
 
   const handleRightClick = (e, name) => {
@@ -530,7 +533,7 @@ const BrowserCard = ({ modals }) => {
                           key={`2${sub?.name}`}
                           nodeId={`2${sub?.name}`}
                           label={getLabel('SwipeRightAltIcon', sub?.name)}
-                          onDoubleClick={() => handleOpenActionTree(sub?.name)}
+                          onClick={() => handleOpenActionTree(sub?.name)}
                           onContextMenu={(e) => handleContext(e, sub?.name)}
                         >
                           {sub?.scenes?.map((at_scene) => {
@@ -549,8 +552,8 @@ const BrowserCard = ({ modals }) => {
                                 key={at_scene?.id}
                                 nodeId={at_scene?.id}
                                 label={at_scene?.name}
-                                onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
-                                onClick={() => handleAttackTree(at_scene)}
+                                // onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
+                                onClick={() => handleAttackTree(at_scene, sub?.name)}
                               ></TreeItem>
                             );
                           })}

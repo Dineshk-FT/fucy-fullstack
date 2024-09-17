@@ -29,7 +29,6 @@ const useStyles = makeStyles(() => ({
   icon: {
     fontSize: 24,
     position: 'absolute',
-    top: 0,
     right: 0,
     cursor: 'pointer',
     zIndex: 1400
@@ -109,7 +108,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         <ArrowCircleLeftTwoToneIcon
           onClick={handleDrawerToggle} // Use handleDrawerToggle here
           className={classes.icon}
-          sx={{ margin: '5px', color: color?.iconColor }}
+          sx={{ margin: '5px', color: color?.iconColor, top: 0 }}
         />
       </BrowserView>
       <MobileView>
@@ -162,7 +161,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             <ArrowCircleRightTwoToneIcon
               onClick={handleDrawerToggle} // Use handleDrawerToggle here
               className={classes.icon}
-              sx={{ position: 'relative', left: '0px', marginTop: `${navbarHeight}px`, color: color?.iconColor }}
+              sx={{ position: 'relative', left: '0px', top: '0.8rem', marginTop: `${navbarHeight}px`, color: color?.iconColor }}
             />
           )}
 

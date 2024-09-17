@@ -10,6 +10,7 @@ import useStore from '../../../../Zustand/store';
 import AddModal from '../../../../ui-component/Modal/AddModal';
 import Components from '../../../../views/NodeList';
 import TemplateList from '../../../../views/Libraries';
+import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 
 const imageComponents = {
   AttackIcon,
@@ -22,17 +23,19 @@ const imageComponents = {
 
 const selector = (state) => ({
   Modals: state.Modals,
-  getModals: state.getModals
+  getModals: state.getModals,
+  deleteModels: state.deleteModels
 });
 
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { Modals, getModals } = useStore(selector);
+  const { Modals, getModals, deleteModels } = useStore(selector);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [open, setOpen] = useState({
     New: false,
-    Open: false
+    Open: false,
+    Delete: false
   });
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState(null);
   const [selectedSubMenu, setSelectedSubMenu] = useState(null);
@@ -43,8 +46,9 @@ export default function LeftSection() {
       options: [
         { label: 'New', action: () => handleOpen('New') },
         { label: 'Open', action: () => handleOpen('Open') },
-        { label: 'Save', action: () => console.log('Save') },
-        { label: 'Exit', action: () => console.log('Exit') }
+        { label: 'Delete', action: () => handleOpen('Delete') }
+        // { label: 'Save', action: () => console.log('Save') },
+        // { label: 'Exit', action: () => console.log('Exit') }
       ]
     },
     {
@@ -186,7 +190,8 @@ export default function LeftSection() {
   const handleClose = () => {
     setOpen({
       New: false,
-      Open: false
+      Open: false,
+      Delete: false
     });
   };
 
@@ -293,6 +298,7 @@ export default function LeftSection() {
       ))}
       {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Modals={Modals} />}
       {open?.New && <AddModal getModals={getModals} open={open?.New} handleClose={handleClose} />}
+      {open?.Delete && <DeleteProject Modals={Modals} open={open?.Delete} handleClose={handleClose} deleteModels={deleteModels} />}
     </Box>
   );
 }

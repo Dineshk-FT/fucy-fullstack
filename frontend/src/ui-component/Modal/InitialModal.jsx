@@ -42,6 +42,7 @@ const InitialModal = () => {
       New: false,
       Open: false
     });
+    onClose();
   };
   const handleClick = (name) => {
     setOpen((state) => ({
@@ -55,7 +56,6 @@ const InitialModal = () => {
       <Dialog open={initialDialogOpen} onClose={onClose} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
         <DialogTitle style={{ cursor: 'move' }} id="draggable-dialog-title">
           <Typography variant="h4" color="primary">
-            {' '}
             Project Menu
           </Typography>
         </DialogTitle>

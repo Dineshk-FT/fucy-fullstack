@@ -29,7 +29,7 @@ const CustomEdge = ({
   }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
   const handleDrag = (event) => {
-    console.log('event', event);
+    // console.log('event', event);
     // Logic to update edge path during drag
     const newPath = getBezierPath({
       sourceX,

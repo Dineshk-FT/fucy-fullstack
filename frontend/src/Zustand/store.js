@@ -459,12 +459,11 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   createModal: async (newModal) => {
-    console.log('newModal', newModal);
+    // console.log('newModal', newModal);
     const FormData = require('form-data');
     let data = new FormData();
     data.append('name', newModal?.name);
     data.append('scenarios', JSON.stringify(newModal?.scenarios));
-    console.log('data', data);
 
     try {
       const URL = `${configuration.backendUrl}add/models`;
@@ -484,6 +483,21 @@ const useStore = createWithEqualityFn((set, get) => ({
   deleteNode: async (id) => {
     const res = await axios.delete(`${configuration.apiBaseUrl}sidebarNode/${id}`);
     // console.log('res', res);
+  },
+
+  deleteModels: async (ids) => {
+    // console.log('ids', ids);
+    let data = new FormData();
+    data.append('model_ids', ids);
+    try {
+      const URL = `${configuration.backendUrl}delete/model`;
+      const response = await axios.post(URL, data);
+      // console.log('response', response);
+      return response.data;
+    } catch (err) {
+      console.log('err', err);
+      throw err; // Re-throwing the error to handle it in calling code if needed
+    }
   },
 
   deleteTemplate: async (id) => {
