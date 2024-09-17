@@ -12,10 +12,10 @@ const DiagonalNode = ({ data, isConnectable, type }) => {
           ...data?.style
         }}
       >
-        <Handle className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
+        <Handle className="handle" position={Position.Top} isConnectable={isConnectable} />
         <div>{data?.label}</div>
 
-        <Handle className="handle" type="source" position={Position.Bottom} isConnectable={isConnectable} />
+        <Handle className="handle" position={Position.Bottom} isConnectable={isConnectable} />
       </div>
     </>
   );

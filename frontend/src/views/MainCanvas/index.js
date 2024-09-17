@@ -565,6 +565,7 @@ export default function MainCanvas() {
             onDrop={onDrop}
             onDragOver={onDragOver}
             fitView
+            connectionMode="loose"
             // onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
             // onContextMenu={createGroup}

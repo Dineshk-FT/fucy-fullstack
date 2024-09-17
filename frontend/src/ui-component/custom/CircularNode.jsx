@@ -11,9 +11,9 @@ const CircularNode = ({ data, isConnectable, type }) => {
           ...data?.style
         }}
       >
-        <Handle className="handle" type="target" position={Position.Left} isConnectable={isConnectable} />
+        <Handle className="handle" position={Position.Left} isConnectable={isConnectable} />
         <div>{data?.label}</div>
-        <Handle className="handle" type="range" position={Position.Right} isConnectable={isConnectable} />
+        <Handle className="handle" position={Position.Right} isConnectable={isConnectable} />
       </div>
     </>
   );

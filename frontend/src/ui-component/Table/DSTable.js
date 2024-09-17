@@ -436,6 +436,7 @@ export default function DsTable() {
     );
   };
 
+  // console.log('model', model);
   // console.log('rows', filtered);
   // console.log('selectedRow', selectedRow)
   return (

@@ -15,10 +15,10 @@ const MultiHandleNode = ({ data, isConnectable, type }) => {
         }}
       >
         {/* Edges */}
-        <Handle className="handle" type="target" id="top" position={Position.Top} isConnectable={isConnectable} />
-        <Handle className="handle" type="source" id="bottom" position={Position.Bottom} isConnectable={isConnectable} />
-        <Handle className="handle" type="target" id="left" position={Position.Left} isConnectable={isConnectable} />
-        <Handle className="handle" type="source" id="right" position={Position.Right} isConnectable={isConnectable} />
+        <Handle className="handle" id="top" position={Position.Top} isConnectable={isConnectable} />
+        <Handle className="handle" id="bottom" position={Position.Bottom} isConnectable={isConnectable} />
+        <Handle className="handle" id="left" position={Position.Left} isConnectable={isConnectable} />
+        <Handle className="handle" id="right" position={Position.Right} isConnectable={isConnectable} />
 
         <div>{data?.label}</div>
       </div>

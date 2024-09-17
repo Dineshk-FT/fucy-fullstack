@@ -1,6 +1,7 @@
 import { v4 as uid } from 'uuid';
 
 export const updatedModelState = (mod, nodes, edges) => {
+  // console.log('mod', mod);
   let Derivations = nodes
     ?.filter((nd) => nd?.type !== 'group')
     ?.map((node) => {
