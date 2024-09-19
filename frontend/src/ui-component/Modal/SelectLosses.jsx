@@ -85,7 +85,6 @@ export default function SelectLosses({
   const handleClick = () => {
     const mod = { ...model };
     const Rows = [...rows];
-    const losses = mod?.scenarios[1]?.subs[0].losses;
     const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
     const Index = Rows.findIndex((rw) => rw.id === selectedRow.id);
     Rows[Index] = selectedRow;
@@ -100,46 +99,47 @@ export default function SelectLosses({
       }
     });
 
-    const updatedLoss = losses
-      ?.map((loss) =>
-        changes.filter((update) => {
-          if (loss.id === update.id) {
-            return { ...loss, cyberLosses: update.cyberLosses };
-          }
-        })
-      )
-      .flat();
+    // const updatedLoss = losses
+    //   ?.map((loss) =>
+    //     changes.filter((update) => {
+    //       if (loss.id === update.id) {
+    //         return { ...loss, cyberLosses: update.cyberLosses };
+    //       }
+    //     })
+    //   )
+    //   .flat();
 
-    const updatedLossEdit = lossesEdit
-      ?.map((loss) =>
-        changes.filter((update) => {
-          if (loss.id === update.id) {
-            return { ...loss, cyberLosses: update.cyberLosses };
-          }
-        })
-      )
-      .flat();
+    // const updatedLossEdit = lossesEdit
+    //   ?.map((loss) =>
+    //     changes.filter((update) => {
+    //       if (loss.id === update.id) {
+    //         return { ...loss, cyberLosses: update.cyberLosses };
+    //       }
+    //     })
+    //   )
+    //   .flat();
 
-    mod.scenarios[1].subs[0].losses = updatedLoss;
-    mod.scenarios[1].subs[1].scenes = updatedLossEdit;
+    // mod.scenarios[1].subs[0].losses = updatedLoss;
+    mod.scenarios[1].subs[1].scenes = changes;
     //     console.log('updatedLoss', updatedLoss)
     // console.log('updatedLossEdit', updatedLossEdit)
 
     threat.losses = cybersec;
-    setRows(Rows);
+    // setRows(Rows);
+
     // console.log('threat', threat)
     // console.log('mod', mod);
-    // update(mod)
-    //   .then((res) => {
-    //     if (res) {
-    //       setTimeout(() => {
-    //         getModelById(id);
-    //         getModels();
-    //       }, 500);
-    //     }
-    //   })
-    //   .catch((err) => console.log('err', err));
-    // handleClose();
+    update(mod)
+      .then((res) => {
+        if (res) {
+          setTimeout(() => {
+            getModelById(id);
+            getModels();
+          }, 500);
+        }
+      })
+      .catch((err) => console.log('err', err));
+    handleClose();
   };
   return (
     <React.Fragment>

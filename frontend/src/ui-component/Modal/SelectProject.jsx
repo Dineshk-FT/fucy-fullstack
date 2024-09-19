@@ -1,5 +1,5 @@
 /* eslint-disable */
-import * as React from 'react';
+import React, { useState } from 'react';
 import {
   List,
   ListItemButton,
@@ -12,9 +12,11 @@ import {
   Button
 } from '@mui/material';
 import { useNavigate } from 'react-router';
+import { useDispatch } from 'react-redux';
 
 export default function SelectProject({ open, handleClose, Models }) {
-  const [selectedModel, setSelectedModel] = React.useState(null);
+  const dispatch = useDispatch();
+  const [selectedModel, setSelectedModel] = useState(null);
   const navigate = useNavigate();
 
   const handleModelClick = (id) => {
@@ -22,10 +24,11 @@ export default function SelectProject({ open, handleClose, Models }) {
   };
   const handleClick = () => {
     navigate(`/Models/${selectedModel}`);
+    dispatch(closeAll());
     handleClose();
   };
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         onClose={handleClose}
@@ -80,6 +83,6 @@ export default function SelectProject({ open, handleClose, Models }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+    </>
   );
 }

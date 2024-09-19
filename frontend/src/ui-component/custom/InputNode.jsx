@@ -12,7 +12,7 @@ const InputNode = ({ data, isConnectable, type }) => {
           ...data?.style
         }}
       >
-        <Handle className="handle" type="source" position={Position.Bottom} isConnectable={isConnectable} />
+        <Handle className="handle" id="a" type="source" position={Position.Bottom} isConnectable={isConnectable} />
         <div>{data?.label}</div>
       </div>
     </>
