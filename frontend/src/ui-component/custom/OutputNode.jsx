@@ -12,7 +12,7 @@ const OutputNode = ({ data, isConnectable, type }) => {
         }}
       >
         <div>{data?.label}</div>
-        <Handle className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
+        <Handle className="handle" id="a" type="target" position={Position.Top} isConnectable={isConnectable} />
       </div>
     </>
   );

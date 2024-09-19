@@ -11,9 +11,9 @@ export default function CyberGoal({ data, isConnectable, type }) {
           backgroundColor: `${data['bgColor']}`
         }}
       >
-        <Handle className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
+        <Handle className="handle" id="a" type="target" position={Position.Top} isConnectable={isConnectable} />
         <div>{data?.label}</div>
-        <Handle className="handle" type="range" position={Position.Bottom} isConnectable={isConnectable} />
+        <Handle className="handle" id="b" type="range" position={Position.Bottom} isConnectable={isConnectable} />
       </div>
     </>
   );

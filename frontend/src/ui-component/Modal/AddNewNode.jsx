@@ -41,7 +41,8 @@ const selector = (state) => ({
   createNode: state.createNode,
   setNodes: state.setNodes,
   nodes: state.nodes,
-  edges: state.edges
+  edges: state.edges,
+  getSidebarNode: state.getSidebarNode
 });
 
 function getStyles(name, nodes, theme) {
@@ -50,7 +51,7 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = ({ open, handleClose, getSidebarNode, selectedItem, model }) => {
+const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
   const theme = useTheme();
   const [newNode, setNewNode] = useState({
     nodeName: '',

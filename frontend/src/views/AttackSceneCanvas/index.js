@@ -12,7 +12,8 @@ import ReactFlow, {
   // MarkerType,
   Controls,
   MiniMap,
-  Panel
+  Panel,
+  MarkerType
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -26,6 +27,7 @@ import { useDispatch } from 'react-redux';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
+import AttackNode from '../../ui-component/custom/AttackNode';
 
 const elk = new ELK();
 
@@ -76,6 +78,7 @@ const selector = (state) => ({
   onConnect: state.onAttackConnect,
   dragAdd: state.dragAdd,
   addAttackNode: state.addAttackNode,
+  addAttackEdge: state.addAttackEdge,
   dragAddNode: state.dragAddNode,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
@@ -88,13 +91,13 @@ const selector = (state) => ({
 //Edge line styling
 const connectionLineStyle = { stroke: 'black' };
 const edgeOptions = {
-  type: 'straight',
-  // markerEnd: {
-  //   type: MarkerType.ArrowClosed,
-  //   width: 20,
-  //   height: 20,
-  //   color: "black",
-  // },
+  type: 'step',
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+    color: 'black'
+  },
   // markerStart: {
   //   type: MarkerType.ArrowClosed,
   //   width: 20,
@@ -110,7 +113,7 @@ const edgeOptions = {
 const nodetypes = {
   input: InputNode,
   output: OutputNode,
-  default: DefaultNode,
+  default: AttackNode,
   receiver: CustomNode,
   signal: CustomNode,
   transmitter: CircularNode,
@@ -134,6 +137,7 @@ export default function AttackBlock({ attackScene }) {
     // dragAdd,
     // dragAddNode,
     addAttackNode,
+    addAttackEdge,
     setNodes,
     setEdges,
     getModelById,
@@ -149,7 +153,7 @@ export default function AttackBlock({ attackScene }) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
-  // console.log('nodes', nodes);
+  console.log('nodes out', nodes);
 
   const onDrop = useCallback(
     (event) => {
@@ -163,13 +167,14 @@ export default function AttackBlock({ attackScene }) {
         parsedNode = JSON.parse(cyber);
       }
       // console.log('parsedNode', parsedNode);
+      const newId = uid();
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
       });
       if (parsedNode) {
         const newNode = {
-          id: uid(),
+          id: newId,
           position,
           type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
           dragged: parsedNode?.dragged ? parsedNode?.dragged : false,
@@ -192,11 +197,23 @@ export default function AttackBlock({ attackScene }) {
             }
           }
         };
+
+        const newEdge = {
+          id: uid(),
+          source: nodes[nodes.length - 1].id,
+          target: newId,
+          type: 'default',
+          markerEnd: { type: MarkerType.Arrow }
+        };
+        // const nod = JSON.parse(JSON.stringify(nodes));
+        // const list = [...nod, newNode];
+        // setNodes(list);
         addAttackNode(newNode);
+        addAttackEdge(newEdge);
         // console.log('newNode', newNode);
       }
     },
-    [reactFlowInstance]
+    [reactFlowInstance, nodes]
   );
 
   const onLayout = useCallback(
@@ -228,11 +245,12 @@ export default function AttackBlock({ attackScene }) {
   }, [attackScene]);
   // console.log('nodes', nodes);
   const handleSave = () => {
-    const atScene = { ...attackScene };
-    console.log('atScene', atScene);
-    const mod = { ...model };
+    const atScene = JSON.parse(JSON.stringify(attackScene));
+    // const atScene = { ...attackScene };
+    // console.log('atScene', atScene);
+    const mod = JSON.parse(JSON.stringify(model));
     const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
-    console.log('selected', selected);
+    // console.log('selected', selected);
     selected.template = {
       id: uid(),
       nodes: nodes,

@@ -196,22 +196,22 @@ const BrowserCard = ({ models }) => {
   }, []);
 
   // console.log('selectedBlock', selectedBlock);
-  const getLabel = (icon, name) => {
-    const IconComponent = iconComponents[icon];
+  const getImageLabel = (icon, name) => {
+    const Image = imageComponents[icon];
     return (
       <div className={classes.labelRoot}>
-        {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
+        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
         <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
           {name}
         </Typography>
       </div>
     );
   };
-  const getImageLabel = (icon, name) => {
-    const Image = imageComponents[icon];
+  const getLabel = (icon, name) => {
+    const IconComponent = iconComponents[icon];
     return (
       <div className={classes.labelRoot}>
-        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
+        {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
         <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
           {name}
         </Typography>
@@ -310,12 +310,12 @@ const BrowserCard = ({ models }) => {
       addNode(newNode);
     }
   };
-  const handleOpenTable = (name) => {
-    // console.log('name', name)
-    if (name.includes('CyberSecurity Controls')) {
-      dispatch(cyberTableOpen());
-    }
-  };
+  // const handleOpenTable = (name) => {
+  //   // console.log('name', name)
+  //   if (name.includes('CyberSecurity Controls')) {
+  //     dispatch(cyberTableOpen());
+  //   }
+  // };
 
   const handleContext = (e, name) => {
     e.preventDefault();
@@ -388,8 +388,7 @@ const BrowserCard = ({ models }) => {
                           nodeId={`1${sub?.name}`} //change to id
                           //   label={sub?.name}
                           label={getLabel('TopicIcon', sub?.name)}
-                          onDoubleClick={() => handleSwicthDsTable(sub?.name)}
-                          onClick={() => handleOpenTable(sub?.name)}
+                          onClick={() => handleSwicthDsTable(sub?.name)} //change to onClick
                         >
                           {sub?.name === 'Damage Scenarios Derivations' &&
                             sub?.Details?.map((ls) => (
@@ -409,7 +408,7 @@ const BrowserCard = ({ models }) => {
                                 <TreeItem
                                   key={dm_scene?.id}
                                   nodeId={dm_scene?.id}
-                                  label={getLabel('DangerousIcon', dm_scene?.name)}
+                                  label={getLabel('DangerousIcon', dm_scene?.Name)}
                                   //   label={dm_scene?.name}
                                 ></TreeItem>
                               );
@@ -418,9 +417,10 @@ const BrowserCard = ({ models }) => {
                             sub?.losses?.map((dt) =>
                               dt?.cyberLosses?.map((pr, prin) =>
                                 pr?.props?.map((pp, pin) => {
+                                  // console.log('pr', dt);
                                   const label = `[TS00${prin}${pin}] ${threatType(pp)} for the loss of ${pp} of ${
                                     pr?.name
-                                  } for Damage Scene ${dt?.id}`;
+                                  } for Damage Scene ${dt?.ID}`;
                                   const Details = {
                                     label: label,
                                     type: 'default',
@@ -454,7 +454,6 @@ const BrowserCard = ({ models }) => {
                                       label={getLabel('BrightnessLowIcon', sce?.name)}
                                       onClick={() => handleAddComponent('goal', sce)}
                                       onDragStart={() => handleDragStart(e, sce)}
-                                      onCli
                                     ></TreeItem>
                                   ))}
                                 {s_sub?.name === 'CyberSecurity Requirements' &&

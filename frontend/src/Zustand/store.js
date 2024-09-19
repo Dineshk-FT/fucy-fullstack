@@ -437,6 +437,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  addAttackEdge: (newEdge) => {
+    set((state) => ({
+      attackEdges: [...state.attackEdges, newEdge]
+    }));
+  },
+
   addCyberNode: (newNode) => {
     // console.log('newNode', newNode);
     set((state) => ({

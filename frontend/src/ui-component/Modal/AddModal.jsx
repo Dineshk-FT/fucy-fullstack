@@ -16,6 +16,8 @@ import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import { v4 as uid } from 'uuid';
+import { useDispatch } from 'react-redux';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -43,7 +45,7 @@ const selector = (state) => ({
 // const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 export default function AddModel({ open, handleClose, getModels }) {
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { create } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
@@ -216,6 +218,7 @@ export default function AddModel({ open, handleClose, getModels }) {
           setTimeout(() => {
             notify(res.message ?? 'Model created successfully', 'success');
             navigate(`/Models/${res?.model_id}`);
+            dispatch(closeAll());
             // window.location.href = `/Modals/${id}`;
             getModels();
             handleClose();

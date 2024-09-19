@@ -29,9 +29,9 @@ export default function AddDamageScenarios({ open, handleClose, model, id, rows,
   // console.log('rows', rows);
   const { update, getModelById, getModels } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
-    id: '',
-    name: '',
-    Description: '',
+    ID: '',
+    Name: '',
+    'Description/ Scalability': '',
     cyberLosses: []
   });
 
@@ -39,7 +39,7 @@ export default function AddDamageScenarios({ open, handleClose, model, id, rows,
     const mod = { ...model };
     const temp = { ...templateDetails };
     const len = rows.length;
-    temp.id = `DS00${len + 1}`;
+    temp.ID = `DS00${len + 1}`;
     mod.scenarios[1].subs[1].scenes.push(temp);
     update(mod)
       .then((res) => {
@@ -51,10 +51,10 @@ export default function AddDamageScenarios({ open, handleClose, model, id, rows,
             getModelById(id);
             getModels();
             setTemplateDetails({
-              id: '',
-              name: '',
-              Description: '',
-              losses: []
+              ID: '',
+              Name: '',
+              'Description/ Scalability': '',
+              cyberLosses: []
             });
           }, 500);
         }
@@ -87,20 +87,20 @@ export default function AddDamageScenarios({ open, handleClose, model, id, rows,
               <TextField
                 id="outlined-basic"
                 // label="Name"
-                value={templateDetails?.name}
+                value={templateDetails?.Name}
                 variant="outlined"
                 placeholder="Name"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
+                onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
               <InputLabel>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"
-                value={templateDetails?.Description}
+                value={templateDetails['Description/ Scalability']}
                 multiline
                 rows={4}
                 placeholder="Description"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, Description: e.target.value })}
+                onChange={(e) => setTemplateDetails({ ...templateDetails, 'Description/ Scalability': e.target.value })}
               />
             </Box>
           </DialogContentText>

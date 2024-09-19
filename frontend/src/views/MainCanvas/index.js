@@ -459,9 +459,9 @@ export default function MainCanvas() {
   };
 
   const toggleDrawerOpen = (tab) => dispatch(drawerOpen(tab));
-  const toggleDrawerClose = () => dispatch(drawerClose());
-  const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
-  const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
+  // const toggleDrawerClose = () => dispatch(drawerClose());
+  // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
+  // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => reactFlowInstance.current;
 
   const handleSidebarOpen = (e, node) => {

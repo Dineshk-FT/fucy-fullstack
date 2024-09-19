@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import useStore from '../../Zustand/store';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,10 +31,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const selector = (state) => ({
-  sidebarNodes: state.sidebarNodes,
-  getSidebarNode: state.getSidebarNode
-  // deleteNode: state.deleteNode
-  // getComponent: state.getComponent
+  sidebarNodes: state.sidebarNodes
 });
 
 const Components = () => {
@@ -44,7 +41,7 @@ const Components = () => {
   const [openAdd, setOpenAdd] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedItem, setSelectedItem] = useState({});
-  const { sidebarNodes, getSidebarNode } = useStore(selector);
+  const { sidebarNodes } = useStore(selector);
   const color = ColorTheme();
 
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -66,10 +63,6 @@ const Components = () => {
     event.dataTransfer.setData('application/parseFile', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
-
-  useEffect(() => {
-    getSidebarNode();
-  }, []);
 
   const handleOpen = (item) => {
     setOpen(true);
@@ -170,7 +163,7 @@ const Components = () => {
         </Fab>
         {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer', my: 1, border: '1px solid' }} /> */}
       </Box>
-      <AddNewNode open={open} handleClose={handleClose} getSidebarNode={getSidebarNode} selectedItem={selectedItem} />
+      <AddNewNode open={open} handleClose={handleClose} selectedItem={selectedItem} />
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
     </>
   );

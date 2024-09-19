@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tooltip, Typography, Box, ClickAwayListener, Popper, Paper } from '@mui/material';
 import ColorTheme from '../../../../store/ColorTheme';
 import { NavLink } from 'react-router-dom';
@@ -24,13 +24,14 @@ const imageComponents = {
 const selector = (state) => ({
   Models: state.Models,
   getModels: state.getModels,
-  deleteModels: state.deleteModels
+  deleteModels: state.deleteModels,
+  getSidebarNode: state.getSidebarNode
 });
 
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { Models, getModels, deleteModels } = useStore(selector);
+  const { Models, getModels, deleteModels, getSidebarNode } = useStore(selector);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [open, setOpen] = useState({
     New: false,
@@ -39,6 +40,10 @@ export default function LeftSection() {
   });
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState(null);
   const [selectedSubMenu, setSelectedSubMenu] = useState(null);
+
+  useEffect(() => {
+    getSidebarNode();
+  }, []);
 
   const menuItems = [
     {

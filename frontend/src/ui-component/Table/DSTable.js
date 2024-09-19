@@ -207,9 +207,9 @@ export default function DsTable() {
   React.useEffect(() => {
     if (model.scenarios) {
       const mod2 = model?.scenarios[1]?.subs[1]?.scenes?.map((ls) => ({
-        ID: ls?.id,
-        Name: ls?.name,
-        'Description/ Scalability': ls?.Description,
+        ID: ls?.ID,
+        Name: ls?.Name,
+        'Description/ Scalability': ls['Description/ Scalability'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         impacts: ls?.impacts
           ? {
