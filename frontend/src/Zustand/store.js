@@ -184,7 +184,6 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   getGroupedNodes: () => {
     let nodes = get().nodes;
-    // console.log('nodes', nodes)
     const groups = nodes?.filter((nd) => nd?.type === 'group');
     const intersectingNodesMap = {};
 
@@ -235,7 +234,24 @@ const useStore = createWithEqualityFn((set, get) => ({
 
         intersectingNodesMap[group.id] = intersectingNodes;
       });
+
+      // Remove parentId and extent from nodes that are not inside any group
+      nodes = nodes.map((node) => {
+        const isInGroup = Object.values(intersectingNodesMap)
+          .flat()
+          .some((n) => n.id === node.id);
+
+        if (!isInGroup && node.parentId && node.extent) {
+          const { parentId, extent, ...rest } = node;
+          return rest;
+        }
+        return node;
+      });
     }
+
+    set({
+      nodes: nodes
+    });
     return [intersectingNodesMap, nodes];
   },
 
