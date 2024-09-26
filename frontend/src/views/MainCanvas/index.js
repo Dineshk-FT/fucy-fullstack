@@ -50,6 +50,8 @@ import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 import { updatedModelState } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
+import StepEdge from '../../ui-component/custom/edges/StepEdge';
+import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 
 const elk = new ELK();
 
@@ -121,6 +123,9 @@ const edgeOptions = {
   animated: false,
   style: {
     stroke: 'grey'
+  },
+  data: {
+    label: 'edge'
   }
 };
 
@@ -139,7 +144,9 @@ const nodetypes = {
   multihandle: MultiHandleNode
 };
 const edgeTypes = {
-  custom: CustomEdge
+  custom: CustomEdge,
+  // step: CurveEdge
+  step: StepEdge
 };
 const flowKey = 'example-flow';
 
@@ -158,7 +165,8 @@ export default function MainCanvas() {
     model,
     getModels,
     updateModel,
-    getIntersectingNodes
+    getIntersectingNodes,
+    getGroupedNodes
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -218,6 +226,7 @@ export default function MainCanvas() {
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getIntersectingNodes();
     let values = Object.values(intersectingNodesMap).flat();
+    // console.log('nodes in', nodes);
 
     let updated = nodes.map((item1) => {
       const match = values.find((item2) => item2.id === item1.id);
@@ -235,6 +244,7 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDragStop = useCallback(() => {
+    getGroupedNodes();
     // if(dragRef.current.type !== 'group'){
     checkForNodes();
     // }

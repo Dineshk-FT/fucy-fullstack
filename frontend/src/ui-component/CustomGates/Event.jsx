@@ -32,7 +32,7 @@ export default function Event(props) {
     const selected = mod?.scenarios[3]?.subs[0]?.scenes.find((item) => item.id === props?.id);
     if (!selected) {
       Scene.push({ id: props.id, name: inputValue });
-      console.log('mod', mod);
+      // console.log('mod', mod);
       updateModel(mod).then((res) => {
         if (res) {
           getModels();

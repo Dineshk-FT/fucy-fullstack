@@ -153,7 +153,7 @@ export default function AttackBlock({ attackScene }) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
-  console.log('nodes out', nodes);
+  // console.log('nodes out', nodes);
 
   const onDrop = useCallback(
     (event) => {

@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
 
 export default function SelectProject({ open, handleClose, Models }) {
   const dispatch = useDispatch();
