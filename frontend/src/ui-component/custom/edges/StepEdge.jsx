@@ -3,19 +3,7 @@ import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 're
 
 import './buttonedge.css';
 
-export default function StepEdge({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  style = {},
-  markerEnd,
-  data,
-  ...rest
-}) {
+export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd, data }) {
   const { setEdges } = useReactFlow();
   const [label, setLabel] = useState(data.label || 'edge'); // Initial label
 
