@@ -51,6 +51,7 @@ import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 import { updatedModelState } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
+import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 
 const elk = new ELK();
 
@@ -144,6 +145,7 @@ const nodetypes = {
 };
 const edgeTypes = {
   custom: CustomEdge,
+  // step: CurveEdge
   step: StepEdge
 };
 const flowKey = 'example-flow';

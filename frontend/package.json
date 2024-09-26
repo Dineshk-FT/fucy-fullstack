@@ -25,6 +25,7 @@
     "apexcharts": "^3.26.1",
     "axios": "^1.6.7",
     "clsx": "^1.1.1",
+    "d3-shape": "^3.2.0",
     "elkjs": "^0.9.2",
     "formik": "^2.2.6",
     "framer-motion": "^4.1.13",

@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
 
 import './buttonedge.css';
 
-export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd, data }) {
+export default function StepEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  data,
+  ...rest
+}) {
   const { setEdges } = useReactFlow();
+  const [label, setLabel] = useState(data.label || 'edge'); // Initial label
 
+  console.log('rest', rest);
   // Use getSmoothStepPath instead of getBezierPath for step edges
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -19,6 +33,13 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
 
   const onEdgeClick = () => {
     setEdges((edges) => edges.filter((edge) => edge.id !== id));
+  };
+
+  const onLabelChange = (e) => {
+    const newLabel = e.target.textContent;
+    setLabel(newLabel);
+    // Optionally, update the edge's label in React Flow if needed
+    setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, data: { ...edge.data, label: newLabel } } : edge)));
   };
 
   return (
@@ -41,7 +62,19 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
           }}
           className="nodrag nopan"
         >
-          <p className="edge-label">{data.label?.length ? data?.label : 'edge1'}</p>
+          <div
+            className="edge-label"
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={onLabelChange} // Save changes on blur (when the user clicks out of the div)
+            style={{
+              outline: 'none', // Remove focus outline when editing
+              padding: '2px 8px',
+              cursor: 'text'
+            }}
+          >
+            {label}
+          </div>
           <button className="edgebutton" onClick={onEdgeClick}>
             ×
           </button>
