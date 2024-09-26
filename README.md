@@ -4,14 +4,10 @@
 
 - Clone the project .
 
-- after cloning open the folder from VS code and and change the Branch to Production - git checkout < branch name >.
+- After cloning, open the folder from VS code and and change the Branch to Production - git checkout < branch name >.
 
-- Change the directory to front - cd front.
+- Change the directory to frontend - cd frontend.
 
 - Now run the command 'yarn' to add the node_modules.
-
-- After installing the node_modules, open another Terminal .
-
-- In one Terminal run 'yarn run server' - to run the local JSON server.
 
 - In the other run 'yarn start' to run the Project.
