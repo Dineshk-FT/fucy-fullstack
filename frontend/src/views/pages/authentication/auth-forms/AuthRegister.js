@@ -80,7 +80,7 @@ const FirebaseRegister = ({ ...others }) => {
   const handleRegister = (values) => {
     dispatch(register(values))
       .then((res) => {
-        console.log('res', res);
+        // console.log('res', res);
         if (res.payload.status === 200 || res.payload.status === 201) {
           notify(res.payload.data.message, 'success');
           setTimeout(() => {

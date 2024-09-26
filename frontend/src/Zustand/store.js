@@ -492,7 +492,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         ...createHeaders(),
         maxRedirects: 5
       });
-      console.log('response', response);
+      // console.log('response', response);
       return response.data;
     } catch (err) {
       console.log('err', err);

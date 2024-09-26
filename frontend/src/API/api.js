@@ -26,7 +26,7 @@ export const register = createAsyncThunk('register', async (details, thunkAPI) =
   const URL = `${configuration.backendUrl}register`;
   try {
     const res = await axios.post(URL, data);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   } catch (error) {
     console.log('error', thunkAPI.rejectWithValue({ ...error.response, name: 'register' }));

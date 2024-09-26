@@ -19,7 +19,7 @@ export default function StepEdge({
   const { setEdges } = useReactFlow();
   const [label, setLabel] = useState(data.label || 'edge'); // Initial label
 
-  console.log('rest', rest);
+  // console.log('rest', rest);
   // Use getSmoothStepPath instead of getBezierPath for step edges
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
