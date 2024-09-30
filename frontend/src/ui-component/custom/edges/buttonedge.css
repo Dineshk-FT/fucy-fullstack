@@ -19,3 +19,9 @@
   z-index: 1;
   /* display: block; */
 }
+
+.icons {
+  font-size: 17px;
+  position: relative;
+  right: 5px;
+}

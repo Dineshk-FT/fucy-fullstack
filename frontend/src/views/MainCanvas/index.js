@@ -120,9 +120,18 @@ const edgeOptions = {
     height: 20,
     color: 'black'
   },
+  markerStart: {
+    type: MarkerType.ArrowClosed,
+    orient: 'auto-start-reverse',
+    width: 20,
+    height: 20,
+    color: 'black'
+  },
   animated: false,
   style: {
-    stroke: 'grey'
+    stroke: 'grey',
+    start: false,
+    end: true
   },
   data: {
     label: 'edge'
@@ -412,6 +421,8 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
+
+  // console.log('edges', edges);
 
   const RefreshAPI = () => {
     getModelById(id);
