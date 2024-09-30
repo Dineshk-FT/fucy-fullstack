@@ -9,11 +9,11 @@ const RequireAuth = ({ children }) => {
   useEffect(() => {
     const isAuthenticated = checkIfUserIsAuthenticated();
 
-    if (!isAuthenticated && window.location.pathname === '/home') {
-      navigate('/home');
-    }
+    // if (!isAuthenticated && window.location.pathname === '/home') {
+    //   navigate('/home');
+    // }
 
-    if (!isAuthenticated && window.location.pathname !== '/home') {
+    if (!isAuthenticated && window.location.pathname.includes('Models')) {
       navigate('/login');
     }
   }, [navigate]);

@@ -7,6 +7,7 @@
   border-radius: 50%;
   font-size: 12px;
   line-height: 1;
+  /* display: none; */
 }
 .edge-label {
   margin: auto;
@@ -16,4 +17,5 @@
 .edgebutton:hover {
   box-shadow: 0 0 6px 2px rgba(0, 0, 0, 0.08);
   z-index: 1;
+  /* display: block; */
 }

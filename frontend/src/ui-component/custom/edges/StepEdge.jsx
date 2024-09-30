@@ -6,8 +6,8 @@ import './buttonedge.css';
 export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd, data }) {
   const { setEdges } = useReactFlow();
   const [label, setLabel] = useState(data.label || 'edge'); // Initial label
+  const [isButtonVisible, setIsButtonVisible] = useState(false); // State to manage button visibility
 
-  // console.log('rest', rest);
   // Use getSmoothStepPath instead of getBezierPath for step edges
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -26,8 +26,17 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
   const onLabelChange = (e) => {
     const newLabel = e.target.textContent;
     setLabel(newLabel);
-    // Optionally, update the edge's label in React Flow if needed
     setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, data: { ...edge.data, label: newLabel } } : edge)));
+  };
+
+  const handleDivClick = () => {
+    setIsButtonVisible((prev) => !prev); // Toggle button visibility
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleDivClick(); // Call click handler on Enter or Space key
+    }
   };
 
   return (
@@ -35,6 +44,10 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
       <EdgeLabelRenderer>
         <div
+          role="button" // Add button role to make the div accessible
+          tabIndex={0} // Makes the div focusable via keyboard
+          onClick={handleDivClick} // Toggle visibility on click
+          onKeyPress={handleKeyPress} // Toggle visibility on key press
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -46,7 +59,10 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
             height: 'auto',
             gap: 6,
             borderRadius: '20px',
-            zIndex: 1
+            zIndex: 1,
+            padding: '2px 8px',
+            cursor: 'pointer',
+            outline: 'none' // Prevent default outline from tab focus
           }}
           className="nodrag nopan"
         >
@@ -56,16 +72,17 @@ export default function StepEdge({ id, sourceX, sourceY, targetX, targetY, sourc
             suppressContentEditableWarning
             onBlur={onLabelChange} // Save changes on blur (when the user clicks out of the div)
             style={{
-              outline: 'none', // Remove focus outline when editing
-              padding: '2px 8px',
+              outline: 'none',
               cursor: 'text'
             }}
           >
             {label}
           </div>
-          <button className="edgebutton" onClick={onEdgeClick}>
-            ×
-          </button>
+          {isButtonVisible && ( // Show button only if isButtonVisible is true
+            <button className="edgebutton" onClick={onEdgeClick}>
+              ×
+            </button>
+          )}
         </div>
       </EdgeLabelRenderer>
     </>
