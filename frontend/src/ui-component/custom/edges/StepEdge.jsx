@@ -1,10 +1,10 @@
-/* eslint-disable */
-import React, { useEffect, useState } from 'react';
+/*eslint-disable*/
+import React, { useState, useEffect } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import './buttonedge.css';
-import { Box } from '@mui/material';
+import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
+import './buttonedge.css';
 
 export default function StepEdge({
   id,
@@ -33,9 +33,7 @@ export default function StepEdge({
       end: style?.end
     });
   }, [style.start, style.end]);
-  // console.log('style', style);
 
-  // Use getSmoothStepPath instead of getBezierPath for step edges
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -119,55 +117,52 @@ export default function StepEdge({
         style={style}
       />
       <EdgeLabelRenderer>
-        <div
-          role="button" // Add button role to make the div accessible
-          tabIndex={0} // Makes the div focusable via keyboard
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            fontSize: 12,
-            pointerEvents: 'all',
-            display: 'flex',
-            alignItems: 'center',
-            backgroundColor: '#eee',
-            height: 'auto',
-            gap: 6,
-            borderRadius: '20px',
-            zIndex: 1,
-            padding: '2px 8px',
-            cursor: 'pointer',
-            outline: 'none' // Prevent default outline from tab focus
-          }}
-          className="nodrag nopan"
-        >
+        <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}>
           <div
-            className="edge-label"
-            onClick={handleDivClick} // Toggle visibility on click
-            onKeyPress={handleKeyPress} // Toggle visibility on key press
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={onLabelChange} // Save changes on blur (when the user clicks out of the div)
+            role="button" // Add button role to make the div accessible
+            tabIndex={0} // Makes the div focusable via keyboard
             style={{
-              outline: 'none',
-              cursor: 'text'
+              position: 'absolute',
+              top: '-10px',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              fontSize: 12,
+              pointerEvents: 'all',
+              display: 'flex',
+              alignItems: 'center',
+              height: 'auto',
+              gap: 3,
+              borderRadius: '20px',
+              zIndex: 1,
+              cursor: 'pointer',
+              outline: 'none'
             }}
+            className="nodrag nopan"
           >
-            {label}
+            <div
+              className="edge-label"
+              onClick={handleDivClick} // Toggle visibility on click
+              onKeyPress={handleKeyPress} // Toggle visibility on key press
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={onLabelChange} // Save changes on blur (when the user clicks out of the div)
+              style={{
+                outline: 'none',
+                cursor: 'text'
+              }}
+            >
+              {label}
+            </div>
+            {isButtonVisible && (
+              // Show button only if isButtonVisible is true
+              <Box display="flex" gap={0.5}>
+                {<Box onClick={handleSwap}>{renderButton()}</Box>}
+                <button className="edgebutton" onClick={onEdgeClick}>
+                  ×
+                </button>
+              </Box>
+            )}
           </div>
-          {isButtonVisible && (
-            // Show button only if isButtonVisible is true
-            <>
-              {
-                <Box mt={0.3} onClick={handleSwap}>
-                  {renderButton()}
-                </Box>
-              }
-              <button className="edgebutton" onClick={onEdgeClick}>
-                ×
-              </button>
-            </>
-          )}
-        </div>
+        </ClickAwayListener>
       </EdgeLabelRenderer>
     </>
   );

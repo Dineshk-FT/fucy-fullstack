@@ -4,6 +4,7 @@ import { Handle, NodeResizer, NodeToolbar, Position, useReactFlow } from 'reactf
 import useStore from '../../Zustand/store';
 import { updatedModelState } from '../../utils/Constraints';
 import { useParams } from 'react-router';
+import { ClickAwayListener } from '@mui/material';
 
 const selector = (state) => ({
   model: state.model,
@@ -51,23 +52,25 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
         <button onClick={handleDelete}>Delete Permanently</button>
       </NodeToolbar>
       <NodeResizer />
-      <div
-        role="button" // Add button role to make the div accessible
-        tabIndex={0} // Makes the div focusable via keyboard
-        onClick={() => setIsVisible((state) => !state)} // Toggle visibility on click
-        onKeyPress={handleKeyPress} // Toggle visibility on key press
-        className={`my-custom-node ${type}`}
-        style={{
-          ...data?.style
-        }}
-      >
-        <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
-        {/* <Handle className="handle" type="target" id="ab" style={{ left: 10 }} position={Position.Top} isConnectable={isConnectable} /> */}
-        <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
-        <div>{data?.label}</div>
-        <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
-        <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
-      </div>
+      <ClickAwayListener onClickAway={() => setIsVisible(false)}>
+        <div
+          role="button" // Add button role to make the div accessible
+          tabIndex={0} // Makes the div focusable via keyboard
+          onClick={() => setIsVisible((state) => !state)} // Toggle visibility on click
+          onKeyPress={handleKeyPress} // Toggle visibility on key press
+          className={`my-custom-node ${type}`}
+          style={{
+            ...data?.style
+          }}
+        >
+          <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
+          {/* <Handle className="handle" type="target" id="ab" style={{ left: 10 }} position={Position.Top} isConnectable={isConnectable} /> */}
+          <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
+          <div>{data?.label}</div>
+          <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
+          <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
+        </div>
+      </ClickAwayListener>
     </>
   );
 };
