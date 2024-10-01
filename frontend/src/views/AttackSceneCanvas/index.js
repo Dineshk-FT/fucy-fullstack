@@ -197,19 +197,21 @@ export default function AttackBlock({ attackScene }) {
             }
           }
         };
+        if (nodes.length) {
+          const newEdge = {
+            id: uid(),
+            source: nodes[nodes.length - 1].id,
+            target: newId,
+            type: 'default',
+            markerEnd: { type: MarkerType.Arrow }
+          };
 
-        const newEdge = {
-          id: uid(),
-          source: nodes[nodes.length - 1].id,
-          target: newId,
-          type: 'default',
-          markerEnd: { type: MarkerType.Arrow }
-        };
+          addAttackEdge(newEdge);
+        }
         // const nod = JSON.parse(JSON.stringify(nodes));
         // const list = [...nod, newNode];
         // setNodes(list);
         addAttackNode(newNode);
-        addAttackEdge(newEdge);
         // console.log('newNode', newNode);
       }
     },

@@ -205,6 +205,7 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
               >
                 <MenuItem value="input">Input</MenuItem>
                 <MenuItem value="default">Default</MenuItem>
+                <MenuItem value="custom">Custom</MenuItem>
                 <MenuItem value="signal">Signal</MenuItem>
                 <MenuItem value="receiver">Receiver</MenuItem>
                 <MenuItem value="output">Output</MenuItem>

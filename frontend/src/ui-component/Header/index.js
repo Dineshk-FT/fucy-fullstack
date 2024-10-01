@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { makeStyles } from '@mui/styles';
 import { Box, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState, useCallback } from 'react';
@@ -208,12 +209,12 @@ export default function Header({
       isDraggable: true,
       component: <GridOnIcon />
     },
-    {
-      id: 2,
-      title: 'Clear',
-      onclick: () => handleClear,
-      component: <ClearIcon />
-    },
+    // {
+    //   id: 2,
+    //   title: 'Clear',
+    //   onclick: () => handleClear,
+    //   component: <ClearIcon />
+    // },
     {
       id: 3,
       title: 'Save',

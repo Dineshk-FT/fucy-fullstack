@@ -1,5 +1,5 @@
 /* eslint-disable*/
-import { useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { styled, useTheme } from '@mui/material/styles';
@@ -20,7 +20,6 @@ import { SET_MENU } from '../../store/actions';
 import { IconChevronRight } from '@tabler/icons';
 import { ArrowSquareDown } from 'iconsax-react';
 import { navbarSlide } from '../../store/slices/CurrentIdSlice';
-import Footer from '../../views/Landing/Footer';
 import HeaderSection from '../../views/Landing/HeaderSection';
 import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
@@ -28,6 +27,7 @@ import InitialModal from '../../ui-component/Modal/InitialModal';
 
 // import Customization from '../Customization';
 
+const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open, isclose, color, drawerOpen }) => {
   // console.log('color', color)
@@ -113,16 +113,16 @@ const MainLayout = ({ children }) => {
   if (isCanvasPage === 'home')
     return (
       <>
-        <Box>
+        <FadeInDiv>
           <HeaderSection />
           <Box>
-            <FadeInDiv>
-              {children}
-              <Outlet />
-            </FadeInDiv>
+            {children}
+            <Outlet />
           </Box>
-          <Footer />
-        </Box>
+          <Suspense fallback={<div>Loading Footer...</div>}>
+            <Footer />
+          </Suspense>
+        </FadeInDiv>
       </>
     );
 

@@ -34,6 +34,7 @@ export default function WhyComponent() {
           marginTop: 4
         }}
         mx={8}
+        mb={2}
       >
         <CircleFeature
           icon={scale}

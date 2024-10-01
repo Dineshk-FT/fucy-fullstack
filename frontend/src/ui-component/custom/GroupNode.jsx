@@ -32,7 +32,7 @@ const CustomGroupNode = ({ data, id }) => {
         onChange={handlechange}
         style={{
           alignSelf: 'flex-start',
-          fontSize: '30px',
+          fontSize: '25px',
           fontWeight: 600,
           marginTop: '1rem',
           textAlign: 'center',
