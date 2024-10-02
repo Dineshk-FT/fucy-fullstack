@@ -126,82 +126,24 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
-  getIntersectingNodes: () => {
-    let nodes = get().nodes;
-    const groups = nodes?.filter((nd) => nd?.type === 'group');
-    const intersectingNodesMap = {};
-
-    function doNodesTouch(nodeA, nodeB) {
-      const aLeft = nodeA.x;
-      const aRight = nodeA.x + nodeA.width;
-      const aTop = nodeA.y;
-      const aBottom = nodeA.y + nodeA.height;
-
-      const bLeft = nodeB.x;
-      const bRight = nodeB.x + nodeB.width;
-      const bTop = nodeB.y;
-      const bBottom = nodeB.y + nodeB.height;
-
-      const horizontalOverlap = aRight >= bLeft && aLeft <= bRight;
-      const verticalOverlap = aBottom >= bTop && aTop <= bBottom;
-
-      return horizontalOverlap && verticalOverlap;
-    }
-
-    if (groups) {
-      groups.forEach((group) => {
-        const area = {
-          x: group?.position?.x,
-          y: group?.position?.y,
-          width: group?.width,
-          height: group?.height
-        };
-
-        const intersectingNodes = nodes
-          .filter((node) => {
-            if (node.type !== 'group') {
-              const nodeRect = {
-                x: node.position.x,
-                y: node.position.y,
-                width: node.width,
-                height: node.height
-              };
-              return doNodesTouch(area, nodeRect);
-            }
-            return false;
-          })
-          .map((node) => ({
-            ...node,
-            parentId: group.id,
-            extent: 'parent'
-          }));
-
-        intersectingNodesMap[group.id] = intersectingNodes;
-      });
-    }
-    return [intersectingNodesMap, nodes];
-  },
-
   getGroupedNodes: () => {
     let nodes = get().nodes;
     const groups = nodes?.filter((nd) => nd?.type === 'group');
     const intersectingNodesMap = {};
 
-    function doNodesTouch(nodeA, nodeB) {
-      const aLeft = nodeA.x;
-      const aRight = nodeA.x + nodeA.width;
-      const aTop = nodeA.y;
-      const aBottom = nodeA.y + nodeA.height;
+    function calculateOverlapArea(nodeA, nodeB) {
+      const xOverlap = Math.max(0, Math.min(nodeA.x + nodeA.width, nodeB.x + nodeB.width) - Math.max(nodeA.x, nodeB.x));
+      const yOverlap = Math.max(0, Math.min(nodeA.y + nodeA.height, nodeB.y + nodeB.height) - Math.max(nodeA.y, nodeB.y));
 
-      const bLeft = nodeB.x;
-      const bRight = nodeB.x + nodeB.width;
-      const bTop = nodeB.y;
-      const bBottom = nodeB.y + nodeB.height;
+      return xOverlap * yOverlap;
+    }
 
-      const horizontalOverlap = aRight >= bLeft && aLeft <= bRight;
-      const verticalOverlap = aBottom >= bTop && aTop <= bBottom;
+    function isAtLeastHalfInside(nodeA, nodeB) {
+      const overlapArea = calculateOverlapArea(nodeA, nodeB);
+      const nodeBArea = nodeB.width * nodeB.height;
 
-      return horizontalOverlap && verticalOverlap;
+      // Check if the overlap area is at least half of node B's area
+      return overlapArea >= nodeBArea / 2;
     }
 
     if (groups) {
@@ -215,14 +157,15 @@ const useStore = createWithEqualityFn((set, get) => ({
 
         const intersectingNodes = nodes
           .filter((node) => {
-            if (node.type !== 'group') {
+            // Include group nodes as well for overlap checking
+            if (node.id !== group.id) {
               const nodeRect = {
                 x: node.position.x,
                 y: node.position.y,
                 width: node.width,
                 height: node.height
               };
-              return doNodesTouch(area, nodeRect);
+              return isAtLeastHalfInside(area, nodeRect);
             }
             return false;
           })
@@ -252,11 +195,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     set({
       nodes: nodes
     });
+
     return [intersectingNodesMap, nodes];
   },
 
   //fetch or GET section
-  fetchAPI: async () => {
+  getTemplates: async () => {
     try {
       const options = {
         method: 'POST',
@@ -288,14 +232,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  getTemplate: async (id) => {
-    const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
-    set({
-      selectedTemplate: res.data[0],
-      nodes: res['data'][0]['template']['nodes'],
-      edges: res['data'][0]['template']['edges']
-    });
-  },
+  // getTemplate: async (id) => {
+  //   const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
+  //   set({
+  //     selectedTemplate: res.data[0],
+  //     nodes: res['data'][0]['template']['nodes'],
+  //     edges: res['data'][0]['template']['edges']
+  //   });
+  // },
 
   getModels: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);

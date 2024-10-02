@@ -25,7 +25,7 @@ const CustomGroupNode = ({ data, id }) => {
     setNodes(nod);
   };
   return (
-    <>
+    <div>
       <input
         type="text"
         value={value}
@@ -61,7 +61,7 @@ const CustomGroupNode = ({ data, id }) => {
           {/* {data?.label} */}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

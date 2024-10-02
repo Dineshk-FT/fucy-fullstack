@@ -9,17 +9,17 @@ import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   template: state.template,
-  fetchAPI: state.fetchAPI
+  getTemplates: state.getTemplates
 });
 
 export default function TemplateList() {
-  const { template, fetchAPI } = useStore(selector, shallow);
+  const { template, getTemplates } = useStore(selector, shallow);
 
   // console.log('template', template)
   //   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAPI();
+    getTemplates();
   }, []);
 
   const onDragStart = (event, item) => {

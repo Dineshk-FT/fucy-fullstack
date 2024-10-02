@@ -25,13 +25,14 @@ const selector = (state) => ({
   Models: state.Models,
   getModels: state.getModels,
   deleteModels: state.deleteModels,
-  getSidebarNode: state.getSidebarNode
+  getSidebarNode: state.getSidebarNode,
+  getTemplates: state.getTemplates
 });
 
 export default function LeftSection() {
   const color = ColorTheme();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { Models, getModels, deleteModels, getSidebarNode } = useStore(selector);
+  const { Models, getModels, deleteModels, getSidebarNode, getTemplates } = useStore(selector);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [open, setOpen] = useState({
     New: false,
@@ -43,6 +44,7 @@ export default function LeftSection() {
 
   useEffect(() => {
     getSidebarNode();
+    getTemplates();
   }, []);
 
   const menuItems = [
@@ -141,8 +143,8 @@ export default function LeftSection() {
           // action: () => console.log('System'),
           subLevel: (
             <Box mt={2}>
-              {/* <TemplateList /> */}
-              <Components />
+              <TemplateList />
+              {/* <Components /> */}
             </Box>
           )
         }

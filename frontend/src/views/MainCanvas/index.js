@@ -106,7 +106,6 @@ const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   updateModel: state.updateModel,
-  getIntersectingNodes: state.getIntersectingNodes,
   getGroupedNodes: state.getGroupedNodes
 });
 
@@ -174,7 +173,6 @@ export default function MainCanvas() {
     model,
     getModels,
     updateModel,
-    getIntersectingNodes,
     getGroupedNodes
   } = useStore(selector, shallow);
   const { id } = useParams();
@@ -233,7 +231,7 @@ export default function MainCanvas() {
   );
 
   const checkForNodes = () => {
-    const [intersectingNodesMap, nodes] = getIntersectingNodes();
+    const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
     // console.log('nodes in', nodes);
 
@@ -421,7 +419,7 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
-
+  console.log('nodes', nodes);
   // console.log('edges', edges);
 
   const RefreshAPI = () => {
@@ -528,14 +526,18 @@ export default function MainCanvas() {
     const newNode = {
       id: uid(),
       type: 'group',
-      height: 280,
-      width: 250,
+      height: 300,
+      width: 300,
       position: {
         x: e.x ?? e.clientX,
         y: e.y ?? e.clientY
       },
       data: {
-        label: 'group'
+        label: 'group',
+        style: {
+          height: 300,
+          width: 300
+        }
       }
     };
     dragAdd(newNode);

@@ -12,7 +12,7 @@ import { v4 as uid } from 'uuid';
 import { useTheme } from '@mui/material/styles';
 
 const selector = (state) => ({
-  fetchAPI: state.fetchAPI
+  getTemplates: state.getTemplates
 });
 
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
@@ -40,7 +40,7 @@ const AddLibrary = ({ open, handleClose, savedTemplate, setNodes, setEdges }) =>
     name: '',
     properties: []
   });
-  const { fetchAPI } = useStore(selector);
+  const { getTemplates } = useStore(selector);
 
   const handleChange = (event) => {
     const {
@@ -63,7 +63,7 @@ const AddLibrary = ({ open, handleClose, savedTemplate, setNodes, setEdges }) =>
     };
     // console.log('newTemplate', newTemplate);
     setTimeout(() => {
-      fetchAPI();
+      getTemplates();
     });
     handleClose();
     setNodes([]);

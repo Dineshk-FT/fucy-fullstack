@@ -25,19 +25,19 @@ import { clearProperties } from '../../../store/slices/PageSectionSlice';
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
-  fetchAPI: state.fetchAPI,
+  getTemplates: state.getTemplates,
   fetchModels: state.getModels
 });
 const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const dispatch = useDispatch();
-  const { template, fetchAPI, fetchModels, models } = useStore(selector);
+  const { template, getTemplates, fetchModels, models } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const { Properties } = useSelector((state) => state?.pageName);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
 
   useEffect(() => {
-    fetchAPI();
+    getTemplates();
     fetchModels();
     dispatch(clearProperties());
   }, []);
