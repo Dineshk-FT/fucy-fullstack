@@ -158,20 +158,19 @@ export default function AttackBlock({ attackScene }) {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      // const file = event.dataTransfer.getData("application/parseFile");
       const cyber = event.dataTransfer.getData('application/cyber');
-      // console.log('cyber', cyber);
       let parsedNode;
-      // let parsedTemplate;
+
       if (cyber) {
         parsedNode = JSON.parse(cyber);
       }
-      // console.log('parsedNode', parsedNode);
+
       const newId = uid();
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
       });
+
       if (parsedNode) {
         const newNode = {
           id: newId,
@@ -189,18 +188,32 @@ export default function AttackBlock({ attackScene }) {
               fontStyle: 'normal',
               fontWeight: 500,
               textAlign: 'center',
-              // color: 'white',
-              textDecoration: 'none',
               borderColor: 'black',
               borderWidth: '2px',
               borderStyle: 'solid'
             }
           }
         };
-        if (nodes.length) {
+
+        // Find if the new node is dropped on any existing node
+        const sourceNode = nodes.find((node) => {
+          const nodeBounds = {
+            xMin: node.position.x,
+            xMax: node.position.x + (node.width || 150),
+            yMin: node.position.y,
+            yMax: node.position.y + (node.height || 50)
+          };
+
+          return (
+            position.x > nodeBounds.xMin && position.x < nodeBounds.xMax && position.y > nodeBounds.yMin && position.y < nodeBounds.yMax
+          );
+        });
+
+        if (sourceNode) {
+          // Create an edge from the sourceNode to the newNode
           const newEdge = {
             id: uid(),
-            source: nodes[nodes.length - 1].id,
+            source: sourceNode.id,
             target: newId,
             type: 'default',
             markerEnd: { type: MarkerType.Arrow }
@@ -208,14 +221,11 @@ export default function AttackBlock({ attackScene }) {
 
           addAttackEdge(newEdge);
         }
-        // const nod = JSON.parse(JSON.stringify(nodes));
-        // const list = [...nod, newNode];
-        // setNodes(list);
+
         addAttackNode(newNode);
-        // console.log('newNode', newNode);
       }
     },
-    [reactFlowInstance, nodes]
+    [reactFlowInstance, nodes, addAttackNode, addAttackEdge]
   );
 
   const onLayout = useCallback(

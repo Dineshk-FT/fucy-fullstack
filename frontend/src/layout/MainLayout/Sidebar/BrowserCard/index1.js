@@ -53,6 +53,7 @@ import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import AddNewNode from '../../../../ui-component/Modal/AddNewNode';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { threatType } from '../../../../ui-component/Table/constraints';
+import { setTitle } from '../../../../store/slices/PageSectionSlice';
 
 const imageComponents = {
   AttackIcon,
@@ -244,7 +245,8 @@ const BrowserCard = ({ models }) => {
     setAnchorEl(null);
   };
 
-  const handleSwicthDsTable = (name) => {
+  const handleSwicthTable = (name) => {
+    // console.log('name', name);
     if (name.includes('Derivations')) {
       dispatch(DerivationTableOpen());
     }
@@ -253,6 +255,7 @@ const BrowserCard = ({ models }) => {
     }
     if (name.includes('Threat')) {
       dispatch(TsTableOpen());
+      dispatch(setTitle(name));
     }
   };
 
@@ -388,7 +391,7 @@ const BrowserCard = ({ models }) => {
                           nodeId={`1${sub?.name}`} //change to id
                           //   label={sub?.name}
                           label={getLabel('TopicIcon', sub?.name)}
-                          onClick={() => handleSwicthDsTable(sub?.name)} //change to onClick
+                          onClick={() => handleSwicthTable(sub?.name)} //change to onClick
                         >
                           {sub?.name === 'Damage Scenarios Derivations' &&
                             sub?.Details?.map((ls) => (

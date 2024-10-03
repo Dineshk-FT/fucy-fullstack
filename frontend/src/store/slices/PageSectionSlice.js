@@ -3,7 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   pageName: '',
   Properties: [],
-  hasError: false
+  hasError: false,
+  title: ''
 };
 
 const PageSectionSlice = createSlice({
@@ -12,6 +13,10 @@ const PageSectionSlice = createSlice({
   reducers: {
     changePage: (state, action) => {
       return { ...state, pageName: action.payload };
+    },
+    setTitle: (state, action) => {
+      // console.log('action', action);
+      return { ...state, title: action.payload };
     },
     setProperties: (state, action) => {
       return { ...state, Properties: action.payload };
@@ -28,5 +33,5 @@ const PageSectionSlice = createSlice({
   }
 });
 
-export const { changePage, setProperties, clearProperties, triggerError, resetError } = PageSectionSlice.actions;
+export const { changePage, setProperties, clearProperties, triggerError, resetError, setTitle } = PageSectionSlice.actions;
 export default PageSectionSlice.reducer;

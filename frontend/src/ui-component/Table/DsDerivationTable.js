@@ -10,7 +10,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox } from '@mui/material';
+import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { useParams } from 'react-router';
@@ -38,10 +38,6 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  // '&:nth-of-type(odd)': {
-  //   backgroundColor: theme.palette.action.hover,
-  // },
-  // hide last border
   '&:last-child td, &:last-child th': {
     border: 0
   }
@@ -49,7 +45,6 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 const selector = (state) => ({
   model: state.model,
-  getModelById: state.getModelById,
   getModels: state.getModels
 });
 
@@ -57,15 +52,13 @@ export default function DsDerivationTable() {
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { id } = useParams();
-  const { model, getModelById } = useStore(selector, shallow);
+  const { model } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
 
-  React.useEffect(() => {
-    getModelById(id);
-  }, [id]);
+  const [page, setPage] = React.useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
 
   const Head = React.useMemo(() => {
     return [
@@ -80,24 +73,20 @@ export default function DsDerivationTable() {
   React.useEffect(() => {
     if (model.scenarios) {
       const mod = model?.scenarios[1]?.subs[0]?.Details?.map((dt) => {
-        // console.log('prp', prp);
         return {
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
-          Assets: dt?.assets,
-          'Damage Scenarios': dt?.Damage
+          Assets: dt?.asset,
+          'Damage Scenarios': dt?.damageScene
         };
       });
       setRows(mod);
       setFiltered(mod);
     }
   }, [model]);
-  // console.log('rows', rows);
 
   const handleSearch = (e) => {
     const { value } = e.target;
-    // console.log('value', value);
-    // console.log("valuerows", rows);
     if (value.length > 0) {
       const filterValue = rows.filter((rw) => {
         if (rw.task.toLowerCase().includes(value)) {
@@ -108,7 +97,6 @@ export default function DsDerivationTable() {
     } else {
       setFiltered(rows);
     }
-
     setSearchTerm(value);
   };
 
@@ -116,50 +104,75 @@ export default function DsDerivationTable() {
     dispatch(closeAll());
   };
 
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
-      <>
-        <StyledTableRow
-          key={row.name}
-          data={row}
-          sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: '#F4F8FE'
-            },
-            backgroundColor: isChild ? '#F4F8FE' : ''
-          }}
-        >
-          {Head?.map((item, index) => {
-            let cellContent;
-            switch (true) {
-              case item.name === 'Checked':
-                cellContent = (
-                  <StyledTableCell component="th" scope="row">
-                    <Checkbox {...label} />
-                  </StyledTableCell>
-                );
-                break;
+      <StyledTableRow
+        key={row.name}
+        data={row}
+        sx={{
+          '&:last-child td, &:last-child th': { border: 0 },
+          '&:nth-of-type(even)': {
+            backgroundColor: '#F4F8FE'
+          },
+          backgroundColor: isChild ? '#F4F8FE' : ''
+        }}
+      >
+        {Head?.map((item, index) => {
+          let cellContent;
+          switch (true) {
+            case item.name === 'Checked':
+              cellContent = (
+                <StyledTableCell component="th" scope="row">
+                  <Checkbox {...label} />
+                </StyledTableCell>
+              );
+              break;
+            case typeof row[item.name] === 'boolean':
+              cellContent = (
+                <StyledTableCell key={index} align={'left'}>
+                  {row[item.name] === true ? 'Yes' : row[item.name] === false ? 'No' : '-'}
+                </StyledTableCell>
+              );
+              break;
 
-              case typeof row[item.name] !== 'object':
-                cellContent = (
-                  <StyledTableCell key={index} align={'left'}>
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
+            case typeof row[item.name] !== 'object':
+              cellContent = (
+                <StyledTableCell key={index} align={'left'}>
+                  {row[item.name] ? row[item.name] : '-'}
+                </StyledTableCell>
+              );
+              break;
 
-              default:
-                cellContent = null;
-                break;
-            }
+            case typeof row[item.name] === 'object':
+              cellContent = (
+                <StyledTableCell key={index} align={'left'}>
+                  {row[item.name].length ? row[item.name].join() : '-'}
+                </StyledTableCell>
+              );
+              break;
 
-            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
-          })}
-        </StyledTableRow>
-      </>
+            default:
+              cellContent = null;
+              break;
+          }
+
+          return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+        })}
+      </StyledTableRow>
     );
   };
+
   return (
     <>
       <Box
@@ -199,30 +212,20 @@ export default function DsDerivationTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered?.map((row, rowkey) => (
+              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
                 <RenderTableRow row={row} rowKey={rowkey} />
-
-                // <StyledTableRow key={row?.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                //   <StyledTableCell component="td" scope="row">
-                //     <Typography sx={{ width: 'max-content' }}>{row?.task}</Typography>
-                //   </StyledTableCell>
-                //   <StyledTableCell component="th" scope="row">
-                //     <Checkbox {...label} />
-                //   </StyledTableCell>
-                //   <StyledTableCell component="td" scope="row">
-                //     {row?.loss}
-                //   </StyledTableCell>
-                //   <StyledTableCell component="td" scope="row">
-                //     {row?.assets}
-                //   </StyledTableCell>
-
-                //   <StyledTableCell component="td" scope="row">
-                //     <div className={classes.div}>{row?.Damage}</div>
-                //   </StyledTableCell>
-                // </StyledTableRow>
               ))}
             </TableBody>
           </Table>
+          {/* Pagination controls */}
+          <TablePagination
+            component="div"
+            count={filtered.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </TableContainer>
       </Box>
     </>

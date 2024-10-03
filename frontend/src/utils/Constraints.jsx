@@ -9,7 +9,7 @@ export const updatedModelState = (mod, nodes, edges) => {
         task: `Check for Damage Scenario for loss of ${pr} for ${node?.data?.label}`,
         name: `Damage Scenario for loss of ${pr} for ${node?.data?.label}`,
         loss: `loss of ${pr}`,
-        assets: node?.assets,
+        asset: node?.isAsset,
         damageScene: []
       }));
     })

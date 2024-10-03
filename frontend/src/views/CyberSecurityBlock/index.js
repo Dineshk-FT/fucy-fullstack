@@ -83,8 +83,7 @@ export default function CyberSecurityBlock() {
   useEffect(() => {
     setNodes([]);
     setEdges([]);
-    getModelById(id);
-  }, [id]);
+  }, []);
 
   // console.log('nodes', nodes);
 

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useEffect } from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
 import '../index.css';
 import AddIcon from '@mui/icons-material/Add';
@@ -8,19 +8,14 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
-  template: state.template,
-  getTemplates: state.getTemplates
+  template: state.template
 });
 
 export default function TemplateList() {
-  const { template, getTemplates } = useStore(selector, shallow);
+  const { template } = useStore(selector, shallow);
 
   // console.log('template', template)
   //   const navigate = useNavigate();
-
-  useEffect(() => {
-    getTemplates();
-  }, []);
 
   const onDragStart = (event, item) => {
     const parseFile = JSON.stringify(item['template']);

@@ -190,10 +190,6 @@ export default function MainCanvas() {
   const { propertiesTabOpen } = useSelector((state) => state?.canvas);
 
   useEffect(() => {
-    getModelById(id);
-  }, [id]);
-
-  useEffect(() => {
     const template = model?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
@@ -419,7 +415,7 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
-  console.log('nodes', nodes);
+  // console.log('nodes', nodes);
   // console.log('edges', edges);
 
   const RefreshAPI = () => {

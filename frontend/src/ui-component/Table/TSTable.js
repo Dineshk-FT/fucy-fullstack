@@ -1,4 +1,4 @@
-/*eslint-disable*/
+/* eslint-disable */
 import * as React from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
@@ -16,10 +16,11 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  TablePagination
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
@@ -32,7 +33,7 @@ const selector = (state) => ({
   getModel: state.getModelById
 });
 
-const Head = [
+const column = [
   { id: 1, name: 'ID' },
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
@@ -67,14 +68,11 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  // '&:nth-of-type(odd)': {
-  //   backgroundColor: theme.palette.action.hover,
-  // },
-  // hide last border
   '&:last-child td, &:last-child th': {
     border: 0
   }
 }));
+
 export default function Tstable() {
   const color = ColorTheme();
   const classes = useStyles();
@@ -85,10 +83,25 @@ export default function Tstable() {
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
+  const { title } = useSelector((state) => state?.pageName);
+
+  // Pagination state
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   React.useEffect(() => {
     getModel(id);
   }, [id]);
+
+  const Head = React.useMemo(() => {
+    if (title.includes('Derived')) {
+      const col = [...column];
+      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+      return col;
+    } else {
+      return column;
+    }
+  }, [title]);
 
   React.useEffect(() => {
     if (model.scenarios) {
@@ -96,11 +109,10 @@ export default function Tstable() {
         ?.map((dt) =>
           dt?.cyberLosses?.map((loss, prin) =>
             loss?.props?.map((prp, pin) => {
-              // console.log('prp', prp);
               return {
                 ID: `TS0${prin}${pin}`,
-                Name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.id}`,
-                Description: `${threatType(prp)} occured due to ${prp} in ${loss?.name} for Damage Scene ${dt?.id}`,
+                Name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.ID}`,
+                Description: `${threatType(prp)} occured due to ${prp} in ${loss?.name} for Damage Scene ${dt?.ID}`,
                 losses: [],
                 'Losses of Cybersecurity Properties': prp
               };
@@ -109,13 +121,11 @@ export default function Tstable() {
         )
         .flat(2);
       const mod2 = model?.scenarios[2]?.subs[1]?.scenes;
-      // console.log('mod2', mod2)
-      const combained = mod1.concat(mod2);
-      setRows(combained);
-      setFiltered(combained);
+      const combined = mod1.concat(mod2);
+      setRows(combined);
+      setFiltered(combined);
     }
   }, [model]);
-  // console.log('rows', rows);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -145,81 +155,66 @@ export default function Tstable() {
     setSearchTerm(value);
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
-      <>
-        <StyledTableRow
-          key={row.name}
-          data={row}
-          sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: '#F4F8FE'
-            },
-            backgroundColor: isChild ? '#F4F8FE' : ''
-          }}
-        >
-          {Head?.map((item, index) => {
-            let cellContent;
-            switch (true) {
-              case item.name === 'Losses of Cybersecurity Properties':
-                cellContent = (
-                  <StyledTableCell component="th" scope="row">
-                    <span
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5
-                      }}
-                    >
-                      <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
-                      <span
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '15px',
-                          width: 'max-content'
-                        }}
-                      >
-                        Loss of {row[item.name]}
-                      </span>
+      <StyledTableRow
+        key={row.name}
+        data={row}
+        sx={{
+          '&:last-child td, &:last-child th': { border: 0 },
+          '&:nth-of-type(even)': {
+            backgroundColor: '#F4F8FE'
+          },
+          backgroundColor: isChild ? '#F4F8FE' : ''
+        }}
+      >
+        {Head?.map((item, index) => {
+          let cellContent;
+          switch (true) {
+            case item.name === 'Losses of Cybersecurity Properties':
+              cellContent = (
+                <StyledTableCell component="th" scope="row">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                      Loss of {row[item.name]}
                     </span>
-                  </StyledTableCell>
-                );
-                break;
-
-              case typeof row[item.name] !== 'object':
-                cellContent = (
-                  <StyledTableCell key={index} align={'left'}>
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
-
-              default:
-                cellContent = null;
-                break;
-            }
-
-            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
-          })}
-        </StyledTableRow>
-      </>
+                  </span>
+                </StyledTableCell>
+              );
+              break;
+            case typeof row[item.name] !== 'object':
+              cellContent = (
+                <StyledTableCell key={index} align={'left'}>
+                  {row[item.name] ? row[item.name] : '-'}
+                </StyledTableCell>
+              );
+              break;
+            default:
+              cellContent = null;
+              break;
+          }
+          return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+        })}
+      </StyledTableRow>
     );
   };
-  // console.log('selectedRow', selectedRow)
+
   return (
-    <Box
-      sx={{
-        overflow: 'auto',
-        height: '-webkit-fill-available',
-        minHeight: 'moz-available'
-      }}
-    >
+    <Box sx={{ overflow: 'auto', height: '-webkit-fill-available', minHeight: 'moz-available' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>Threat Scenario Table</Typography>
+          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>
           <TextField
@@ -228,11 +223,7 @@ export default function Tstable() {
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{
-              '& .MuiInputBase-input': {
-                border: '1px solid black'
-              }
-            }}
+            sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
           />
           <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
@@ -249,12 +240,20 @@ export default function Tstable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.map((row, rowkey) => (
+            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
               <RenderTableRow row={row} rowKey={rowkey} />
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={filtered.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
     </Box>
   );

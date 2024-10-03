@@ -32,12 +32,8 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
   const { id } = useParams();
   const { getModelById, update, model } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
-    name: ''
+    Name: ''
   });
-
-  React.useEffect(() => {
-    getModelById(id);
-  }, []);
 
   const handleCreate = () => {
     const mod = { ...model };
@@ -49,7 +45,7 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
       Scene = mod?.scenarios[3]?.subs[1]?.scenes;
     }
     const newScene = {
-      id: uid(),
+      ID: uid(),
       ...templateDetails
     };
     Scene.push(newScene);
@@ -59,6 +55,7 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
           setTimeout(() => {
             notify(res.data.message, 'success');
             getModels();
+            getModelById(id);
             handleClose();
           }, 500);
         }
@@ -69,14 +66,14 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
       });
     setTemplateDetails((state) => ({
       ...state,
-      name: ''
+      Name: ''
     }));
   };
 
   const onClose = () => {
     setTemplateDetails((state) => ({
       ...state,
-      name: ''
+      Name: ''
     }));
     handleClose();
   };
@@ -88,11 +85,11 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <TextField
-                value={templateDetails?.name}
+                value={templateDetails?.Name}
                 id="outlined-basic"
                 label="Name"
                 variant="outlined"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
+                onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
                 sx={{
                   width: '300px'
                 }}

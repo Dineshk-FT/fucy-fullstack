@@ -38,7 +38,6 @@ const useStyles = makeStyles(() => ({
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
-  getTemplates: state.getTemplates,
   fetchModels: state.getModels
 });
 
@@ -46,7 +45,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, getTemplates, fetchModels, models } = useStore(selector);
+  const { template, fetchModels, models } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const { Properties } = useSelector((state) => state?.pageName);
@@ -57,7 +56,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 400 : 0);
 
   useEffect(() => {
-    getTemplates();
     fetchModels();
     dispatch(clearProperties());
   }, []);

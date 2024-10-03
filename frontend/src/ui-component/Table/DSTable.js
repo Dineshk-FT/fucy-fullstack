@@ -21,7 +21,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  TablePagination
 } from '@mui/material';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
@@ -122,10 +123,8 @@ export default function DsTable() {
   const [selectedRow, setSelectedRow] = React.useState({});
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
-
-  React.useEffect(() => {
-    getModelById(id);
-  }, [id]);
+  const [page, setPage] = React.useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
 
   const notify = (message, status) => toast[status](message);
 
@@ -236,7 +235,8 @@ export default function DsTable() {
 
   const handleChange = (e, row) => {
     // console.log('e.target', e.target);
-    const Rows = [...rows];
+    const mod = JSON.parse(JSON.stringify(model));
+    const Rows = JSON.parse(JSON.stringify(rows));
     const editRow = Rows.find((ele) => ele.id === row.id);
     const { name, value } = e.target;
     if (name) {
@@ -250,7 +250,6 @@ export default function DsTable() {
       const { Description, ...rest } = rw;
       return rest;
     });
-    const mod = { ...model };
     const losses = mod?.scenarios[1]?.subs[0].losses;
     const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
     // console.log('lossesEdit', lossesEdit);
@@ -335,6 +334,17 @@ export default function DsTable() {
     // console.log('ratio', ratio)
     return avgImpact(ratio);
   }, []);
+
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
@@ -442,15 +452,31 @@ export default function DsTable() {
   return (
     <Box
       sx={{
-        overflow: 'auto',
-        height: '-webkit-fill-available',
-        minHeight: 'moz-available'
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'auto' // Ensure the table takes up the full height of the parent
       }}
     >
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>Damage Scenario Table</Typography>
+          <KeyboardBackspaceRoundedIcon
+            sx={{
+              float: 'left',
+              cursor: 'pointer',
+              ml: 1,
+              color: color?.title
+            }}
+            onClick={handleBack}
+          />
+          <Typography
+            sx={{
+              color: color?.title,
+              fontWeight: 600,
+              fontSize: '18px'
+            }}
+          >
+            Damage Scenario Table
+          </Typography>
         </Box>
         <Box display="flex" gap={3}>
           <TextField
@@ -470,7 +496,15 @@ export default function DsTable() {
           </Button>
         </Box>
       </Box>
-      <TableContainer component={Paper}>
+
+      <TableContainer
+        component={Paper}
+        sx={{
+          flexGrow: 1, // Let the container grow to fill available space
+          overflowY: 'auto', // Enable vertical scrolling
+          marginBottom: '1rem' // Add space for the pagination
+        }}
+      >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
@@ -486,6 +520,18 @@ export default function DsTable() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination placed outside of the scrollable area */}
+      <TablePagination
+        component="div"
+        count={filtered.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      {/* Modals */}
       {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} id={id} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses
