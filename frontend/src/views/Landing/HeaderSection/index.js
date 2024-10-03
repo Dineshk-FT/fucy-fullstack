@@ -12,20 +12,35 @@ import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
 import ColorTheme from '../../../store/ColorTheme';
 import { textAlign } from '@mui/system';
 
-const services = [
-  'TARA Automation',
-  'Vulnerability Management',
-  'Cybersecurity Monitoring',
-  'Manufacturing Software',
-  'Consulting Service'
+// const services = [
+//   'TARA Automation',
+//   'Vulnerability Management',
+//   'Cybersecurity Monitoring',
+//   'Manufacturing Software',
+//   'Consulting Service'
+// ];
+
+const products = [
+  'Cybersecurity',
+  'SDV',
+  'Fuctional Safety',
 ];
+
+// const links = [
+//   { name: 'Home', path: '/home' },
+//   { name: 'Dashboard', path: '/dashboard' },
+//   { name: 'CSMS Solutions ', dropdown: true },
+//   { name: 'About Us', path: '/about' },
+//   { name: 'Career', path: '/career' },
+//   { name: 'Contact', path: '/contact' }
+// ];
 
 const links = [
   { name: 'Home', path: '/home' },
-  { name: 'Dashboard', path: '/dashboard' },
-  { name: 'CSMS Solutions', dropdown: true },
-  { name: 'About Us', path: '/about' },
-  { name: 'Career', path: '/career' },
+  { name: 'Products', dropdown:true},
+  { name: 'Services', path: '/services' },
+  { name: 'Consulting', path: '/consulting' },
+  { name: 'Academy', path: '/academy' },
   { name: 'Contact', path: '/contact' }
 ];
 
@@ -106,9 +121,13 @@ export default function Header() {
       dispatch(changeCanvasPage('canvas'));
       navigate('/login', { replace: true });
     }
+    if (name === 'Cybersecurity') {
+      dispatch(changeCanvasPage('canvas'));
+      navigate('/cybersecurity', { replace: true });
+    }
     setAnchorEl(null);
     setMenuOpen(false);
-    setDrawerOpen(false);
+    setDrawerOpen(false); 
   };
 
   const handleClick = (event) => {
@@ -148,7 +167,7 @@ export default function Header() {
                     {link.name} {menuOpen ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
                   </Typography>
                   <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
-                    {services.map((service, index) => (
+                    {products.map((service, index) => (
                       <MenuItem key={index} onClick={() => handleClose(service)}>
                         {service}
                       </MenuItem>
@@ -170,7 +189,7 @@ export default function Header() {
           <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" className={classes.title} color={ColorTheme()?.logo}>
+          <Typography variant="h6" className={classes.title} color={ColorTheme()?.logo} >
             FUCY TECH
           </Typography>
           <Box className={classes.links}>
@@ -185,7 +204,7 @@ export default function Header() {
                     {link.name} {menuOpen ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
                   </Typography>
                   <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
-                    {services.map((service, index) => (
+                    {products.map((service, index) => (
                       <MenuItem key={index} onClick={() => handleClose(service)}>
                         {service}
                       </MenuItem>

@@ -2,6 +2,10 @@ import { lazy } from 'react';
 import Loadable from '../ui-component/Loadable';
 import MainLayout from '../layout/MainLayout';
 import RequireAuth from './Protected';
+import Academy from '../views/Academy';
+import Consulting from '../views/Consulting';
+import Cybersecurity from '../views/CyberSecurity';
+import Service from '../views/Services';
 
 const Home = Loadable(lazy(() => import('../views/HomePage')));
 const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
@@ -40,7 +44,23 @@ const commonRoutes = [
   {
     path: '/Models/:id',
     element: <MainCanvas />
-  }
+  },
+  {
+    path: '/services',
+    element: <Service />
+  },
+  {
+    path: '/consulting',
+    element: <Consulting />
+  },
+  {
+    path: '/academy',
+    element: <Academy />
+  },
+  {
+    path: '/cybersecurity',
+    element: <Cybersecurity />
+  },
 ];
 
 // const finialisedRoute = (routes = commonRoutes) => {
