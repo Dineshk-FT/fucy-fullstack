@@ -19,7 +19,7 @@ import '../index.css';
 import 'reactflow/dist/style.css';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalNode } from '../../ui-component/custom';
+import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalNode, CustomEdge } from '../../ui-component/custom';
 import { AttackTreeNode, ORGate, ANDGate, TransferGate, VotingGate, Event } from '../../ui-component/CustomGates';
 import { Button } from '@mui/material';
 import { v4 as uid } from 'uuid';
@@ -27,7 +27,8 @@ import { useDispatch } from 'react-redux';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
-import AttackNode from '../../ui-component/custom/AttackNode';
+import AttackNode from '../../ui-component/custom/nodes/AttackNode';
+import StepEdge from '../../ui-component/custom/edges/StepEdge';
 
 const elk = new ELK();
 
@@ -98,15 +99,18 @@ const edgeOptions = {
     height: 20,
     color: 'black'
   },
-  // markerStart: {
-  //   type: MarkerType.ArrowClosed,
-  //   width: 20,
-  //   height: 20,
-  //   color: "#FF0072",
-  // },
+  markerStart: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+    color: '#FF0072'
+  },
   animated: false,
   style: {
     stroke: 'gray'
+  },
+  data: {
+    label: 'edge'
   }
 };
 
@@ -126,6 +130,12 @@ const nodetypes = {
   [`Voting Gate`]: VotingGate
 };
 // const flowKey = "example-flow";
+
+const edgeTypes = {
+  custom: CustomEdge,
+  // step: CurveEdge
+  step: StepEdge
+};
 
 export default function AttackBlock({ attackScene }) {
   const {
@@ -215,7 +225,7 @@ export default function AttackBlock({ attackScene }) {
             id: uid(),
             source: sourceNode.id,
             target: newId,
-            type: 'default',
+            type: 'step',
             markerEnd: { type: MarkerType.Arrow }
           };
 
@@ -231,8 +241,8 @@ export default function AttackBlock({ attackScene }) {
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? nodes : nodes;
-      const es = useInitialNodes ? nodes : edges;
+      const ns = useInitialNodes ? attackScene?.template?.nodes : nodes;
+      const es = useInitialNodes ? attackScene?.template?.edges : edges;
 
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
@@ -300,6 +310,7 @@ export default function AttackBlock({ attackScene }) {
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
           onInit={setReactFlowInstance}
+          edgeTypes={edgeTypes}
           onDrop={onDrop}
           onDragOver={onDragOver}
           fitView

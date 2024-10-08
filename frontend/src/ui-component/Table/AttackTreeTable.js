@@ -16,7 +16,7 @@ import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, threatType } from './constraints';
+import { colorPicker, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
@@ -77,40 +77,40 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 const options = {
   Approach: [
-    { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },
-    { value: 'CVSS-based Approach', label: 'CVSS-based Approach' },
-    { value: 'Attack Vector-based Approach', label: 'Attack Vector-based Approach' }
+    { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach', rating: 1 },
+    { value: 'CVSS-based Approach', label: 'CVSS-based Approach', rating: 2 },
+    { value: 'Attack Vector-based Approach', label: 'Attack Vector-based Approach', rating: 3 }
   ],
   'Elapsed Time': [
-    { value: '<= 1 day', label: '<= 1 day' },
-    { value: '<= 1 week', label: '<= 1 week' },
-    { value: '<= 1 month', label: '<= 1 month' },
-    { value: '<= 6 month', label: '<= 6 month' },
-    { value: '>6 month', label: '>6 month    ' }
+    { value: '<= 1 day', label: '<= 1 day', rating: 1 },
+    { value: '<= 1 week', label: '<= 1 week', rating: 2 },
+    { value: '<= 1 month', label: '<= 1 month', rating: 3 },
+    { value: '<= 6 month', label: '<= 6 month', rating: 4 },
+    { value: '>6 month', label: '>6 month', rating: 5 }
   ],
   Expertise: [
-    { value: 'Layman', label: 'Layman' },
-    { value: 'Proficient', label: 'Proficient' },
-    { value: 'Expert', label: 'Expert' },
-    { value: 'Multiple experts', label: 'Multiple experts' }
+    { value: 'Layman', label: 'Layman', rating: 1 },
+    { value: 'Proficient', label: 'Proficient', rating: 2 },
+    { value: 'Expert', label: 'Expert', rating: 3 },
+    { value: 'Multiple experts', label: 'Multiple experts', rating: 4 }
   ],
   'Knowledge of the Item': [
-    { value: 'Public information', label: 'Public information' },
-    { value: 'Restricted information', label: 'Restricted information' },
-    { value: 'Confidential information', label: 'Confidential information' },
-    { value: 'Strictly confidential information', label: 'Strictly confidential information' }
+    { value: 'Public information', label: 'Public information', rating: 1 },
+    { value: 'Restricted information', label: 'Restricted information', rating: 2 },
+    { value: 'Confidential information', label: 'Confidential information', rating: 3 },
+    { value: 'Strictly confidential information', label: 'Strictly confidential information', rating: 4 }
   ],
   'Window of Opportunity': [
-    { value: 'Unlimited', label: 'Unlimited' },
-    { value: 'Easy', label: 'Easy' },
-    { value: 'Moderate', label: 'Moderate' },
-    { value: 'Difficult', label: 'Difficult' }
+    { value: 'Unlimited', label: 'Unlimited', rating: 1 },
+    { value: 'Easy', label: 'Easy', rating: 2 },
+    { value: 'Moderate', label: 'Moderate', rating: 3 },
+    { value: 'Difficult', label: 'Difficult', rating: 4 }
   ],
   Equipment: [
-    { value: 'Standard', label: 'Standard' },
-    { value: 'Specialized', label: 'Specialized' },
-    { value: 'Bespoke', label: 'Bespoke' },
-    { value: 'Multiple bespoke', label: 'Multiple bespoke' }
+    { value: 'Standard', label: 'Standard', rating: 1 },
+    { value: 'Specialized', label: 'Specialized', rating: 2 },
+    { value: 'Bespoke', label: 'Bespoke', rating: 3 },
+    { value: 'Multiple bespoke', label: 'Multiple bespoke', rating: 4 }
   ]
 };
 
@@ -191,7 +191,8 @@ export default function AttackTreeTable() {
           Expertise: dt?.Expertise ?? '',
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
           'Window of Opportunity': dt['Window of Opportunity'] ?? '',
-          Equipment: dt?.Equipment ?? ''
+          Equipment: dt?.Equipment ?? '',
+          'Attack Feasabilities Rating': dt['Attack Feasabilities Rating'] ?? ''
         };
       });
 
@@ -200,29 +201,65 @@ export default function AttackTreeTable() {
     }
   }, [model]);
 
+  const getRating = (value) => {
+    if (value === 0) {
+      return 'NA';
+    } else if (value > 0 && value <= 1.5) {
+      return 'Low';
+    } else if (value > 1.5 && value <= 3) {
+      return 'Medium';
+    } else {
+      return 'High';
+    }
+  };
   // console.log('rows', rows);
   const handleChange = (e, row) => {
-    // console.log('e.target', e.target);
-    // console.log('row', row);
-    const mod = JSON.parse(JSON.stringify(model));
-    const Rows = JSON.parse(JSON.stringify(rows));
-    const editRow = Rows.find((ele) => ele.ID === row.ID);
-    const Index = Rows.findIndex((it) => it.ID === row.ID);
-    // console.log('Rows', Rows);
-    // console.log('editRow', editRow);
     const { name, value } = e.target;
-    editRow[`${name}`] = value;
-    // console.log('editRow', editRow);
-    Rows[Index] = editRow;
-    setRows(Rows);
-    const updated = Rows?.map((rw) => {
-      //eslint-disable-next-line
+
+    // Update the selected category with the new value
+    const updatedRows = rows.map((r) => {
+      if (r.ID === row.ID) {
+        return { ...r, [name]: value };
+      }
+      return r;
+    });
+
+    setRows(updatedRows);
+
+    // Calculate average Attack Feasabilities Rating if the updated category is part of the specified categories
+    const calculateAverageRating = (row) => {
+      const categories = ['Approach', 'Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
+      let totalRating = 0;
+      let count = 0;
+
+      categories.forEach((category) => {
+        const selectedOption = options[category].find((option) => option.value === row[category]);
+        if (selectedOption) {
+          totalRating += selectedOption.rating;
+          count++;
+        }
+      });
+
+      return count > 0 ? (totalRating / count).toFixed(2) : 'N/A';
+    };
+
+    // Find the updated row and recalculate the rating
+    const updatedRow = updatedRows.find((r) => r.ID === row.ID);
+    const averageRating = calculateAverageRating(updatedRow);
+    updatedRow['Attack Feasabilities Rating'] = getRating(averageRating);
+
+    // Update the model with the new row and rating
+    const mod = JSON.parse(JSON.stringify(model));
+    const scenarioIndex = 3; // Update based on your actual scenario
+    const subsIndex = 0;
+
+    const updated = updatedRows.map((rw) => {
       const { Description, ...rest } = rw;
       return rest;
     });
-    mod.scenarios[3].subs[0].scenes = updated;
-    // console.log('updated', updated);
-    // console.log('mod', mod);
+
+    mod.scenarios[scenarioIndex].subs[subsIndex].scenes = updated;
+
     update(mod)
       .then((res) => {
         if (res) {
@@ -237,6 +274,8 @@ export default function AttackTreeTable() {
   const handleBack = () => {
     dispatch(closeAll());
   };
+
+  // console.log('model', model);
 
   const handleSearch = (e) => {
     const { value } = e.target;
@@ -293,11 +332,19 @@ export default function AttackTreeTable() {
           }}
         >
           {Head?.map((item, index) => {
-            // console.log('item.name', item.name);
+            const bgColor = RatingColor(row['Attack Feasabilities Rating']);
             return (
               <React.Fragment key={index}>
                 {checkforLabel(item) ? (
                   <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
+                ) : item.name === 'Attack Feasabilities Rating' ? (
+                  <StyledTableCell
+                    key={index}
+                    align={'left'}
+                    sx={{ backgroundColor: bgColor, color: bgColor !== 'yellow' ? 'white' : 'black' }}
+                  >
+                    {row[item.name] ? row[item.name] : '-'}
+                  </StyledTableCell>
                 ) : (
                   <StyledTableCell key={index} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}

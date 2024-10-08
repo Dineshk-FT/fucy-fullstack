@@ -18,6 +18,16 @@ export const colorPicker = (pr) => {
   }
 };
 
+export const RatingColor = (value) => {
+  const mapped = {
+    High: 'red',
+    Medium: 'yellow',
+    Low: 'green',
+    NA: 'transparent'
+  };
+  return mapped[value];
+};
+
 export const threatType = (value) => {
   // console.log('value', value)
   switch (value) {

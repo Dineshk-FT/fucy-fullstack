@@ -17,7 +17,8 @@ import {
   cyberTableOpen,
   setAttackScene,
   DerivationTableOpen,
-  attackTableOpen
+  attackTableOpen,
+  drawerOpen
 } from '../../../../store/slices/CurrentIdSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import CyberSecurityModal from '../../../../ui-component/Modal/CyberSecurityModal';
@@ -334,7 +335,8 @@ const BrowserCard = ({ models }) => {
   };
 
   const handleAddNewNode = () => {
-    setOpenNewNode(true);
+    dispatch(drawerOpen());
+    // setOpenNewNode(true);
     setOpenItemRight(false);
   };
 
@@ -543,9 +545,9 @@ const BrowserCard = ({ models }) => {
                             // console.log('at_scene', at_scene);
                             return sub?.name == 'Attack' ? (
                               <DraggableTreeItem
-                                key={at_scene?.id}
-                                nodeId={at_scene?.id}
-                                label={at_scene?.name}
+                                key={at_scene?.ID}
+                                nodeId={at_scene?.ID}
+                                label={at_scene?.Name}
                                 draggable={true}
                                 onDragStart={(e) => onDragStart(e, { label: at_scene?.name })}
                               />

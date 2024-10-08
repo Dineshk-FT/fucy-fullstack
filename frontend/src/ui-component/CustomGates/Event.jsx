@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+/*eslint-disable*/
+import React, { useCallback, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Menu, MenuItem, TextField } from '@mui/material';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
@@ -31,7 +34,7 @@ export default function Event(props) {
     const Scene = mod?.scenarios[3]?.subs[0]?.scenes;
     const selected = mod?.scenarios[3]?.subs[0]?.scenes.find((item) => item.id === props?.id);
     if (!selected) {
-      Scene.push({ id: props.id, name: inputValue });
+      Scene.push({ ID: props.id, Name: inputValue });
       // console.log('mod', mod);
       updateModel(mod).then((res) => {
         if (res) {
@@ -40,6 +43,13 @@ export default function Event(props) {
       });
     }
   };
+
+  const getBgColor = useCallback(() => {
+    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID === props.id)['Attack Feasabilities Rating'];
+    return RatingColor(color);
+  }, []);
+
+  const bgColor = getBgColor();
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -50,8 +60,41 @@ export default function Event(props) {
   return (
     <>
       <Handle type="target" position={Position.Top} />
-      <Box onContextMenu={handleOpenModal} sx={{ p: 2, border: '1px dashed grey', minWidth: 100, color: 'gray' }}>
-        <TextField value={inputValue} onChange={handleChange} variant="outlined" fullWidth />
+      <Box display="flex" flexDirection="column" alignItems="center">
+        <Box
+          onContextMenu={handleOpenModal}
+          display="flex"
+          alignItems="center"
+          sx={{ p: 2, border: '1px solid grey', minWidth: 100, color: 'gray' }}
+        >
+          <WarningAmberIcon color="error" />
+          <TextField
+            value={inputValue}
+            onChange={handleChange}
+            variant="outlined"
+            fullWidth
+            sx={{
+              '& fieldset': {
+                border: 'none'
+              }
+            }}
+          />
+        </Box>
+        <Box
+          my={1}
+          sx={{
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            border: '1px solid black',
+            bgcolor: bgColor,
+            color: 'black',
+            alignContent: 'center',
+            textAlign: 'center'
+          }}
+        >
+          {props?.id?.slice(0, 5)}
+        </Box>
       </Box>
       <Handle type="source" position={Position.Bottom} />
       <Menu

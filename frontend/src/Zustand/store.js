@@ -157,8 +157,8 @@ const useStore = createWithEqualityFn((set, get) => ({
 
         const intersectingNodes = nodes
           .filter((node) => {
-            // Include group nodes as well for overlap checking
-            if (node.id !== group.id) {
+            // Avoid grouping group nodes with another group node
+            if (node.id !== group.id && node.type !== 'group') {
               const nodeRect = {
                 x: node.position.x,
                 y: node.position.y,

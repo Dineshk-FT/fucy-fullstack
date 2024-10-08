@@ -1,8 +1,8 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
 import { Handle, NodeResizer, NodeToolbar, Position, useReactFlow } from 'reactflow';
-import useStore from '../../Zustand/store';
-import { updatedModelState } from '../../utils/Constraints';
+import useStore from '../../../Zustand/store';
+import { updatedModelState } from '../../../utils/Constraints';
 import { useParams } from 'react-router';
 import { ClickAwayListener } from '@mui/material';
 
@@ -13,7 +13,7 @@ const selector = (state) => ({
   updateModel: state.updateModel,
   getModelById: state.getModelById
 });
-const CustomNode = ({ id, data, isConnectable, type }) => {
+export default function DefaultNode({ id, data, isConnectable, type }) {
   const { id: mainId } = useParams();
   const { model, nodes, edges, updateModel, getModelById } = useStore(selector);
   // console.log('model', model);
@@ -73,6 +73,4 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
       </ClickAwayListener>
     </>
   );
-};
-
-export default CustomNode;
+}

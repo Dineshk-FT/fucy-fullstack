@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NodeResizer } from 'reactflow';
-import useStore from '../../Zustand/store';
+import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({

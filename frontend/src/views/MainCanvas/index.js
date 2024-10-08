@@ -595,20 +595,7 @@ export default function MainCanvas() {
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
             {/* <LeftDrawer state={isLeftDrawerOpen} drawerOpen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
-            {/* <RightDrawer
-              state={isRightDrawerOpen}
-              drawerOpen={toggleDrawerOpen}
-              drawerClose={toggleDrawerClose}
-              selectedElement={selectedElement}
-              setSelectedElement={setSelectedElement}
-              nodes={nodes}
-              edges={edges}
-              setEdges={setEdges}
-              setNodes={setNodes}
-              modal={modal}
-              updateModal={updateModal}
-              RefreshAPI={RefreshAPI}
-            /> */}
+            {isRightDrawerOpen && <RightDrawer stateOpen={isRightDrawerOpen} />}
           </ReactFlow>
         </ReactFlowProvider>
         {openTemplate && (

@@ -32,6 +32,7 @@
     "history": "^5.0.0",
     "html-to-image": "^1.11.11",
     "iconsax-react": "^0.0.8",
+    "lodash": "^4.17.21",
     "material-ui-popup-state": "^1.8.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",

@@ -211,9 +211,9 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
                 <MenuItem value="output">Output</MenuItem>
                 <MenuItem value="transceiver">Transceiver</MenuItem>
                 <MenuItem value="transmitter">Transmitter</MenuItem>
-                <MenuItem value="mcu">MicroController</MenuItem>
-                <MenuItem value="memory">Memory</MenuItem>
-                <MenuItem value="multihandle">Multi-Handle</MenuItem>
+                {/* <MenuItem value="mcu">MicroController</MenuItem>
+                <MenuItem value="memory">Memory</MenuItem> */}
+                {/* <MenuItem value="multihandle">Multi-Handle</MenuItem> */}
               </Select>
             </FormControl>
             <FormControl sx={{ width: 350 }}>

@@ -13,12 +13,12 @@ import ReactFlow, {
 import '../index.css';
 import 'reactflow/dist/style.css';
 // import { v4 as uid } from "uuid";
-import CustomNode from '../../ui-component/custom/CustomNode';
-import DefaultNode from '../../ui-component/custom/DefaultNode';
-import InputNode from '../../ui-component/custom/InputNode';
-import OutputNode from '../../ui-component/custom/OutputNode';
-import CircularNode from '../../ui-component/custom/CircularNode';
-import DiagonalNode from '../../ui-component/custom/DiagonalNode ';
+import CustomNode from '../../ui-component/custom/nodes/CustomNode';
+import DefaultNode from '../../ui-component/custom/nodes/DefaultNode';
+import InputNode from '../../ui-component/custom/nodes/InputNode';
+import OutputNode from '../../ui-component/custom/nodes/OutputNode';
+import CircularNode from '../../ui-component/custom/nodes/CircularNode';
+import DiagonalNode from '../../ui-component/custom/nodes/DiagonalNode ';
 import AttackTreeNode from '../../ui-component/CustomGates/AttackTreeNode';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
