@@ -274,6 +274,8 @@ const BrowserCard = ({ models }) => {
   };
 
   const handleAttackTree = (at_scene, name) => {
+    // console.log('at_scene', at_scene);
+    // console.log('name', name);
     dispatch(setAttackScene(at_scene));
     if (name) {
       dispatch(AttackTreePageOpen());
@@ -506,11 +508,16 @@ const BrowserCard = ({ models }) => {
                         >
                           {value?.props.map((pr) => {
                             // console.log('pr', pr);
+                            const Details = {
+                              label: `Loss of ${pr.name} of ${value?.name}`,
+                              type: 'attack_tree_node',
+                              dragged: true
+                            };
                             return (
                               <DraggableTreeItem
                                 key={pr?.id}
                                 nodeId={pr?.id}
-                                onDragStart={(e) => onDragStart(e, { label: `Loss of ${pr.name} of ${value?.name}` })}
+                                onDragStart={(e) => onDragStart(e, Details)}
                                 label={
                                   <div
                                     style={{
@@ -543,19 +550,25 @@ const BrowserCard = ({ models }) => {
                           {sub?.scenes?.map((at_scene) => {
                             // console.log('sub?.name', sub?.name);
                             // console.log('at_scene', at_scene);
+                            const Details = {
+                              label: at_scene?.Name,
+                              nodeId: at_scene?.ID,
+                              type: 'Event',
+                              dragged: true
+                            };
                             return sub?.name == 'Attack' ? (
                               <DraggableTreeItem
                                 key={at_scene?.ID}
                                 nodeId={at_scene?.ID}
                                 label={at_scene?.Name}
                                 draggable={true}
-                                onDragStart={(e) => onDragStart(e, { label: at_scene?.name })}
+                                onDragStart={(e) => onDragStart(e, Details)}
                               />
                             ) : (
                               <TreeItem
-                                key={at_scene?.id}
-                                nodeId={at_scene?.id}
-                                label={at_scene?.name}
+                                key={at_scene?.ID}
+                                nodeId={at_scene?.ID}
+                                label={at_scene?.Name}
                                 // onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
                                 onClick={() => handleAttackTree(at_scene, sub?.name)}
                               ></TreeItem>

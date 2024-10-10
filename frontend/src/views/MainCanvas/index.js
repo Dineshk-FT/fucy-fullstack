@@ -151,10 +151,15 @@ const nodetypes = {
   group: CustomGroupNode,
   multihandle: MultiHandleNode
 };
+
+const CustomStepEdge = (props) => {
+  return <StepEdge {...props} />;
+};
+
 const edgeTypes = {
   custom: CustomEdge,
   // step: CurveEdge
-  step: StepEdge
+  step: CustomStepEdge
 };
 const flowKey = 'example-flow';
 

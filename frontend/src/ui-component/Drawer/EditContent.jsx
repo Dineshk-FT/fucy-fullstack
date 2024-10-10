@@ -24,6 +24,7 @@ const EditContent = ({
   RefreshAPI
 }) => {
   const [value, setValue] = useState('1');
+  // console.log('details', details);
 
   // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {

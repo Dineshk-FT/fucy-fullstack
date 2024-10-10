@@ -19,9 +19,9 @@ export default function StepEdge({
   markerStart,
   data
 }) {
-  const { setEdges } = useReactFlow();
-  const [label, setLabel] = useState(data.label || 'edge'); // Initial label
-  const [isButtonVisible, setIsButtonVisible] = useState(false); // State to manage button visibility
+  const { setEdges, getEdges } = useReactFlow(); // useReactFlow to manage the edges globally
+  const [label, setLabel] = useState(data.label || 'edge');
+  const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
     start: true,
     end: true
@@ -41,39 +41,58 @@ export default function StepEdge({
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 0 // Set borderRadius to 0 for sharp steps (adjust for rounded corners)
+    borderRadius: 0
   });
 
+  const updateEdges = (updatedEdge) => {
+    const edges = getEdges(); // Get current edges
+    const newEdges = edges.map(
+      (edge) => (edge.id === id ? updatedEdge : edge) // Modify the specific edge with the new data
+    );
+    setEdges(newEdges); // Update edges globally
+  };
+
   const onEdgeClick = () => {
-    setEdges((edges) => edges.filter((edge) => edge.id !== id));
+    const edges = getEdges(); // Get the current edges
+    const updated = edges.filter((edge) => edge.id !== id); // Remove the clicked edge
+    setEdges(updated); // Update the edges globally
   };
 
   const onLabelChange = (e) => {
     const newLabel = e.target.textContent;
-    setLabel(newLabel);
-    setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, data: { ...edge.data, label: newLabel } } : edge)));
+    setLabel(newLabel); // Update label in state
+    updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
   };
 
   const handleDivClick = () => {
-    setIsButtonVisible((prev) => !prev); // Toggle button visibility
+    setIsButtonVisible((prev) => !prev);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      handleDivClick(); // Call click handler on Enter or Space key
+      handleDivClick();
     }
   };
 
   const handleSwap = () => {
     if (isMarkerVisible.start && isMarkerVisible.end) {
       setIsMarkerVisible({ start: false, end: true });
-      setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, style: { ...edge.data, start: false, end: true } } : edge)));
+      updateEdges({
+        ...getEdges().find((edge) => edge.id === id),
+        style: { ...style, start: false, end: true }
+      });
     } else if (isMarkerVisible.end) {
       setIsMarkerVisible({ start: true, end: false });
-      setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, style: { ...edge.data, start: true, end: false } } : edge)));
+      updateEdges({
+        ...getEdges().find((edge) => edge.id === id),
+        style: { ...style, start: true, end: false }
+      });
     } else if (isMarkerVisible.start || (!isMarkerVisible.start && !isMarkerVisible.end)) {
       setIsMarkerVisible({ start: true, end: true });
-      setEdges((edges) => edges.map((edge) => (edge.id === id ? { ...edge, style: { ...edge.data, start: true, end: true } } : edge)));
+      updateEdges({
+        ...getEdges().find((edge) => edge.id === id),
+        style: { ...style, start: true, end: true }
+      });
     }
   };
 
@@ -119,8 +138,8 @@ export default function StepEdge({
       <EdgeLabelRenderer>
         <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}>
           <div
-            role="button" // Add button role to make the div accessible
-            tabIndex={0} // Makes the div focusable via keyboard
+            role="button"
+            tabIndex={0}
             style={{
               position: 'absolute',
               top: '-10px',
@@ -140,11 +159,11 @@ export default function StepEdge({
           >
             <div
               className="edge-label"
-              onClick={handleDivClick} // Toggle visibility on click
-              onKeyPress={handleKeyPress} // Toggle visibility on key press
+              onClick={handleDivClick}
+              onKeyPress={handleKeyPress}
               contentEditable
               suppressContentEditableWarning
-              onBlur={onLabelChange} // Save changes on blur (when the user clicks out of the div)
+              onBlur={onLabelChange}
               style={{
                 outline: 'none',
                 cursor: 'text'
@@ -153,7 +172,6 @@ export default function StepEdge({
               {label}
             </div>
             {isButtonVisible && (
-              // Show button only if isButtonVisible is true
               <Box display="flex" gap={0.5}>
                 {<Box onClick={handleSwap}>{renderButton()}</Box>}
                 <button className="edgebutton" onClick={onEdgeClick}>

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
@@ -11,14 +11,25 @@ const selector = (state) => ({
   update: state.updateAttackNode,
   getModels: state.getModels,
   model: state.model,
-  updateModel: state.updateModel
+  updateModel: state.updateModel,
+  edges: state.attackEdges,
+  setEdges: state.setAttackEdges,
+  nodes: state.attackNodes
 });
 
 export default function Event(props) {
-  const { update, model, updateModel, getModels } = useStore(selector, shallow);
+  const { update, model, updateModel, getModels, edges, setEdges, nodes } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
+
+  // const isTarget = useMemo(() => edges?.some((ed) => ed?.source === props.id), [edges]);
+  // console.log('edges', edges);
+  // useEffect(() => {
+  //   return () => {
+  //     setEdges((prevEdges) => prevEdges?.filter((ed) => ed?.source !== props.id && ed?.target !== props.id));
+  //   };
+  // }, [edges]);
 
   const handleOpenModal = (e) => {
     e.preventDefault();
@@ -45,8 +56,15 @@ export default function Event(props) {
   };
 
   const getBgColor = useCallback(() => {
-    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID === props.id)['Attack Feasabilities Rating'];
-    return RatingColor(color);
+    // console.log('props.id', props.id);
+    // console.log('model?.scenarios[3]?.subs[0].scenes', model?.scenarios[3]?.subs[0].scenes);
+    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID || sub?.nodeId === props.id);
+    // console.log('color', color);
+    if (color) {
+      return RatingColor(color['Attack Feasabilities Rating']);
+    } else {
+      return 'transparent';
+    }
   }, []);
 
   const bgColor = getBgColor();

@@ -1,20 +1,6 @@
 /*eslint-disable*/
-import React, {
-  // useState,
-  useCallback,
-  useLayoutEffect,
-  useEffect,
-  useState,
-  useContext
-} from 'react';
-import ReactFlow, {
-  ReactFlowProvider,
-  // MarkerType,
-  Controls,
-  MiniMap,
-  Panel,
-  MarkerType
-} from 'reactflow';
+import React, { useCallback, useEffect, useState } from 'react';
+import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import useStore from '../../Zustand/store';
@@ -37,6 +23,7 @@ const elkOptions = {
   'elk.layered.spacing.nodeNodeBetweenLayers': '100',
   'elk.spacing.nodeNode': '80'
 };
+
 const getLayoutedElements = (nodes, edges, options = {}) => {
   const isHorizontal = options?.['elk.direction'] === 'RIGHT';
   const graph = {
@@ -52,18 +39,14 @@ const getLayoutedElements = (nodes, edges, options = {}) => {
     edges: edges
   };
 
-  // console.log('graph', graph);
-  // console.log('elk', elk);
   return elk
     .layout(graph)
     .then((layoutedGraph) => {
-      // console.log('layoutedGraph', layoutedGraph);
       return {
         nodes: layoutedGraph.children.map((node) => ({
           ...node,
           position: { x: node.x, y: node.y }
         })),
-
         edges: layoutedGraph.edges
       };
     })
@@ -71,16 +54,26 @@ const getLayoutedElements = (nodes, edges, options = {}) => {
       console.log('error', error);
     });
 };
+
+// Define CustomStepEdge outside the component
+function CustomStepEdge({ edges, setEdges, ...props }) {
+  return <StepEdge {...props} edges={edges} setEdges={setEdges} />;
+}
+
+// Define edge types outside and pass edges, setEdges as props
+const edgeTypes = (edges, setEdges) => ({
+  custom: CustomEdge,
+  step: (props) => <CustomStepEdge {...props} edges={edges} setEdges={setEdges} />
+});
+
 const selector = (state) => ({
   nodes: state.attackNodes,
   edges: state.attackEdges,
   onNodesChange: state.onAttackNodesChange,
   onEdgesChange: state.onAttackEdgesChange,
   onConnect: state.onAttackConnect,
-  dragAdd: state.dragAdd,
   addAttackNode: state.addAttackNode,
   addAttackEdge: state.addAttackEdge,
-  dragAddNode: state.dragAddNode,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
   model: state.model,
@@ -89,7 +82,7 @@ const selector = (state) => ({
   update: state.updateModel
 });
 
-//Edge line styling
+// Edge line styling
 const connectionLineStyle = { stroke: 'black' };
 const edgeOptions = {
   type: 'step',
@@ -119,6 +112,7 @@ const nodetypes = {
   output: OutputNode,
   default: AttackNode,
   receiver: CustomNode,
+  custom: CustomNode,
   signal: CustomNode,
   transmitter: CircularNode,
   transceiver: DiagonalNode,
@@ -129,13 +123,6 @@ const nodetypes = {
   [`Transfer Gate`]: TransferGate,
   [`Voting Gate`]: VotingGate
 };
-// const flowKey = "example-flow";
-
-const edgeTypes = {
-  custom: CustomEdge,
-  // step: CurveEdge
-  step: StepEdge
-};
 
 export default function AttackBlock({ attackScene }) {
   const {
@@ -144,31 +131,24 @@ export default function AttackBlock({ attackScene }) {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    // dragAdd,
-    // dragAddNode,
     addAttackNode,
     addAttackEdge,
     setNodes,
     setEdges,
-    getModelById,
     model,
     update,
     getModels
   } = useStore(selector, shallow);
+
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
-
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
-  // console.log('nodes out', nodes);
 
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
       const cyber = event.dataTransfer.getData('application/cyber');
+      // console.log('cyber', cyber);
       let parsedNode;
 
       if (cyber) {
@@ -182,16 +162,18 @@ export default function AttackBlock({ attackScene }) {
       });
 
       if (parsedNode) {
+        // console.log('parsedNode', parsedNode);
         const newNode = {
           id: newId,
           position,
           type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
-          dragged: parsedNode?.dragged ? parsedNode?.dragged : false,
+
           width: 100,
           height: 70,
           data: {
             label: parsedNode?.label,
             style: {
+              color: 'black',
               backgroundColor: 'transparent',
               fontSize: '16px',
               fontFamily: 'Inter',
@@ -202,10 +184,10 @@ export default function AttackBlock({ attackScene }) {
               borderWidth: '2px',
               borderStyle: 'solid'
             }
-          }
+          },
+          ...parsedNode
         };
 
-        // Find if the new node is dropped on any existing node
         const sourceNode = nodes.find((node) => {
           const nodeBounds = {
             xMin: node.position.x,
@@ -220,7 +202,6 @@ export default function AttackBlock({ attackScene }) {
         });
 
         if (sourceNode) {
-          // Create an edge from the sourceNode to the newNode
           const newEdge = {
             id: uid(),
             source: sourceNode.id,
@@ -238,6 +219,8 @@ export default function AttackBlock({ attackScene }) {
     [reactFlowInstance, nodes, addAttackNode, addAttackEdge]
   );
 
+  console.log('nodes', nodes);
+
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
@@ -254,37 +237,30 @@ export default function AttackBlock({ attackScene }) {
     [nodes, edges]
   );
 
-  // console.log('attackScene', attackScene);
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
-
   useEffect(() => {
     if (attackScene) {
       setNodes(attackScene?.template?.nodes ?? []);
       setEdges(attackScene?.template?.edges ?? []);
     }
   }, [attackScene]);
-  // console.log('nodes', nodes);
+
   const handleSave = () => {
     const atScene = JSON.parse(JSON.stringify(attackScene));
-    // const atScene = { ...attackScene };
-    // console.log('atScene', atScene);
     const mod = JSON.parse(JSON.stringify(model));
     const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
-    // console.log('selected', selected);
+
     selected.template = {
       id: uid(),
       nodes: nodes,
       edges: edges
     };
+
     dispatch(setAttackScene(selected));
     update(mod)
       .then((res) => {
         if (res) {
           setTimeout(() => {
             notify(attackScene?.template ? 'Updated Successfully' : 'Added Successfully', 'success');
-            // window.location.reload();
             getModels();
           }, 500);
         }
@@ -299,7 +275,6 @@ export default function AttackBlock({ attackScene }) {
   return (
     <div style={{ height: '100%', background: 'white' }}>
       <ReactFlowProvider>
-        {/* <div className="reactflow-wrapper" ref={reactFlowWrapper}> */}
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -310,38 +285,22 @@ export default function AttackBlock({ attackScene }) {
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
           onInit={setReactFlowInstance}
-          edgeTypes={edgeTypes}
+          edgeTypes={edgeTypes(edges, setEdges)}
           onDrop={onDrop}
-          onDragOver={onDragOver}
+          onDragOver={(event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+          }}
           fitView
         >
-          <Panel
-            position="top-left"
-            style={{
-              display: 'flex',
-              gap: 5,
-              background: 'white'
-              // marginLeft: "2rem",
-              // marginTop: "2rem",
-            }}
-          >
+          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>
             <Button variant="outlined" onClick={handleSave}>
               {attackScene?.template ? 'Update' : 'Add'}
-            </Button>
-          </Panel>
-          <Panel position="top-right" style={{ display: 'flex', gap: '10px' }}>
-            <Button variant="outlined" onClick={() => onLayout({ direction: 'DOWN' })}>
-              vertical layout
-            </Button>
-
-            <Button variant="outlined" onClick={() => onLayout({ direction: 'RIGHT' })}>
-              horizontal layout
             </Button>
           </Panel>
           <MiniMap />
           <Controls />
         </ReactFlow>
-        {/* </div> */}
       </ReactFlowProvider>
       <Toaster position="top-right" reverseOrder={false} />
     </div>
