@@ -56,15 +56,15 @@ const getLayoutedElements = (nodes, edges, options = {}) => {
 };
 
 // Define CustomStepEdge outside the component
-function CustomStepEdge({ edges, setEdges, ...props }) {
-  return <StepEdge {...props} edges={edges} setEdges={setEdges} />;
-}
+// function CustomStepEdge({ edges, setEdges, ...props }) {
+//   return <StepEdge {...props} edges={edges} setEdges={setEdges} />;
+// }
 
 // Define edge types outside and pass edges, setEdges as props
-const edgeTypes = (edges, setEdges) => ({
+const edgeTypes = {
   custom: CustomEdge,
-  step: (props) => <CustomStepEdge {...props} edges={edges} setEdges={setEdges} />
-});
+  step: StepEdge
+};
 
 const selector = (state) => ({
   nodes: state.attackNodes,
@@ -137,9 +137,11 @@ export default function AttackBlock({ attackScene }) {
     setEdges,
     model,
     update,
-    getModels
+    getModels,
+    getModelById
   } = useStore(selector, shallow);
 
+  // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -172,6 +174,7 @@ export default function AttackBlock({ attackScene }) {
           height: 70,
           data: {
             label: parsedNode?.label,
+            nodeId: parsedNode?.nodeId,
             style: {
               color: 'black',
               backgroundColor: 'transparent',
@@ -184,8 +187,7 @@ export default function AttackBlock({ attackScene }) {
               borderWidth: '2px',
               borderStyle: 'solid'
             }
-          },
-          ...parsedNode
+          }
         };
 
         const sourceNode = nodes.find((node) => {
@@ -219,7 +221,8 @@ export default function AttackBlock({ attackScene }) {
     [reactFlowInstance, nodes, addAttackNode, addAttackEdge]
   );
 
-  console.log('nodes', nodes);
+  // console.log('nodes', nodes);
+  // console.log('edges', edges);
 
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
@@ -237,6 +240,7 @@ export default function AttackBlock({ attackScene }) {
     [nodes, edges]
   );
 
+  // console.log('model', model);
   useEffect(() => {
     if (attackScene) {
       setNodes(attackScene?.template?.nodes ?? []);
@@ -248,13 +252,16 @@ export default function AttackBlock({ attackScene }) {
     const atScene = JSON.parse(JSON.stringify(attackScene));
     const mod = JSON.parse(JSON.stringify(model));
     const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
+    const selectedIndex = mod?.scenarios[3]?.subs[1]?.scenes?.findIndex((ite) => ite.id === atScene?.id);
 
     selected.template = {
       id: uid(),
       nodes: nodes,
       edges: edges
     };
-
+    mod.scenarios[3].subs[1].scenes.push[selectedIndex] = selected;
+    // console.log('mod', mod);
+    // console.log('selected', selected);
     dispatch(setAttackScene(selected));
     update(mod)
       .then((res) => {
@@ -262,6 +269,7 @@ export default function AttackBlock({ attackScene }) {
           setTimeout(() => {
             notify(attackScene?.template ? 'Updated Successfully' : 'Added Successfully', 'success');
             getModels();
+            getModelById(model?.id);
           }, 500);
         }
       })
@@ -285,7 +293,7 @@ export default function AttackBlock({ attackScene }) {
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
           onInit={setReactFlowInstance}
-          edgeTypes={edgeTypes(edges, setEdges)}
+          edgeTypes={edgeTypes}
           onDrop={onDrop}
           onDragOver={(event) => {
             event.preventDefault();

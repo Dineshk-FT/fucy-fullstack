@@ -22,7 +22,7 @@ export default function Event(props) {
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
-
+  // console.log('props', props);
   // const isTarget = useMemo(() => edges?.some((ed) => ed?.source === props.id), [edges]);
   // console.log('edges', edges);
   // useEffect(() => {
@@ -57,8 +57,9 @@ export default function Event(props) {
 
   const getBgColor = useCallback(() => {
     // console.log('props.id', props.id);
+    // console.log('props?.data', props?.data?.nodeId);
     // console.log('model?.scenarios[3]?.subs[0].scenes', model?.scenarios[3]?.subs[0].scenes);
-    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID || sub?.nodeId === props.id);
+    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     // console.log('color', color);
     if (color) {
       return RatingColor(color['Attack Feasabilities Rating']);

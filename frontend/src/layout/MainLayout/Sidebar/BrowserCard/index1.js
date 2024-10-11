@@ -538,7 +538,7 @@ const BrowserCard = ({ models }) => {
                       ))}
                   {scene?.name === 'Attack Path Analysis and Attack Feasability Rating' &&
                     scene?.subs?.map((sub) => {
-                      // console.log('sub', sub)
+                      // console.log('sub', sub.scenes);
                       return (
                         <TreeItem
                           key={`2${sub?.name}`}

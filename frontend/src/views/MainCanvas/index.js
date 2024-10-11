@@ -593,7 +593,7 @@ export default function MainCanvas() {
             // onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
             // onContextMenu={createGroup}
-            onNodeContextMenu={handleSidebarOpen}
+            // onNodeContextMenu={handleSidebarOpen}
             // onEdgeContextMenu={handleSidebarOpen}
           >
             <Controls />

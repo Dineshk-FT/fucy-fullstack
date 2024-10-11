@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useState, useEffect } from 'react';
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
+import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useEdgesState, useReactFlow } from 'reactflow';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
@@ -19,13 +19,18 @@ export default function StepEdge({
   markerStart,
   data
 }) {
-  const { setEdges, getEdges } = useReactFlow(); // useReactFlow to manage the edges globally
+  // const [setEdges] = useEdgesState([]);
+  const { getEdges, setEdges } = useReactFlow();
+  const edges = getEdges();
   const [label, setLabel] = useState(data.label || 'edge');
   const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
     start: true,
     end: true
   });
+
+  // console.log('edges', edges);
+  // console.log('setEdges', setEdges);
 
   useEffect(() => {
     setIsMarkerVisible({
