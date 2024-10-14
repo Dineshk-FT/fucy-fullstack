@@ -137,7 +137,7 @@ const selector = (state) => ({
   addNode: state.addCyberNode,
   getModels: state.getModels,
   getModelById: state.getModelById,
-  nodes: state.attackNodes,
+  nodes: state.nodes,
   model: state.model,
   getSidebarNode: state.getSidebarNode
 });

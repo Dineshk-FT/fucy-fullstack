@@ -9,7 +9,7 @@ import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalN
 import { AttackTreeNode, ORGate, ANDGate, TransferGate, VotingGate, Event } from '../../ui-component/CustomGates';
 import { Button } from '@mui/material';
 import { v4 as uid } from 'uuid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
@@ -67,15 +67,15 @@ const edgeTypes = {
 };
 
 const selector = (state) => ({
-  nodes: state.attackNodes,
-  edges: state.attackEdges,
-  onNodesChange: state.onAttackNodesChange,
-  onEdgesChange: state.onAttackEdgesChange,
-  onConnect: state.onAttackConnect,
-  addAttackNode: state.addAttackNode,
-  addAttackEdge: state.addAttackEdge,
-  setNodes: state.setAttackNodes,
-  setEdges: state.setAttackEdges,
+  nodes: state.nodes,
+  edges: state.edges,
+  onNodesChange: state.onNodesChange,
+  onEdgesChange: state.onEdgesChange,
+  onConnect: state.onConnect,
+  addNode: state.dragAdd,
+  addEdge: state.addEdge,
+  setNodes: state.setNodes,
+  setEdges: state.setEdges,
   model: state.model,
   getModelById: state.getModelById,
   getModels: state.getModels,
@@ -131,8 +131,8 @@ export default function AttackBlock({ attackScene }) {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    addAttackNode,
-    addAttackEdge,
+    addNode,
+    addEdge,
     setNodes,
     setEdges,
     model,
@@ -145,6 +145,27 @@ export default function AttackBlock({ attackScene }) {
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
+
+  // useEffect(() => {
+  //   setNodes([]);
+  //   setEdges([]);
+  // }, []);
+
+  useEffect(() => {
+    if (attackScene) {
+      setTimeout(() => {
+        setNodes(attackScene?.template?.nodes ?? []);
+        setEdges(attackScene?.template?.edges ?? []);
+      }, 10);
+    }
+  }, [attackScene]);
+
+  // useEffect(() => {
+  //   if (reactFlowInstance) {
+  //     reactFlowInstance.fitView({ padding: 0.1, duration: 800 });
+  //   }
+  // }, [reactFlowInstance]);
 
   const onDrop = useCallback(
     (event) => {
@@ -212,13 +233,13 @@ export default function AttackBlock({ attackScene }) {
             markerEnd: { type: MarkerType.Arrow }
           };
 
-          addAttackEdge(newEdge);
+          addEdge(newEdge);
         }
 
-        addAttackNode(newNode);
+        addNode(newNode);
       }
     },
-    [reactFlowInstance, nodes, addAttackNode, addAttackEdge]
+    [reactFlowInstance, nodes, addNode, addEdge]
   );
 
   // console.log('nodes', nodes);
@@ -241,12 +262,6 @@ export default function AttackBlock({ attackScene }) {
   );
 
   // console.log('model', model);
-  useEffect(() => {
-    if (attackScene) {
-      setNodes(attackScene?.template?.nodes ?? []);
-      setEdges(attackScene?.template?.edges ?? []);
-    }
-  }, [attackScene]);
 
   const handleSave = () => {
     const atScene = JSON.parse(JSON.stringify(attackScene));

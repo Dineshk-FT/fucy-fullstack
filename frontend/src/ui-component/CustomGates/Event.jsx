@@ -11,25 +11,14 @@ const selector = (state) => ({
   update: state.updateAttackNode,
   getModels: state.getModels,
   model: state.model,
-  updateModel: state.updateModel,
-  edges: state.attackEdges,
-  setEdges: state.setAttackEdges,
-  nodes: state.attackNodes
+  updateModel: state.updateModel
 });
 
 export default function Event(props) {
-  const { update, model, updateModel, getModels, edges, setEdges, nodes } = useStore(selector, shallow);
+  const { update, model, updateModel, getModels } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
-  // console.log('props', props);
-  // const isTarget = useMemo(() => edges?.some((ed) => ed?.source === props.id), [edges]);
-  // console.log('edges', edges);
-  // useEffect(() => {
-  //   return () => {
-  //     setEdges((prevEdges) => prevEdges?.filter((ed) => ed?.source !== props.id && ed?.target !== props.id));
-  //   };
-  // }, [edges]);
 
   const handleOpenModal = (e) => {
     e.preventDefault();
@@ -56,11 +45,7 @@ export default function Event(props) {
   };
 
   const getBgColor = useCallback(() => {
-    // console.log('props.id', props.id);
-    // console.log('props?.data', props?.data?.nodeId);
-    // console.log('model?.scenarios[3]?.subs[0].scenes', model?.scenarios[3]?.subs[0].scenes);
     const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
-    // console.log('color', color);
     if (color) {
       return RatingColor(color['Attack Feasabilities Rating']);
     } else {

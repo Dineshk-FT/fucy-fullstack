@@ -193,16 +193,6 @@ export default function MainCanvas() {
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
   const { propertiesTabOpen } = useSelector((state) => state?.canvas);
-
-  useEffect(() => {
-    const template = model?.template;
-    setSavedTemplate(template);
-    onSaveInitial(template);
-    setTimeout(() => {
-      onRestore(template);
-    }, 100);
-  }, [model]);
-
   const {
     isDsTableOpen,
     isTsTableOpen,
@@ -214,6 +204,28 @@ export default function MainCanvas() {
     isDerivationTableOpen,
     isAttackTableOpen
   } = useSelector((state) => state?.currentId);
+
+  useEffect(() => {
+    // console.log('initial');
+    setNodes([]);
+    setEdges([]);
+  }, [!isAttackTreeOpen]);
+
+  // console.log('isAttackTreeOpen', isAttackTreeOpen);
+  useEffect(() => {
+    const template = model?.template;
+    setSavedTemplate(template);
+    onSaveInitial(template);
+    // setTimeout(() => {
+    onRestore(template);
+    // }, 100);
+  }, [model, !isAttackTreeOpen]);
+
+  useEffect(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.1, duration: 800 });
+    }
+  }, [reactFlowInstance]);
 
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
@@ -478,7 +490,7 @@ export default function MainCanvas() {
       });
   };
 
-  const toggleDrawerOpen = (tab) => dispatch(drawerOpen(tab));
+  // const toggleDrawerOpen = (tab) => dispatch(drawerOpen(tab));
   // const toggleDrawerClose = () => dispatch(drawerClose());
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
@@ -492,7 +504,7 @@ export default function MainCanvas() {
       dispatch(OpenPropertiesTab());
       setSelectedElement(node);
       dispatch(setSelectedBlock(node));
-      toggleDrawerOpen('MainCanvasTab');
+      // toggleDrawerOpen('MainCanvasTab');
       dispatch(setProperties(node?.properties));
     }
   };
@@ -585,12 +597,12 @@ export default function MainCanvas() {
             onNodeDragStop={onNodeDragStop}
             connectionLineStyle={connectionLineStyle}
             defaultEdgeOptions={edgeOptions}
-            onInit={setReactFlowInstance}
+            onInit={(instance) => setReactFlowInstance(instance)}
             onDrop={onDrop}
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
-            // onNodeDoubleClick={handleSidebarOpen}
+            onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
             // onContextMenu={createGroup}
             // onNodeContextMenu={handleSidebarOpen}

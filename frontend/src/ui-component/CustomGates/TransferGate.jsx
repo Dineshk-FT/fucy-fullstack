@@ -69,7 +69,7 @@ export default function TransferGate(props) {
               fill="none"
               stroke={colorPickerTab(props?.data?.status)}
               //eslint-disable-next-line
-              stroke-width="6"
+              strokeWidth="6"
               transform="rotate(-90 256 256)"
               d="M 105,111.3 V 400.7 L 365.5,256 Z M 16,247 v "
             />

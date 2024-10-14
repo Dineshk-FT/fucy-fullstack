@@ -29,8 +29,8 @@ const MenuProps = {
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
-  nodes: state?.attackNodes,
-  setNodes: state?.setAttackNodes
+  nodes: state?.nodes,
+  setNodes: state?.setNodes
 });
 
 function getStyles(name, nodes, theme) {
