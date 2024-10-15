@@ -161,11 +161,11 @@ export default function AttackBlock({ attackScene }) {
     }
   }, [attackScene]);
 
-  // useEffect(() => {
-  //   if (reactFlowInstance) {
-  //     reactFlowInstance.fitView({ padding: 0.1, duration: 800 });
-  //   }
-  // }, [reactFlowInstance]);
+  useEffect(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+    }
+  }, [reactFlowInstance, nodes?.length]);
 
   const onDrop = useCallback(
     (event) => {
@@ -190,7 +190,7 @@ export default function AttackBlock({ attackScene }) {
           id: newId,
           position,
           type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
-
+          ...parsedNode,
           width: 100,
           height: 70,
           data: {

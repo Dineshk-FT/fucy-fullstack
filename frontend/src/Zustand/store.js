@@ -23,6 +23,7 @@ export const createHeaders = () => {
 };
 
 const useStore = createWithEqualityFn((set, get) => ({
+  reactFlowInstance: null,
   attackNodes: [],
   attackEdges: [],
   cyberNodes: [],
@@ -38,8 +39,46 @@ const useStore = createWithEqualityFn((set, get) => ({
   scenerio: {},
   component: [],
 
-  //Normal Nodes
+  setReactFlowInstance: (instance) => set({ reactFlowInstance: instance }),
 
+  fitView: (nodes) => {
+    set((state) => {
+      console.log('state.reactFlowInstance', state.reactFlowInstance);
+      if (!state.reactFlowInstance || nodes.length === 0) return;
+
+      // Calculate the bounding box of the nodes
+      const xPositions = nodes.map((node) => node.position.x);
+      const yPositions = nodes.map((node) => node.position.y);
+
+      const minX = Math.min(...xPositions);
+      const maxX = Math.max(...xPositions);
+      const minY = Math.min(...yPositions);
+      const maxY = Math.max(...yPositions);
+
+      // Calculate the center of the bounding box
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      // Get the bounding box dimensions
+      const boxWidth = maxX - minX;
+      const boxHeight = maxY - minY;
+
+      // Access the current dimensions of the viewport
+      const { width: viewportWidth, height: viewportHeight } = state.reactFlowInstance.getViewport();
+
+      // Calculate the zoom level to fit the nodes within the viewport (with padding)
+      const zoom = Math.min(viewportWidth / (boxWidth + 50), viewportHeight / (boxHeight + 50));
+
+      // Apply the zoom and pan
+      state.reactFlowInstance.setTransform({
+        x: viewportWidth / 2 - centerX * zoom,
+        y: viewportHeight / 2 - centerY * zoom,
+        zoom
+      });
+    });
+  },
+
+  //Normal Nodes
   onNodesChange: (changes) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes)

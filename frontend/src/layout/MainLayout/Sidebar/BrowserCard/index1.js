@@ -5,7 +5,7 @@ import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import { v4 as uid } from 'uuid';
 import {
@@ -164,7 +164,7 @@ const BrowserCard = ({ models }) => {
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
 
-  const isDragged = nodes.some(dragCheck);
+  const isDragged = useMemo(() => nodes?.some(dragCheck), []);
   function dragCheck(node) {
     return node.dragged;
   }
@@ -273,7 +273,7 @@ const BrowserCard = ({ models }) => {
     }
   };
 
-  const handleAttackTree = (at_scene, name) => {
+  const handleSetAttackTreeScene = (at_scene, name) => {
     // console.log('at_scene', at_scene);
     // console.log('name', name);
     dispatch(setAttackScene(at_scene));
@@ -387,155 +387,156 @@ const BrowserCard = ({ models }) => {
                     }
                   }}
                 >
-                  {scene?.subs
-                    ? !scene?.name.includes('Attack Path') &&
-                      scene?.subs?.map((sub) => (
-                        <TreeItem
-                          key={`1${sub?.name}`}
-                          nodeId={`1${sub?.name}`} //change to id
-                          //   label={sub?.name}
-                          label={getLabel('TopicIcon', sub?.name)}
-                          onClick={() => handleSwicthTable(sub?.name)} //change to onClick
-                        >
-                          {sub?.name === 'Damage Scenarios Derivations' &&
-                            sub?.Details?.map((ls) => (
-                              <TreeItem
-                                key={ls?.id}
-                                nodeId={ls.id}
-                                label={`[${ls?.id}] ${ls?.name}`}
-                                sx={{
-                                  ml: -2
-                                }}
-                              ></TreeItem>
-                            ))}
-                          {sub?.name === 'Damage Scenarios - Collection & Impact Ratings' &&
-                            sub?.scenes?.map((dm_scene) => {
-                              // console.log('dm_scene', dm_scene)
-                              return (
-                                <TreeItem
-                                  key={dm_scene?.id}
-                                  nodeId={dm_scene?.id}
-                                  label={getLabel('DangerousIcon', dm_scene?.Name)}
-                                  //   label={dm_scene?.name}
-                                ></TreeItem>
-                              );
-                            })}
-                          {sub?.name === 'Threat Scenarios' &&
-                            sub?.losses?.map((dt) =>
-                              dt?.cyberLosses?.map((pr, prin) =>
-                                pr?.props?.map((pp, pin) => {
-                                  // console.log('pr', dt);
-                                  const label = `[TS00${prin}${pin}] ${threatType(pp)} for the loss of ${pp} of ${
-                                    pr?.name
-                                  } for Damage Scene ${dt?.ID}`;
-                                  const Details = {
-                                    label: label,
-                                    type: 'default',
-                                    dragged: true
-                                  };
-                                  return (
-                                    <DraggableTreeItem
-                                      draggable={!isDragged}
-                                      key={`${dt?.id}${prin}${pin}`}
-                                      nodeId={`${dt?.id}${prin}${pin}`}
-                                      label={label}
-                                      onDragStart={(e) => onDragStart(e, Details)}
-                                    />
-                                  );
-                                })
-                              )
-                            )}
-                          {sub?.name === 'CyberSecurity Goals and Requirements' &&
-                            sub?.subs?.map((s_sub) => (
-                              <TreeItem
-                                key={s_sub?.id}
-                                nodeId={s_sub?.id}
-                                label={s_sub?.name}
-                                onContextMenu={(e) => handleRightClick(e, s_sub?.name)}
-                              >
-                                {s_sub?.name === 'CyberSecurity Goals' &&
-                                  s_sub.scenes.map((sce) => (
-                                    <TreeItem
-                                      key={sce?.id}
-                                      nodeId={sce?.id}
-                                      label={getLabel('BrightnessLowIcon', sce?.name)}
-                                      onClick={() => handleAddComponent('goal', sce)}
-                                      onDragStart={() => handleDragStart(e, sce)}
-                                    ></TreeItem>
-                                  ))}
-                                {s_sub?.name === 'CyberSecurity Requirements' &&
-                                  s_sub.scenes.map((sce) => (
-                                    <TreeItem
-                                      key={sce?.id}
-                                      nodeId={sce?.id}
-                                      label={getLabel('CalendarMonthIcon', sce?.name)}
-                                      onClick={() => handleAddComponent('require', sce)}
-                                      onDragStart={() => handleDragStart(e, sce)}
-                                    ></TreeItem>
-                                  ))}
-                              </TreeItem>
-                            ))}
-
-                          {sub?.name === 'Derived Threat Scenarios' &&
-                            sub?.scenes?.map((th_scene, i) => {
-                              return (
-                                <TreeItem
-                                  key={`${th_scene?.id}${i}`}
-                                  nodeId={`${th_scene?.id}${i}`}
-                                  label={getLabel('ReportIcon', th_scene?.name)}
-                                ></TreeItem>
-                              );
-                            })}
-                          {sub?.name === 'CyberSecurity Controls' &&
-                            sub?.scenes?.map((th_scene) => {
-                              return (
-                                <TreeItem
-                                  key={th_scene?.id}
-                                  nodeId={th_scene?.id}
-                                  //   label={th_scene?.name}
-                                  label={getLabel('SecurityIcon', th_scene?.name)}
-                                ></TreeItem>
-                              );
-                            })}
-                        </TreeItem>
-                      ))
-                    : scene?.Details?.map((value, i) => (
-                        <TreeItem
-                          key={`1${i}`}
-                          nodeId={`1${i}`}
-                          label={`[000${i}] ${value?.name}`}
-                          sx={{ backgroundColor: selectedBlock?.id === value?.nodeId ? 'wheat' : 'inherit' }}
-                        >
-                          {value?.props.map((pr) => {
-                            // console.log('pr', pr);
-                            const Details = {
-                              label: `Loss of ${pr.name} of ${value?.name}`,
-                              type: 'attack_tree_node',
-                              dragged: true
-                            };
+                  {scene?.subs &&
+                    !scene?.name.includes('Attack Path') &&
+                    scene?.subs?.map((sub) => (
+                      <TreeItem
+                        key={`1${sub?.name}`}
+                        nodeId={`1${sub?.name}`} //change to id
+                        //   label={sub?.name}
+                        label={getLabel('TopicIcon', sub?.name)}
+                        onClick={() => handleSwicthTable(sub?.name)} //change to onClick
+                      >
+                        {sub?.name === 'Damage Scenarios Derivations' &&
+                          sub?.Details?.map((ls) => (
+                            <TreeItem
+                              key={ls?.id}
+                              nodeId={ls.id}
+                              label={`[${ls?.id}] ${ls?.name}`}
+                              sx={{
+                                ml: -2
+                              }}
+                            ></TreeItem>
+                          ))}
+                        {sub?.name === 'Damage Scenarios - Collection & Impact Ratings' &&
+                          sub?.scenes?.map((dm_scene) => {
+                            // console.log('dm_scene', dm_scene)
                             return (
-                              <DraggableTreeItem
-                                key={pr?.id}
-                                nodeId={pr?.id}
-                                onDragStart={(e) => onDragStart(e, Details)}
-                                label={
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      marginLeft: '-31px',
-                                      gap: 2
-                                    }}
-                                  >
-                                    <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                                    {`Loss of ${pr.name}`}
-                                  </div>
-                                }
-                              ></DraggableTreeItem>
+                              <TreeItem
+                                key={dm_scene?.id}
+                                nodeId={dm_scene?.id}
+                                label={getLabel('DangerousIcon', dm_scene?.Name)}
+                                //   label={dm_scene?.name}
+                              ></TreeItem>
                             );
                           })}
-                        </TreeItem>
-                      ))}
+                        {sub?.name === 'Threat Scenarios' &&
+                          sub?.losses?.map((dt) =>
+                            dt?.cyberLosses?.map((pr, prin) =>
+                              pr?.props?.map((pp, pin) => {
+                                // console.log('pr', dt);
+                                const label = `[TS00${prin}${pin}] ${threatType(pp)} for the loss of ${pp} of ${
+                                  pr?.name
+                                } for Damage Scene ${dt?.ID}`;
+                                const Details = {
+                                  label: label,
+                                  type: 'default',
+                                  dragged: true
+                                };
+                                return (
+                                  <DraggableTreeItem
+                                    draggable={!isDragged}
+                                    key={`${dt?.id}${prin}${pin}`}
+                                    nodeId={`${dt?.id}${prin}${pin}`}
+                                    label={label}
+                                    onDragStart={(e) => onDragStart(e, Details)}
+                                  />
+                                );
+                              })
+                            )
+                          )}
+                        {sub?.name === 'CyberSecurity Goals and Requirements' &&
+                          sub?.subs?.map((s_sub) => (
+                            <TreeItem
+                              key={s_sub?.id}
+                              nodeId={s_sub?.id}
+                              label={s_sub?.name}
+                              onContextMenu={(e) => handleRightClick(e, s_sub?.name)}
+                            >
+                              {s_sub?.name === 'CyberSecurity Goals' &&
+                                s_sub.scenes.map((sce) => (
+                                  <TreeItem
+                                    key={sce?.id}
+                                    nodeId={sce?.id}
+                                    label={getLabel('BrightnessLowIcon', sce?.name)}
+                                    onClick={() => handleAddComponent('goal', sce)}
+                                    onDragStart={() => handleDragStart(e, sce)}
+                                  ></TreeItem>
+                                ))}
+                              {s_sub?.name === 'CyberSecurity Requirements' &&
+                                s_sub.scenes.map((sce) => (
+                                  <TreeItem
+                                    key={sce?.id}
+                                    nodeId={sce?.id}
+                                    label={getLabel('CalendarMonthIcon', sce?.name)}
+                                    onClick={() => handleAddComponent('require', sce)}
+                                    onDragStart={() => handleDragStart(e, sce)}
+                                  ></TreeItem>
+                                ))}
+                            </TreeItem>
+                          ))}
+
+                        {sub?.name === 'Derived Threat Scenarios' &&
+                          sub?.scenes?.map((th_scene, i) => {
+                            return (
+                              <TreeItem
+                                key={`${th_scene?.id}${i}`}
+                                nodeId={`${th_scene?.id}${i}`}
+                                label={getLabel('ReportIcon', th_scene?.name)}
+                              ></TreeItem>
+                            );
+                          })}
+                        {sub?.name === 'CyberSecurity Controls' &&
+                          sub?.scenes?.map((th_scene) => {
+                            return (
+                              <TreeItem
+                                key={th_scene?.id}
+                                nodeId={th_scene?.id}
+                                //   label={th_scene?.name}
+                                label={getLabel('SecurityIcon', th_scene?.name)}
+                              ></TreeItem>
+                            );
+                          })}
+                      </TreeItem>
+                    ))}
+                  {scene?.name === 'Item Model & Assets' &&
+                    scene?.Details?.map((value, i) => (
+                      <DraggableTreeItem
+                        key={`1${i}`}
+                        nodeId={`1${i}`}
+                        label={`[000${i}] ${value?.name}`}
+                        sx={{ backgroundColor: selectedBlock?.id === value?.nodeId ? 'wheat' : 'inherit' }}
+                      >
+                        {value?.props.map((pr) => {
+                          // console.log('pr', pr);
+                          const Details = {
+                            label: `Loss of ${pr.name} of ${value?.name}`,
+                            type: 'attack_tree_node',
+                            dragged: true
+                          };
+                          return (
+                            <DraggableTreeItem
+                              key={pr?.id}
+                              nodeId={pr?.id}
+                              onDragStart={(e) => onDragStart(e, Details)}
+                              label={
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    marginLeft: '-31px',
+                                    gap: 2
+                                  }}
+                                >
+                                  <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                                  {`Loss of ${pr.name}`}
+                                </div>
+                              }
+                            ></DraggableTreeItem>
+                          );
+                        })}
+                      </DraggableTreeItem>
+                    ))}
                   {scene?.name === 'Attack Path Analysis and Attack Feasability Rating' &&
                     scene?.subs?.map((sub) => {
                       // console.log('sub', sub.scenes);
@@ -570,7 +571,7 @@ const BrowserCard = ({ models }) => {
                                 nodeId={at_scene?.ID}
                                 label={at_scene?.Name}
                                 // onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
-                                onClick={() => handleAttackTree(at_scene, sub?.name)}
+                                onClick={() => handleSetAttackTreeScene(at_scene, sub?.name)}
                               ></TreeItem>
                             );
                           })}

@@ -8,7 +8,9 @@ import ReactFlow, {
   // Panel,
   getRectOfNodes,
   getTransformForBounds,
-  MarkerType
+  MarkerType,
+  useReactFlow,
+  Panel
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -52,6 +54,7 @@ import { updatedModelState } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
+import { Button } from '@mui/material';
 
 const elk = new ELK();
 
@@ -106,7 +109,10 @@ const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   updateModel: state.updateModel,
-  getGroupedNodes: state.getGroupedNodes
+  getGroupedNodes: state.getGroupedNodes,
+  reactFlowInstance: state.reactFlowInstance,
+  setReactFlowInstance: state.setReactFlowInstance,
+  fitView: state.fitView
 });
 
 //Edge line styling
@@ -178,12 +184,16 @@ export default function MainCanvas() {
     model,
     getModels,
     updateModel,
-    getGroupedNodes
+    getGroupedNodes,
+    reactFlowInstance,
+    setReactFlowInstance,
+    fitView
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
+  // const { setTransform } = useReactFlow();
   const Color = ColorTheme();
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [selectedElement, setSelectedElement] = useState({});
@@ -192,6 +202,7 @@ export default function MainCanvas() {
   const [message, setMessage] = useState('');
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
+  const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen } = useSelector((state) => state?.canvas);
   const {
     isDsTableOpen,
@@ -218,15 +229,21 @@ export default function MainCanvas() {
     onSaveInitial(template);
     // setTimeout(() => {
     onRestore(template);
+
     // }, 100);
   }, [model, !isAttackTreeOpen]);
 
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.1, duration: 800 });
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
     }
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, nodes?.length]);
 
+  const onInit = (rf) => {
+    setReactFlowInstance(rf);
+  };
+
+  // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
@@ -453,6 +470,7 @@ export default function MainCanvas() {
 
   const onRestore = useCallback(
     (temp) => {
+      console.log('temp', temp);
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
@@ -494,8 +512,11 @@ export default function MainCanvas() {
   // const toggleDrawerClose = () => dispatch(drawerClose());
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
-  const onLoad = (reactFlowInstance) => reactFlowInstance.current;
-
+  const onLoad = (reactFlowInstance) => {
+    console.log('reactFlowInstance', reactFlowInstance);
+    setReactFlowInstance(reactFlowInstance);
+    fitView(nodes);
+  };
   const handleSidebarOpen = (e, node) => {
     // console.log('e', e);
     // console.log('node', node);
@@ -567,7 +588,7 @@ export default function MainCanvas() {
 
   return (
     <>
-      <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}>
+      <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }} ref={reactFlowWrapper}>
         {propertiesTabOpen && (
           <Header
             selectedElement={selectedElement}
@@ -591,23 +612,28 @@ export default function MainCanvas() {
             onConnect={onConnect}
             nodeTypes={nodetypes}
             edgeTypes={edgeTypes}
+            onInit={onInit}
             onLoad={onLoad}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}
             connectionLineStyle={connectionLineStyle}
             defaultEdgeOptions={edgeOptions}
-            onInit={(instance) => setReactFlowInstance(instance)}
             onDrop={onDrop}
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
             onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
+            defaultPosition={[0, 0]}
+            defaultZoom={1}
             // onContextMenu={createGroup}
             // onNodeContextMenu={handleSidebarOpen}
             // onEdgeContextMenu={handleSidebarOpen}
           >
+            <Panel position="left">
+              <Button onClick={() => onRestore(model?.template)}>Restore</Button>
+            </Panel>
             <Controls />
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />

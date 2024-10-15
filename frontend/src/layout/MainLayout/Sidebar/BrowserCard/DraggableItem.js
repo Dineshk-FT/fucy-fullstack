@@ -2,7 +2,7 @@
 import React, { useCallback } from 'react';
 import { TreeItem } from '@mui/x-tree-view';
 
-export default function DraggableTreeItem({ nodeId, label, onDragStart, draggable }) {
+export default function DraggableTreeItem({ nodeId, label, onDragStart, draggable, children, ...props }) {
   const ref = useCallback(
     (elt) => {
       if (elt) {
@@ -14,5 +14,9 @@ export default function DraggableTreeItem({ nodeId, label, onDragStart, draggabl
     [onDragStart]
   );
 
-  return <TreeItem nodeId={nodeId} label={label} ref={ref} draggable={draggable} onDragStart={onDragStart} />;
+  return (
+    <TreeItem nodeId={nodeId} label={label} ref={ref} draggable={draggable} onDragStart={onDragStart} {...props}>
+      {children}
+    </TreeItem>
+  );
 }
