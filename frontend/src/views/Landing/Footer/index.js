@@ -24,13 +24,13 @@ export default function Footer() {
             mb: 2
           }}
         >
-          <Link href="#" underline="none" sx={{ mx: 2 }} color="black">
+          <Link href="/home" underline="none" sx={{ mx: 2 }} color="black">
             Home
           </Link>
-          <Link href="#" underline="none" sx={{ mx: 2 }} color="black">
+          <Link href="/about" underline="none" sx={{ mx: 2 }} color="black">
             About Us
           </Link>
-          <Link href="#" underline="none" sx={{ mx: 2 }} color="black">
+          <Link href="contact" underline="none" sx={{ mx: 2 }} color="black">
             Contact
           </Link>
           <Link href="#" underline="none" sx={{ mx: 2 }} color="black">
