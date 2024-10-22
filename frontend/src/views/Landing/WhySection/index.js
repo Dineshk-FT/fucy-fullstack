@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
 export default function WhyComponent() {
   const classes = useStyles();
   return (
-    <Box sx={{ height: { lg: '80svh' } }}>
+    <Box>
       <Typography variant="h3" align="left" gutterBottom className={classes.head} fontWeight={700} mx={10} my={2}>
         Why Fucy Tech?
       </Typography>
