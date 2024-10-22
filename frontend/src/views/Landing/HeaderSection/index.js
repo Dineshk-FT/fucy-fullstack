@@ -10,6 +10,7 @@ import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import { products, cybersecurityServices, consulting, academy, contact } from './dropdown-options-data';
 import { AppBar, Toolbar, Box, Typography, MenuItem, Menu, IconButton, Drawer, List, ListItem, ListItemText } from '@mui/material';
+import { display } from '@mui/system';
 
 // const services = [
 //   'TARA Automation',
@@ -28,6 +29,19 @@ const useStyles = makeStyles((theme) => ({
     color: 'white',
     [theme.breakpoints.down('sm')]: {
       textAlign: 'center'
+    }
+  },
+  navbarLayout: {
+    display: 'flex',
+    justifyContent: 'center',
+    [theme.breakpoints.down('sm')]: {
+      justifyContent: 'space-around'
+    }
+  },
+  navbarMobileLayout: {
+    display: 'block',
+    [theme.breakpoints.down('sm')]: {
+      display: 'space-around'
     }
   },
   navlink: {
@@ -64,8 +78,8 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.down('sm')]: {
       display: 'block',
       width: '100%', // Make sure it takes full width on smaller screens
-      padding: '5px 10px',
-    },
+      padding: '5px 10px'
+    }
   },
   // productsContainer: {
   //   display: 'grid',
@@ -80,20 +94,20 @@ const useStyles = makeStyles((theme) => ({
     marginRight: '30px',
     [theme.breakpoints.down('sm')]: {
       display: 'block',
-      marginRight: 0, // Remove margin for smaller screens
-    },
+      marginRight: 0 // Remove margin for smaller screens
+    }
   },
   productCloumnSub: {
     marginLeft: '10px',
     [theme.breakpoints.down('sm')]: {
       display: 'block',
-      marginLeft: '0', // Align to the left on smaller screens
-    },
+      marginLeft: '0' // Align to the left on smaller screens
+    }
   },
   productHeader: {
     fontWeight: 'bold',
     fontSize: '16px',
-    marginBottom: '8px', 
+    marginBottom: '8px',
     textDecoration: 'underline'
   },
   menuIcon: {
@@ -104,19 +118,16 @@ const useStyles = makeStyles((theme) => ({
   },
   mobileMenu: {
     width: 250,
-    color: 'black',
-  },
-  nested: {
-    paddingLeft: theme.spacing(4),
+    color: 'black'
   },
   subNested: {
-    paddingLeft: theme.spacing(6),
+    paddingLeft: theme.spacing(6)
   },
   closeButton: {
     display: 'flex',
     justifyContent: 'flex-end',
     padding: '8px',
-    cursor: 'pointer',
+    cursor: 'pointer'
   }
 }));
 
@@ -131,7 +142,7 @@ export default function Header() {
   const [anchorElAcademy, setAnchorElAcademy] = useState(null);
   const [anchorElContact, setAnchorElContact] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [openMenus, setOpenMenus] = useState({}); 
+  const [openMenus, setOpenMenus] = useState({});
 
   const links = [
     { name: 'Home', path: '/home' },
@@ -143,25 +154,24 @@ export default function Header() {
     { name: 'Academy', dropdown: true, options: academy },
     { name: 'Contact Us', dropdown: true, options: contact },
     { name: 'About Us', path: '/about' },
-    { name: 'Career', path: '/career' },
+    { name: 'Career', path: '/career' }
     // { name: 'Contact', path: '/contact' }
   ];
 
   const handleClose = (name) => {
-    const link = links.find(link => link.name === name);
+    const link = links.find((link) => link.name === name);
 
     if (link) {
       // If the link has a path, navigate to it
       if (link.path) {
         navigate(link.path, { replace: true });
-      } 
+      }
     }
-    // Handle specific cases without a direct path 
+    // Handle specific cases without a direct path
     else if (name === 'TARA Tool') {
       dispatch(changeCanvasPage('canvas'));
       navigate('/Models', { replace: true });
-    } 
-    else if (name === 'Business Enquiry') {
+    } else if (name === 'Business Enquiry') {
       navigate('/contact', { replace: true });
     }
     // setAnchorElCSMS(null);
@@ -180,7 +190,7 @@ export default function Header() {
   const handleToggle = (menu) => {
     setOpenMenus((prevOpenMenus) => ({
       ...prevOpenMenus,
-      [menu]: !prevOpenMenus[menu],
+      [menu]: !prevOpenMenus[menu]
     }));
   };
 
@@ -210,7 +220,7 @@ export default function Header() {
   return (
     <>
       <AppBar position="fixed" style={{ background: 'rgba(0, 0, 0, 0.9)' }}>
-        <Toolbar style={{ display: 'flex', justifyContent: 'center'}}>
+        <Toolbar className={classes.navbarLayout}>
           <Typography variant="h5" className={classes.title}>
             FUCY TECH
           </Typography>
@@ -223,49 +233,45 @@ export default function Header() {
               ) : (
                 <Box key={index}>
                   {
-                  // link.name === 'CSMS Solutions' ? (
-                  //   <Typography className={classes.dropdown} onClick={handleClickCSMS}>
-                  //     {link.name} {Boolean(anchorElCSMS) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                  //   </Typography>
-                  // ) : 
-                  link.name === 'Services' ? (
-                    <Typography className={classes.dropdown} onClick={handleClickCybersecurity}>
-                      {link.name}{' '}
-                      {Boolean(anchorElCybersecurity) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                    </Typography>
-                  ) : link.name === 'Products' ? (
-                    <Typography className={classes.dropdown} onClick={handleClickProducts}>
-                      {link.name}{' '}
-                      {Boolean(anchorElProducts) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                    </Typography>
-                  ) : link.name === 'Consulting' ? (
-                    <Typography className={classes.dropdown} onClick={(event) => handleClickConsulting(event, link.name)}>
-                      {link.name}{' '}
-                      {Boolean(anchorElConsulting) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                    </Typography>
-                  ) : link.name === 'Academy' ? (
-                    <Typography className={classes.dropdown} onClick={(event) => handleClickAcademy(event, link.name)}>
-                      {link.name}{' '}
-                      {Boolean(anchorElAcademy) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                    </Typography>
-                  ) : (
-                    <Typography className={classes.dropdown} onClick={(event) => handleClickContactUs(event, link.name)}>
-                      {link.name}{' '}
-                      {Boolean(anchorElContact) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
-                    </Typography>
-                  )}
+                    // link.name === 'CSMS Solutions' ? (
+                    //   <Typography className={classes.dropdown} onClick={handleClickCSMS}>
+                    //     {link.name} {Boolean(anchorElCSMS) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                    //   </Typography>
+                    // ) :
+                    link.name === 'Services' ? (
+                      <Typography className={classes.dropdown} onClick={handleClickCybersecurity}>
+                        {link.name}{' '}
+                        {Boolean(anchorElCybersecurity) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                      </Typography>
+                    ) : link.name === 'Products' ? (
+                      <Typography className={classes.dropdown} onClick={handleClickProducts}>
+                        {link.name}{' '}
+                        {Boolean(anchorElProducts) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                      </Typography>
+                    ) : link.name === 'Consulting' ? (
+                      <Typography className={classes.dropdown} onClick={(event) => handleClickConsulting(event, link.name)}>
+                        {link.name}{' '}
+                        {Boolean(anchorElConsulting) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                      </Typography>
+                    ) : link.name === 'Academy' ? (
+                      <Typography className={classes.dropdown} onClick={(event) => handleClickAcademy(event, link.name)}>
+                        {link.name}{' '}
+                        {Boolean(anchorElAcademy) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                      </Typography>
+                    ) : (
+                      <Typography className={classes.dropdown} onClick={(event) => handleClickContactUs(event, link.name)}>
+                        {link.name}{' '}
+                        {Boolean(anchorElContact) ? <ArrowDropUpIcon className={classes.dropdownActive} /> : <ArrowDropDownIcon />}
+                      </Typography>
+                    )
+                  }
                 </Box>
               )
             )}
           </Box>
 
           {/* Hamburger Icon for Mobile */}
-          <IconButton
-            edge="end"
-            className={classes.menuIcon}
-            aria-label="menu"
-            onClick={() => toggleDrawer(true)}
-          >
+          <IconButton edge="end" className={classes.menuIcon} aria-label="menu" onClick={() => toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
         </Toolbar>
@@ -279,7 +285,7 @@ export default function Header() {
           </IconButton>
           <List>
             {links.map((link, index) => (
-              <ListItem button key={index}>
+              <ListItem button key={index} style={{ display: 'block' }}>
                 <ListItemText
                   primary={link.name}
                   onClick={() => {
@@ -290,8 +296,20 @@ export default function Header() {
                     }
                   }}
                 />
+                {/* {link.dropdown && (
+                  <IconButton
+                    onClick={() => handleToggle(link.name)}
+                    style={{ padding: '0', marginLeft: '8px' }}
+                  >
+                    {openMenus[link.name] ? (
+                    <ArrowDropUpIcon />
+                    ) : (
+                    <ArrowDropDownIcon />
+                  )}
+                  </IconButton>
+                )} */}
                 {link.dropdown && openMenus[link.name] && (
-                  <List className={classes.nested}>
+                  <List>
                     {link.options.map((option, idx) => {
                       if (typeof option === 'string') {
                         return (
@@ -303,11 +321,12 @@ export default function Header() {
                       return Object.entries(option).map(([key, subOptions]) => (
                         <div key={key}>
                           <ListItem disabled>{key}</ListItem>
-                          {Array.isArray(subOptions) && subOptions.map((subOption, subIdx) => (
-                            <ListItem button key={subIdx} onClick={() => handleClose(subOption)}>
-                              <ListItemText primary={subOption.name || subOption} />
-                            </ListItem>
-                          ))}
+                          {Array.isArray(subOptions) &&
+                            subOptions.map((subOption, subIdx) => (
+                              <ListItem button key={subIdx} onClick={() => handleClose(subOption)}>
+                                <ListItemText primary={subOption.name || subOption} />
+                              </ListItem>
+                            ))}
                         </div>
                       ));
                     })}
@@ -318,7 +337,6 @@ export default function Header() {
           </List>
         </Box>
       </Drawer>
-
 
       {/* CSMS Solutions Dropdown */}
       {/* <Menu id="csms-menu" anchorEl={anchorElCSMS} keepMounted open={Boolean(anchorElCSMS)} onClose={() => handleClose(null)}>
@@ -339,8 +357,8 @@ export default function Header() {
       >
         <div className={classes.productsContainer}>
           {cybersecurityServices.map((service, index) => {
-            const serviceName = Object.keys(service)[0]; 
-            const serviceOptions = service[serviceName]; 
+            const serviceName = Object.keys(service)[0];
+            const serviceOptions = service[serviceName];
 
             return (
               <div className={classes.productColumn} key={index}>
@@ -411,8 +429,8 @@ export default function Header() {
       <Menu id="products-menu" anchorEl={anchorElProducts} keepMounted open={Boolean(anchorElProducts)} onClose={() => handleClose(null)}>
         <div className={classes.productsContainer}>
           {products.map((product, index) => {
-            const productName = Object.keys(product)[0]; 
-            const productOptions = product[productName]; 
+            const productName = Object.keys(product)[0];
+            const productOptions = product[productName];
 
             return (
               <div className={classes.productColumn} key={index}>
