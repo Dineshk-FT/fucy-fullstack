@@ -173,6 +173,8 @@ export default function Header() {
       navigate('/Models', { replace: true });
     } else if (name === 'Business Enquiry') {
       navigate('/contact', { replace: true });
+    } else if (name === 'Hit Us with Your Work') {
+      navigate('/work', { replace: true });
     }
     // setAnchorElCSMS(null);
     setAnchorElCybersecurity(null);

@@ -7,6 +7,7 @@ const Home = Loadable(lazy(() => import('../views/HomePage')));
 const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
 const Career = Loadable(lazy(() => import('../views/CareerPage')));
 const Contact = Loadable(lazy(() => import('../views/ContactPage')));
+const Work = Loadable(lazy(() => import('../views/YourWorkSection')));
 const About = Loadable(lazy(() => import('../views/AboutPage')));
 const Dashboard = Loadable(lazy(() => import('../views/Dashboard')));
 
@@ -40,6 +41,10 @@ const commonRoutes = [
   {
     path: '/Models/:id',
     element: <MainCanvas />
+  },
+  {
+    path: '/work',
+    element: <Work />
   }
 ];
 
