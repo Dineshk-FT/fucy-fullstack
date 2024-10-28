@@ -9,6 +9,7 @@ const Home = Loadable(lazy(() => import('../views/HomePage')));
 const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
 const Career = Loadable(lazy(() => import('../views/CareerPage')));
 const Contact = Loadable(lazy(() => import('../views/ContactPage')));
+const Work = Loadable(lazy(() => import('../views/Landing/YourWorkSection')));
 const About = Loadable(lazy(() => import('../views/AboutPage')));
 
 const ErrorPage = Loadable(lazy(() => import('../views/ErrorPage')));
@@ -45,6 +46,10 @@ const MainRoutes = {
     {
       path: 'about',
       element: <About />
+    },
+    {
+      path: 'work',
+      element: <Work />
     },
     {
       path: '*',

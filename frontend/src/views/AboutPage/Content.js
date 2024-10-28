@@ -48,7 +48,7 @@ export default function ContentPage() {
       <Box>
         <Grid container sx={{ my: 8 }} display="flex" justifyContent="space-evenly">
           <Grid item lg={6}>
-            <Box component="img" src={Team} alt="Cybersecurity Innovation" className={classes.image} />
+            <Box component="img" src='https://i.pinimg.com/564x/d8/42/82/d842824f28ab05d3ffb1a03f6e7e6297.jpg' alt="Cybersecurity Innovation" className={classes.image} />
           </Grid>
           <Grid item lg={5}>
             <Box className={classes.content}>
@@ -89,7 +89,7 @@ export default function ContentPage() {
       <Box>
         <Grid container sx={{ my: 8 }} display="flex" justifyContent="space-evenly">
           <Grid item lg={6}>
-            <Box component="img" src={Team} alt="Cybersecurity Innovation" className={classes.image} />
+            <Box component="img" src='https://i.pinimg.com/564x/28/63/08/286308f8de514eb3acbbfcc0da9ec2ed.jpg' alt="Cybersecurity Innovation" className={classes.image} />
           </Grid>
           <Grid item lg={5}>
             <Box className={classes.content}>
