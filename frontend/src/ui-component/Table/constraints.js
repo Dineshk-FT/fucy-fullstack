@@ -23,6 +23,7 @@ export const RatingColor = (value) => {
     High: 'red',
     Medium: 'yellow',
     Low: 'green',
+    'Very low': 'lightgreen',
     NA: 'transparent'
   };
   return mapped[value];
@@ -49,17 +50,18 @@ export const threatType = (value) => {
 };
 
 export const colorPickerTab = (value) => {
-  if (value === 'Severe') {
-    return 'red';
+  switch (value) {
+    case 'Severe':
+      return 'red';
+    case 'Major':
+      return 'orange';
+    case 'Moderate':
+      return 'yellow';
+    case 'Minor':
+      return 'green';
+    case 'Negligible':
+      return 'lightgreen';
+    default:
+      return 'white';
   }
-  if (value === 'Major') {
-    return 'orange';
-  }
-  if (value === 'Moderate') {
-    return 'yellow';
-  }
-  if (value === 'Negligible') {
-    return '#65B741';
-  }
-  return 'white';
 };

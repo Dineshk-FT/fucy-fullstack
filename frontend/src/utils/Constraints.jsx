@@ -28,6 +28,7 @@ export const updatedModelState = (mod, nodes, edges) => {
   mod.template = { nodes, edges };
   mod.scenarios[0].Details = Details;
   mod.scenarios[1].subs[0].Details = Derivations;
+  // mod.scenarios[1].subs[0].losses = [];
   mod.scenarios[1].subs[1].Details = Details;
   mod.scenarios[2].Details = Details;
 

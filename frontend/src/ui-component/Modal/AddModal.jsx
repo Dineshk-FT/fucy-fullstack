@@ -86,7 +86,8 @@ export default function AddModel({ open, handleClose, getModels }) {
             id: uid(),
             name: 'Damage Scenarios - Collection & Impact Ratings',
             scenes: [],
-            Details: []
+            Details: [],
+            losses: []
           }
         ]
       },
@@ -187,7 +188,13 @@ export default function AddModel({ open, handleClose, getModels }) {
       {
         id: uid(),
         name: 'Risk Determination and Risk Treatment Decision',
-        icon: 'RiskIcon'
+        icon: 'RiskIcon',
+        subs: [
+          {
+            name: 'Threat Assessment & Risk Treatment',
+            scenes: []
+          }
+        ]
       },
       {
         id: uid(),

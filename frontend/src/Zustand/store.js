@@ -30,6 +30,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   cyberEdges: [],
   nodes: [],
   edges: [],
+  undoStack: [],
+  redoStack: [],
   sidebarNodes: [],
   template: [],
   selectedTemplate: {},
@@ -79,15 +81,41 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   //Normal Nodes
+
+  updateNodes: (newNodes) =>
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      nodes: newNodes
+    })),
+
+  // Update edges (with undo/redo management)
+  updateEdges: (newEdges) =>
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      edges: newEdges
+    })),
+
   onNodesChange: (changes) => {
-    set({
-      nodes: applyNodeChanges(changes, get().nodes)
-    });
+    const currentNodes = get().nodes; // get current nodes
+    const updatedNodes = applyNodeChanges(changes, currentNodes); // apply changes
+
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      nodes: updatedNodes // set the updated nodes
+    }));
   },
   onEdgesChange: (changes) => {
-    set({
-      edges: applyEdgeChanges(changes, get().edges)
-    });
+    const currentEdges = get().edges; // get current edges
+    const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
+
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      edges: updatedEdges // set the updated edges
+    }));
   },
   onConnect: (connection) => {
     // console.log('connection', connection);
@@ -435,6 +463,38 @@ const useStore = createWithEqualityFn((set, get) => ({
       edges: [...state.edges, newEdge]
     }));
   },
+
+  addEdgeState: (params) =>
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      edges: addEdge(params, state.edges)
+    })),
+
+  undo: () =>
+    set((state) => {
+      if (state.undoStack.length === 0) return state; // No undo available
+      const prevState = state.undoStack[state.undoStack.length - 1];
+      return {
+        nodes: prevState.nodes,
+        edges: prevState.edges,
+        redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }],
+        undoStack: state.undoStack.slice(0, -1)
+      };
+    }),
+
+  // Redo action
+  redo: () =>
+    set((state) => {
+      if (state.redoStack.length === 0) return state; // No redo available
+      const nextState = state.redoStack[state.redoStack.length - 1];
+      return {
+        nodes: nextState.nodes,
+        edges: nextState.edges,
+        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+        redoStack: state.redoStack.slice(0, -1)
+      };
+    }),
 
   addAttackNode: (newNode) => {
     // console.log('newNode', newNode);

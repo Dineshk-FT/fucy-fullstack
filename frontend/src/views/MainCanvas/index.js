@@ -55,6 +55,7 @@ import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSl
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 import { Button } from '@mui/material';
+import RiskTreatmentTable from '../../ui-component/Table/RiskTreatmentTable';
 
 const elk = new ELK();
 
@@ -112,7 +113,11 @@ const selector = (state) => ({
   getGroupedNodes: state.getGroupedNodes,
   reactFlowInstance: state.reactFlowInstance,
   setReactFlowInstance: state.setReactFlowInstance,
-  fitView: state.fitView
+  fitView: state.fitView,
+  undo: state.undo,
+  redo: state.redo,
+  undoStack: state.undoStack,
+  redoStack: state.redoStack
 });
 
 //Edge line styling
@@ -187,7 +192,11 @@ export default function MainCanvas() {
     getGroupedNodes,
     reactFlowInstance,
     setReactFlowInstance,
-    fitView
+    fitView,
+    undo,
+    redo,
+    undoStack,
+    redoStack
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -213,7 +222,8 @@ export default function MainCanvas() {
     isRightDrawerOpen,
     isLeftDrawerOpen,
     isDerivationTableOpen,
-    isAttackTableOpen
+    isAttackTableOpen,
+    isRiskTableOpen
   } = useSelector((state) => state?.currentId);
 
   useEffect(() => {
@@ -222,6 +232,8 @@ export default function MainCanvas() {
     setEdges([]);
   }, [!isAttackTreeOpen]);
 
+  // console.log('redoStack', redoStack);
+  // console.log('undoStack', undoStack);
   // console.log('isAttackTreeOpen', isAttackTreeOpen);
   useEffect(() => {
     const template = model?.template;
@@ -470,7 +482,7 @@ export default function MainCanvas() {
 
   const onRestore = useCallback(
     (temp) => {
-      console.log('temp', temp);
+      // console.log('temp', temp);
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
@@ -585,6 +597,7 @@ export default function MainCanvas() {
   if (isCyberBlockOpen) return <CyberSecurityBlock />;
   if (isCyberTableOpen) return <CyberSecurityTable />;
   if (isAttackTableOpen) return <AttackTreeTable />;
+  if (isRiskTableOpen) return <RiskTreatmentTable />;
 
   return (
     <>
@@ -633,6 +646,12 @@ export default function MainCanvas() {
           >
             <Panel position="left">
               <Button onClick={() => onRestore(model?.template)}>Restore</Button>
+              {/* <button onClick={undo} disabled={undoStack.length === 0}>
+                Undo
+              </button>
+              <button onClick={redo} disabled={redoStack.length === 0}>
+                Redo
+              </button> */}
             </Panel>
             <Controls />
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />

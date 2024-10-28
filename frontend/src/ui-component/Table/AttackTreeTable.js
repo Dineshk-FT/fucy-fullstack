@@ -7,6 +7,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { Paper, FormControl, MenuItem, Select, TextField, Typography, styled, Tooltip, TablePagination } from '@mui/material';
+import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router';
@@ -26,6 +27,15 @@ const selector = (state) => ({
   getModelById: state.getModelById
 });
 
+const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(12),
+    border: '1px solid #dadde9'
+  }
+}));
 const Head = [
   { id: 1, name: 'ID' },
   { id: 2, name: 'Name' },
@@ -77,40 +87,131 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 const options = {
   Approach: [
-    { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach', rating: 1 },
-    { value: 'CVSS-based Approach', label: 'CVSS-based Approach', rating: 2 },
-    { value: 'Attack Vector-based Approach', label: 'Attack Vector-based Approach', rating: 3 }
+    { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },
+    { value: 'CVSS-based Approach', label: 'CVSS-based Approach' },
+    { value: 'Attack Vector-based Approach', label: 'Attack Vector-based Approach' }
   ],
   'Elapsed Time': [
-    { value: '<= 1 day', label: '<= 1 day', rating: 1 },
-    { value: '<= 1 week', label: '<= 1 week', rating: 2 },
-    { value: '<= 1 month', label: '<= 1 month', rating: 3 },
-    { value: '<= 6 month', label: '<= 6 month', rating: 4 },
-    { value: '>6 month', label: '>6 month', rating: 5 }
+    { value: '<= 1 day', label: '<= 1 day', rating: 0 },
+    { value: '<= 1 week', label: '<= 1 week', rating: 1 },
+    { value: '<= 1 month', label: '<= 1 month', rating: 4 },
+    { value: '<= 6 month', label: '<= 6 month', rating: 17 },
+    { value: '>6 month', label: '>6 month', rating: 19 }
   ],
   Expertise: [
-    { value: 'Layman', label: 'Layman', rating: 1 },
-    { value: 'Proficient', label: 'Proficient', rating: 2 },
-    { value: 'Expert', label: 'Expert', rating: 3 },
-    { value: 'Multiple experts', label: 'Multiple experts', rating: 4 }
+    {
+      value: 'Layman',
+      label: 'Layman',
+      rating: 0,
+      description: 'Unknowledgeable compared to experts or proficient persons, with no particular expertise.'
+    },
+    {
+      value: 'Proficient',
+      label: 'Proficient',
+      rating: 3,
+      description: 'Knowledgeable in that they are familiar with the security behavior of the product or system type.'
+    },
+    {
+      value: 'Expert',
+      label: 'Expert',
+      rating: 6,
+      description:
+        'Familiar with the underlying algorithms, protocols, hardware, structures, security behavior, and the complexity of scientific knowledge that leads to the definition of new attacks, cryptography, classical attacks for the product type, attack methods, etc., implemented in the product or system type. '
+    },
+    {
+      value: 'Multiple experts',
+      label: 'Multiple experts',
+      rating: 8,
+      description: 'Different fields of expertise are required at an expert level for distinct steps of an attack. '
+    }
   ],
   'Knowledge of the Item': [
-    { value: 'Public information', label: 'Public information', rating: 1 },
-    { value: 'Restricted information', label: 'Restricted information', rating: 2 },
-    { value: 'Confidential information', label: 'Confidential information', rating: 3 },
-    { value: 'Strictly confidential information', label: 'Strictly confidential information', rating: 4 }
+    {
+      value: 'Public information',
+      label: 'Public information',
+      rating: 0,
+      description: 'Public information concerning the item or component (e.g. as gained from the Internet).'
+    },
+    {
+      value: 'Restricted information',
+      label: 'Restricted information',
+      rating: 3,
+      description:
+        'Restricted information concerning the item or component (e.g. knowledge that is controlled within the developer organization and shared with other organizations under a non-disclosure agreement). '
+    },
+    {
+      value: 'Confidential information',
+      label: 'Confidential information',
+      rating: 7,
+      description:
+        'Confidential information about the item or component (e.g. knowledge that is shared between different teams within the developer organization, access to which is controlled and only to members of the design and testing teams). '
+    },
+    {
+      value: 'Strictly confidential information',
+      label: 'Strictly confidential information',
+      rating: 11,
+      description:
+        'Highly confidential information about the item or component (e.g. knowledge that is known by a handful of individuals, access to which is very tightly controlled on a strict need-to-know basis and kept secret for individual reasons). '
+    }
   ],
   'Window of Opportunity': [
-    { value: 'Unlimited', label: 'Unlimited', rating: 1 },
-    { value: 'Easy', label: 'Easy', rating: 2 },
-    { value: 'Moderate', label: 'Moderate', rating: 3 },
-    { value: 'Difficult', label: 'Difficult', rating: 4 }
+    {
+      value: 'Unlimited',
+      label: 'Unlimited',
+      rating: 0,
+      description:
+        'Highly availability via public/untrusted network without any time limitation (i.e. asset is always accessible). Remote access without physical presence or time limitation as well as unlimited physical access is provided to the item or component.'
+    },
+    {
+      value: 'Easy',
+      label: 'Easy',
+      rating: 1,
+      description: 'Highly available but limited access time. Remote access without physical presence to the item or component.'
+    },
+    {
+      value: 'Moderate',
+      label: 'Moderate',
+      rating: 4,
+      description:
+        'Low availability of the item or component, limited physical and/or logical access. Physical access to the vehicle interior or exterior without using any special tool. '
+    },
+    {
+      value: 'Difficult',
+      label: 'Difficult',
+      rating: 10,
+      description:
+        'Very low availability of the item or component. Impractical level of access to the item or component to perform the attack.'
+    }
   ],
   Equipment: [
-    { value: 'Standard', label: 'Standard', rating: 1 },
-    { value: 'Specialized', label: 'Specialized', rating: 2 },
-    { value: 'Bespoke', label: 'Bespoke', rating: 3 },
-    { value: 'Multiple bespoke', label: 'Multiple bespoke', rating: 4 }
+    {
+      value: 'Standard',
+      label: 'Standard',
+      rating: 0,
+      description:
+        'Equipment is readily available to the attacker. This equipment can be a part of the product itself (e.g. debugger on an operating system), or can be readily obtained (e.g. internet sources, product samples, or simple attack scripts). '
+    },
+    {
+      value: 'Specialized',
+      label: 'Specialized',
+      rating: 4,
+      description:
+        'Equipment is not readily available to the attacker but can be acquired without undue effort. This includes products and/or intermediate stages of equipment (e.g., power analysis tools, use of hundreds of PC hacker tools offered in the Internet) would fall into this category. Development of more extensive attack scripts or scan programs. If difficulty reflects the benchmark costs of specialized equipment are required for distinct steps of an attack, this would be rated as bespoke. '
+    },
+    {
+      value: 'Bespoke',
+      label: 'Bespoke',
+      rating: 7,
+      description:
+        'Equipment is specially produced (e.g. very sophisticated software) and not readily available on the public or black market, or the equipment is so specialized that its distribution is controlled, possibly even restricted. Alternatively, the equipment is very expensive.'
+    },
+    {
+      value: 'Multiple bespoke',
+      label: 'Multiple bespoke',
+      rating: 9,
+      description:
+        ' It is introduced to allow for a situation, where different types of bespoke equipment are required for distinct steps of an attack.'
+    }
   ]
 };
 
@@ -146,13 +247,25 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
             const isLong = item?.label.length > 18;
             return (
               <MenuItem key={item?.value} value={item?.value}>
-                {isLong ? (
-                  <Tooltip title={item.label}>
-                    <Typography variant="h5">{item?.label}</Typography>
-                  </Tooltip>
-                ) : (
-                  <Typography variant="h5">{item?.label}</Typography>
-                )}
+                <HtmlTooltip
+                  placement="left"
+                  title={
+                    <Typography
+                      sx={{
+                        // backgroundColor: 'black',
+                        // color: 'white',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        padding: '8px', // Optional: Adds some padding for better spacing
+                        borderRadius: '4px' // Optional: Adds rounded corners
+                      }}
+                    >
+                      {item?.description}
+                    </Typography>
+                  }
+                >
+                  {<Typography variant="h5">{item?.label}</Typography>}
+                </HtmlTooltip>
               </MenuItem>
             );
           })}
@@ -202,14 +315,14 @@ export default function AttackTreeTable() {
   }, [model]);
 
   const getRating = (value) => {
-    if (value === 0) {
-      return 'NA';
-    } else if (value > 0 && value <= 1.5) {
+    if (value >= 0 && value <= 13) {
       return 'Low';
-    } else if (value > 1.5 && value <= 3) {
+    } else if (value >= 14 && value <= 19) {
       return 'Medium';
+    } else if (value >= 20 && value <= 24) {
+      return 'Low';
     } else {
-      return 'High';
+      return 'Very low';
     }
   };
   // console.log('rows', rows);
@@ -228,7 +341,7 @@ export default function AttackTreeTable() {
 
     // Calculate average Attack Feasabilities Rating if the updated category is part of the specified categories
     const calculateAverageRating = (row) => {
-      const categories = ['Approach', 'Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
+      const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
       let count = 0;
 
@@ -245,6 +358,7 @@ export default function AttackTreeTable() {
 
     // Find the updated row and recalculate the rating
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
+    // console.log('updatedRows', updatedRows);
     const averageRating = calculateAverageRating(updatedRow);
     updatedRow['Attack Feasabilities Rating'] = getRating(averageRating);
 

@@ -22,8 +22,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  Tooltip
 } from '@mui/material';
+import { tooltipClasses } from '@mui/material/Tooltip';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -71,7 +73,18 @@ const StyledTableRow = styled(TableRow)(() => ({
   }
 }));
 
+const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(12),
+    border: '1px solid #dadde9'
+  }
+}));
+
 const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
+  // console.log('name', name);
   return (
     <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(impact) }}>
       <FormControl
@@ -101,7 +114,25 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
         >
           {options?.map((item) => (
             <MenuItem key={item?.value} value={item?.value}>
-              {item?.label}
+              <HtmlTooltip
+                placement="left"
+                title={
+                  <Typography
+                    sx={{
+                      // backgroundColor: 'black',
+                      // color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      padding: '8px', // Optional: Adds some padding for better spacing
+                      borderRadius: '4px' // Optional: Adds rounded corners
+                    }}
+                  >
+                    {item?.description[name]}
+                  </Typography>
+                }
+              >
+                {item?.label}
+              </HtmlTooltip>
             </MenuItem>
           ))}
         </Select>
@@ -297,10 +328,66 @@ export default function DsTable() {
   };
 
   const options = [
-    { value: 'Severe', label: 'Severe' },
-    { value: 'Major', label: 'Major' },
-    { value: 'Moderate', label: 'Moderate' },
-    { value: 'Negligible', label: 'Negligible' }
+    {
+      value: 'Severe',
+      label: 'Severe',
+      description: {
+        'Safety Impact': 'Life-threatening or fatal injuries.',
+        'Financial Impact':
+          'The financial damage leads to significant loss for the affected road user with substantial effects on their ability to meet financial obligations.',
+        'Operational Impact':
+          'The operational damage leads to a loss of important or all vehicle functions. EXAMPLE 1: Major malfunction in the steering system leads to a loss of directional control. EXAMPLE 2: Significant loss in the braking system causes a severe reduction in braking force. EXAMPLE 3: Significant loss in other important functions of the vehicle.',
+        'Privacy Impact':
+          'The privacy damage leads to significant or very harmful impacts to the road user. The information regarding the road user’s identity is available and easy to link to PII (personally identifiable information), leading to severe harm or loss. The information belongs to third parties as well.'
+      }
+    },
+    {
+      value: 'Major',
+      label: 'Major',
+      description: {
+        'Safety Impact': 'Severe and/or irreversible injuries or significant physical harm.',
+        'Financial Impact':
+          'The financial damage leads to notable loss for the affected road user, but the financial ability of the road user to meet financial obligations is not fundamentally impacted.',
+        'Operational Impact':
+          'The operational damage leads to partial degradation of a vehicle function. EXAMPLE 4: Degradation in steering or braking capacity.',
+        'Privacy Impact':
+          'The privacy damage has a notable impact on the road user. The information may be difficult to link to PII but is of a significant nature and has risks to PII principal.'
+      }
+    },
+    {
+      value: 'Moderate',
+      label: 'Moderate',
+      description: {
+        'Safety Impact': 'Reversible physical injuries requiring treatment.',
+        'Financial Impact':
+          'The financial damage is noticeable but does not significantly affect the financial situation of the road user.',
+        'Operational Impact':
+          'The operational damage leads to noticeable degradation of a vehicle function. EXAMPLE 5: Slight degradation in steering capability.',
+        'Privacy Impact':
+          'The privacy damage leads to moderate consequences to the road user. The information regarding the road user is not sensitive.'
+      }
+    },
+    {
+      value: 'Minor',
+      label: 'Minor',
+      description: {
+        'Safety Impact': 'Light physical injuries, may require first aid.',
+        'Financial Impact': 'The financial damage is small and can be easily absorbed by the affected road user.',
+        'Operational Impact': 'The operational damage leads to an insignificant or no noticeable impact on vehicle operation.',
+        'Privacy Impact':
+          'The privacy damage has a light impact or no effect at all. The information is low-risk and difficult to link to PII.'
+      }
+    },
+    {
+      value: 'Negligible',
+      label: 'Negligible',
+      description: {
+        'Safety Impact': 'No physical injuries.',
+        'Financial Impact': 'The financial damage is so low that it has no significant effect on the road user.',
+        'Operational Impact': "The operational damage leads to an insignificant or no post-collision damage to a vehicle's functionality.",
+        'Privacy Impact': 'The privacy damage has no effect on the road user or their personal information.'
+      }
+    }
   ];
   const handleBack = () => {
     dispatch(closeAll());
@@ -311,17 +398,29 @@ export default function DsTable() {
       // console.log('it', it);
       return it === 'Negligible'
         ? (it = 1)
-        : it === 'Moderate'
+        : it === 'Minor'
         ? (it = 2)
-        : it === 'Major'
+        : it === 'Moderate'
         ? (it = 3)
-        : it === 'Severe'
+        : it === 'Major'
         ? (it = 4)
+        : it === 'Severe'
+        ? (it = 5)
         : (it = 0);
     };
 
     const avgImpact = (ratio) => {
-      return ratio === 1 ? 'Negligible' : ratio === 2 ? 'Moderate' : ratio === 3 ? 'Major' : ratio === 4 ? 'Severe' : '';
+      return ratio === 1
+        ? 'Negligible'
+        : ratio === 2
+        ? 'Minor'
+        : ratio === 3
+        ? 'Moderate'
+        : ratio === 4
+        ? 'Major'
+        : ratio === 5
+        ? 'Severe'
+        : '';
     };
     const val = Object.values(impact)?.map((it) => {
       return pattern(it);

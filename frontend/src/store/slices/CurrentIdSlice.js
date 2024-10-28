@@ -8,6 +8,7 @@ const initialState = {
   isCyberTableOpen: false,
   isAttackTreeOpen: false,
   isAttackTableOpen: false,
+  isRiskTableOpen: false,
   isLevelOpen: false,
   isCyberBlockOpen: false,
   attackScene: {},
@@ -35,7 +36,8 @@ const CurrentIdSlice = createSlice({
         isCyberBlockOpen: false,
         isCyberTableOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     TsTableOpen: (state) => {
@@ -48,7 +50,8 @@ const CurrentIdSlice = createSlice({
         isCyberBlockOpen: false,
         isCyberTableOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     DerivationTableOpen: (state) => {
@@ -62,7 +65,8 @@ const CurrentIdSlice = createSlice({
         isCyberBlockOpen: false,
         isCyberTableOpen: false,
         isRightDrawerOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     AttackTreePageOpen: (state) => {
@@ -75,7 +79,8 @@ const CurrentIdSlice = createSlice({
         isCyberBlockOpen: false,
         isCyberTableOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     setAttackScene: (state, action) => {
@@ -91,7 +96,8 @@ const CurrentIdSlice = createSlice({
         isCyberBlockOpen: false,
         isCyberTableOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     cyberBlockOpen: (state) => {
@@ -104,7 +110,8 @@ const CurrentIdSlice = createSlice({
         isLevelOpen: false,
         isCyberTableOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     cyberTableOpen: (state) => {
@@ -117,13 +124,29 @@ const CurrentIdSlice = createSlice({
         isDsTableOpen: false,
         isLevelOpen: false,
         isDerivationTableOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     },
     attackTableOpen: (state) => {
       return {
         ...state,
         isAttackTableOpen: true,
+        isCyberTableOpen: false,
+        isCyberBlockOpen: false,
+        isAttackTreeOpen: false,
+        isTsTableOpen: false,
+        isDsTableOpen: false,
+        isLevelOpen: false,
+        isDerivationTableOpen: false,
+        isRiskTableOpen: false
+      };
+    },
+    riskTreatmentTableOpen: (state) => {
+      return {
+        ...state,
+        isRiskTableOpen: true,
+        isAttackTableOpen: false,
         isCyberTableOpen: false,
         isCyberBlockOpen: false,
         isAttackTreeOpen: false,
@@ -182,7 +205,8 @@ const CurrentIdSlice = createSlice({
         activeTab: '',
         isRightDrawerOpen: false,
         isLeftDrawerOpen: false,
-        isAttackTableOpen: false
+        isAttackTableOpen: false,
+        isRiskTableOpen: false
       };
     }
   }
@@ -205,6 +229,7 @@ export const {
   leftDrawerClose,
   changeMode,
   navbarSlide,
-  attackTableOpen
+  attackTableOpen,
+  riskTreatmentTableOpen
 } = CurrentIdSlice.actions;
 export default CurrentIdSlice.reducer;
