@@ -23,7 +23,7 @@ const UserDetailsSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.userDetails = action.payload;
+        state.userDetails = action.payload.data;
         state.error = null;
         state.isLoggedIn = true;
       })

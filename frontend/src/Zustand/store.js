@@ -265,7 +265,81 @@ const useStore = createWithEqualityFn((set, get) => ({
 
     return [intersectingNodesMap, nodes];
   },
+  dragAdd: (newNode) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      nodes: [...state.nodes, newNode]
+    }));
+  },
 
+  addEdge: (newEdge) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      edges: [...state.edges, newEdge]
+    }));
+  },
+
+  addEdgeState: (params) =>
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      edges: addEdge(params, state.edges)
+    })),
+
+  undo: () =>
+    set((state) => {
+      if (state.undoStack.length === 0) return state; // No undo available
+      const prevState = state.undoStack[state.undoStack.length - 1];
+      return {
+        nodes: prevState.nodes,
+        edges: prevState.edges,
+        redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }],
+        undoStack: state.undoStack.slice(0, -1)
+      };
+    }),
+
+  // Redo action
+  redo: () =>
+    set((state) => {
+      if (state.redoStack.length === 0) return state; // No redo available
+      const nextState = state.redoStack[state.redoStack.length - 1];
+      return {
+        nodes: nextState.nodes,
+        edges: nextState.edges,
+        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+        redoStack: state.redoStack.slice(0, -1)
+      };
+    }),
+
+  addAttackNode: (newNode) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      attackNodes: [...state.attackNodes, newNode]
+    }));
+  },
+
+  addAttackEdge: (newEdge) => {
+    set((state) => ({
+      attackEdges: [...state.attackEdges, newEdge]
+    }));
+  },
+
+  addCyberNode: (newNode) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      cyberNodes: [...state.cyberNodes, newNode]
+    }));
+  },
+
+  dragAddNode: (newNode, newEdge) => {
+    // console.log("store",newNode);
+    set((state) => ({
+      nodes: state.nodes.concat(newNode),
+      edges: state.edges.concat(newEdge)
+    }));
+  },
+
+  // API section
   //fetch or GET section
   getTemplates: async () => {
     try {
@@ -307,6 +381,20 @@ const useStore = createWithEqualityFn((set, get) => ({
   //     edges: res['data'][0]['template']['edges']
   //   });
   // },
+
+  get_Models: async () => {
+    // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
+    const options = {
+      method: 'POST',
+      ...createHeaders(),
+      url: `${configuration.backendUrl}get_details/models`
+    };
+    const res = await axios(options);
+
+    set({
+      Models: res.data
+    });
+  },
 
   getModels: async () => {
     // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
@@ -450,86 +538,34 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  dragAdd: (newNode) => {
-    // console.log('newNode', newNode);
-    set((state) => ({
-      nodes: [...state.nodes, newNode]
-    }));
-  },
-
-  addEdge: (newEdge) => {
-    // console.log('newNode', newNode);
-    set((state) => ({
-      edges: [...state.edges, newEdge]
-    }));
-  },
-
-  addEdgeState: (params) =>
-    set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
-      edges: addEdge(params, state.edges)
-    })),
-
-  undo: () =>
-    set((state) => {
-      if (state.undoStack.length === 0) return state; // No undo available
-      const prevState = state.undoStack[state.undoStack.length - 1];
-      return {
-        nodes: prevState.nodes,
-        edges: prevState.edges,
-        redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }],
-        undoStack: state.undoStack.slice(0, -1)
-      };
-    }),
-
-  // Redo action
-  redo: () =>
-    set((state) => {
-      if (state.redoStack.length === 0) return state; // No redo available
-      const nextState = state.redoStack[state.redoStack.length - 1];
-      return {
-        nodes: nextState.nodes,
-        edges: nextState.edges,
-        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-        redoStack: state.redoStack.slice(0, -1)
-      };
-    }),
-
-  addAttackNode: (newNode) => {
-    // console.log('newNode', newNode);
-    set((state) => ({
-      attackNodes: [...state.attackNodes, newNode]
-    }));
-  },
-
-  addAttackEdge: (newEdge) => {
-    set((state) => ({
-      attackEdges: [...state.attackEdges, newEdge]
-    }));
-  },
-
-  addCyberNode: (newNode) => {
-    // console.log('newNode', newNode);
-    set((state) => ({
-      cyberNodes: [...state.cyberNodes, newNode]
-    }));
-  },
-
-  dragAddNode: (newNode, newEdge) => {
-    // console.log("store",newNode);
-    set((state) => ({
-      nodes: state.nodes.concat(newNode),
-      edges: state.edges.concat(newEdge)
-    }));
-  },
-
   addNewNode: async (newNode) => {
     // console.log('newNode',newNode);
     const res = await axios.post(`${configuration.apiBaseUrl}sidebarNode`, newNode);
     return res;
   },
 
+  create_model: async (newModel, username) => {
+    const FormData = require('form-data');
+    let data = new FormData();
+    data.append('name', newModel?.name);
+    data.append('createdBy', username);
+
+    // "user_id": user_id,
+    // "name": name,
+    // "created_by":created_by,
+    try {
+      const URL = `${configuration.localUrl}v1/add/Models`;
+      const response = await axios.post(URL, data, {
+        ...createHeaders(),
+        maxRedirects: 5
+      });
+      // console.log('response', response);
+      return response.data;
+    } catch (err) {
+      console.log('err', err);
+      throw err; // Re-throwing the error to handle it in calling code if needed
+    }
+  },
   createModel: async (newModel) => {
     const FormData = require('form-data');
     let data = new FormData();
