@@ -179,7 +179,17 @@ export default function DsDerivationTable() {
         sx={{
           overflow: 'auto',
           height: '-webkit-fill-available',
-          minHeight: 'moz-available'
+          minHeight: 'moz-available',
+          '&::-webkit-scrollbar': {
+            width: '4px' 
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '10px' 
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
         }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
@@ -195,6 +205,7 @@ export default function DsDerivationTable() {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
+                padding: 1,
                 '& .MuiInputBase-input': {
                   border: '1px solid black'
                 }
@@ -202,7 +213,7 @@ export default function DsDerivationTable() {
             />
           </Box>
         </Box>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{borderRadius: '0px', padding: 1}}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

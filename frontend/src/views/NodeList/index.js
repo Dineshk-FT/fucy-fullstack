@@ -17,16 +17,15 @@ import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibr
 
 const useStyles = makeStyles(() => ({
   paper: {
-    // color: '#1d97fc',
-    // padding: '5px',
-    // border: '1px solid #1e88e5',
-    // boxShadow: '0px 0px 4px 2px #90caf9'
+    marginLeft: '2.7rem',
+    zIndex: 1400,
     pointerEvents: 'auto',
-    background: '#E5E4E2',
-    border: '1px solid',
-    borderRadius: 0,
-    marginLeft: '1.0rem',
-    zIndex: 1300
+    background: '#f5f5f5',
+    border: '1px solid #d1d1d1',
+    borderRadius: '8px',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+    padding: '8px',
+    minWidth: '150px'
   }
 }));
 
@@ -104,9 +103,7 @@ const Components = () => {
               sx={{
                 width: 56,
                 height: 56,
-                '&:hover': {
-                  backgroundColor: 'gray'
-                }
+                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
               }}
             />
             <Typography variant="h6" color={'#1d97fc'}>
@@ -129,7 +126,7 @@ const Components = () => {
                           </MenuItem>
                         ))}
                         <MenuItem>
-                          <Button onClick={() => handleOpen(item)} variant="outlined" fullWidth>
+                          <Button sx={{margin: 0}} onClick={() => handleOpen(item)} variant="outlined" fullWidth>
                             + Add
                           </Button>
                         </MenuItem>
