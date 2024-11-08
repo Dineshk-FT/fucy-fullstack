@@ -40,7 +40,8 @@ const selector = (state) => ({
   model: state.model,
   getModelById: state.getModelById,
   getModels: state.getModels,
-  update: state.updateModel
+  update: state.updateModel,
+  damageScenarios: state.damageScenarios['subs'][1]
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -143,7 +144,7 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update } = useStore(selector, shallow);
+  const { model, getModels, getModelById, update, damageScenarios } = useStore(selector, shallow);
   const [stakeHolder] = React.useState(false);
   const classes = useStyles();
   const { id } = useParams();
@@ -235,11 +236,11 @@ export default function DsTable() {
   };
 
   React.useEffect(() => {
-    if (model.scenarios) {
-      const mod2 = model?.scenarios[1]?.subs[1]?.scenes?.map((ls) => ({
-        ID: ls?.ID,
+    if (damageScenarios['Details']) {
+      const scene = damageScenarios['Details']?.map((ls) => ({
+        ID: ls?._id,
         Name: ls?.Name,
-        'Description/ Scalability': ls['Description/ Scalability'],
+        'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         impacts: ls?.impacts
           ? {
@@ -250,10 +251,10 @@ export default function DsTable() {
             }
           : {}
       }));
-      setRows(mod2);
-      setFiltered(mod2);
+      setRows(scene);
+      setFiltered(scene);
     }
-  }, [model]);
+  }, [damageScenarios]);
 
   // console.log('rows', rows);
 
@@ -545,9 +546,6 @@ export default function DsTable() {
     );
   };
 
-  // console.log('model', model);
-  // console.log('rows', filtered);
-  // console.log('selectedRow', selectedRow)
   return (
     <Box
       sx={{

@@ -117,7 +117,8 @@ const selector = (state) => ({
   undo: state.undo,
   redo: state.redo,
   undoStack: state.undoStack,
-  redoStack: state.redoStack
+  redoStack: state.redoStack,
+  assets: state.assets
 });
 
 //Edge line styling
@@ -196,7 +197,8 @@ export default function MainCanvas() {
     undo,
     redo,
     undoStack,
-    redoStack
+    redoStack,
+    assets
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -236,14 +238,14 @@ export default function MainCanvas() {
   // console.log('undoStack', undoStack);
   // console.log('isAttackTreeOpen', isAttackTreeOpen);
   useEffect(() => {
-    const template = model?.template;
+    const template = assets?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
     // setTimeout(() => {
     onRestore(template);
 
     // }, 100);
-  }, [model, !isAttackTreeOpen]);
+  }, [assets, !isAttackTreeOpen]);
 
   useEffect(() => {
     if (reactFlowInstance) {
@@ -525,7 +527,7 @@ export default function MainCanvas() {
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
-    console.log('reactFlowInstance', reactFlowInstance);
+    // console.log('reactFlowInstance', reactFlowInstance);
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
   };
@@ -645,7 +647,7 @@ export default function MainCanvas() {
             // onEdgeContextMenu={handleSidebarOpen}
           >
             <Panel position="left">
-              <Button onClick={() => onRestore(model?.template)}>Restore</Button>
+              <Button onClick={() => onRestore(assets?.template)}>Restore</Button>
               {/* <button onClick={undo} disabled={undoStack.length === 0}>
                 Undo
               </button>

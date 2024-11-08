@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { setModelId } from '../../store/slices/PageSectionSlice';
 
 export default function SelectProject({ open, handleClose, Models }) {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ export default function SelectProject({ open, handleClose, Models }) {
   };
   const handleClick = () => {
     navigate(`/Models/${selectedModel}`);
+    dispatch(setModelId(selectedModel));
     dispatch(closeAll());
     handleClose();
   };

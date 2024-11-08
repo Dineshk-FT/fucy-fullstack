@@ -13,7 +13,6 @@ import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceR
 import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
-import { useParams } from 'react-router';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { useDispatch } from 'react-redux';
 
@@ -44,15 +43,15 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  model: state.model,
-  getModels: state.getModels
+  getModels: state.getModels,
+  damageScenarios: state.damageScenarios['subs'][0]
 });
 
 export default function DsDerivationTable() {
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { model } = useStore(selector, shallow);
+  const { damageScenarios } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
@@ -71,8 +70,8 @@ export default function DsDerivationTable() {
   }, []);
 
   React.useEffect(() => {
-    if (model.scenarios) {
-      const mod = model?.scenarios[1]?.subs[0]?.Details?.map((dt) => {
+    if (damageScenarios['Derivations']) {
+      const scene = damageScenarios['Derivations']?.map((dt) => {
         return {
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
@@ -80,10 +79,10 @@ export default function DsDerivationTable() {
           'Damage Scenarios': dt?.damageScene
         };
       });
-      setRows(mod);
-      setFiltered(mod);
+      setRows(scene);
+      setFiltered(scene);
     }
-  }, [model]);
+  }, [damageScenarios]);
 
   const handleSearch = (e) => {
     const { value } = e.target;

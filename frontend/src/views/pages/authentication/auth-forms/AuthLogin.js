@@ -39,6 +39,7 @@ import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/Ca
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
 import { login } from '../../../../API/api';
 import toast, { Toaster } from 'react-hot-toast';
+import { setModelId } from '../../../../store/slices/PageSectionSlice';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
 
@@ -75,6 +76,7 @@ const FirebaseLogin = ({ ...others }) => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
             dispatch(changeCanvasPage('canvas'));
+            dispatch(setModelId(res?.payload?.data?.model_id));
             dispatch(OpenInitialDialog());
             dispatch(closeAll());
           }, 600);

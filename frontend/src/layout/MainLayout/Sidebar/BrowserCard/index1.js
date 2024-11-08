@@ -291,6 +291,7 @@ const BrowserCard = ({ models }) => {
   };
 
   const onDragStart = (event, item) => {
+    // console.log('item', item);
     const parseFile = JSON.stringify(item);
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.effectAllowed = 'move';
@@ -505,6 +506,7 @@ const BrowserCard = ({ models }) => {
                         key={`1${i}`}
                         nodeId={`1${i}`}
                         label={`[000${i}] ${value?.name}`}
+                        onDragStart={(e) => onDragStart(e, value)}
                         sx={{ backgroundColor: selectedBlock?.id === value?.nodeId ? 'wheat' : 'inherit' }}
                       >
                         {value?.props.map((pr) => {
@@ -518,7 +520,7 @@ const BrowserCard = ({ models }) => {
                             <DraggableTreeItem
                               key={pr?.id}
                               nodeId={pr?.id}
-                              onDragStart={(e) => onDragStart(e, Details)}
+                              // onDragStart={(e) => onDragStart(e, Details)}
                               label={
                                 <div
                                   style={{

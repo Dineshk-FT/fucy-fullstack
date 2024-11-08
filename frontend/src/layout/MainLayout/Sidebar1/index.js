@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
 import LogoSection from '../LogoSection';
-import BrowserCard from '../Sidebar/BrowserCard/index1';
+import BrowserCard from '../Sidebar/BrowserCard/index';
 import { drawerWidth, navbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
@@ -60,17 +60,15 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
     dispatch(clearProperties());
   }, []);
 
-  // console.log('sidebarWidth', sidebarWidth);
-
   const handleResize = (event, { size }) => {
     setSidebarWidth(size.width);
   };
 
   const handleDrawerToggle = () => {
     if (drawerOpen) {
-      setSidebarWidth(0); // Set width to 0 when closing
+      setSidebarWidth(0);
     } else {
-      setSidebarWidth(400); // Set default width when opening (you can adjust the value as needed)
+      setSidebarWidth(400);
     }
     drawerToggle();
   };

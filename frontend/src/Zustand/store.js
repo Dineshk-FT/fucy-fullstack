@@ -4,6 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
+import { GET_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -37,7 +38,42 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedTemplate: {},
   Models: [],
   model: {},
-  DamageScenaris: [],
+  assets: {
+    id: 1,
+    name: 'Item Model & Assets',
+    icon: 'ItemIcon'
+  },
+  damageScenarios: {
+    id: 2,
+    name: 'Damage Scenarios Identification and Impact Ratings',
+    subs: [
+      {
+        // id: 21,
+        name: 'Damage Scenarios Derivations'
+      },
+      {
+        // id: 22,
+        name: 'Damage Scenarios - Collection & Impact Ratings'
+      }
+    ]
+  },
+  threatScenarios: {
+    id: 3,
+    name: 'Threat Scenarios Identification',
+    subs: [
+      {
+        id: 31,
+        name: 'Threat Scenarios',
+        Details: [],
+        losses: []
+      },
+      {
+        id: 32,
+        name: 'Derived Threat Scenarios',
+        scenes: []
+      }
+    ]
+  },
   scenerio: {},
   component: [],
 
@@ -382,26 +418,28 @@ const useStore = createWithEqualityFn((set, get) => ({
   //   });
   // },
 
-  get_Models: async () => {
-    // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
+  //New API's
+  get_Model: async (modelId) => {
+    const FormData = require('form-data');
+    let data = new FormData();
+    data.append('model-id', modelId);
     const options = {
       method: 'POST',
       ...createHeaders(),
-      url: `${configuration.backendUrl}get_details/models`
+      url: `${configuration.apiBaseUrl}v1/get_details/model`
     };
     const res = await axios(options);
 
     set({
-      Models: res.data
+      model: res.data
     });
   },
 
   getModels: async () => {
-    // const res = await axios.get(`${configuration.apiBaseUrl}Modals`);
     const options = {
       method: 'POST',
       ...createHeaders(),
-      url: `${configuration.backendUrl}get_details/models`
+      url: `${configuration.apiBaseUrl}v1/get_details/models`
     };
     const res = await axios(options);
 
@@ -410,29 +448,67 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
-  getModelById: async (id) => {
-    if (id) {
-      // const res = await axios.get(`${configuration.apiBaseUrl}Modals/${id}`);
-      const res = await axios.post(`${configuration.backendUrl}get_details/models/${id}`);
+  getModelById: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/model`;
+    const res = await GET_CALL(modelId, url);
+    set({
+      model: res
+    });
+  },
 
-      // console.log('res.data ...', res.data);
-      set({
-        model: res.data
-      });
-    }
+  getAssets: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
+    const res = await GET_CALL(modelId, url);
+    set((state) => ({
+      assets: {
+        ...state.assets,
+        ...res
+      }
+    }));
   },
-  getDamageScenarios: async () => {
-    const res = await axios.get(`${configuration.apiBaseUrl}Damage-scenarios`);
-    set({
-      DamageScenaris: res.data
-    });
+
+  getDamageScenarios: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/damage_scenarios`;
+    const res = await GET_CALL(modelId, url);
+
+    // Separate the "Derived" and "User-defined" objects
+    const derivedScenario = res.find((item) => item.type === 'Derived');
+    const userDefinedScenario = res.find((item) => item.type === 'User-defined');
+
+    set((state) => ({
+      damageScenarios: {
+        ...state.damageScenarios,
+        subs: [
+          {
+            ...state.damageScenarios.subs[0],
+            ...derivedScenario // Spread the "Derived" object into the first subs element
+          },
+          {
+            ...state.damageScenarios.subs[1],
+            ...userDefinedScenario // Spread the "User-defined" object into the second subs element
+          }
+        ]
+      }
+    }));
   },
-  getUniqueDamageScenario: async (id) => {
-    const res = await axios.get(`${configuration.apiBaseUrl}Damage-scenarios/${id}`);
-    set({
-      scenerio: res.data
-    });
+
+  getThreatScenario: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/threat_scenarios`;
+    const res = await GET_CALL(modelId, url);
+    set((state) => ({
+      threatScenarios: {
+        ...state.threatScenarios,
+        ...res
+      }
+    }));
   },
+
+  // getUniqueDamageScenario: async (id) => {
+  //   const res = await axios.get(`${configuration.apiBaseUrl}Damage-scenarios/${id}`);
+  //   set({
+  //     scenerio: res.data
+  //   });
+  // },
 
   //Update Section
   updateSidebarNodes: async (newTemplate) => {
