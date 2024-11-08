@@ -51,7 +51,7 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
+const AddNewNode = ({ open, handleClose, selectedItem, model, isNodelist }) => {
   const theme = useTheme();
   const [newNode, setNewNode] = useState({
     nodeName: '',
@@ -62,7 +62,7 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [message, setMessage] = React.useState('');
-  const { createNode, updateModel, setNodes, nodes, edges } = useStore(selector);
+  const { createNode, updateModel, setNodes, nodes, edges, getSidebarNode } = useStore(selector);
 
   //Name & type for the new Node
   const handleChange = (event) => {
@@ -80,7 +80,6 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
   // console.log('nodes', nodes);
 
   // For Adding new Node
-  console.log('model', model);
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataNode = {
@@ -188,7 +187,7 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
       <Dialog open={open} onClose={CloseModel} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
         <DialogTitle id="draggable-dialog-title">
           <Typography variant="h4" color="primary">
-            {'Add New '}
+            {'Add New 123'}
           </Typography>
         </DialogTitle>
         <DialogContent>

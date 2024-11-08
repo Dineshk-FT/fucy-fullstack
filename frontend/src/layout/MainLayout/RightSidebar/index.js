@@ -7,8 +7,9 @@ import useStore from '../../../Zustand/store';
 import AlertMessage from '../../../ui-component/Alert';
 import { updatedModelState } from '../../../utils/Constraints';
 import { CloseCircle } from 'iconsax-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { drawerClose } from '../../../store/slices/CurrentIdSlice';
+import { setSelectedItem } from '../../../store/slices/CanvasSlice';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -38,7 +39,7 @@ function getStyles(name, nodes, theme) {
     fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
   };
 }
-export default function RightDrawer({ stateOpen, selectedItem }) {
+export default function RightDrawer({ stateOpen }) {
   const theme = useTheme();
   const dispatch = useDispatch();
   const [newNode, setNewNode] = useState({
@@ -50,8 +51,8 @@ export default function RightDrawer({ stateOpen, selectedItem }) {
   const [openMsg, setOpenMsg] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState('');
-  const { createNode, updateModel, setNodes, nodes, edges, model } = useStore(selector);
-
+  const { createNode, updateModel, setNodes, nodes, edges, model, getSidebarNode } = useStore(selector);
+  const { selectedItem } = useSelector((state) => state?.canvas);
   //Name & type for the new Node
   const handleChange = (event) => {
     const {
@@ -65,6 +66,7 @@ export default function RightDrawer({ stateOpen, selectedItem }) {
     }
   };
 
+  // console.log('selectedItem', selectedItem);
   // console.log('nodes', nodes);
 
   // For Adding new Node
@@ -77,6 +79,7 @@ export default function RightDrawer({ stateOpen, selectedItem }) {
       properties: [],
       bgColor: '#dadada'
     });
+    dispatch(setSelectedItem({}));
   };
 
   const handleSubmit = (e) => {
@@ -112,7 +115,7 @@ export default function RightDrawer({ stateOpen, selectedItem }) {
     // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
     // selectedsection?.nodes?.push(dataNode);
     // console.log('selectedsection', selectedsection);
-    if (model) {
+    if (!Object.keys(selectedItem).length) {
       const Details = {
         ...dataNode,
         position: { x: 495, y: 250 }
@@ -188,7 +191,7 @@ export default function RightDrawer({ stateOpen, selectedItem }) {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1, mx: 3 }}>
           <Box display="flex" justifyContent="space-between" my={1} alignItems="center">
             <Typography variant="h4" color="primary">
-              {'Add New '}
+              {'Add New'}
             </Typography>
             <CloseCircle size="24" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
           </Box>

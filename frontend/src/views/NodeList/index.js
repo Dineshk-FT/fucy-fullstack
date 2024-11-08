@@ -16,6 +16,7 @@ import { makeStyles } from '@mui/styles';
 import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibrary';
 import { drawerOpen } from '../../store/slices/CurrentIdSlice';
 import { useDispatch } from 'react-redux';
+import { setSelectedItem } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   paper: {
@@ -32,7 +33,8 @@ const useStyles = makeStyles(() => ({
 }));
 
 const selector = (state) => ({
-  sidebarNodes: state.sidebarNodes
+  sidebarNodes: state.sidebarNodes,
+  getSidebarNode: state.getSidebarNode
 });
 
 const Components = () => {
@@ -42,8 +44,8 @@ const Components = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedItem, setSelectedItem] = useState({});
-  const { sidebarNodes } = useStore(selector);
+  // const [selectedItem, setSelectedItem] = useState({});
+  const { sidebarNodes, getSidebarNode } = useStore(selector);
   const color = ColorTheme();
 
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -69,12 +71,13 @@ const Components = () => {
   const handleOpen = (item) => {
     setOpen(true);
     dispatch(drawerOpen());
-    setSelectedItem(item);
+    dispatch(setSelectedItem(item));
+    // setSelectedItem(item);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedItem({});
+    // setSelectedItem({});
   };
 
   function stringAvatar(name) {
@@ -164,7 +167,7 @@ const Components = () => {
         </Fab>
         {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer', my: 1, border: '1px solid' }} /> */}
       </Box>
-      <AddNewNode open={open} handleClose={handleClose} selectedItem={selectedItem} />
+      {/* {open && <AddNewNode open={open} handleClose={handleClose} selectedItem={selectedItem} />} */}
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
     </>
   );

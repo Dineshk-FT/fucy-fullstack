@@ -138,15 +138,14 @@ const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
-  model: state.model,
-  getSidebarNode: state.getSidebarNode
+  model: state.model
 });
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ models }) => {
   const color = ColorTheme();
   const { id } = useParams();
-  const { addNode, getModels, nodes, model, getModelById, getSidebarNode } = useStore(selector);
+  const { addNode, getModels, nodes, model, getModelById } = useStore(selector);
   const classes = useStyles();
   const dispatch = useDispatch();
   const { isCyberBlockOpen } = useSelector((state) => state?.currentId);
@@ -157,7 +156,7 @@ const BrowserCard = ({ models }) => {
   const [openCyberModal, setOpenCyberModal] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
-  const [selectedItem, setSelectedItem] = useState({});
+  // const [selectedItem, setSelectedItem] = useState({});
   const { selectedBlock } = useSelector((state) => state?.canvas);
   // const [selectedId, setSelectedId] = useState(null);
   const openRight = Boolean(anchorEl);
@@ -178,15 +177,15 @@ const BrowserCard = ({ models }) => {
     }
   };
 
-  const handleOpen = (item) => {
-    setOpen(true);
-    setSelectedItem(item);
-  };
+  // const handleOpen = (item) => {
+  //   setOpen(true);
+  //   setSelectedItem(item);
+  // };
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedItem({});
-  };
+  // const handleClose = () => {
+  //   setOpen(false);
+  //   setSelectedItem({});
+  // };
 
   const handleCloseItem = () => {
     setOpenItemRight(false);
@@ -661,7 +660,7 @@ const BrowserCard = ({ models }) => {
 
       <CyberSecurityModal open={openCyberModal} handleClose={handleCloseCyberModal} name={name} />
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} getModels={getModels} name={subName} />
-      {openNewNode && (
+      {/* {openNewNode && (
         <AddNewNode
           open={openNewNode}
           handleClose={() => setOpenNewNode(false)}
@@ -669,7 +668,7 @@ const BrowserCard = ({ models }) => {
           model={model}
           // id={selectedId}
         />
-      )}
+      )} */}
       <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
     </>
   );

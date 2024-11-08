@@ -428,7 +428,7 @@ export default function MainCanvas() {
       if (parsedNodeItem) {
         const newNode = {
           id: parsedNodeItem.id,
-          type: parsedNodeItem.type, 
+          type: parsedNodeItem.type,
           position,
           data: {
             label: parsedNodeItem.name,
