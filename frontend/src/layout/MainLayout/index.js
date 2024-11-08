@@ -143,7 +143,7 @@ const MainLayout = ({ children }) => {
           }}
         >
           {/* ----------------- Navbar ------------------- */}
-          <Toolbar sx={{ display: isNavbarClose ? 'none' : 'flex', transition: 'display 0.8s', justifyContent: 'space-between' }}>
+          <Toolbar sx={{ display: isNavbarClose ? 'none' : 'flex', transition: 'display 0.8s', justifyContent: 'space-between', borderBottom: '1px solid black' }}>
             {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
             <Header1 />
           </Toolbar>

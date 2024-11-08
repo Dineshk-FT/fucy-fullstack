@@ -473,7 +473,7 @@ export default function AttackTreeTable() {
   };
   // console.log('selectedRow', selectedRow)
   return (
-    <Box sx={{ overflow: 'auto', height: '100%' }}>
+    <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
@@ -485,13 +485,31 @@ export default function AttackTreeTable() {
           size="small"
           value={searchTerm}
           onChange={handleSearch}
-          sx={{
+          sx={{padding: 1,
             '& .MuiInputBase-input': { border: '1px solid black' }
           }}
         />
       </Box>
 
-      <TableContainer component={Paper} sx={{ maxHeight: 440, overflow: 'auto' }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          maxHeight: 440,
+          borderRadius: '0px', 
+          padding: 1,
+          overflow: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '4px'
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '10px'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
         <Table stickyHeader aria-label="sticky table" sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>

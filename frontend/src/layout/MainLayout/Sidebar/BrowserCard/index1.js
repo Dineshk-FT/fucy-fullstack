@@ -293,6 +293,7 @@ const BrowserCard = ({ models }) => {
   const onDragStart = (event, item) => {
     const parseFile = JSON.stringify(item);
     event.dataTransfer.setData('application/cyber', parseFile);
+    event.dataTransfer.setData('application/dragItem', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -349,15 +350,39 @@ const BrowserCard = ({ models }) => {
 
   return (
     <>
-      <Typography variant="h4" sx={{ color: color?.tabContentClr }} my={1}>
+      <Typography variant="h3" sx={{ color: color?.tabContentClr, marginBottom: 1, textAlign: 'center' }}>
         Projects
       </Typography>
-      <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
+      <CardStyle
+        sx={{
+          overflowY: 'auto',
+          backgroundColor: color?.sidebarInnerBG,
+          borderRadius: 1,
+          paddingY: 0,
+          '&::-webkit-scrollbar': {
+            width: '4px' 
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '10px' 
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
+            sx={{
+              '& .MuiTreeItem-root': { paddingY: 0.3 },
+              '& .MuiTreeItem-label': { color: color?.sidebarContent },
+              '& .css-i3pm3h-MuiTypography-root': { fontSize: 15, color: 'blue' },
+              '& .css-170gy1o.active': { backgroundColor: 'rgba(33, 150, 243, 0.08)' },
+              '& .css-6f3abp.active': { backgroundColor: 'rgba(33, 150, 243, 0.08)' }
+            }}
           >
             <TreeItem
               key={model?._id}
@@ -367,7 +392,14 @@ const BrowserCard = ({ models }) => {
               // onClick={handleNavigate}
               sx={{
                 '& .Mui-selected': {
-                  backgroundColor: 'none !important'
+                  backgroundColor: `${color?.highlight} !important`,
+                  borderRadius: 1
+                },
+                '& .css-y33nt-MuiTypography-root': {
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  paddingY: 0.4,
+                  color: color?.sidebarContent
                 }
               }}
             >
@@ -379,11 +411,10 @@ const BrowserCard = ({ models }) => {
                   label={getImageLabel(scene?.icon, scene?.name)}
                   onContextMenu={(e) => handleNodes(e, scene?.name)}
                   sx={{
-                    ml: -0.8,
                     '& .MuiTreeItem-label': {
                       fontSize: '12px',
-                      fontWeight: 600,
-                      my: 0.2
+                      fontWeight: 500,
+                      color: color?.sidebarContent
                     }
                   }}
                 >
@@ -396,6 +427,7 @@ const BrowserCard = ({ models }) => {
                         //   label={sub?.name}
                         label={getLabel('TopicIcon', sub?.name)}
                         onClick={() => handleSwicthTable(sub?.name)} //change to onClick
+                        sx={{ paddingY: 0.5, paddingLeft: 1 }}
                       >
                         {sub?.name === 'Damage Scenarios Derivations' &&
                           sub?.Details?.map((ls) => (
@@ -506,6 +538,7 @@ const BrowserCard = ({ models }) => {
                         nodeId={`1${i}`}
                         label={`[000${i}] ${value?.name}`}
                         sx={{ backgroundColor: selectedBlock?.id === value?.nodeId ? 'wheat' : 'inherit' }}
+                        onDragStart={(e) => onDragStart(e, value)}
                       >
                         {value?.props.map((pr) => {
                           // console.log('pr', pr);
@@ -518,7 +551,6 @@ const BrowserCard = ({ models }) => {
                             <DraggableTreeItem
                               key={pr?.id}
                               nodeId={pr?.id}
-                              onDragStart={(e) => onDragStart(e, Details)}
                               label={
                                 <div
                                   style={{
@@ -592,8 +624,9 @@ const BrowserCard = ({ models }) => {
               }}
               sx={{
                 '& .MuiPaper-root': {
-                  // top: '22rem !important',
-                  // left: '14rem !important'
+                  backgroundColor: color?.menuBG,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  borderRadius: 1
                 }
               }}
             >
