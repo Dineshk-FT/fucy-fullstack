@@ -360,11 +360,11 @@ const BrowserCard = ({ models }) => {
           borderRadius: 1,
           paddingY: 0,
           '&::-webkit-scrollbar': {
-            width: '4px' 
+            width: '4px'
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px' 
+            borderRadius: '10px'
           },
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
@@ -665,7 +665,6 @@ const BrowserCard = ({ models }) => {
         <AddNewNode
           open={openNewNode}
           handleClose={() => setOpenNewNode(false)}
-          getSidebarNode={getSidebarNode}
           selectedItem={selectedItem}
           model={model}
           // id={selectedId}

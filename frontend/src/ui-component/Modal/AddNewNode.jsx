@@ -80,6 +80,7 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
   // console.log('nodes', nodes);
 
   // For Adding new Node
+  console.log('model', model);
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataNode = {

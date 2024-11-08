@@ -14,6 +14,8 @@ import MenuList from '@mui/material/MenuList';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibrary';
+import { drawerOpen } from '../../store/slices/CurrentIdSlice';
+import { useDispatch } from 'react-redux';
 
 const useStyles = makeStyles(() => ({
   paper: {
@@ -35,6 +37,7 @@ const selector = (state) => ({
 
 const Components = () => {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
@@ -65,6 +68,7 @@ const Components = () => {
 
   const handleOpen = (item) => {
     setOpen(true);
+    dispatch(drawerOpen());
     setSelectedItem(item);
   };
 
@@ -126,7 +130,7 @@ const Components = () => {
                           </MenuItem>
                         ))}
                         <MenuItem>
-                          <Button sx={{margin: 0}} onClick={() => handleOpen(item)} variant="outlined" fullWidth>
+                          <Button sx={{ margin: 0 }} onClick={() => handleOpen(item)} variant="outlined" fullWidth>
                             + Add
                           </Button>
                         </MenuItem>
