@@ -76,9 +76,9 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const drawer = (
     <>
       <Box>
-        <Box sx={{ display: 'flex', p: 1, mx: 'auto' }}>
+        <Box sx={{ display: 'flex', pt: 1, px: 1, mx: 'auto' }}>
           <Box display="flex" alignItems="center" justifyContent="start">
-            <svg width="82" height="32" viewBox="0 0 92 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="82" height="25" viewBox="0 0 92 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M10.987 31.5841C4.92849 31.5841 0 26.626 0 20.5323C0 14.4385 4.92899 9.48041 10.987 9.48041C17.045 9.48041 21.974 14.4385 21.974 20.5323C21.974 26.626 17.0459 31.5841 10.987 31.5841ZM10.987 10.536C5.50765 10.536 1.04938 15.0196 1.04938 20.5318C1.04938 26.044 5.50765 30.5275 10.987 30.5275C16.4663 30.5275 20.9251 26.0429 20.9251 20.5308C20.9251 15.0186 16.4673 10.536 10.987 10.536Z"
                 fill={theme.palette.primary.main}
@@ -125,7 +125,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           style={{
             paddingLeft: '16px',
             paddingRight: '16px',
-            marginTop: '-1rem'
           }}
         >
           <BrowserCard template={template} models={models} />
