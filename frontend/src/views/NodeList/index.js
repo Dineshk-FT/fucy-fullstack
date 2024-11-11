@@ -20,7 +20,7 @@ import { setSelectedItem } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   paper: {
-    marginLeft: '2.7rem',
+    marginLeft: '1.7rem',
     zIndex: 1400,
     pointerEvents: 'auto',
     background: '#f5f5f5',
@@ -28,7 +28,19 @@ const useStyles = makeStyles(() => ({
     borderRadius: '8px',
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
     padding: '8px',
-    minWidth: '150px'
+    minWidth: '150px',
+    maxHeight: '300px',
+    overflowY: 'auto',
+    '&::-webkit-scrollbar': {
+      width: '4px'
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      borderRadius: '10px'
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)'
+    }
   }
 }));
 

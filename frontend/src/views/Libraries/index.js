@@ -19,6 +19,18 @@ const useStyles = makeStyles(() => ({
     '&:hover': {
       backgroundColor: 'rgba(0, 0, 0, 0.1)'
     },
+    maxHeight: '300px',
+    overflowY: 'auto',
+    '&::-webkit-scrollbar': {
+      width: '4px'
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      borderRadius: '10px'
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)'
+    }
   },
 }));
 
