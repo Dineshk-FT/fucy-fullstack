@@ -30,7 +30,9 @@ import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
   model: state.model,
-  getModel: state.getModelById
+  derived: state.threatScenarios.subs[0],
+  userDefined: state.threatScenarios.subs[1],
+  getThreatScenario: state.getThreatScenario
 });
 
 const column = [
@@ -79,7 +81,7 @@ export default function Tstable() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = React.useState(false);
-  const { model, getModel } = useStore(selector, shallow);
+  const { model, derived, userDefined, getThreatScenario } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
@@ -87,11 +89,7 @@ export default function Tstable() {
 
   // Pagination state
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-  React.useEffect(() => {
-    getModel(id);
-  }, [id]);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const Head = React.useMemo(() => {
     if (title.includes('Derived')) {
@@ -104,29 +102,37 @@ export default function Tstable() {
   }, [title]);
 
   React.useEffect(() => {
-    if (model.scenarios) {
-      const mod1 = model?.scenarios[2]?.subs[0]?.losses
-        ?.map((dt) =>
-          dt?.cyberLosses?.map((loss, prin) =>
-            loss?.props?.map((prp, pin) => {
+    if (derived['Details']) {
+      const mod1 = derived['Details']
+        ?.map((detail) =>
+          detail?.Details?.map((nodedetail) =>
+            nodedetail?.props?.map((prop) => {
               return {
-                ID: `TS0${prin}${pin}`,
-                Name: `${threatType(prp)}  ${prp} of ${loss?.name} for Damage Scene ${dt?.ID}`,
-                Description: `${threatType(prp)} occured due to ${prp} in ${loss?.name} for Damage Scene ${dt?.ID}`,
+                ID: prop?.id.slice(0, 6),
+                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node} for Damage Scene ${nodedetail?.nodeId.slice(0, 6)}`,
+                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${
+                  nodedetail?.node
+                } for Damage Scene ${nodedetail?.nodeId?.slice(0, 6)}`,
                 losses: [],
-                'Losses of Cybersecurity Properties': prp
+                'Losses of Cybersecurity Properties': prop?.name
               };
             })
           )
         )
         .flat(2);
-      const mod2 = model?.scenarios[2]?.subs[1]?.scenes;
+
+      const mod2 = userDefined['Details'].map((detail) => ({
+        ID: detail?.id,
+        Name: detail?.name,
+        Description: detail?.description
+      }));
       const combined = mod1.concat(mod2);
       setRows(combined);
       setFiltered(combined);
     }
-  }, [model]);
+  }, [derived, userDefined]);
 
+  // console.log('userDefined', userDefined);
   const handleOpenModalTs = () => {
     setOpenTs(true);
   };
@@ -254,7 +260,7 @@ export default function Tstable() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
+      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
     </Box>
   );
 }

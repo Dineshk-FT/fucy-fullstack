@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
-import { GET_CALL } from '../API/api';
+import { ADD_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -46,6 +46,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   damageScenarios: {
     id: 2,
     name: 'Damage Scenarios Identification and Impact Ratings',
+    icon: 'DamageIcon',
     subs: [
       {
         // id: 21,
@@ -60,17 +61,15 @@ const useStore = createWithEqualityFn((set, get) => ({
   threatScenarios: {
     id: 3,
     name: 'Threat Scenarios Identification',
+    icon: 'ThreatIcon',
     subs: [
       {
-        id: 31,
-        name: 'Threat Scenarios',
-        Details: [],
-        losses: []
+        // id: 31,
+        name: 'Derived Threat Scenarios'
       },
       {
-        id: 32,
-        name: 'Derived Threat Scenarios',
-        scenes: []
+        // id: 32,
+        name: 'Threat Scenarios'
       }
     ]
   },
@@ -495,22 +494,37 @@ const useStore = createWithEqualityFn((set, get) => ({
   getThreatScenario: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/threat_scenarios`;
     const res = await GET_CALL(modelId, url);
+
+    // Separate the "Derived" and "User-defined" objects
+    const derivedScenario = res.find((item) => item.type === 'derived');
+    const userDefinedScenario = res.find((item) => item.type === 'User-defined');
+
     set((state) => ({
       threatScenarios: {
         ...state.threatScenarios,
-        ...res
+        subs: [
+          {
+            ...state.threatScenarios.subs[0],
+            ...derivedScenario // Spread the "Derived" object into the first subs element
+          },
+          {
+            ...state.threatScenarios.subs[1],
+            ...userDefinedScenario // Spread the "User-defined" object into the second subs element
+          }
+        ]
       }
     }));
   },
 
-  // getUniqueDamageScenario: async (id) => {
-  //   const res = await axios.get(`${configuration.apiBaseUrl}Damage-scenarios/${id}`);
-  //   set({
-  //     scenerio: res.data
-  //   });
-  // },
-
   //Update Section
+
+  updateDamageScenario: async (details) => {
+    // const { id, detailId, cyberLosses } = details;
+    const url = `${configuration.apiBaseUrl}v1/update/damage_scenario`;
+    const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
   updateSidebarNodes: async (newTemplate) => {
     const res = await axios.patch(`${configuration.apiBaseUrl}sidebarNode/${newTemplate.id}`, newTemplate);
     return res;
@@ -522,15 +536,10 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   updateModel: async (newModel) => {
-    // console.log('newModal', newModal);
-    // const res = await axios.patch(`${configuration.apiBaseUrl}Modals/${newModal?.id}`, newModal);
     const res = await axios.put(`${configuration.backendUrl}update_model/${newModel?._id}`, newModel);
 
     // console.log('res', res);
     if (res) {
-      // alert('Updated');
-      // window.location.reload();
-      // console.log('res', res);
       return res;
     }
   },
@@ -549,6 +558,11 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   //Add Section
 
+  addThreatScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/threat_scenarios`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   createComponent: async (newTemplate) => {
     const FormData = require('form-data');
     let data = new FormData();

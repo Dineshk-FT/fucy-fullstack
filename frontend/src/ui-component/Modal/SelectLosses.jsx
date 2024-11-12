@@ -13,6 +13,11 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 
 export default function SelectLosses({
+  damageScenarios,
+  details,
+  setDetails,
+  damageID,
+  refreshAPI,
   open,
   handleClose,
   model,
@@ -25,121 +30,69 @@ export default function SelectLosses({
   id,
   update
 }) {
+  // console.log('selectedRow', selectedRow);
   const handleChange = (e, prop, item) => {
-    if (e.target.checked) {
-      if (Object.keys(selectedRow?.cyberLosses).length === 0) {
-        let select = [...selectedRow.cyberLosses];
-        const Details = {
-          name: item?.name,
-          props: [prop]
-        };
-        select.push(Details);
-        let row = { ...selectedRow };
-        row.cyberLosses = select;
-        setSelectedRow(row);
-      } else {
-        let select = [...selectedRow.cyberLosses];
-        const ele = selectedRow?.cyberLosses.find((it) => it.name === item?.name);
-        const Index = selectedRow?.cyberLosses.findIndex((it) => it.name === item?.name);
-        if (ele) {
-          if (!ele.props.includes(prop)) {
-            ele.props.push(prop);
-          }
-          select[Index] = ele;
-          let row = { ...selectedRow };
-          row.cyberLosses = select;
-          setSelectedRow(row);
-        } else {
-          let select = [...selectedRow.cyberLosses];
-          const Details = {
-            name: item?.name,
-            props: [prop]
-          };
-          select.push(Details);
-          let row = { ...selectedRow };
-          row.cyberLosses = select;
-          setSelectedRow(row);
-        }
-      }
+    // console.log('e.target.checked', e.target.checked);
+    // console.log('prop', prop);
+    // console.log('item', item);
+    const value = JSON.parse(JSON.stringify(details));
+    const selectedItem = item.props.find((pr) => pr.id === prop.id);
+    const Itemindex = item.props.findIndex((pr) => pr.id === prop.id);
+    const index = value.findIndex((ind) => ind?.nodeId === item?.nodeId);
+    // console.log('index', index);
+    if (!prop.isSelected && e.target.checked) {
+      selectedItem.isSelected = true;
     } else {
-      // console.log('here')
-      let select = [...selectedRow.cyberLosses];
-      const ele = selectedRow?.cyberLosses.find((it) => it.name === item?.name);
-      const Index = selectedRow?.cyberLosses.findIndex((it) => it.name === item?.name);
-      if (ele) {
-        if (ele.props.includes(prop)) {
-          const filt = ele.props.filter((it) => it !== prop);
-          ele.props = filt;
-          select[Index] = ele;
-          let row = { ...selectedRow };
-          row.cyberLosses = select;
-          setSelectedRow(row);
-        }
-        if (ele.props.length === 0) {
-          select.splice(Index, Index + 1);
-        }
-      }
+      selectedItem.isSelected = false;
     }
+    // console.log('selectedItem', selectedItem);
+    value[index]['props'][Itemindex] = selectedItem;
+    // console.log('value', value);
+    setDetails(value);
   };
 
+  // console.log('selectedRow', selectedRow);
   const handleClick = () => {
-    const mod = { ...model };
-    const Rows = [...rows];
-    const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
-    const Index = Rows.findIndex((rw) => rw.id === selectedRow.id);
-    Rows[Index] = selectedRow;
-    const changes = Rows.map((rw) => {
-      return rw;
-    });
+    // console.log('details', details);
+    const losses = details?.flatMap(
+      (dtl) =>
+        dtl?.props
+          ?.filter((prp) => prp.isSelected)
+          .map((prp) => ({
+            ...prp,
+            node: dtl?.name,
+            nodeId: dtl?.nodeId
+          })) || []
+    );
 
-    const threat = mod?.scenarios[2]?.subs[0];
-    const cybersec = Rows.filter((rw) => {
-      if (rw.cyberLosses.length > 0) {
-        return rw;
-      }
-    });
+    const filteredDetails = {
+      rowId: selectedRow?.ID,
+      Details: details
+        .filter((item) => item.props.some((prop) => prop.isSelected))
+        .map((item) => ({
+          node: item?.name,
+          nodeId: item?.nodeId,
+          props: item.props.filter((prop) => prop.isSelected),
+          name: selectedRow?.Name,
+          description: selectedRow['Description/ Scalability']
+        }))
+    };
 
-    // const updatedLoss = losses
-    //   ?.map((loss) =>
-    //     changes.filter((update) => {
-    //       if (loss.id === update.id) {
-    //         return { ...loss, cyberLosses: update.cyberLosses };
-    //       }
-    //     })
-    //   )
-    //   .flat();
+    console.log('filteredDetails', filteredDetails);
 
-    // const updatedLossEdit = lossesEdit
-    //   ?.map((loss) =>
-    //     changes.filter((update) => {
-    //       if (loss.id === update.id) {
-    //         return { ...loss, cyberLosses: update.cyberLosses };
-    //       }
-    //     })
-    //   )
-    //   .flat();
-
-    // mod.scenarios[1].subs[0].losses = updatedLoss;
-    mod.scenarios[1].subs[1].scenes = changes;
-    //     console.log('updatedLoss', updatedLoss)
-    // console.log('updatedLossEdit', updatedLossEdit)
-
-    threat.losses = cybersec;
-    // setRows(Rows);
-
-    // console.log('threat', threat)
-    // console.log('mod', mod);
-    update(mod)
+    const info = {
+      'model-id': model?._id,
+      id: damageID,
+      detailId: selectedRow?.ID,
+      cyberLosses: JSON.stringify(losses),
+      threats: JSON.stringify(filteredDetails)
+    };
+    update(info)
       .then((res) => {
-        if (res) {
-          setTimeout(() => {
-            getModelById(id);
-            getModels();
-          }, 500);
-        }
+        handleClose();
+        refreshAPI();
       })
       .catch((err) => console.log('err', err));
-    handleClose();
   };
   return (
     <React.Fragment>
@@ -167,7 +120,7 @@ export default function SelectLosses({
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-              {model?.scenarios[1]?.subs[1]?.Details?.map((item, i) => (
+              {details?.map((item, i) => (
                 <TreeItem key={`a${i}`} nodeId={`a${i}`} label={item?.name}>
                   {item?.props?.map((pr, ind) => (
                     <TreeItem
@@ -182,7 +135,7 @@ export default function SelectLosses({
                                 fontSize: '13px'
                               }
                             }}
-                            control={<Checkbox size="small" onChange={(e) => handleChange(e, pr.name, item)} />}
+                            control={<Checkbox size="small" onChange={(e) => handleChange(e, pr, item)} />}
                             label={`Loss of ${pr.name}`}
                           />
                         </FormGroup>

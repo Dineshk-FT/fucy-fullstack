@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import * as React from 'react';
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
 } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { v4 as uid } from 'uuid';
 import AlertMessage from '../Alert';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -21,43 +21,36 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  update: state.updateModel,
-  getModels: state.getModels,
-  getModelById: state.getModelById
+  addScene: state.addThreatScene,
+  getThreatScenario: state.getThreatScenario
 });
 
-export default function AddThreatScenarios({ open, handleClose, model, id }) {
-  const { update, getModelById, getModels } = useStore(selector, shallow);
+export default function AddThreatScenarios({ open, handleClose, id }) {
+  const { addScene, getThreatScenario } = useStore(selector, shallow);
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [message, setMessage] = React.useState('');
   const [templateDetails, setTemplateDetails] = React.useState({
-    id: '',
     name: '',
     Description: ''
   });
 
   const handleCreate = () => {
-    const mod = { ...model };
-    const temp = { ...templateDetails };
-    temp.id = uid();
-    mod.scenarios[2].subs[1].scenes.push(temp);
-    mod.scenarios[3].subs[0].scenes.push(temp);
-    // console.log('mod', mod)
-    update(mod)
+    const details = {
+      ...templateDetails,
+      'model-id': id
+    };
+    addScene(details)
       .then((res) => {
+        // console.log('res page', res);
         if (res) {
           setTimeout(() => {
-            // alert('Threat Scenario added');
-            // window.location.reload();
             handleClose();
-            getModelById(id);
-            getModels();
+            getThreatScenario(id);
             setOpenMsg(true);
-            setMessage('Threat scene created Successfully');
+            setMessage(res?.message);
             setSuccess(true);
             setTemplateDetails({
-              id: '',
               name: '',
               Description: ''
             });

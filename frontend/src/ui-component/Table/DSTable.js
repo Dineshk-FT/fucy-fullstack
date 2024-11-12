@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import * as React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router';
@@ -40,12 +40,14 @@ const selector = (state) => ({
   model: state.model,
   getModelById: state.getModelById,
   getModels: state.getModels,
-  update: state.updateModel,
-  damageScenarios: state.damageScenarios['subs'][1]
+  update: state.updateDamageScenario,
+  getDamageScenarios: state.getDamageScenarios,
+  damageScenarios: state.damageScenarios['subs'][1],
+  Details: state.damageScenarios['subs'][0]['Details'],
+  damageID: state.damageScenarios['subs'][1]['_id']
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
-
 const useStyles = makeStyles({
   div: {
     width: 'max-content'
@@ -144,23 +146,25 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update, damageScenarios } = useStore(selector, shallow);
-  const [stakeHolder] = React.useState(false);
+  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios } = useStore(selector, shallow);
+  const [stakeHolder] = useState(false);
   const classes = useStyles();
   const { id } = useParams();
   const dispatch = useDispatch();
-  const [openDs, setOpenDs] = React.useState(false);
-  const [openCl, setOpenCl] = React.useState(false);
-  const [rows, setRows] = React.useState([]);
-  const [selectedRow, setSelectedRow] = React.useState({});
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
-  const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
+  const [openDs, setOpenDs] = useState(false);
+  const [openCl, setOpenCl] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [selectedRow, setSelectedRow] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [details, setDetails] = useState([]);
+  const [page, setPage] = useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
 
   const notify = (message, status) => toast[status](message);
 
-  const Head = React.useMemo(() => {
+  // console.log('damageID', damageID);
+  const Head = useMemo(() => {
     if (stakeHolder) {
       return [
         { id: 1, name: 'ID' },
@@ -235,7 +239,7 @@ export default function DsTable() {
     setSearchTerm(value);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (damageScenarios['Details']) {
       const scene = damageScenarios['Details']?.map((ls) => ({
         ID: ls?._id,
@@ -253,9 +257,14 @@ export default function DsTable() {
       }));
       setRows(scene);
       setFiltered(scene);
+      setDetails(Details);
     }
   }, [damageScenarios]);
 
+  const refreshAPI = () => {
+    // console.log('model', model);
+    getDamageScenarios(model?._id);
+  };
   // console.log('rows', rows);
 
   const handleOpenModalDs = () => {
@@ -266,52 +275,20 @@ export default function DsTable() {
   };
 
   const handleChange = (e, row) => {
-    // console.log('e.target', e.target);
-    const mod = JSON.parse(JSON.stringify(model));
-    const Rows = JSON.parse(JSON.stringify(rows));
-    const editRow = Rows.find((ele) => ele.id === row.id);
     const { name, value } = e.target;
-    if (name) {
-      editRow.impacts = { ...editRow.impacts, [`${name}`]: value };
-    }
-    const Index = Rows.findIndex((it) => it.id === editRow.id);
-    Rows[Index] = editRow;
-    setRows(Rows);
-    const updated = Rows?.map((rw) => {
-      //eslint-disable-next-line
-      const { Description, ...rest } = rw;
-      return rest;
-    });
-    const losses = mod?.scenarios[1]?.subs[0].losses;
-    const lossesEdit = mod?.scenarios[1]?.subs[1]?.scenes;
-    // console.log('lossesEdit', lossesEdit);
-    const updatedLoss = losses
-      .map((loss) =>
-        updated.filter((update) => {
-          if (loss.id === update.id) {
-            return { ...loss, impacts: update.impacts };
-          }
-        })
-      )
-      .flat();
-    const updatedLossEdit = lossesEdit
-      .map((loss) =>
-        updated.filter((update) => {
-          if (loss.id === update.id) {
-            return { ...loss, impacts: update.impacts };
-          }
-        })
-      )
-      .flat();
-    mod.scenarios[1].subs[0].losses = updatedLoss;
-    mod.scenarios[1].subs[1].scenes = updatedLossEdit;
-    update(mod)
+    const seleced = JSON.parse(JSON.stringify(row));
+    seleced['impacts'][`${name}`] = value;
+    // console.log('seleced', seleced);
+
+    const info = {
+      id: damageID,
+      detailId: seleced?.ID,
+      impacts: JSON.stringify(seleced['impacts'])
+    };
+    update(info)
       .then((res) => {
-        if (res) {
-          setTimeout(() => {
-            getModelById(id);
-          }, 500);
-        }
+        // console.log('res', res);
+        refreshAPI();
       })
       .catch((err) => console.log('err', err));
   };
@@ -394,7 +371,7 @@ export default function DsTable() {
     dispatch(closeAll());
   };
 
-  const OverallImpact = React.useCallback((impact) => {
+  const OverallImpact = useCallback((impact) => {
     const pattern = (it) => {
       // console.log('it', it);
       return it === 'Negligible'
@@ -482,29 +459,27 @@ export default function DsTable() {
                 cellContent = (
                   <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)}>
                     {row?.cyberLosses?.map((loss) => (
-                      <div key={loss} style={{ marginBottom: '5px' }}>
-                        {loss?.props.map((pr, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 5
-                            }}
-                          >
-                            <CircleIcon sx={{ fontSize: 14, color: colorPicker(pr) }} />
-                            <span
-                              style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '15px',
-                                width: 'max-content'
-                              }}
-                            >
-                              Loss of {pr}
-                            </span>
-                          </span>
-                        ))}
+                      <div
+                        key={loss?.id}
+                        style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                      >
+                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
+                        <span>Loss of {loss?.name}</span>
+                      </div>
+                    ))}
+                  </StyledTableCell>
+                );
+                break;
+
+              case item.name === 'Assets':
+                cellContent = (
+                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)}>
+                    {row?.cyberLosses?.map((loss) => (
+                      <div
+                        key={loss?.id}
+                        style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                      >
+                        <span> {loss?.node}</span>
                       </div>
                     ))}
                   </StyledTableCell>
@@ -633,6 +608,11 @@ export default function DsTable() {
       {openCl && (
         <SelectLosses
           open={openCl}
+          damageScenarios={damageScenarios}
+          details={details}
+          setDetails={setDetails}
+          damageID={damageID}
+          refreshAPI={refreshAPI}
           handleClose={handleCloseCl}
           model={model}
           rows={rows}
