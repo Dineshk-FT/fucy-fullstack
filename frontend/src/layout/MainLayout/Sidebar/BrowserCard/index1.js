@@ -349,9 +349,6 @@ const BrowserCard = ({ models }) => {
 
   return (
     <>
-      <Typography variant="h3" sx={{ color: color?.tabContentClr, marginBottom: 1, textAlign: 'center' }}>
-        Projects
-      </Typography>
       <CardStyle
         sx={{
           overflowY: 'auto',
