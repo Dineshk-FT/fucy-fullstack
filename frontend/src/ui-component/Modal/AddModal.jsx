@@ -15,9 +15,9 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
-import { v4 as uid } from 'uuid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { setModelId } from '../../store/slices/PageSectionSlice';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -47,6 +47,7 @@ const selector = (state) => ({
 export default function AddModel({ open, handleClose, getModels }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { userDetails } = useSelector((state) => state?.userDetails);
   const { create } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
   // const theme = useTheme();
@@ -65,171 +66,22 @@ export default function AddModel({ open, handleClose, getModels }) {
   // };
 
   const handleCreate = () => {
-    const scenarios = [
-      {
-        id: uid(),
-        name: 'Item Model & Assets',
-        icon: 'ItemIcon',
-        Details: []
-      },
-      {
-        id: uid(),
-        name: 'Damage Scenarios Identification and Impact Ratings',
-        icon: 'DamageIcon',
-        subs: [
-          {
-            id: uid(),
-            name: 'Damage Scenarios Derivations',
-            Details: []
-          },
-          {
-            id: uid(),
-            name: 'Damage Scenarios - Collection & Impact Ratings',
-            scenes: [],
-            Details: [],
-            losses: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Threat Scenarios Identification',
-        icon: 'ThreatIcon',
-        subs: [
-          {
-            id: uid(),
-            name: 'Threat Scenarios',
-            Details: [],
-            losses: []
-          },
-          {
-            id: uid(),
-            name: 'Derived Threat Scenarios',
-            scenes: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Attack Path Analysis and Attack Feasability Rating',
-        icon: 'AttackIcon',
-        subs: [
-          {
-            id: uid(),
-            name: 'Attack',
-            scenes: []
-          },
-          {
-            id: uid(),
-            name: 'Attack Trees',
-            scenes: []
-          },
-          {
-            id: uid(),
-            name: 'Vulnerability Analysis',
-            scenes: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'CyberSecurity Goals, Claims and Requirements',
-        icon: 'CybersecurityIcon',
-        subs: [
-          {
-            id: uid(),
-            name: 'CyberSecurity Goals and Requirements',
-            subs: [
-              {
-                id: uid(),
-                name: 'CyberSecurity Goals',
-                scenes: []
-              },
-              {
-                id: uid(),
-                name: 'CyberSecurity Requirements',
-                scenes: []
-              }
-            ]
-          },
-          {
-            id: uid(),
-            name: 'CyberSecurity Controls',
-            scenes: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'System Design',
-        icon: 'SystemIcon',
-        subs: [
-          {
-            id: uid(),
-            name: 'Hardware Models'
-          },
-          {
-            id: uid(),
-            name: 'Software Models'
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Catalogs',
-        icon: 'CatalogIcon',
-        subs: [
-          {
-            name: 'UNICE R.155 Annex 5(WP.29)',
-            scenes: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Risk Determination and Risk Treatment Decision',
-        icon: 'RiskIcon',
-        subs: [
-          {
-            name: 'Threat Assessment & Risk Treatment',
-            scenes: []
-          }
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Documents',
-        icon: 'DocumentIcon'
-      },
-      {
-        id: uid(),
-        name: 'Reporting',
-        icon: 'ReportIcon',
-        scenes: []
-      },
-      {
-        id: uid(),
-        name: 'Layouts',
-        icon: 'LayoutIcon',
-        scenes: []
-      }
-    ];
     const newModel = {
-      ...templateDetails,
-      scenarios: scenarios
+      ...templateDetails
     };
 
-    create(newModel)
+    create(newModel, userDetails?.username)
       .then((res) => {
         if (res) {
-          setTimeout(() => {
-            notify(res.message ?? 'Model created successfully', 'success');
-            navigate(`/Models/${res?.model_id}`);
-            dispatch(closeAll());
-            // window.location.href = `/Modals/${id}`;
-            getModels();
-            handleClose();
-          }, 500);
+          // setTimeout(() => {
+          notify(res.message ?? 'Model created successfully', 'success');
+          navigate(`/Models/${res?.model_id}`);
+          dispatch(setModelId(res?.model_id));
+          dispatch(closeAll());
+          // window.location.href = `/Modals/${id}`;
+          getModels();
+          handleClose();
+          // }, 500);
         }
       })
       .catch((err) => {

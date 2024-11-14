@@ -10,7 +10,7 @@ export const login = createAsyncThunk('login', async ({ username, password }, th
   let data = new FormData();
   data.append('username', username);
   data.append('password', password);
-  const URL = `${configuration.backendUrl}login`;
+  const URL = `${configuration.apiBaseUrl}login`;
   try {
     const res = await axios.post(URL, data);
     // console.log('res', res);
@@ -70,12 +70,12 @@ export const UPDATE_CALL = async (details, url) => {
     const res = await axios({
       method: 'POST',
       url: url,
-      headers: createHeaders(),
+      ...createHeaders(),
       data: data
     });
     return res.data;
   } catch (error) {
-    console.error('Error in GET_CALL:', error);
+    console.error('Error in UPDATE_CALL:', error);
   }
   // const res = await axios(options);
   // return res.data;
@@ -95,12 +95,12 @@ export const ADD_CALL = async (details, url) => {
     const res = await axios({
       method: 'POST',
       url: url,
-      headers: createHeaders(),
+      ...createHeaders(),
       data: data
     });
     return res.data;
   } catch (error) {
-    console.error('Error in GET_CALL:', error);
+    console.error('Error in ADD_CALL:', error);
   }
   // const res = await axios(options);
   // return res.data;

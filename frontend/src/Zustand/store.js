@@ -535,14 +535,21 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
   },
 
-  updateModel: async (newModel) => {
-    const res = await axios.put(`${configuration.backendUrl}update_model/${newModel?._id}`, newModel);
-
-    // console.log('res', res);
-    if (res) {
-      return res;
-    }
+  updateAssets: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/assets`;
+    const res = await UPDATE_CALL(details, url);
+    console.log('res', res);
+    return res;
   },
+
+  // updateModel: async (newModel) => {
+  //   const res = await axios.put(`${configuration.backendUrl}update_model/${newModel?._id}`, newModel);
+
+  //   // console.log('res', res);
+  //   if (res) {
+  //     return res;
+  //   }
+  // },
 
   updateAttackNode: (nodeId, name) => {
     set((state) => {
@@ -634,47 +641,43 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
-  create_model: async (newModel, username) => {
+  createModel: async (newModel, username) => {
     const FormData = require('form-data');
     let data = new FormData();
     data.append('name', newModel?.name);
     data.append('createdBy', username);
-
-    // "user_id": user_id,
-    // "name": name,
-    // "created_by":created_by,
     try {
-      const URL = `${configuration.localUrl}v1/add/Models`;
+      const URL = `${configuration.apiBaseUrl}v1/add/models`;
       const response = await axios.post(URL, data, {
         ...createHeaders(),
         maxRedirects: 5
       });
-      // console.log('response', response);
+
       return response.data;
     } catch (err) {
       console.log('err', err);
       throw err; // Re-throwing the error to handle it in calling code if needed
     }
   },
-  createModel: async (newModel) => {
-    const FormData = require('form-data');
-    let data = new FormData();
-    data.append('name', newModel?.name);
-    data.append('scenarios', JSON.stringify(newModel?.scenarios));
+  // createModel: async (newModel) => {
+  //   const FormData = require('form-data');
+  //   let data = new FormData();
+  //   data.append('name', newModel?.name);
+  //   data.append('scenarios', JSON.stringify(newModel?.scenarios));
 
-    try {
-      const URL = `${configuration.backendUrl}add/models`;
-      const response = await axios.post(URL, data, {
-        ...createHeaders(),
-        maxRedirects: 5
-      });
-      // console.log('response', response);
-      return response.data;
-    } catch (err) {
-      console.log('err', err);
-      throw err; // Re-throwing the error to handle it in calling code if needed
-    }
-  },
+  //   try {
+  //     const URL = `${configuration.backendUrl}add/models`;
+  //     const response = await axios.post(URL, data, {
+  //       ...createHeaders(),
+  //       maxRedirects: 5
+  //     });
+  //     // console.log('response', response);
+  //     return response.data;
+  //   } catch (err) {
+  //     console.log('err', err);
+  //     throw err; // Re-throwing the error to handle it in calling code if needed
+  //   }
+  // },
   //Delete Section
 
   deleteNode: async (id) => {

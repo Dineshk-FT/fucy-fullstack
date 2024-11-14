@@ -109,7 +109,8 @@ const selector = (state) => ({
   model: state.model,
   getModels: state.getModels,
   getModelById: state.getModelById,
-  updateModel: state.updateModel,
+  update: state.updateAssets,
+  getAssets: state.getAssets,
   getGroupedNodes: state.getGroupedNodes,
   reactFlowInstance: state.reactFlowInstance,
   setReactFlowInstance: state.setReactFlowInstance,
@@ -189,7 +190,6 @@ export default function MainCanvas() {
     getModelById,
     model,
     getModels,
-    updateModel,
     getGroupedNodes,
     reactFlowInstance,
     setReactFlowInstance,
@@ -198,7 +198,9 @@ export default function MainCanvas() {
     redo,
     undoStack,
     redoStack,
-    assets
+    assets,
+    update,
+    getAssets
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -467,9 +469,10 @@ export default function MainCanvas() {
   // console.log('edges', edges);
 
   const RefreshAPI = () => {
-    getModelById(id);
-    getModels();
+    getAssets(model?._id);
   };
+
+  // console.log('model?._id', model?._id);
 
   const handleClose = () => {
     setOpenTemplate(false);
@@ -501,17 +504,27 @@ export default function MainCanvas() {
   };
 
   const handleSaveToModel = () => {
-    let mod = { ...model };
-    updateModel(updatedModelState(mod, nodes, edges))
+    // model - id,
+    //   template
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template)
+    };
+
+    update(details)
       .then((res) => {
         if (res) {
-          setTimeout(() => {
-            setOpen(true);
-            setMessage('Saved Successfully');
-            setSuccess(true);
-            handleClose();
-            RefreshAPI();
-          }, 500);
+          // setTimeout(() => {
+          setOpen(true);
+          setMessage('Saved Successfully');
+          setSuccess(true);
+          handleClose();
+          RefreshAPI();
+          // }, 500);
         }
       })
       .catch((err) => {
