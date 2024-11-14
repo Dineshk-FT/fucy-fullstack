@@ -227,12 +227,23 @@ export default function LeftSection() {
             onMouseLeave={handleMenuClose}
             sx={{ zIndex: 1200 }}
           >
-            <Paper sx={{ background: '#F7F7F7', border: '1px solid #ccc', borderRadius: '8px', padding: '8px' }}>
+            <Paper
+              sx={{
+                background: '#F7F7F7',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                padding: '8px',
+                display: item.icon ? 'flex' : 'block',
+                flexDirection: item.icon ? 'row' : 'column',
+                gap: item.icon ? 2 : 0,
+                flexWrap: item.icon ? 'nowrap' : 'wrap',
+              }}
+            >
               {item.options.map((option, i) => (
                 <Box
                   key={i}
                   sx={{
-                    padding: '8px 16px',
+                    padding: item.icon ? '0px':'5px 8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
