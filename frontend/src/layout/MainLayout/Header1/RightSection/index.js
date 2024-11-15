@@ -47,7 +47,7 @@ export default function RightSection() {
 
   return (
     <>
-      <NavLink to="/home" style={{ fontSize: 22, fontWeight: 900, color: color?.logo, textDecoration: 'none'}}>
+      <NavLink to="/home" style={{ fontSize: 25, fontWeight: 900, color: color?.logo, textDecoration: 'none'}}>
         FUCY TECH
       </NavLink>
       <Box display="flex" gap={2} alignItems="center" justifyContent="center" mt={1}>

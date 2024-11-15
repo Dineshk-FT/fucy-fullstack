@@ -114,42 +114,42 @@ export default function LeftSection() {
         }
       ]
     },
-    {
-      icon: <InfoIcon sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}/>,
+    // {
+    //   icon: <InfoIcon sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}/>,
 
-      options: [
-        {
-          label: 'Item Definition',
-          value: '1',
-          icon: 'ItemIcon'
-        },
-        {
-          label: 'Damage Scenarios',
-          value: '3',
-          icon: 'DamageIcon'
-        },
-        {
-          label: 'Threat Scenarios',
-          value: '4',
-          icon: 'ThreatIcon'
-        },
-        {
-          label: 'Attack Path Analysis',
-          value: '5',
-          icon: 'AttackIcon'
-        },
-        {
-          label: 'Risk Treatment and Determination',
-          value: '6',
-          icon: 'RiskIcon'
-        },
-        {
-          label: 'Cybersecurity Goals and Requirements',
-          value: '7',
-          icon: 'CybersecurityIcon'
-        }
-      ]
-    }
+    //   options: [
+    //     {
+    //       label: 'Item Definition',
+    //       value: '1',
+    //       icon: 'ItemIcon'
+    //     },
+    //     {
+    //       label: 'Damage Scenarios',
+    //       value: '3',
+    //       icon: 'DamageIcon'
+    //     },
+    //     {
+    //       label: 'Threat Scenarios',
+    //       value: '4',
+    //       icon: 'ThreatIcon'
+    //     },
+    //     {
+    //       label: 'Attack Path Analysis',
+    //       value: '5',
+    //       icon: 'AttackIcon'
+    //     },
+    //     {
+    //       label: 'Risk Treatment and Determination',
+    //       value: '6',
+    //       icon: 'RiskIcon'
+    //     },
+    //     {
+    //       label: 'Cybersecurity Goals and Requirements',
+    //       value: '7',
+    //       icon: 'CybersecurityIcon'
+    //     }
+    //   ]
+    // }
   ];
 
   const getImageLabel = (item) => {
