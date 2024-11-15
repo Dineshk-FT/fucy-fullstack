@@ -6,6 +6,9 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import toast, { Toaster } from 'react-hot-toast';
+import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import { ClosePropertiesTab } from '../../store/slices/CanvasSlice';
+import { useDispatch } from 'react-redux';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 const notify = (message, status) => toast[status](message);
@@ -24,6 +27,7 @@ const EditContent = ({
   RefreshAPI
 }) => {
   const [value, setValue] = useState('1');
+  const dispatch = useDispatch();
   // console.log('details', details);
 
   // console.log('selectedElement', selectedElement);
@@ -148,16 +152,19 @@ const EditContent = ({
   // console.log('details', details);
   return (
     <>
+      <Box sx={{ cursor: 'pointer', float: 'right', mt: 1.5 }} onClick={() => dispatch(ClosePropertiesTab())}>
+        <CancelTwoToneIcon />
+      </Box>
       <TabContext value={value}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '230px' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '270px' }}>
           <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
-            <Tab label="Text" value="1" sx={{ minWidth: '73px' }} />
-            <Tab label="Diagram" value="2" sx={{ minWidth: '73px' }} />
-            <Tab label="Style" value="3" sx={{ minWidth: '73px' }} />
+            <Tab label="Text" value="1" sx={{ minWidth: '90px' }} />
+            <Tab label="Diagram" value="2" sx={{ minWidth: '90px' }} />
+            <Tab label="Style" value="3" sx={{ minWidth: '90px' }} />
           </TabList>
         </Box>
         <TabPanel value="1" sx={{ p: 0 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 1.5, mt: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
             <InputLabel>Name :</InputLabel>
             <TextField
               id="outlined-basic"

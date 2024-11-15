@@ -216,7 +216,7 @@ export default function MainCanvas() {
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
   const {
     isDsTableOpen,
     isTsTableOpen,
@@ -603,6 +603,7 @@ export default function MainCanvas() {
     };
     dragAdd(newNode);
   };
+  // console.log('isRightDrawerOpen', isRightDrawerOpen);
 
   // console.log('nodes', nodes);
   if (isDsTableOpen) return <DsTable />;
@@ -672,7 +673,7 @@ export default function MainCanvas() {
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
             {/* <LeftDrawer state={isLeftDrawerOpen} drawerOpen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
-            {isRightDrawerOpen && <RightDrawer stateOpen={isRightDrawerOpen} />}
+            {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
         {openTemplate && (

@@ -1,27 +1,16 @@
 /* eslint-disable */
 import React, { useState } from 'react';
-import Dialog from '@mui/material/Dialog';
-import {
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Button,
-  TextField,
-  Box,
-  OutlinedInput,
-  InputLabel,
-  MenuItem,
-  FormControl,
-  Select,
-  Chip,
-  Typography
-} from '@mui/material';
+import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
 import AlertMessage from '../Alert';
 import { updatedModelState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
-import PaperComponent from './PaperComponent';
+import { CloseCircle } from 'iconsax-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { drawerClose } from '../../store/slices/CurrentIdSlice';
+import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
+import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -42,7 +31,8 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   nodes: state.nodes,
   edges: state.edges,
-  getSidebarNode: state.getSidebarNode
+  getSidebarNode: state.getSidebarNode,
+  model: state.model
 });
 
 function getStyles(name, nodes, theme) {
@@ -51,19 +41,18 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
+const AddNewNode = () => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
   const [newNode, setNewNode] = useState({
     nodeName: '',
     type: '',
     properties: [],
     bgColor: ''
   });
-  const [openMsg, setOpenMsg] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
-  const [message, setMessage] = React.useState('');
-  const { createNode, updateModel, setNodes, nodes, edges } = useStore(selector);
-
+  // console.log('selectedNodeGroupId', selectedNodeGroupId);
+  const { createNode, updateModel, setNodes, nodes, edges, model } = useStore(selector);
   //Name & type for the new Node
   const handleChange = (event) => {
     const {
@@ -75,6 +64,18 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
         [`${name}`]: value
       });
     }
+  };
+
+  const CloseModel = () => {
+    // dispatch(drawerClose());
+    dispatch(closeAddNodeTab());
+    dispatch(setSelectedNodeGroupId(''));
+    setNewNode({
+      nodeName: '',
+      type: '',
+      properties: [],
+      bgColor: '#dadada'
+    });
   };
 
   // console.log('nodes', nodes);
@@ -107,13 +108,13 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
       isAsset: false
     };
     const details = {
-      id: selectedItem?._id,
+      id: selectedNodeGroupId,
       new_node: dataNode
     };
     // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
     // selectedsection?.nodes?.push(dataNode);
     // console.log('selectedsection', selectedsection);
-    if (model) {
+    if (!selectedNodeGroupId) {
       const Details = {
         ...dataNode,
         position: { x: 495, y: 250 }
@@ -126,40 +127,26 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
           // console.log('res', res);
           if (res.data) {
             setTimeout(() => {
-              setOpenMsg(true);
-              setMessage('Node created Successfully');
-              setSuccess(true);
               getSidebarNode();
             }, []);
           }
         })
         .catch((err) => {
           console.log('err', err);
-          setOpenMsg(true);
-          setSuccess(false);
-          setMessage('Something went wrong');
         });
     } else {
-      // console.log('details', details);
       createNode(details)
-        // updateNode(selectedsection)
         .then((res) => {
           // console.log('res', res);
           if (res.data) {
-            setTimeout(() => {
-              setOpenMsg(true);
-              setMessage('Node created Successfully');
-              setSuccess(true);
-              getSidebarNode();
-              handleClose();
-            }, []);
+            // setTimeout(() => {
+            getSidebarNode();
+            setSelectedNodeGroupId({});
+            // }, []);
           }
         })
         .catch((err) => {
           console.log('err', err);
-          setOpenMsg(true);
-          setSuccess(false);
-          setMessage('Something went wrong');
         });
     }
 
@@ -171,99 +158,83 @@ const AddNewNode = ({ open, handleClose, selectedItem, model }) => {
     });
   };
 
-  const CloseModel = () => {
-    handleClose();
-    setNewNode({
-      nodeName: '',
-      type: '',
-      properties: [],
-      bgColor: '#dadada'
-    });
-  };
-
   // console.log('newNode', newNode);
   return (
     <>
-      <Dialog open={open} onClose={CloseModel} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
-        <DialogTitle id="draggable-dialog-title">
-          <Typography variant="h4" color="primary">
-            {'Add New '}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-            <TextField id="outlined-basic" label="Name" name="nodeName" variant="outlined" onChange={handleChange} />
-            <FormControl sx={{ width: 350 }}>
-              <InputLabel id="demo-simple-select-label">Type</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={newNode.type}
-                label="type"
-                onChange={handleChange}
-                name="type"
-              >
-                <MenuItem value="input">Input</MenuItem>
-                <MenuItem value="default">Default</MenuItem>
-                <MenuItem value="custom">Custom</MenuItem>
-                <MenuItem value="signal">Signal</MenuItem>
-                <MenuItem value="receiver">Receiver</MenuItem>
-                <MenuItem value="output">Output</MenuItem>
-                <MenuItem value="transceiver">Transceiver</MenuItem>
-                <MenuItem value="transmitter">Transmitter</MenuItem>
-                {/* <MenuItem value="mcu">MicroController</MenuItem>
-                <MenuItem value="memory">Memory</MenuItem> */}
-                {/* <MenuItem value="multihandle">Multi-Handle</MenuItem> */}
-              </Select>
-            </FormControl>
-            <FormControl sx={{ width: 350 }}>
-              <InputLabel notched id="demo-multiple-chip-label">
-                Properties
-              </InputLabel>
-              <Select
-                labelId="demo-multiple-chip-label"
-                id="demo-multiple-chip"
-                multiple
-                name="properties"
-                value={newNode.properties}
-                onChange={handleChange}
-                input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={value} />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {names.map((name) => (
-                  <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {/* <label>
-                        Choose Node color :{' '}
-                        <input type="color" value={newNode.bgColor} onChange={(e) => setNewNode({ ...newNode, bgColor: e.target.value })} />
-                    </label> */}
+      <Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1, mx: 3 }}>
+          <Box display="flex" justifyContent="space-between" my={1} alignItems="center">
+            <Typography variant="h4" color="primary">
+              {'Add New '}
+            </Typography>
+            <CloseCircle size="24" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={CloseModel} variant="outlined" color="warning">
-            cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={!newNode.nodeName || !newNode.type || !newNode.properties.length > 0}
-          >
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <AlertMessage open={openMsg} message={message} setOpen={setOpenMsg} success={success} />
+          <TextField id="outlined-basic" label="Name" name="nodeName" variant="outlined" onChange={handleChange} />
+          <FormControl sx={{ width: 'inherit' }}>
+            <InputLabel id="demo-simple-select-label">Type</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={newNode.type}
+              label="type"
+              onChange={handleChange}
+              name="type"
+            >
+              <MenuItem value="input">Input</MenuItem>
+              <MenuItem value="default">Default</MenuItem>
+              <MenuItem value="custom">Custom</MenuItem>
+              <MenuItem value="signal">Signal</MenuItem>
+              <MenuItem value="receiver">Receiver</MenuItem>
+              <MenuItem value="output">Output</MenuItem>
+              <MenuItem value="transceiver">Transceiver</MenuItem>
+              <MenuItem value="transmitter">Transmitter</MenuItem>
+              {/* <MenuItem value="mcu">MicroController</MenuItem>
+                <MenuItem value="memory">Memory</MenuItem> */}
+              {/* <MenuItem value="multihandle">Multi-Handle</MenuItem> */}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ width: 'inherit' }}>
+            <InputLabel notched id="demo-multiple-chip-label">
+              Properties
+            </InputLabel>
+            <Select
+              labelId="demo-multiple-chip-label"
+              id="demo-multiple-chip"
+              multiple
+              name="properties"
+              value={newNode.properties}
+              onChange={handleChange}
+              input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </Box>
+              )}
+              MenuProps={MenuProps}
+            >
+              {names.map((name) => (
+                <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box display="flex" justifyContent="space-between">
+            <Button onClick={CloseModel} variant="outlined" color="warning">
+              cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={!newNode.nodeName || !newNode.type || !newNode.properties.length > 0}
+            >
+              Add
+            </Button>
+          </Box>
+        </Box>
+      </Box>
     </>
   );
 };

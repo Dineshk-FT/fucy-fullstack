@@ -4,13 +4,20 @@ const initialState = {
   isCanvasPage: '',
   selectedBlock: {},
   initialDialogOpen: false,
-  propertiesTabOpen: false
+  propertiesTabOpen: false,
+  addNodeTabOpen: false
 };
 
 const CanvasSlice = createSlice({
   name: 'Canvas',
   initialState,
   reducers: {
+    openAddNodeTab: (state) => {
+      return { ...state, addNodeTabOpen: true };
+    },
+    closeAddNodeTab: (state) => {
+      return { ...state, addNodeTabOpen: false };
+    },
     changeCanvasPage: (state, action) => {
       return { ...state, isCanvasPage: action.payload };
     },
@@ -32,6 +39,14 @@ const CanvasSlice = createSlice({
   }
 });
 
-export const { changeCanvasPage, setSelectedBlock, OpenInitialDialog, CloseInitialDialog, OpenPropertiesTab, ClosePropertiesTab } =
-  CanvasSlice.actions;
+export const {
+  changeCanvasPage,
+  setSelectedBlock,
+  OpenInitialDialog,
+  CloseInitialDialog,
+  OpenPropertiesTab,
+  ClosePropertiesTab,
+  openAddNodeTab,
+  closeAddNodeTab
+} = CanvasSlice.actions;
 export default CanvasSlice.reducer;

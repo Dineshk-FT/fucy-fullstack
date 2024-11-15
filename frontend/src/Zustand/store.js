@@ -73,6 +73,100 @@ const useStore = createWithEqualityFn((set, get) => ({
       }
     ]
   },
+  attackScenarios: {
+    id: 4,
+    name: 'Attack Path Analysis and Attack Feasability Rating',
+    icon: 'AttackIcon',
+    subs: [
+      {
+        name: 'Attack'
+      },
+      {
+        name: 'Attack Trees'
+      },
+      {
+        name: 'Vulnerability Analysis'
+      }
+    ]
+  },
+  cybersecurity: {
+    id: 5,
+    name: 'CyberSecurity Goals, Claims and Requirements',
+    icon: 'CybersecurityIcon',
+    subs: [
+      {
+        name: 'CyberSecurity Goals and Requirements',
+        subs: [
+          {
+            name: 'CyberSecurity Goals',
+            scenes: []
+          },
+          {
+            name: 'CyberSecurity Requirements',
+            scenes: []
+          }
+        ]
+      },
+      {
+        name: 'CyberSecurity Controls'
+      }
+    ]
+  },
+
+  systemDesign: {
+    id: 6,
+    name: 'System Design',
+    icon: 'SystemIcon',
+    subs: [
+      {
+        id: 61,
+        name: 'Hardware Models'
+      },
+      {
+        id: 62,
+        name: 'Software Models'
+      }
+    ]
+  },
+  catalog: {
+    id: 7,
+    name: 'Catalogs',
+    icon: 'CatalogIcon',
+    subs: [
+      {
+        name: 'UNICE R.155 Annex 5(WP.29)',
+        scenes: []
+      }
+    ]
+  },
+  riskTreatment: {
+    id: 8,
+    name: 'Risk Determination and Risk Treatment Decision',
+    icon: 'RiskIcon',
+    subs: [
+      {
+        name: 'Threat Assessment & Risk Treatment',
+        scenes: []
+      }
+    ]
+  },
+  documents: {
+    id: 9,
+    name: 'Documents',
+    icon: 'DocumentIcon'
+  },
+  reports: {
+    id: 10,
+    name: 'Reporting',
+    icon: 'ReportIcon',
+    scenes: []
+  },
+  layouts: {
+    id: 11,
+    name: 'Layouts',
+    icon: 'LayoutIcon',
+    scenes: []
+  },
   scenerio: {},
   component: [],
 
@@ -80,7 +174,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   fitView: (nodes) => {
     set((state) => {
-      console.log('state.reactFlowInstance', state.reactFlowInstance);
+      // console.log('state.reactFlowInstance', state.reactFlowInstance);
       if (!state.reactFlowInstance || nodes.length === 0) return;
 
       // Calculate the bounding box of the nodes

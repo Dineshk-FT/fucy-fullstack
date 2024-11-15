@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import useStore from '../../Zustand/store';
 import AddIcon from '@mui/icons-material/Add';
-import AddNewNode from '../../ui-component/Modal/AddNewNode';
 import { Avatar, Button, Fab, Typography } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
@@ -14,6 +13,10 @@ import MenuList from '@mui/material/MenuList';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibrary';
+import { drawerOpen } from '../../store/slices/CurrentIdSlice';
+import { useDispatch } from 'react-redux';
+import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
+import { openAddNodeTab } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   paper: {
@@ -36,11 +39,10 @@ const selector = (state) => ({
 
 const Components = () => {
   const classes = useStyles();
-  const [open, setOpen] = useState(false);
+  const dispatch = useDispatch();
   const [openModal, setOpenModal] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedItem, setSelectedItem] = useState({});
   const { sidebarNodes } = useStore(selector);
   const color = ColorTheme();
 
@@ -65,13 +67,10 @@ const Components = () => {
   };
 
   const handleOpen = (item) => {
-    setOpen(true);
-    setSelectedItem(item);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedItem({});
+    // console.log('item', item);
+    // dispatch(drawerOpen());
+    dispatch(openAddNodeTab());
+    dispatch(setSelectedNodeGroupId(item?._id));
   };
 
   function stringAvatar(name) {
@@ -122,7 +121,7 @@ const Components = () => {
                 >
                   <Paper onMouseLeave={handleMouseLeave} sx={{ backgroundColor: color?.leftbarBG }} className={classes?.paper}>
                     <ClickAwayListener onClickAway={handleMouseLeave}>
-                      <MenuList autoFocusItem={openModal}>
+                      <MenuList autoFocusItem={openModal} sx={{ height: 'auto', maxHeight: 600, overflow: 'auto' }}>
                         {item?.nodes?.map((node) => (
                           <MenuItem draggable onDragStart={(event) => onDragStart(event, node)} key={node?.id} onClick={handleMouseLeave}>
                             {node?.data['label']}
@@ -163,7 +162,6 @@ const Components = () => {
         </Fab>
         {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer', my: 1, border: '1px solid' }} /> */}
       </Box>
-      <AddNewNode open={open} handleClose={handleClose} selectedItem={selectedItem} />
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
     </>
   );

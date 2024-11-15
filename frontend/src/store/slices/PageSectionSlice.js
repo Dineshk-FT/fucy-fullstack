@@ -5,13 +5,17 @@ const initialState = {
   Properties: [],
   hasError: false,
   title: '',
-  modelId: ''
+  modelId: '',
+  selectedNodeGroupId: ''
 };
 
 const PageSectionSlice = createSlice({
   name: 'pageName',
   initialState,
   reducers: {
+    setSelectedNodeGroupId: (state, action) => {
+      return { ...state, selectedNodeGroupId: action.payload };
+    },
     setModelId: (state, action) => {
       return { ...state, modelId: action.payload };
     },
@@ -37,5 +41,6 @@ const PageSectionSlice = createSlice({
   }
 });
 
-export const { changePage, setProperties, clearProperties, triggerError, resetError, setTitle, setModelId } = PageSectionSlice.actions;
+export const { changePage, setProperties, clearProperties, triggerError, resetError, setTitle, setModelId, setSelectedNodeGroupId } =
+  PageSectionSlice.actions;
 export default PageSectionSlice.reducer;

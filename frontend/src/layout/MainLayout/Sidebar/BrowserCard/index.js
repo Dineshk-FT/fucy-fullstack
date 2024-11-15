@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import AddModal from '../../../../ui-component/Modal/AddModal';
@@ -37,9 +37,11 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
-import { DerivationTableOpen, DsTableOpen, TsTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import { DerivationTableOpen, drawerOpen, DsTableOpen, TsTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
+import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
+import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 
 const imageComponents = {
   AttackIcon,
@@ -101,7 +103,7 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height: '40vh',
+    height: '60vh',
     boxShadow: 'inset 0px 0px 7px gray',
     '&:after': {
       content: '""',
@@ -151,8 +153,12 @@ const BrowserCard = () => {
     getDamageScenarios,
     getThreatScenario
   } = useStore(selector);
+  const [open, setOpen] = useState(false);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
+  const [anchorItemEl, setAnchorItemEl] = useState(null);
+  const [openItemRight, setOpenItemRight] = useState(false);
+  const [openNodelist, setOpenNodelist] = useState(false);
 
   const handleClick = async (id, name) => {
     const get_api = {
@@ -180,12 +186,31 @@ const BrowserCard = () => {
     }
   };
 
-  const [open, setOpen] = useState(false);
-
   const handleClose = () => {
     setOpen(false);
   };
 
+  const handleNodes = (e) => {
+    e.preventDefault();
+    setAnchorItemEl(e.currentTarget);
+    setOpenItemRight((prev) => !prev);
+  };
+
+  const handleCloseItem = () => {
+    setOpenItemRight(false);
+    setAnchorItemEl(null);
+  };
+
+  const handleAddNewNode = () => {
+    // dispatch(drawerOpen());
+    dispatch(openAddNodeTab());
+    setOpenItemRight(false);
+  };
+
+  const handleOpenSelectNode = () => {
+    setOpenNodelist(true);
+    setOpenItemRight(false);
+  };
   // console.log('damageScenarios', damageScenarios);
   // console.log('threatScenarios', threatScenarios.subs[0].Details);
   const getTitleLabel = (icon, name, id) => {
@@ -256,6 +281,7 @@ const BrowserCard = () => {
                 // label={assets?.name}
                 onClick={() => handleClick(model?._id, 'assets')}
                 label={getImageLabel(assets?.icon, assets?.name)}
+                onContextMenu={handleNodes}
                 // onDragStart={(e) => onDragStart(e, assets)}
                 sx={{ ml: -1 }}
               >
@@ -386,10 +412,33 @@ const BrowserCard = () => {
                 ))}
               </TreeItem>
             </TreeItem>
+            <Popper
+              id="basic-popper"
+              open={openItemRight}
+              anchorEl={anchorItemEl}
+              placement="right"
+              sx={{ zIndex: 1400 }}
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [-10, -50] // Adjust these values as needed
+                  }
+                }
+              ]}
+            >
+              <ClickAwayListener onClickAway={handleCloseItem}>
+                <Paper className={classes.paper}>
+                  <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
+                  <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
+                </Paper>
+              </ClickAwayListener>
+            </Popper>
           </TreeView>
         </CardContent>
       </CardStyle>
       {open && <AddModal open={open} handleClose={handleClose} />}
+      <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
     </>
   );
 };
