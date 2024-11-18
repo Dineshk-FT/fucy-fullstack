@@ -10,7 +10,7 @@ export default function RightDrawer() {
     <React.Fragment>
       <Box
         sx={{
-          backgroundColor: '#e3e3e3',
+          backgroundColor: '#f5f5f5',
           position: 'sticky',
           float: 'right',
           // left: '50rem',
@@ -21,7 +21,8 @@ export default function RightDrawer() {
           overflow: 'auto',
           zIndex: 1000,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxShadow: '-1px 0px 10px gray'
           // pr:1
         }}
       >

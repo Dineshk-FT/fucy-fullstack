@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { drawerClose } from '../../store/slices/CurrentIdSlice';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
+import { fontSize } from '../../store/constant';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -167,10 +168,26 @@ const AddNewNode = () => {
             <Typography variant="h4" color="primary">
               {'Add New '}
             </Typography>
-            <CloseCircle size="24" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
+            <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
           </Box>
-          <TextField id="outlined-basic" label="Name" name="nodeName" variant="outlined" onChange={handleChange} />
-          <FormControl sx={{ width: 'inherit' }}>
+          <TextField
+            size="small"
+            id="outlined-basic"
+            label="Name"
+            name="nodeName"
+            variant="outlined"
+            onChange={handleChange}
+            sx={{ '& .MuiFormLabel-root': { fontSize: fontSize } }}
+          />
+          <FormControl
+            size="small"
+            sx={{
+              width: 'inherit',
+              '& .MuiInputBase-input': {
+                fontSize: fontSize
+              }
+            }}
+          >
             <InputLabel id="demo-simple-select-label">Type</InputLabel>
             <Select
               labelId="demo-simple-select-label"
@@ -179,6 +196,11 @@ const AddNewNode = () => {
               label="type"
               onChange={handleChange}
               name="type"
+              sx={{
+                '& .MuiSelect-select': {
+                  fontSize: fontSize
+                }
+              }}
             >
               <MenuItem value="input">Input</MenuItem>
               <MenuItem value="default">Default</MenuItem>
@@ -193,7 +215,12 @@ const AddNewNode = () => {
               {/* <MenuItem value="multihandle">Multi-Handle</MenuItem> */}
             </Select>
           </FormControl>
-          <FormControl sx={{ width: 'inherit' }}>
+          <FormControl
+            sx={{
+              width: 'inherit'
+            }}
+            size="small"
+          >
             <InputLabel notched id="demo-multiple-chip-label">
               Properties
             </InputLabel>
@@ -208,7 +235,7 @@ const AddNewNode = () => {
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
-                    <Chip key={value} label={value} />
+                    <Chip sx={{ '& .MuiChip-label': { fontSize: fontSize } }} key={value} label={value} />
                   ))}
                 </Box>
               )}

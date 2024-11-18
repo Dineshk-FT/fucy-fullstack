@@ -9,10 +9,20 @@ import toast, { Toaster } from 'react-hot-toast';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 import { ClosePropertiesTab } from '../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
+import { fontSize } from '../../store/constant';
+import { makeStyles } from '@mui/styles';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 const notify = (message, status) => toast[status](message);
 
+const useStyles = makeStyles(() => ({
+  inputlabel: {
+    fontSize: fontSize,
+    fontFamily: 'Inter',
+    fontWeight: 600,
+    color: '#000'
+  }
+}));
 const EditContent = ({
   selectedElement,
   nodes,
@@ -26,6 +36,7 @@ const EditContent = ({
   updateModel,
   RefreshAPI
 }) => {
+  const classes = useStyles();
   const [value, setValue] = useState('1');
   const dispatch = useDispatch();
   // console.log('details', details);
@@ -165,7 +176,7 @@ const EditContent = ({
         </Box>
         <TabPanel value="1" sx={{ p: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-            <InputLabel>Name :</InputLabel>
+            <InputLabel className={classes.inputlabel}>Name :</InputLabel>
             <TextField
               id="outlined-basic"
               variant="outlined"
@@ -174,11 +185,12 @@ const EditContent = ({
               sx={{
                 width: 'auto',
                 '& .MuiInputBase-input': {
-                  height: '0.4rem'
+                  height: '0.4rem',
+                  fontSize: fontSize
                 }
               }}
             />
-            <InputLabel>Properties :</InputLabel>
+            <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
 
             <Autocomplete
               multiple
@@ -193,13 +205,24 @@ const EditContent = ({
               }}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip key={option} variant="outlined" label={option} {...getTagProps({ index })} onDelete={handleDelete(option)} />
+                  <Chip
+                    sx={{ '& .MuiChip-label': { fontSize: 11 } }}
+                    key={option}
+                    variant="outlined"
+                    label={option}
+                    {...getTagProps({ index })}
+                    onDelete={handleDelete(option)}
+                  />
                 ))
               }
               renderInput={(params) => <TextField {...params} variant="outlined" />}
             />
             {!selectedElement?.target && (
-              <FormControlLabel control={<Checkbox onChange={handleChecked} checked={Boolean(selectedElement?.isAsset)} />} label="Asset" />
+              <FormControlLabel
+                sx={{ fontSize: fontSize, color: '#000' }}
+                control={<Checkbox onChange={handleChecked} checked={Boolean(selectedElement?.isAsset)} />}
+                label="Asset"
+              />
             )}
             <Button variant="outlined" onClick={handleUpdate}>
               Update
