@@ -56,7 +56,8 @@ import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 import { Button } from '@mui/material';
 import RiskTreatmentTable from '../../ui-component/Table/RiskTreatmentTable';
-
+import SaveIcon from '@mui/icons-material/Save';
+import RestoreIcon from '@mui/icons-material/Restore';
 const elk = new ELK();
 
 const elkOptions = {
@@ -371,19 +372,35 @@ export default function MainCanvas() {
       const file = event.dataTransfer.getData('application/parseFile');
       const template = event.dataTransfer.getData('application/template');
       const group = event.dataTransfer.getData('application/group');
+      const dragItem = event.dataTransfer.getData('application/dragItem');
+      const parsedDragItem = dragItem ? JSON.parse(dragItem) : null;
       let parsedNode;
       let parsedTemplate;
+      let parsedNodeItem;
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
       });
-      if (file) {
-        parsedNode = JSON.parse(file);
-      } else if (group) {
-        createGroup(position);
-      } else {
-        parsedTemplate = JSON.parse(template);
+
+      const dropType = parsedDragItem ? 'dragItem' : file ? 'file' : group ? 'group' : 'template';
+
+      switch (dropType) {
+        case 'dragItem':
+          parsedNodeItem = parsedDragItem;
+          break;
+        case 'file':
+          parsedNode = JSON.parse(file);
+          break;
+        case 'group':
+          createGroup(position);
+          break;
+        case 'template':
+          parsedTemplate = JSON.parse(template);
+          break;
+        default:
+          console.error('Unsupported drop type');
       }
+
       if (parsedNode) {
         const newNode = {
           id: uid(),
@@ -409,6 +426,33 @@ export default function MainCanvas() {
               borderStyle: 'solid'
             }
           }
+        };
+        dragAdd(newNode);
+      }
+
+      if (parsedNodeItem) {
+        const newNode = {
+          id: parsedNodeItem.id,
+          type: parsedNodeItem.type,
+          position,
+          data: {
+            label: parsedNodeItem.name,
+            nodeId: parsedNodeItem.nodeId,
+            style: {
+              backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
+              fontSize: '16px',
+              fontFamily: 'Inter',
+              fontStyle: 'normal',
+              fontWeight: 500,
+              textAlign: 'center',
+              color: 'white',
+              textDecoration: 'none',
+              borderColor: 'black',
+              borderWidth: '2px',
+              borderStyle: 'solid'
+            }
+          },
+          properties: parsedNodeItem.props || []
         };
         dragAdd(newNode);
       }
@@ -660,8 +704,13 @@ export default function MainCanvas() {
             // onNodeContextMenu={handleSidebarOpen}
             // onEdgeContextMenu={handleSidebarOpen}
           >
-            <Panel position="left">
-              <Button onClick={() => onRestore(assets?.template)}>Restore</Button>
+            <Panel position="left" style={{ display: 'flex', gap: 10 }}>
+              <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
+                Restore
+              </Button>
+              <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
+                Save
+              </Button>
               {/* <button onClick={undo} disabled={undoStack.length === 0}>
                 Undo
               </button>

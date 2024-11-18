@@ -1,8 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
-import { Tooltip, Typography, Box, ClickAwayListener, Popper, Paper } from '@mui/material';
+import { Tooltip, Typography, Box, Popper, Paper } from '@mui/material';
 import ColorTheme from '../../../../store/ColorTheme';
-import { NavLink } from 'react-router-dom';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../../../assets/icons';
 import InfoIcon from '@mui/icons-material/Info';
 import SelectProject from '../../../../ui-component/Modal/SelectProject';
@@ -92,48 +91,13 @@ export default function LeftSection() {
       ]
     },
     {
-      icon: <InfoIcon />,
-      options: [
-        {
-          label: 'Item Definition',
-          value: '1',
-          icon: 'ItemIcon'
-        },
-        {
-          label: 'Damage Scenarios',
-          value: '3',
-          icon: 'DamageIcon'
-        },
-        {
-          label: 'Threat Scenarios',
-          value: '4',
-          icon: 'ThreatIcon'
-        },
-        {
-          label: 'Attack Path Analysis',
-          value: '5',
-          icon: 'AttackIcon'
-        },
-        {
-          label: 'Risk Treatment and Determination',
-          value: '6',
-          icon: 'RiskIcon'
-        },
-        {
-          label: 'Cybersecurity Goals and Requirements',
-          value: '7',
-          icon: 'CybersecurityIcon'
-        }
-      ]
-    },
-    {
       name: 'Library',
       options: [
         {
           label: 'Component',
           // action: () => console.log('Component'),
           subLevel: (
-            <Box mt={2}>
+            <Box>
               <Components />
             </Box>
           )
@@ -142,25 +106,60 @@ export default function LeftSection() {
           label: 'System',
           // action: () => console.log('System'),
           subLevel: (
-            <Box mt={2}>
+            <Box>
               <TemplateList />
               {/* <Components /> */}
             </Box>
           )
         }
       ]
-    }
+    },
+    // {
+    //   icon: <InfoIcon sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}/>,
+
+    //   options: [
+    //     {
+    //       label: 'Item Definition',
+    //       value: '1',
+    //       icon: 'ItemIcon'
+    //     },
+    //     {
+    //       label: 'Damage Scenarios',
+    //       value: '3',
+    //       icon: 'DamageIcon'
+    //     },
+    //     {
+    //       label: 'Threat Scenarios',
+    //       value: '4',
+    //       icon: 'ThreatIcon'
+    //     },
+    //     {
+    //       label: 'Attack Path Analysis',
+    //       value: '5',
+    //       icon: 'AttackIcon'
+    //     },
+    //     {
+    //       label: 'Risk Treatment and Determination',
+    //       value: '6',
+    //       icon: 'RiskIcon'
+    //     },
+    //     {
+    //       label: 'Cybersecurity Goals and Requirements',
+    //       value: '7',
+    //       icon: 'CybersecurityIcon'
+    //     }
+    //   ]
+    // }
   ];
 
   const getImageLabel = (item) => {
     const Image = imageComponents[item?.icon];
-    const maxLength = 40;
-    const isLongLabel = item?.label.length > maxLength;
-    const displayLabel = isLongLabel ? `${item.label.slice(0, maxLength)}...` : item.label;
+    const isLongLabel = item?.label.length > 40;
+    const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
 
     return (
-      <Box display="flex" alignItems="center" justifyContent="flex-start" gap={2}>
-        {Image ? <img src={Image} alt={item.label} style={{ height: '20px', width: '20px' }} /> : null}
+      <Box display="flex" alignItems="center" gap={2}>
+        {Image && <img src={Image} alt={item.label} style={{ height: '20px', width: '20px' }} />}
         <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
           <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
             {displayLabel}
@@ -195,112 +194,117 @@ export default function LeftSection() {
   };
 
   const handleClose = () => {
-    setOpen({
-      New: false,
-      Open: false,
-      Delete: false
-    });
+    setOpen({ New: false, Open: false, Delete: false });
   };
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <NavLink to="/home" style={{ fontSize: 16, fontWeight: 600, color: color?.logo, textDecoration: 'none' }}>
-        FUCY TECH
-      </NavLink>
       {menuItems.map((item, index) => (
         <Box key={index}>
-          {/* <ClickAwayListener onClickAway={handleMenuClose}> */}
-          <div>
-            {item.name ? (
-              <Typography
-                variant="h6"
-                component="div"
-                sx={{
-                  cursor: 'pointer',
-                  color: color?.title,
-                  mx: 0.5,
-                  px: 0.5,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
-                    p: 0.5
-                  }
-                }}
-                onMouseEnter={(e) => handleMenuOpen(e, index)}
-              >
-                {item.name}
-              </Typography>
-            ) : (
-              <Box
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: color?.title,
-                  mx: 0.5,
-                  px: 0.5,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
-                    p: 0.5
-                  }
-                }}
-                onMouseEnter={(e) => handleMenuOpen(e, index)}
-              >
-                {item.icon}
-              </Box>
-            )}
-            <Popper
-              open={selectedMenu === index && Boolean(anchorEl)}
-              anchorEl={anchorEl}
-              placement="bottom-start"
-              disablePortal={false}
-              onMouseLeave={handleMenuClose}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              cursor: 'pointer',
+              color: color?.title,
+              mx: 0.5,
+              px: 0.5,
+              transition: 'background-color 0.3s, box-shadow 0.3s',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '4px'
+              }
+            }}
+            onMouseEnter={(e) => handleMenuOpen(e, index)}
+          >
+            {item.name || <Box>{item.icon}</Box>}
+          </Typography>
+          <Popper
+            open={selectedMenu === index && Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            placement="bottom-start"
+            onMouseLeave={handleMenuClose}
+            sx={{ zIndex: 1200 }}
+          >
+            <Paper
               sx={{
-                zIndex: 1200
+                background: '#F7F7F7',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                padding: '8px',
+                display: item.icon ? 'flex' : 'block',
+                flexDirection: item.icon ? 'row' : 'column',
+                gap: item.icon ? 2 : 0,
+                flexWrap: item.icon ? 'nowrap' : 'wrap',
               }}
             >
-              <Paper sx={{ pointerEvents: 'auto', background: '#E5E4E2', border: '1px solid', borderRadius: 0 }}>
-                {item.options.map((option, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      padding: '8px 16px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.08)'
-                      }
-                    }}
-                    onMouseEnter={option.subLevel ? (e) => handleSubMenuOpen(e, i) : undefined}
-                    onClick={() => {
-                      option.action && option.action(); // Ensure option.action exists before invoking
-                      // handleMenuClose();
-                    }}
-                  >
-                    {item.icon ? getImageLabel(option) : option.label}
-                    {option.subLevel && (
-                      <Popper
-                        open={selectedSubMenu === i && Boolean(subMenuAnchorEl)}
-                        anchorEl={subMenuAnchorEl}
-                        placement="right-start"
-                        disablePortal={false}
+              {item.options.map((option, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    padding: item.icon ? '0px':'5px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
+                  }}
+                  onMouseEnter={option.subLevel ? (e) => handleSubMenuOpen(e, i) : undefined}
+                  onClick={() => {
+                    option.action && option.action();
+                    handleMenuClose();
+                  }}
+                >
+                  {item.icon ? (
+                    getImageLabel(option)
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: color?.textPrimary,
+                        fontSize: '14px',
+                        fontFamily: 'Inter',
+                        fontWeight: 500,
+                        paddingX: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      {option.label}
+                    </Typography>
+                  )}
+                  {option.subLevel && (
+                    <Popper
+                      open={selectedSubMenu === i && Boolean(subMenuAnchorEl)}
+                      anchorEl={subMenuAnchorEl}
+                      placement="right-start"
+                      disablePortal={false}
+                      sx={{
+                        zIndex: 1300,
+                        mx: 2,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Paper
                         sx={{
-                          zIndex: 1300,
-                          width: '100px',
-                          mx: 2
+                          pointerEvents: 'auto',
+                          background: '#f5f5f5',
+                          border: '1px solid #d1d1d1',
+                          borderRadius: 1,
+                          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                          padding: 1,
+                          minWidth: '150px'
                         }}
                       >
-                        <Paper sx={{ pointerEvents: 'auto', background: '#E5E4E2', border: '1px solid', borderRadius: 0 }}>
-                          {option.subLevel}
-                        </Paper>
-                      </Popper>
-                    )}
-                  </Box>
-                ))}
-              </Paper>
-            </Popper>
-          </div>
-          {/* </ClickAwayListener> */}
+                        {option.subLevel}
+                      </Paper>
+                    </Popper>
+                  )}
+                </Box>
+              ))}
+            </Paper>
+          </Popper>
         </Box>
       ))}
       {open?.Open && <SelectProject open={open?.Open} handleClose={handleClose} Models={Models} />}

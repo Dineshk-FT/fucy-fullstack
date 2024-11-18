@@ -3,9 +3,9 @@
 import React, { useState, useEffect, createContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTheme } from '@mui/material/styles';
-import { Box, Drawer, useMediaQuery } from '@mui/material';
-import ArrowCircleLeftTwoToneIcon from '@mui/icons-material/ArrowCircleLeftTwoTone';
-import ArrowCircleRightTwoToneIcon from '@mui/icons-material/ArrowCircleRightTwoTone';
+import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { BrowserView, MobileView } from 'react-device-detect';
 import { ResizableBox } from 'react-resizable';
@@ -50,7 +50,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
-  const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 400 : 0);
+  const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 370 : 0);
 
   useEffect(() => {
     fetchModels();
@@ -68,31 +68,36 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
       setSidebarWidth(400);
     }
     drawerToggle();
+    // console.log('Drawer open:', !drawerOpen.open);
   };
 
   const drawer = (
     <>
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        <Box sx={{ display: 'flex', p: 2, mx: 'auto' }}>
-          <LogoSection />
-        </Box>
-      </Box>
       <BrowserView>
         <PerfectScrollbar
           component="div"
           style={{
             paddingLeft: '16px',
-            paddingRight: '16px',
-            marginTop: '1.4rem'
+            paddingRight: '40px',
+            paddingTop: '16px'
           }}
         >
           <BrowserCard template={template} models={models} />
         </PerfectScrollbar>
-        <ArrowCircleLeftTwoToneIcon
-          onClick={handleDrawerToggle} // Use handleDrawerToggle here
-          className={classes.icon}
-          sx={{ margin: '5px', color: color?.iconColor, top: 0 }}
-        />
+        <IconButton
+          onClick={handleDrawerToggle}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            color: color?.iconColor,
+            zIndex: 1400,
+            '&:hover': { transform: 'scale(1.1)' },
+            transition: 'transform 0.2s ease'
+          }}
+        >
+          {drawerOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+        </IconButton>
       </BrowserView>
       <MobileView>
         <Box sx={{ px: 2 }}>
@@ -111,7 +116,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         width={sidebarWidth}
         height={Infinity}
         axis="x"
-        minConstraints={[60, 0]}
+        minConstraints={[250, 0]}
         maxConstraints={[450, Infinity]}
         onResize={handleResize}
         handle={
@@ -141,11 +146,21 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           aria-label="mailbox folders"
         >
           {!drawerOpen && (
-            <ArrowCircleRightTwoToneIcon
-              onClick={handleDrawerToggle} // Use handleDrawerToggle here
-              className={classes.icon}
-              sx={{ position: 'relative', left: '0px', top: '0.8rem', marginTop: `${navbarHeight}px`, color: color?.iconColor }}
-            />
+            <IconButton
+              onClick={handleDrawerToggle}
+              sx={{
+                position: 'absolute',
+                left: '0px',
+                top: 0,
+                marginTop: `${navbarHeight}px`,
+                color: color?.iconColor,
+                zIndex: 1400,
+                '&:hover': { transform: 'scale(1.1)' },
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              {drawerOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+            </IconButton>
           )}
 
           <Drawer

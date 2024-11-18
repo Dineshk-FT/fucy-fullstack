@@ -33,8 +33,9 @@ const EditContent = ({
   details,
   setDetails,
   model,
-  updateModel,
-  RefreshAPI
+  RefreshAPI,
+  assets,
+  update
 }) => {
   const classes = useStyles();
   const [value, setValue] = useState('1');
@@ -43,38 +44,17 @@ const EditContent = ({
 
   // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {
-    const mod = JSON.parse(JSON.stringify(model));
-    const Nodestate = JSON.parse(JSON.stringify(nodes));
-    const edgeState = JSON.parse(JSON.stringify(edges));
-
-    if (selectedElement.target) {
-      const index = edges?.findIndex((nd) => nd?.id === selectedElement?.id);
-      if (index !== -1) {
-        // Create a shallow copy of the selected edge object
-        const selected = { ...edges[index], data: { ...edges[index].data } };
-        selected.data.label = details?.name;
-        selected.properties = details?.properties;
-
-        // Update edgeState with the new selected edge
-        edgeState[index] = selected;
-        mod.template.edges = edgeState;
-      }
-    } else {
-      const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
-      if (index !== -1) {
-        // Create a shallow copy of the selected node object
-        const selected = { ...nodes[index], data: { ...nodes[index].data } };
-        selected.data.label = details?.name;
-        selected.properties = details?.properties;
-        selected.isAsset = details?.isAsset;
-
-        // Update Nodestate with the new selected node
-        Nodestate[index] = selected;
-        mod.template.nodes = Nodestate;
-      }
-    }
-
-    updateModel(mod)
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    const details = {
+      assetId: assets?._id,
+      'model-id': model?._id,
+      nodeUpdate: true,
+      template: JSON.stringify(template)
+    };
+    update(details)
       .then((res) => {
         notify('Updated Successfully', 'success');
         RefreshAPI();
@@ -96,23 +76,16 @@ const EditContent = ({
     setValue(newValue);
   };
 
+  // console.log('nodes', nodes);
+
   const handleChecked = (event) => {
     const { checked } = event.target;
-    const mod = JSON.parse(JSON.stringify(model));
-    const Nodestate = JSON.parse(JSON.stringify(nodes));
-    const selected = nodes?.find((nd) => nd?.id === selectedElement?.id);
-    const index = nodes?.findIndex((nd) => nd?.id === selectedElement?.id);
-    // console.log('checked', checked);
-    selected.isAsset = checked;
-    Nodestate[index] = selected;
-    mod.template.nodes = Nodestate;
-    setSelectedElement(selected);
-    // console.log('mod', mod);
-    updateModel(mod);
+    const updatedNodes = nodes.map((node) => (node.id === selectedElement?.id ? { ...node, isAsset: checked } : node));
+    const updatedSelected = updatedNodes.find((nd) => nd.id === selectedElement?.id);
+    setNodes(updatedNodes);
+    setSelectedElement(updatedSelected);
   };
 
-  // console.log('selectedElement', selectedElement);
-  // console.log('nodes', nodes);
   useEffect(() => {
     setDetails({
       ...details,
@@ -130,12 +103,14 @@ const EditContent = ({
       ...details,
       properties: newValue
     });
+
+    const updatedNodes = nodes.map((node) => (node.id === selectedElement?.id ? { ...node, properties: newValue } : node));
+    setNodes(updatedNodes);
   };
 
   const handleStyle = (e, name) => {
     const { value } = e.target;
-    // const list = [...nodes];
-    const list = JSON.parse(JSON.stringify(nodes));
+    const nodeState = JSON.parse(JSON.stringify(nodes));
     const edgeState = [...edges];
     if (selectedElement.target) {
       const edge = edgeState?.find((nd) => nd?.id === selectedElement?.id);
@@ -148,14 +123,14 @@ const EditContent = ({
       edgeState[Index] = edge;
       setEdges(edgeState);
     } else {
-      const node = list?.find((nd) => nd?.id === selectedElement?.id);
-      const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
+      const node = nodeState?.find((nd) => nd?.id === selectedElement?.id);
+      const Index = nodeState?.findIndex((nd) => nd?.id === selectedElement?.id);
       setDetails({ ...details, name: value });
       node.data.label = value;
 
       setSelectedElement(node);
-      list[Index] = node;
-      setNodes(list);
+      nodeState[Index] = node;
+      setNodes(nodeState);
     }
   };
   // console.log('nodes', nodes);

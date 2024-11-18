@@ -37,11 +37,20 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
-import { DerivationTableOpen, drawerOpen, DsTableOpen, TsTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import {
+  attackTableOpen,
+  AttackTreePageOpen,
+  DerivationTableOpen,
+  drawerOpen,
+  DsTableOpen,
+  setAttackScene,
+  TsTableOpen
+} from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
+import CommonModal from '../../../../ui-component/Modal/CommonModal';
 
 const imageComponents = {
   AttackIcon,
@@ -131,6 +140,7 @@ const selector = (state) => ({
   getAssets: state.getAssets,
   getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
+  getAttackScenario: state.getAttackScenario,
   attackScenarios: state.attackScenarios,
   cybersecurity: state.cybersecurity,
   systemDesign: state.systemDesign,
@@ -160,6 +170,7 @@ const BrowserCard = () => {
     getAssets,
     getDamageScenarios,
     getThreatScenario,
+    getAttackScenario,
     attackScenarios,
     cybersecurity,
     systemDesign,
@@ -175,6 +186,8 @@ const BrowserCard = () => {
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
   const [openNodelist, setOpenNodelist] = useState(false);
+  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [subName, setSubName] = useState('');
 
   useEffect(() => {
     getModelById(modelId);
@@ -194,11 +207,14 @@ const BrowserCard = () => {
     { name: 'layouts', scene: layouts }
   ];
 
+  // console.log('attackScenarios', attackScenarios);
+
   const handleClick = async (id, name) => {
     const get_api = {
       assets: getAssets,
       damage: getDamageScenarios,
-      threat: getThreatScenario
+      threat: getThreatScenario,
+      attack: getAttackScenario
     };
     await get_api[name](id);
   };
@@ -215,8 +231,24 @@ const BrowserCard = () => {
         dispatch(TsTableOpen());
         dispatch(setTitle(name));
         break;
+
+      case name === 'Attack':
+        dispatch(attackTableOpen());
+        break;
+      // case name === 'Attack Trees':
+      //   dispatch(AttackTreePageOpen());
+      //   dispatch(setAttackScene(scene));
+      //   break;
       default:
         break;
+
+      // if (sub) {
+      //
+      // }
+      // if (scene === 'Attack') {
+      //   // console.log('first');
+      //
+      // }
     }
   };
 
@@ -280,6 +312,18 @@ const BrowserCard = () => {
         </Typography>
       </div>
     );
+  };
+
+  const handleContext = (e, name) => {
+    e.preventDefault();
+    if (name === 'Attack' || name === 'Attack Trees') {
+      setOpenAttackModal(true);
+      setSubName(name);
+    }
+  };
+
+  const handleAttackTreeClose = () => {
+    setOpenAttackModal(false);
   };
   // console.log('assets', assets);
 
@@ -372,6 +416,30 @@ const BrowserCard = () => {
             ))}
           </TreeItem>
         );
+      case 'attackScenarios':
+        return (
+          <TreeItem
+            key={data.id}
+            nodeId={data.id}
+            label={getImageLabel(data.icon, data.name)}
+            onClick={() => handleClick(model?._id, 'attack')}
+            sx={{ ml: -1 }}
+          >
+            {data?.subs?.map((sub) => (
+              <TreeItem
+                key={sub._id || sub?.id}
+                nodeId={sub._id || sub?.id}
+                label={getLabel('TopicIcon', sub.name)}
+                onClick={() => handleOpenTable(sub.name)}
+                onContextMenu={(e) => handleContext(e, sub?.name)}
+              >
+                {sub?.scenes?.map((detail) => (
+                  <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
+                ))}
+              </TreeItem>
+            ))}
+          </TreeItem>
+        );
 
       default:
         return (
@@ -383,7 +451,12 @@ const BrowserCard = () => {
             sx={{ ml: -1 }}
           >
             {data?.subs?.map((sub) => (
-              <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
+              <TreeItem
+                key={sub._id || sub?.id}
+                nodeId={sub._id || sub?.id}
+                label={getLabel('TopicIcon', sub.name)}
+                onClick={() => handleOpenTable(sub.name)}
+              >
                 {sub?.Details?.map((detail) => (
                   <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />
                 ))}
@@ -439,6 +512,7 @@ const BrowserCard = () => {
         </CardContent>
       </CardStyle>
       {open && <AddModal open={open} handleClose={handleClose} />}
+      <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />
       <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
     </>
   );

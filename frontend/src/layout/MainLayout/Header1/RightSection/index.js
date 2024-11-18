@@ -17,6 +17,7 @@ import { changeMode, navbarSlide } from '../../../../store/slices/CurrentIdSlice
 import { Typography } from '@mui/material';
 import { logout } from '../../../../store/slices/UserDetailsSlice';
 import { useNavigate } from 'react-router';
+import { NavLink } from 'react-router-dom';
 
 export default function RightSection() {
   const [open, setOpen] = useState(false);
@@ -46,7 +47,10 @@ export default function RightSection() {
 
   return (
     <>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="center">
+      <NavLink to="/home" style={{ fontSize: 25, fontWeight: 900, color: color?.logo, textDecoration: 'none'}}>
+        FUCY TECH
+      </NavLink>
+      <Box display="flex" gap={2} alignItems="center" justifyContent="center" mt={1}>
         <Box onClick={handleChangeMode} sx={{ cursor: 'pointer' }}>
           {isDark ? <NightsStayIcon sx={{ color: 'white' }} /> : <LightModeIcon />}
         </Box>

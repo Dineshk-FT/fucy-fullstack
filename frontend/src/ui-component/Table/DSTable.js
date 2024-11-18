@@ -574,7 +574,18 @@ export default function DsTable() {
         sx={{
           flexGrow: 1, // Let the container grow to fill available space
           overflowY: 'auto', // Enable vertical scrolling
-          marginBottom: '1rem' // Add space for the pagination
+          borderRadius: '0px', 
+          padding: 1,
+          '&::-webkit-scrollbar': {
+            width: '4px' 
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '10px' 
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
         }}
       >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">

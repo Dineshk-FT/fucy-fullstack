@@ -23,60 +23,47 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  getModelById: state.getModelById,
-  update: state.updateModel,
-  model: state.model
+  model: state.model,
+  addAttackScene: state.addAttackScene,
+  getAttackScenario: state.getAttackScenario
 });
-export default function CommonModal({ open, handleClose, getModels, name }) {
+export default function CommonModal({ open, handleClose, name }) {
   const { notify } = React.useContext(ToasterContext);
   const { id } = useParams();
-  const { getModelById, update, model } = useStore(selector, shallow);
+  const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
-    Name: ''
+    name: ''
   });
-
-  const handleCreate = () => {
-    const mod = { ...model };
-    let Scene;
-    if (name === 'Attack') {
-      Scene = mod?.scenarios[3]?.subs[0]?.scenes;
-    }
-    if (name === 'Attack Trees') {
-      Scene = mod?.scenarios[3]?.subs[1]?.scenes;
-    }
-    const newScene = {
-      ID: uid(),
-      ...templateDetails
-    };
-    Scene.push(newScene);
-    update(mod)
-      .then((res) => {
-        if (res) {
-          setTimeout(() => {
-            notify(res.data.message, 'success');
-            getModels();
-            getModelById(id);
-            handleClose();
-          }, 500);
-        }
-      })
-      .catch((err) => {
-        'err', err;
-        notify('Something Went Wrong', 'error');
-      });
-    setTemplateDetails((state) => ({
-      ...state,
-      Name: ''
-    }));
-  };
 
   const onClose = () => {
     setTemplateDetails((state) => ({
       ...state,
-      Name: ''
+      name: ''
     }));
     handleClose();
   };
+
+  const handleCreate = () => {
+    const newScene = {
+      modelId: model?._id,
+      type: name === 'Attack' ? 'attack' : 'attack_trees',
+      ...templateDetails
+    };
+
+    addAttackScene(newScene)
+      .then((res) => {
+        console.log('res', res);
+        if (res) {
+          notify('Added Successfully', 'success');
+          getAttackScenario(model?._id);
+          onClose();
+        }
+      })
+      .catch((err) => {
+        notify('Something Went Wrong', 'error');
+      });
+  };
+
   return (
     <React.Fragment>
       <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={onClose} aria-describedby="alert-dialog-slide-description">
@@ -85,11 +72,11 @@ export default function CommonModal({ open, handleClose, getModels, name }) {
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <TextField
-                value={templateDetails?.Name}
+                value={templateDetails?.name}
                 id="outlined-basic"
-                label="Name"
+                label="name"
                 variant="outlined"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
+                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
                 sx={{
                   width: '300px'
                 }}

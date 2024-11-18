@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { styled, useTheme } from '@mui/material/styles';
-import { AppBar, Box, CssBaseline, Toolbar, useMediaQuery } from '@mui/material';
+import { AppBar, Box, CssBaseline, Toolbar, useMediaQuery, Typography, Tooltip } from '@mui/material';
 
 // project imports
 import Breadcrumbs from '../../ui-component/extended/Breadcrumbs';
@@ -24,6 +24,7 @@ import HeaderSection from '../../views/Landing/HeaderSection';
 import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
 import InitialModal from '../../ui-component/Modal/InitialModal';
+import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../assets/icons';
 
 // import Customization from '../Customization';
 
@@ -126,6 +127,32 @@ const MainLayout = ({ children }) => {
       </>
     );
 
+  const imageComponents = {
+    AttackIcon,
+    ItemIcon,
+    DamageIcon,
+    ThreatIcon,
+    CybersecurityIcon,
+    RiskIcon
+  };
+
+  const getImageLabel = (item) => {
+    const Image = imageComponents[item?.icon];
+    const isLongLabel = item?.label.length > 40;
+    const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
+
+    return (
+      <Box display="flex" alignItems="center" gap={2}>
+        {Image && <img src={Image} alt={item.label} style={{ height: '15px', width: '15px' }} />}
+        <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
+          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
+            {displayLabel}
+          </Typography>
+        </Tooltip>
+      </Box>
+    );
+  };
+
   return (
     <>
       <Box sx={{ display: 'flex', height: '80svh' }}>
@@ -139,14 +166,40 @@ const MainLayout = ({ children }) => {
           sx={{
             bgcolor: color?.navBG,
             height: !isNavbarClose ? navbarHeight : '0px',
-            transition: leftDrawerOpened ? theme.transitions.create('width') : 'none'
+            transition: leftDrawerOpened ? theme.transitions.create('width') : 'none',
+            borderBottom: '1px solid black'
           }}
         >
           {/* ----------------- Navbar ------------------- */}
-          <Toolbar sx={{ display: isNavbarClose ? 'none' : 'flex', transition: 'display 0.8s', justifyContent: 'space-between' }}>
+          <Toolbar
+            sx={{
+              display: isNavbarClose ? 'none' : 'flex',
+              transition: 'display 0.8s',
+              justifyContent: 'space-between',
+              py: 0,
+              borderBottom: '0.2px solid black'
+            }}
+          >
             {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
             <Header1 />
           </Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 2, px: 4, py:0.5 }}>
+            {['ItemIcon', 'DamageIcon', 'ThreatIcon', 'AttackIcon', 'RiskIcon', 'CybersecurityIcon'].map((icon, index) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {getImageLabel({
+                  icon,
+                  label: [
+                    'Item Definition',
+                    'Damage Scenarios',
+                    'Threat Scenarios',
+                    'Attack Path Analysis',
+                    'Risk Treatment and Determination',
+                    'Cybersecurity Goals and Requirements'
+                  ][index]
+                })}
+              </Box>
+            ))}
+          </Box>
           {isNavbarClose && (
             <Box display="flex" justifyContent="end" onClick={() => dispatch(navbarSlide())}>
               <ArrowSquareDown size="20" color={isDark ? 'white' : 'black'} />

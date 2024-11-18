@@ -79,12 +79,15 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'AttackIcon',
     subs: [
       {
+        id: 41,
         name: 'Attack'
       },
       {
+        id: 42,
         name: 'Attack Trees'
       },
       {
+        id: 43,
         name: 'Vulnerability Analysis'
       }
     ]
@@ -95,13 +98,16 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'CybersecurityIcon',
     subs: [
       {
+        id: 51,
         name: 'CyberSecurity Goals and Requirements',
         subs: [
           {
+            id: 511,
             name: 'CyberSecurity Goals',
             scenes: []
           },
           {
+            id: 512,
             name: 'CyberSecurity Requirements',
             scenes: []
           }
@@ -545,7 +551,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
     set({
-      model: res
+      model: res,
+      assets: {
+        id: 1,
+        name: 'Item Model & Assets',
+        icon: 'ItemIcon'
+      }
     });
   },
 
@@ -555,7 +566,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       assets: {
         ...state.assets,
-        ...res
+        ...(res || { template: { nodes: [], edges: [] }, Details: [] })
       }
     }));
   },
@@ -604,6 +615,35 @@ const useStore = createWithEqualityFn((set, get) => ({
           {
             ...state.threatScenarios.subs[1],
             ...userDefinedScenario // Spread the "User-defined" object into the second subs element
+          }
+        ]
+      }
+    }));
+  },
+
+  getAttackScenario: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/attacks`;
+    const res = await GET_CALL(modelId, url);
+
+    const attacks = res.find((item) => item.type === 'attack');
+    const attackTrees = res.find((item) => item.type === 'attack_trees');
+    const Vulnerability = res.find((item) => item.type === 'Vulnerability');
+
+    set((state) => ({
+      attackScenarios: {
+        ...state.attackScenarios,
+        subs: [
+          {
+            ...state.attackScenarios.subs[0],
+            ...attacks
+          },
+          {
+            ...state.attackScenarios.subs[1],
+            ...attackTrees
+          },
+          {
+            ...state.attackScenarios.subs[2],
+            ...Vulnerability
           }
         ]
       }
@@ -664,6 +704,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await ADD_CALL(details, url);
     return res;
   },
+
+  addAttackScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/attacks`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   createComponent: async (newTemplate) => {
     const FormData = require('form-data');
     let data = new FormData();
@@ -705,28 +751,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           window.location.reload();
         }, 500);
       }
-    } catch (err) {
-      // console.log('err', err);
-      // setTimeout(() => {
-      // alert('Something went Wrong');
-      // }, 1000);
-    }
-  },
-
-  addDamageScenario: async (newTemplate) => {
-    // console.log('newTemplate', newTemplate);
-    try {
-      const res = await axios.post(`${configuration.apiBaseUrl}Damage-scenarios`, newTemplate);
-      // console.log('res store', res)
-      if (res) {
-        return res;
-      }
-    } catch (err) {
-      console.log('err', err);
-      // setTimeout(() => {
-      //     alert('Something went Wrong');
-      // }, 1000);
-    }
+    } catch (err) {}
   },
 
   addNewNode: async (newNode) => {

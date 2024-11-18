@@ -3,15 +3,14 @@ import React, { useState } from 'react';
 import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
-import AlertMessage from '../Alert';
 import { updatedModelState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
 import { CloseCircle } from 'iconsax-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { drawerClose } from '../../store/slices/CurrentIdSlice';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
 import { fontSize } from '../../store/constant';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -33,7 +32,8 @@ const selector = (state) => ({
   nodes: state.nodes,
   edges: state.edges,
   getSidebarNode: state.getSidebarNode,
-  model: state.model
+  model: state.model,
+  update: state.updateAssets
 });
 
 function getStyles(name, nodes, theme) {
@@ -45,6 +45,7 @@ function getStyles(name, nodes, theme) {
 const AddNewNode = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const notify = (message, status) => toast[status](message);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
   const [newNode, setNewNode] = useState({
     nodeName: '',
@@ -53,7 +54,7 @@ const AddNewNode = () => {
     bgColor: ''
   });
   // console.log('selectedNodeGroupId', selectedNodeGroupId);
-  const { createNode, updateModel, setNodes, nodes, edges, model } = useStore(selector);
+  const { createNode, updateModel, setNodes, nodes, edges, model, update } = useStore(selector);
   //Name & type for the new Node
   const handleChange = (event) => {
     const {
@@ -115,25 +116,51 @@ const AddNewNode = () => {
     // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
     // selectedsection?.nodes?.push(dataNode);
     // console.log('selectedsection', selectedsection);
-    if (!selectedNodeGroupId) {
-      const Details = {
-        ...dataNode,
-        position: { x: 495, y: 250 }
+
+    function updatePositionWithinRange(position, range) {
+      const getRandomOffset = (range) => Math.random() * range * 2 - range;
+
+      return {
+        x: position.x + getRandomOffset(range),
+        y: position.y + getRandomOffset(range)
       };
-      const list = [...nodes, Details];
+    }
+
+    const position = { x: 495, y: 250 };
+    const range = 50;
+
+    const updatedPosition = updatePositionWithinRange(position, range);
+    if (!selectedNodeGroupId) {
+      const nodeDetail = {
+        ...dataNode,
+        position: updatedPosition
+      };
+      const list = [...nodes, nodeDetail];
       setNodes(list);
-      const mod = { ...model };
-      updateModel(updatedModelState(mod, list, edges))
+      const template = {
+        nodes: list,
+        edges: edges
+      };
+      const details = {
+        'model-id': model?._id,
+        template: JSON.stringify(template)
+      };
+
+      update(details)
+        // updateModel(updatedModelState(mod, list, edges))
         .then((res) => {
           // console.log('res', res);
           if (res.data) {
-            setTimeout(() => {
-              getSidebarNode();
-            }, []);
+            notify(res?.message, 'success');
+
+            // setTimeout(() => {
+            getSidebarNode();
+            // }, []);
           }
         })
         .catch((err) => {
           console.log('err', err);
+          notify('Something went wrong', 'error');
         });
     } else {
       createNode(details)
@@ -143,11 +170,13 @@ const AddNewNode = () => {
             // setTimeout(() => {
             getSidebarNode();
             setSelectedNodeGroupId({});
+            notify('Node created successfully', 'success');
             // }, []);
           }
         })
         .catch((err) => {
           console.log('err', err);
+          notify('Something went wrong', 'error');
         });
     }
 
