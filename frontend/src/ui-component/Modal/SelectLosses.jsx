@@ -31,6 +31,7 @@ export default function SelectLosses({
   update
 }) {
   // console.log('selectedRow', selectedRow);
+  // console.log('details', details);
   const handleChange = (e, prop, item) => {
     // console.log('e.target.checked', e.target.checked);
     // console.log('prop', prop);

@@ -51,7 +51,6 @@ const EditContent = ({
     const details = {
       assetId: assets?._id,
       'model-id': model?._id,
-      nodeUpdate: true,
       template: JSON.stringify(template)
     };
     update(details)

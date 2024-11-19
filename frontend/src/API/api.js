@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { configuration } from '../services/baseApiService';
 import axios from 'axios';
@@ -58,9 +59,11 @@ export const GET_CALL = async (modelId, url) => {
 
 export const UPDATE_CALL = async (details, url) => {
   const trimmed = Object.fromEntries(
-    Object.entries(details).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+    Object.entries(details)
+      .filter(([_, value]) => value !== undefined) // Filter out undefined values
+      .map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
   );
-  // console.log('trimmed', trimmed);
+
   let data = new FormData();
   for (const [key, value] of Object.entries(trimmed)) {
     data.append(key, value);

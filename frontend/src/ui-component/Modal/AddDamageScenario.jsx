@@ -20,14 +20,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  update: state.updateModel,
-  getModelById: state.getModelById,
-  getModels: state.getModels
+  addDamageScene: state.addDamageScene,
+  getDamageScenarios: state.getDamageScenarios
 });
 
-export default function AddDamageScenarios({ open, handleClose, model, id, rows, notify }) {
+export default function AddDamageScenarios({ open, handleClose, model, rows, notify }) {
   // console.log('rows', rows);
-  const { update, getModelById, getModels } = useStore(selector, shallow);
+  const { addDamageScene, getDamageScenarios } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
     ID: '',
     Name: '',
@@ -36,27 +35,30 @@ export default function AddDamageScenarios({ open, handleClose, model, id, rows,
   });
 
   const handleCreate = () => {
-    const mod = { ...model };
     const temp = { ...templateDetails };
     const len = rows.length;
     temp.ID = `DS00${len + 1}`;
-    mod.scenarios[1].subs[1].scenes.push(temp);
-    update(mod)
+    const details = {
+      'model-id': model?._id,
+      Name: templateDetails?.Name,
+      Description: templateDetails['Description/ Scalability']
+    };
+    addDamageScene(details)
       .then((res) => {
+        // console.log('res', res);
         if (res) {
-          setTimeout(() => {
-            notify('Damage Scene added', 'success');
-            // window.location.reload();
-            handleClose();
-            getModelById(id);
-            getModels();
-            setTemplateDetails({
-              ID: '',
-              Name: '',
-              'Description/ Scalability': '',
-              cyberLosses: []
-            });
-          }, 500);
+          // setTimeout(() => {
+          notify(res?.message, 'success');
+          // window.location.reload();
+          handleClose();
+          getDamageScenarios(model?._id);
+          setTemplateDetails({
+            ID: '',
+            Name: '',
+            'Description/ Scalability': '',
+            cyberLosses: []
+          });
+          // }, 500);
         }
       })
       .catch((err) => {

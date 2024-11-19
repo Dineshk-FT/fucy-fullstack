@@ -121,18 +121,23 @@ export default function Tstable() {
         )
         .flat(2);
 
-      const mod2 = userDefined['Details'].map((detail) => ({
-        ID: detail?.id,
-        Name: detail?.name,
-        Description: detail?.description
-      }));
-      const combined = mod1.concat(mod2);
+      const mappedDetails = Array.isArray(userDefined['Details'])
+        ? userDefined['Details'].map((detail) =>
+            detail && typeof detail === 'object'
+              ? {
+                  ID: detail?.id || null,
+                  Name: detail?.name || null,
+                  Description: detail?.description || null
+                }
+              : {}
+          )
+        : [];
+      const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
     }
   }, [derived, userDefined]);
 
-  // console.log('userDefined', userDefined);
   const handleOpenModalTs = () => {
     setOpenTs(true);
   };

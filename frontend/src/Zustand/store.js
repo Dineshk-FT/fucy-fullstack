@@ -699,6 +699,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   //Add Section
 
+  addDamageScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/damage_scenario`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
+
   addThreatScene: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/threat_scenarios`;
     const res = await ADD_CALL(details, url);

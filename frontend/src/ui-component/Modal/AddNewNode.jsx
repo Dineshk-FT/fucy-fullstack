@@ -143,7 +143,8 @@ const AddNewNode = () => {
       };
       const details = {
         'model-id': model?._id,
-        template: JSON.stringify(template)
+        template: JSON.stringify(template),
+        assetId: assets?._id
       };
 
       update(details)
