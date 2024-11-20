@@ -79,7 +79,8 @@ const selector = (state) => ({
   model: state.model,
   getModelById: state.getModelById,
   getModels: state.getModels,
-  update: state.updateModel
+  update: state.updateAttackScenario,
+  getAttackScenario: state.getAttackScenario
 });
 
 // Edge line styling
@@ -136,11 +137,13 @@ export default function AttackBlock({ attackScene }) {
     setNodes,
     setEdges,
     model,
-    update,
     getModels,
-    getModelById
+    getModelById,
+    update,
+    getAttackScenario
   } = useStore(selector, shallow);
 
+  // console.log('nodes', nodes);
   // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -155,8 +158,8 @@ export default function AttackBlock({ attackScene }) {
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
-        setNodes(attackScene?.template?.nodes ?? []);
-        setEdges(attackScene?.template?.edges ?? []);
+        setNodes(attackScene?.templates?.nodes ?? []);
+        setEdges(attackScene?.templates?.edges ?? []);
       }, 10);
     }
   }, [attackScene]);
@@ -248,8 +251,8 @@ export default function AttackBlock({ attackScene }) {
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? attackScene?.template?.nodes : nodes;
-      const es = useInitialNodes ? attackScene?.template?.edges : edges;
+      const ns = useInitialNodes ? attackScene?.templates?.nodes : nodes;
+      const es = useInitialNodes ? attackScene?.templates?.edges : edges;
 
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
@@ -262,29 +265,39 @@ export default function AttackBlock({ attackScene }) {
   );
 
   // console.log('model', model);
+  // console.log('nodes', nodes);
 
   const handleSave = () => {
-    const atScene = JSON.parse(JSON.stringify(attackScene));
-    const mod = JSON.parse(JSON.stringify(model));
-    const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
-    const selectedIndex = mod?.scenarios[3]?.subs[1]?.scenes?.findIndex((ite) => ite.id === atScene?.id);
+    // const atScene = JSON.parse(JSON.stringify(attackScene));
+    // const mod = JSON.parse(JSON.stringify(model));
+    // const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
+    // const selectedIndex = mod?.scenarios[3]?.subs[1]?.scenes?.findIndex((ite) => ite.id === atScene?.id);
 
-    selected.template = {
-      id: uid(),
+    // selected.template = {
+    //   id: uid(),
+    //   nodes: nodes,
+    //   edges: edges
+    // };
+    // mod.scenarios[3].subs[1].scenes.push[selectedIndex] = selected;
+    // // console.log('mod', mod);
+    // // console.log('selected', selected);
+    const template = {
       nodes: nodes,
       edges: edges
     };
-    mod.scenarios[3].subs[1].scenes.push[selectedIndex] = selected;
-    // console.log('mod', mod);
-    // console.log('selected', selected);
-    dispatch(setAttackScene(selected));
-    update(mod)
+    const details = {
+      modelId: model?._id,
+      type: 'attack_trees',
+      id: attackScene?.ID,
+      templates: JSON.stringify(template)
+    };
+    // dispatch(setAttackScene(selected));
+    update(details)
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            notify(attackScene?.template ? 'Updated Successfully' : 'Added Successfully', 'success');
-            getModels();
-            getModelById(model?.id);
+            notify(attackScene?.templates ? 'Updated Successfully' : 'Added Successfully', 'success');
+            getAttackScenario(model?._id);
           }, 500);
         }
       })
@@ -318,7 +331,7 @@ export default function AttackBlock({ attackScene }) {
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>
             <Button variant="outlined" onClick={handleSave}>
-              {attackScene?.template ? 'Update' : 'Add'}
+              {attackScene?.templates ? 'Update' : 'Add'}
             </Button>
           </Panel>
           <MiniMap />

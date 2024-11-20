@@ -659,6 +659,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     return res;
   },
+
+  updateAttackScenario: async (details) => {
+    // const { id, detailId, cyberLosses } = details;
+    const url = `${configuration.apiBaseUrl}v1/update/attacks`;
+    const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
   updateSidebarNodes: async (newTemplate) => {
     const res = await axios.patch(`${configuration.apiBaseUrl}sidebarNode/${newTemplate.id}`, newTemplate);
     return res;
@@ -687,12 +695,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   updateAttackNode: (nodeId, name) => {
     set((state) => {
-      let node = state.attackNodes.find((ite) => ite.id === nodeId);
-      const ind = state.attackNodes.findIndex((ite) => ite.id === nodeId);
+      let node = state.nodes.find((ite) => ite.id === nodeId);
+      const ind = state.nodes.findIndex((ite) => ite.id === nodeId);
       node.data.label = name;
-      state.attackNodes[ind] = node;
+      state.nodes[ind] = node;
       return {
-        attackNodes: [...state.attackNodes]
+        nodes: [...state.nodes]
       };
     });
   },

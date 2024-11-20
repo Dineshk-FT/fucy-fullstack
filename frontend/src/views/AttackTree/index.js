@@ -37,7 +37,7 @@ const AttackTree = () => {
         )}
         <Paper elevation={3} sx={{ height: '83svh' }}>
           <Grid container sx={{ height: 'inherit' }}>
-            <ResizableBox
+            {/* <ResizableBox
               width={sidebarWidth}
               height={Infinity}
               axis="x"
@@ -59,17 +59,17 @@ const AttackTree = () => {
                 />
               }
               handleSize={[10, Infinity]}
-            >
+            > */}
             <Grid item sx={{ flexGrow: 1 }}>
-              {!isLevelOpen ? (attackScene && <AttackBlock attackScene={attackScene} />) : <Levels />}
+              {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} /> : <Levels />}
             </Grid>
-            </ResizableBox>
-              <Grid
-                item
-                sx={{ borderLeft: '1px solid black', height: '100%' }} // Fill the ResizableBox
-              >
-                <Properties />
-              </Grid>
+            {/* </ResizableBox> */}
+            <Grid
+              item
+              sx={{ borderLeft: '1px solid black', height: '100%' }} // Fill the ResizableBox
+            >
+              <Properties />
+            </Grid>
           </Grid>
         </Paper>
       </Box>

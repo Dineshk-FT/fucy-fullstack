@@ -22,9 +22,9 @@ import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
   model: state.model,
-  getModel: state.getModelById,
-  update: state.updateModel,
-  getModelById: state.getModelById
+  update: state.updateAttackScenario,
+  getAttackScenario: state.getAttackScenario,
+  attacks: state.attackScenarios['subs'][0]
 });
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -53,7 +53,7 @@ const Head = [
   { id: 14, name: 'User Interaction' },
   { id: 15, name: 'Scope' },
   { id: 16, name: 'Determination Criteria' },
-  { id: 17, name: 'Attack Feasabilities Rating' },
+  { id: 17, name: 'Attack Feasibilities Rating' },
   { id: 18, name: 'Attack Feasability Rating Justification' }
 ];
 
@@ -280,7 +280,7 @@ export default function AttackTreeTable() {
   const classes = useStyles();
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { model, getModel, update, getModelById } = useStore(selector, shallow);
+  const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
@@ -288,12 +288,8 @@ export default function AttackTreeTable() {
   const [rowsPerPage, setRowsPerPage] = React.useState(10); // Rows per page state
 
   React.useEffect(() => {
-    getModel(id);
-  }, [id]);
-
-  React.useEffect(() => {
-    if (model.scenarios) {
-      const mod1 = model?.scenarios[3]?.subs[0]?.scenes?.map((dt) => {
+    if (attacks['scenes']) {
+      const mod1 = attacks['scenes']?.map((dt) => {
         // console.log('prp', prp);
         return {
           ID: dt.id || dt?.ID,
@@ -305,14 +301,14 @@ export default function AttackTreeTable() {
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
           'Window of Opportunity': dt['Window of Opportunity'] ?? '',
           Equipment: dt?.Equipment ?? '',
-          'Attack Feasabilities Rating': dt['Attack Feasabilities Rating'] ?? ''
+          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'] ?? ''
         };
       });
 
       setRows(mod1);
       setFiltered(mod1);
     }
-  }, [model]);
+  }, [attacks]);
 
   const getRating = (value) => {
     if (value >= 0 && value <= 13) {
@@ -337,9 +333,9 @@ export default function AttackTreeTable() {
       return r;
     });
 
-    setRows(updatedRows);
+    // setRows(updatedRows);
 
-    // Calculate average Attack Feasabilities Rating if the updated category is part of the specified categories
+    // // Calculate average Attack Feasabilities Rating if the updated category is part of the specified categories
     const calculateAverageRating = (row) => {
       const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
@@ -356,30 +352,41 @@ export default function AttackTreeTable() {
       return count > 0 ? (totalRating / count).toFixed(2) : 'N/A';
     };
 
-    // Find the updated row and recalculate the rating
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
-    // console.log('updatedRows', updatedRows);
     const averageRating = calculateAverageRating(updatedRow);
-    updatedRow['Attack Feasabilities Rating'] = getRating(averageRating);
+    updatedRow['Attack Feasibilities Rating'] = getRating(averageRating);
 
-    // Update the model with the new row and rating
-    const mod = JSON.parse(JSON.stringify(model));
-    const scenarioIndex = 3; // Update based on your actual scenario
-    const subsIndex = 0;
+    // console.log('updatedRow', updatedRow);
+    // // Find the updated row and recalculate the rating
+    // // console.log('updatedRows', updatedRows);
 
-    const updated = updatedRows.map((rw) => {
-      const { Description, ...rest } = rw;
-      return rest;
-    });
+    // // Update the model with the new row and rating
+    // const mod = JSON.parse(JSON.stringify(model));
+    // const scenarioIndex = 3; // Update based on your actual scenario
+    // const subsIndex = 0;
 
-    mod.scenarios[scenarioIndex].subs[subsIndex].scenes = updated;
+    // const updated = updatedRows.map((rw) => {
+    //   const { Description, ...rest } = rw;
+    //   return rest;
+    // });
 
-    update(mod)
+    // console.log('updated', updated);
+
+    // mod.scenarios[scenarioIndex].subs[subsIndex].scenes = updated;
+
+    const details = {
+      modelId: model?._id,
+      type: 'attack',
+      id: row?.ID,
+      [`${name}`]: value,
+      'Attack Feasibilities Rating': getRating(averageRating)
+    };
+
+    // console.log('details', details);
+    update(details)
       .then((res) => {
         if (res) {
-          setTimeout(() => {
-            getModelById(id);
-          }, 500);
+          getAttackScenario(model?._id);
         }
       })
       .catch((err) => console.log('err', err));
@@ -446,12 +453,12 @@ export default function AttackTreeTable() {
           }}
         >
           {Head?.map((item, index) => {
-            const bgColor = RatingColor(row['Attack Feasabilities Rating']);
+            const bgColor = RatingColor(row['Attack Feasibilities Rating']);
             return (
               <React.Fragment key={index}>
                 {checkforLabel(item) ? (
                   <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
-                ) : item.name === 'Attack Feasabilities Rating' ? (
+                ) : item.name === 'Attack Feasibilities Rating' ? (
                   <StyledTableCell
                     key={index}
                     align={'left'}
@@ -485,9 +492,7 @@ export default function AttackTreeTable() {
           size="small"
           value={searchTerm}
           onChange={handleSearch}
-          sx={{padding: 1,
-            '& .MuiInputBase-input': { border: '1px solid black' }
-          }}
+          sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
         />
       </Box>
 
@@ -495,7 +500,7 @@ export default function AttackTreeTable() {
         component={Paper}
         sx={{
           maxHeight: 440,
-          borderRadius: '0px', 
+          borderRadius: '0px',
           padding: 1,
           overflow: 'auto',
           '&::-webkit-scrollbar': {

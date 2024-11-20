@@ -9,13 +9,16 @@ import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
-  getModels: state.getModels,
+  getAttackScenario: state.getAttackScenario,
   model: state.model,
-  updateModel: state.updateModel
+  attacks: state.attackScenarios['subs'][0],
+  attackTrees: state.attackScenarios['subs'][1],
+  addAttackScene: state.addAttackScene,
+  nodes: state.nodes
 });
 
 export default function Event(props) {
-  const { update, model, updateModel, getModels } = useStore(selector, shallow);
+  const { update, model, addAttackScene, getAttackScenario, attacks, attackTrees, nodes } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
@@ -30,30 +33,31 @@ export default function Event(props) {
   };
 
   const handleClick = () => {
-    const mod = { ...model };
-    const Scene = mod?.scenarios[3]?.subs[0]?.scenes;
-    const selected = mod?.scenarios[3]?.subs[0]?.scenes.find((item) => item.id === props?.id);
-    if (!selected) {
-      Scene.push({ ID: props.id, Name: inputValue });
-      // console.log('mod', mod);
-      updateModel(mod).then((res) => {
-        if (res) {
-          getModels();
-        }
-      });
-    }
+    const details = {
+      modelId: model?._id,
+      type: 'attack',
+      attackId: props.id,
+      name: inputValue
+    };
+    addAttackScene(details).then((res) => {
+      if (res) {
+        getAttackScenario(model?._id);
+      }
+    });
   };
 
   const getBgColor = useCallback(() => {
-    const color = model?.scenarios[3]?.subs[0].scenes.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+    const color = attacks?.scenes.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     if (color) {
-      return RatingColor(color['Attack Feasabilities Rating']);
+      return RatingColor(color['Attack Feasibilities Rating']);
     } else {
       return 'transparent';
     }
   }, []);
 
   const bgColor = getBgColor();
+
+  // console.log('bgColor', bgColor);
 
   const handleChange = (e) => {
     const value = e.target.value;
