@@ -27,7 +27,7 @@ export const register = createAsyncThunk('register', async (details, thunkAPI) =
   let data = new FormData();
   data.append('username', details?.email);
   data.append('password', details?.password);
-  const URL = `${configuration.backendUrl}register`;
+  const URL = `${configuration.apiBaseUrl}register`;
   try {
     const res = await axios.post(URL, data);
     // console.log('res', res);

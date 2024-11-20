@@ -481,7 +481,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       const options = {
         method: 'POST',
         ...createHeaders(),
-        url: `${configuration?.backendUrl}get_details/templates`
+        url: `${configuration?.apiBaseUrl}get_details/templates`
       };
       const res = await axios(options);
       set({
@@ -497,7 +497,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       const options = {
         method: 'POST',
         ...createHeaders(),
-        url: `${configuration.backendUrl}get_details/sidebarNode`
+        url: `${configuration.apiBaseUrl}get_details/sidebarNode`
       };
       const res = await axios(options);
       set({
@@ -734,7 +734,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       ...createHeaders(),
       body: data
     };
-    const res = await fetch(`${configuration.backendUrl}add/sidebarNode`, requestOptions);
+    const res = await fetch(`${configuration.apiBaseUrl}add/sidebarNode`, requestOptions);
     // console.log('res', res);
     return res;
   },
@@ -746,7 +746,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     data.append('new_node', JSON.stringify(newNode.new_node));
 
     // const res = await axios.post(`${configuration.backendUrl}createComponent`,newTemplate)
-    const res = await axios.post(`${configuration.backendUrl}add/node`, data);
+    const res = await axios.post(`${configuration.apiBaseUrl}add/node`, data);
     // console.log('res', res);
     return res;
   },
@@ -823,7 +823,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     let data = new FormData();
     data.append('model_ids', ids);
     try {
-      const URL = `${configuration.backendUrl}delete/model`;
+      const URL = `${configuration.apiBaseUrl}delete/model`;
       const response = await axios.post(URL, data);
       // console.log('response', response);
       return response.data;

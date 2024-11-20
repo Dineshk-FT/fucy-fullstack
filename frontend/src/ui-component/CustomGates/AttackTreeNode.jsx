@@ -6,16 +6,16 @@ import useStore from '../../Zustand/store';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
-  model: state?.model
+  attacks: state.attackScenarios['subs'][0]
 });
 const AttackTreeNode = ({ data, isConnectable, type, id }) => {
-  const { model } = useStore(selector);
+  const { attacks } = useStore(selector);
   const { getNodes, getEdges } = useReactFlow();
   const nodes = getNodes();
   const edges = getEdges();
   const selected = edges.filter((ed) => ed.source === id).map((item) => item.target);
   const result = nodes.filter((obj) => selected.includes(obj.id));
-  const merged = model?.scenarios[3]?.subs[0].scenes
+  const merged = attacks?.scenes
     .filter((obj1) => result.some((obj2) => obj1?.ID === obj2?.data?.nodeId))
     .map((item) => item['Attack Feasabilities Rating']);
 

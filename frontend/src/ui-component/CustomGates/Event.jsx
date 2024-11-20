@@ -12,13 +12,11 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   model: state.model,
   attacks: state.attackScenarios['subs'][0],
-  attackTrees: state.attackScenarios['subs'][1],
-  addAttackScene: state.addAttackScene,
-  nodes: state.nodes
+  addAttackScene: state.addAttackScene
 });
 
 export default function Event(props) {
-  const { update, model, addAttackScene, getAttackScenario, attacks, attackTrees, nodes } = useStore(selector, shallow);
+  const { update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
   const [anchorEl, setAnchorEl] = useState(null);
   const openRight = Boolean(anchorEl);
