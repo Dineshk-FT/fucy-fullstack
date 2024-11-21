@@ -100,6 +100,7 @@ const useStyles = makeStyles((theme) => ({
   title: {
     display: 'flex',
     marginLeft: '-7px',
+    padding: "5px",
     alignItems: 'center'
   }
 }));
@@ -111,8 +112,6 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height: '60vh',
-    boxShadow: 'inset 0px 0px 7px gray',
     '&:after': {
       content: '""',
       position: 'absolute',
@@ -147,7 +146,9 @@ const selector = (state) => ({
   riskTreatment: state.riskTreatment,
   documents: state.documents,
   reports: state.reports,
-  layouts: state.layouts
+  layouts: state.layouts,
+  clickedItem: state.clickedItem,
+  setClickedItem: state.setClickedItem,
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -177,7 +178,9 @@ const BrowserCard = () => {
     riskTreatment,
     documents,
     reports,
-    layouts
+    layouts,
+    clickedItem,
+    setClickedItem,
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -186,9 +189,12 @@ const BrowserCard = () => {
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
+  const [expanded, setExpanded] = useState([]);
 
   useEffect(() => {
     getModelById(modelId);
+    setExpanded([modelId])
+    setClickedItem(modelId);
   }, [modelId]);
 
   const scenarios = [
@@ -207,14 +213,15 @@ const BrowserCard = () => {
 
   // console.log('attackScenarios', attackScenarios);
 
-  const handleClick = async (id, name) => {
+  const handleClick = async (ModelId, name, id) => {
+    setClickedItem(id);
     const get_api = {
       assets: getAssets,
       damage: getDamageScenarios,
       threat: getThreatScenario,
       attack: getAttackScenario
     };
-    await get_api[name](id);
+    await get_api[name](ModelId);
   };
 
   const handleOpenTable = (name) => {
@@ -300,7 +307,7 @@ const BrowserCard = () => {
     return (
       <Box color={color?.sidebarContent} className={classes.title}>
         {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit">
+        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={"14px !important"}>
           {name}
         </Typography>
       </Box>
@@ -342,9 +349,9 @@ const BrowserCard = () => {
             key={data.id}
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'assets')}
+            onClick={() => handleClick(model?._id, 'assets', data.id)}
             onContextMenu={handleNodes}
-            sx={{ ml: -1 }}
+            sx={{ ml: -1, p:1 }}
           >
             {data.Details?.map((detail) => (
               <DraggableTreeItem
@@ -377,8 +384,8 @@ const BrowserCard = () => {
             key={data.id}
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'damage')}
-            sx={{ ml: -1 }}
+            onClick={() => handleClick(model?._id, 'damage', data.id)}
+            sx={{ ml: -1, p:1 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
@@ -401,8 +408,8 @@ const BrowserCard = () => {
             key={data.id}
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'threat')}
-            sx={{ ml: -1 }}
+            onClick={() => handleClick(model?._id, 'threat', data.id)}
+            sx={{ ml: -1, p:1 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
@@ -441,8 +448,8 @@ const BrowserCard = () => {
             key={data.id}
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'attack')}
-            sx={{ ml: -1 }}
+            onClick={() => handleClick(model?._id, 'attack', data.id)}
+            sx={{ ml: -1, p:1 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -496,8 +503,8 @@ const BrowserCard = () => {
             key={data.id}
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, data.name)}
-            sx={{ ml: -1 }}
+            onClick={() => handleClick(model?._id, data.name, data.id)}
+            sx={{ ml: -1, p:1 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -517,13 +524,11 @@ const BrowserCard = () => {
   };
   return (
     <>
-      <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
-        Projects
-      </Typography>
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
+            expanded={clickedItem}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
           >

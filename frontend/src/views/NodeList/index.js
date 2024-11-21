@@ -21,6 +21,7 @@ import { openAddNodeTab } from '../../store/slices/CanvasSlice';
 const useStyles = makeStyles(() => ({
   paper: {
     marginLeft: '1.7rem',
+    marginTop: '2rem',
     zIndex: 1400,
     pointerEvents: 'auto',
     background: '#f5f5f5',
@@ -131,7 +132,7 @@ const Components = () => {
                 >
                   <Paper onMouseLeave={handleMouseLeave} sx={{ backgroundColor: color?.leftbarBG }} className={classes?.paper}>
                     <ClickAwayListener onClickAway={handleMouseLeave}>
-                      <MenuList autoFocusItem={openModal} sx={{ height: 'auto', maxHeight: 600, overflow: 'auto' }}>
+                      <MenuList autoFocusItem={openModal} sx={{ height: 'auto', maxHeight: 600 }}>
                         {item?.nodes?.map((node) => (
                           <MenuItem draggable onDragStart={(event) => onDragStart(event, node)} key={node?.id} onClick={handleMouseLeave}>
                             {node?.data['label']}

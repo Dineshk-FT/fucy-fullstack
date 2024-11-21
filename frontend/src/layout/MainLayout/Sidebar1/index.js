@@ -20,6 +20,8 @@ import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import MenuCard from '../Sidebar/MenuCard/index1';
+import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import { ClosePropertiesTab } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -49,6 +51,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const { Properties } = useSelector((state) => state?.pageName);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
+  const { propertiesTabOpen } = useSelector((state) => state?.canvas);
   // State to track the width of the ResizableBox
   const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 370 : 0);
 
@@ -62,32 +65,35 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   };
 
   const handleDrawerToggle = () => {
-    if (drawerOpen) {
-      setSidebarWidth(0);
-    } else {
-      setSidebarWidth(400);
-    }
+    setSidebarWidth(drawerOpen ? 0 : 370);
     drawerToggle();
-    // console.log('Drawer open:', !drawerOpen.open);
   };
 
   const drawer = (
     <>
       <BrowserView>
-        <PerfectScrollbar
-          component="div"
-          style={{
-            paddingLeft: '16px',
-            paddingRight: '40px',
-            paddingTop: '16px'
-          }}
-        >
+        <PerfectScrollbar component="div" style={{ paddingRight: '30px' }}>
           <BrowserCard template={template} models={models} />
+          {propertiesTabOpen && (
+            <Box mx={1} display="flex">
+              <Box>
+                <MenuCard />
+              </Box>
+              <Box mt={2} sx={{ cursor: 'pointer' }} onClick={() => dispatch(ClosePropertiesTab())}>
+                <CancelTwoToneIcon />
+              </Box>
+            </Box>
+          )}
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}
           sx={{
             position: 'absolute',
+            border: '1px solid black',
+            margin: 1,
+            padding: '0px',
+            width: '0.8em',
+            height: '0.8em',        
             top: 0,
             right: 0,
             color: color?.iconColor,
@@ -150,6 +156,10 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
               onClick={handleDrawerToggle}
               sx={{
                 position: 'absolute',
+                border: '1px solid black',
+                padding: '0px',
+                width: '0.8em',
+                height: '0.8em',
                 left: '0px',
                 top: 0,
                 marginTop: `${navbarHeight}px`,
