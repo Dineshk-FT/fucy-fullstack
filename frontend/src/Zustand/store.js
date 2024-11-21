@@ -38,6 +38,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedTemplate: {},
   Models: [],
   model: {},
+  clickedItem: [],
   assets: {
     id: 1,
     name: 'Item Model & Assets',
@@ -175,6 +176,16 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   scenerio: {},
   component: [],
+
+  setClickedItem: (item) => set((state) => {
+    if (state.clickedItem.includes(item)) {
+      // If the item is already in the array, remove it
+      return { clickedItem: state.clickedItem.filter((i) => i !== item) };
+    } else {
+      // If the item is not in the array, add it
+      return { clickedItem: [...state.clickedItem, item] };
+    }
+  }),
 
   setReactFlowInstance: (instance) => set({ reactFlowInstance: instance }),
 
