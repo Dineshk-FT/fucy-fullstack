@@ -182,7 +182,7 @@ const MainLayout = ({ children }) => {
       <Box display="flex" alignItems="center" gap={2}>
         {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
         <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
+          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
             {displayLabel}
           </Typography>
         </Tooltip>
@@ -204,7 +204,7 @@ const MainLayout = ({ children }) => {
             bgcolor: color?.navBG,
             height: !isNavbarClose ? navbarHeight : '0px',
             transition: leftDrawerOpened ? theme.transitions.create('width') : 'none',
-            borderBottom: '1px solid black'
+            borderBottom: `1px solid ${color?.title}`
           }}
         >
           {/* ----------------- Navbar ------------------- */}
@@ -214,7 +214,7 @@ const MainLayout = ({ children }) => {
               transition: 'display 0.8s',
               justifyContent: 'space-between',
               py: 0,
-              borderBottom: '0.2px solid black'
+              borderBottom: `0.2px solid ${color?.title}`
             }}
           >
             {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
@@ -241,13 +241,12 @@ const MainLayout = ({ children }) => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  color: color?.title,
                   gap: 1,
                   cursor: 'pointer',
                   fontSize: 'inherit',
                   transition: 'background-color 0.3s, box-shadow 0.3s',
                   '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
                     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                     borderRadius: '4px'
                   }

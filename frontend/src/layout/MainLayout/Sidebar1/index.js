@@ -89,7 +89,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           onClick={handleDrawerToggle}
           sx={{
             position: 'absolute',
-            border: '1px solid black',
+            border: `1px solid ${color?.title}`,
             margin: 1,
             padding: '0px',
             width: '0.8em',
@@ -156,7 +156,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
               onClick={handleDrawerToggle}
               sx={{
                 position: 'absolute',
-                border: '1px solid black',
+                border: `1px solid ${color?.title}`,
                 padding: '0px',
                 width: '0.8em',
                 height: '0.8em',
