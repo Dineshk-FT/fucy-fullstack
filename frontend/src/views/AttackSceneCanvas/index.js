@@ -150,10 +150,10 @@ export default function AttackBlock({ attackScene }) {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
 
-  // useEffect(() => {
-  //   setNodes([]);
-  //   setEdges([]);
-  // }, []);
+  useEffect(() => {
+    setNodes([]);
+    setEdges([]);
+  }, []);
 
   useEffect(() => {
     if (attackScene) {
@@ -331,7 +331,7 @@ export default function AttackBlock({ attackScene }) {
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>
             <Button variant="outlined" onClick={handleSave}>
-              {attackScene?.templates ? 'Update' : 'Add'}
+              {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
             </Button>
           </Panel>
           <MiniMap />

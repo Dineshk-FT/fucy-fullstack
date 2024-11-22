@@ -7,6 +7,7 @@ export const appDrawerWidth = 320;
 export const navbarHeight = 75;
 export const height = '93svh';
 export const fontSize = 13;
+export const tableHeight = 450;
 //  export const ColorTheme = {
 //     navBG:'#a2a8d3' ,
 //     tabBG:'#e7eaf6',

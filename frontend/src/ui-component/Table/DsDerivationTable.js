@@ -15,6 +15,7 @@ import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { useDispatch } from 'react-redux';
+import { tableHeight } from '../../store/constant';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -28,10 +29,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    fontSize: 13,
+    padding: 5
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   }
 }));
@@ -180,11 +183,11 @@ export default function DsDerivationTable() {
           height: '-webkit-fill-available',
           minHeight: 'moz-available',
           '&::-webkit-scrollbar': {
-            width: '4px' 
+            width: '4px'
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px' 
+            borderRadius: '10px'
           },
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
@@ -194,7 +197,7 @@ export default function DsDerivationTable() {
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>Damage Scenario Derivation Table</Typography>
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
           <Box>
             <TextField
@@ -212,7 +215,7 @@ export default function DsDerivationTable() {
             />
           </Box>
         </Box>
-        <TableContainer component={Paper} sx={{borderRadius: '0px', padding: 1}}>
+        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
@@ -228,15 +231,15 @@ export default function DsDerivationTable() {
             </TableBody>
           </Table>
           {/* Pagination controls */}
-          <TablePagination
-            component="div"
-            count={filtered.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={filtered.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </Box>
     </>
   );

@@ -27,6 +27,7 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
+import { tableHeight } from '../../store/constant';
 
 const selector = (state) => ({
   model: state.model,
@@ -61,10 +62,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    fontSize: 13,
+    padding: 5
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   }
 }));
@@ -242,7 +245,7 @@ export default function Tstable() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>{title} Table</Typography>
+          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>
           <TextField
@@ -258,7 +261,7 @@ export default function Tstable() {
           </Button>
         </Box>
       </Box>
-      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1 }}>
+      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>

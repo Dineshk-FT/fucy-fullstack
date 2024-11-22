@@ -19,6 +19,7 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
+import { tableHeight } from '../../store/constant';
 
 const selector = (state) => ({
   model: state.model,
@@ -67,10 +68,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    fontSize: 13,
+    padding: 5
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   }
 }));
@@ -484,7 +487,7 @@ export default function AttackTreeTable() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>Attack Tree Table</Typography>
+          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
         <TextField
           id="outlined-size-small"
@@ -512,7 +515,9 @@ export default function AttackTreeTable() {
           },
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
-          }
+          },
+          maxHeight: tableHeight,
+          scrollbarWidth: 'thin'
         }}
       >
         <Table stickyHeader aria-label="sticky table" sx={{ minWidth: 650 }}>

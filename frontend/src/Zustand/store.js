@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
-import { ADD_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
+import { ADD_CALL, DELETE_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -64,12 +64,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'ThreatIcon',
     subs: [
       {
+        name: 'Threat Scenarios'
         // id: 31,
-        name: 'Derived Threat Scenarios'
       },
       {
         // id: 32,
-        name: 'Threat Scenarios'
+        name: 'Derived Threat Scenarios'
       }
     ]
   },
@@ -378,6 +378,12 @@ const useStore = createWithEqualityFn((set, get) => ({
           }));
 
         intersectingNodesMap[group.id] = intersectingNodes;
+
+        // Add nodeCount to the group's data
+        group.data = {
+          ...group.data,
+          nodeCount: intersectingNodes.length
+        };
       });
 
       // Remove parentId and extent from nodes that are not inside any group
@@ -400,6 +406,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
     return [intersectingNodesMap, nodes];
   },
+
   dragAdd: (newNode) => {
     // console.log('newNode', newNode);
     set((state) => ({
@@ -813,9 +820,10 @@ const useStore = createWithEqualityFn((set, get) => ({
   // },
   //Delete Section
 
-  deleteNode: async (id) => {
-    const res = await axios.delete(`${configuration.apiBaseUrl}sidebarNode/${id}`);
-    // console.log('res', res);
+  deleteNode: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete-node/assets`;
+    const res = await DELETE_CALL(details, url);
+    return res;
   },
 
   deleteModels: async (ids) => {
