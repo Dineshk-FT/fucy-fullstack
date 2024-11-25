@@ -94,15 +94,6 @@ export default function LeftSection() {
       name: 'Library',
       options: [
         {
-          label: 'Component',
-          // action: () => console.log('Component'),
-          subLevel: (
-            <Box>
-              <Components />
-            </Box>
-          )
-        },
-        {
           label: 'System',
           // action: () => console.log('System'),
           subLevel: (
@@ -112,6 +103,20 @@ export default function LeftSection() {
             </Box>
           )
         }
+      ]
+    },
+    {
+      name: 'Components',
+      options: [
+        {
+          label: 'Create Component',
+          // action: () => console.log('Component'),
+          subLevel: (
+            <Box>
+              <Components />
+            </Box>
+          )
+        },
       ]
     },
     // {
