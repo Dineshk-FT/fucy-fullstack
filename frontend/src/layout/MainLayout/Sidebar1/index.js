@@ -48,10 +48,8 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const { template, fetchModels, models } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
-  const { Properties } = useSelector((state) => state?.pageName);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
-  const { propertiesTabOpen } = useSelector((state) => state?.canvas);
   // State to track the width of the ResizableBox
   const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 370 : 0);
 
@@ -74,16 +72,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
       <BrowserView>
         <PerfectScrollbar component="div" style={{ paddingRight: '30px' }}>
           <BrowserCard template={template} models={models} />
-          {propertiesTabOpen && (
-            <Box mx={1} display="flex">
-              <Box>
-                <MenuCard />
-              </Box>
-              <Box mt={2} sx={{ cursor: 'pointer' }} onClick={() => dispatch(ClosePropertiesTab())}>
-                <CancelTwoToneIcon />
-              </Box>
-            </Box>
-          )}
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}
