@@ -65,10 +65,22 @@ const EditContent = ({
   };
 
   const handleDelete = (valueToDelete) => () => {
+    const updatedProperties = details.properties.filter((property) => property !== valueToDelete);
+
+    // Update details with the filtered properties
     setDetails((prevDetails) => ({
       ...prevDetails,
-      properties: prevDetails.properties.filter((property) => property !== valueToDelete)
+      properties: updatedProperties
     }));
+
+    // Update nodes and selectedElement to reflect the changes in `isAsset`
+    const updatedNodes = nodes.map((node) =>
+      node.id === selectedElement?.id ? { ...node, properties: updatedProperties, isAsset: updatedProperties.length > 0 } : node
+    );
+    const updatedSelected = updatedNodes.find((nd) => nd.id === selectedElement?.id);
+
+    setNodes(updatedNodes);
+    setSelectedElement(updatedSelected);
   };
 
   const handleChangeTab = (event, newValue) => {
@@ -77,14 +89,27 @@ const EditContent = ({
 
   // console.log('nodes', nodes);
 
+  useEffect(() => {
+    // Automatically update `isAsset` based on `details.properties`
+    const updatedNodes = nodes.map((node) =>
+      node.id === selectedElement?.id ? { ...node, isAsset: details?.properties?.length > 0 } : node
+    );
+    const updatedSelected = updatedNodes.find((nd) => nd.id === selectedElement?.id);
+
+    setNodes(updatedNodes);
+    setSelectedElement(updatedSelected);
+  }, [details.properties]);
+
   const handleChecked = (event) => {
     const { checked } = event.target;
+
+    // Manually update `isAsset` without overriding automatic logic
     const updatedNodes = nodes.map((node) => (node.id === selectedElement?.id ? { ...node, isAsset: checked } : node));
     const updatedSelected = updatedNodes.find((nd) => nd.id === selectedElement?.id);
+
     setNodes(updatedNodes);
     setSelectedElement(updatedSelected);
   };
-
   useEffect(() => {
     setDetails({
       ...details,
@@ -95,7 +120,7 @@ const EditContent = ({
   }, [selectedElement]);
 
   // console.log('details', details);
-  // console.log('details', details)
+  // console.log('details', details);
 
   const handleChange = (event, newValue) => {
     setDetails({

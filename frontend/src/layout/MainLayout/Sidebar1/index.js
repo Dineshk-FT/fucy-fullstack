@@ -93,7 +93,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             margin: 1,
             padding: '0px',
             width: '0.8em',
-            height: '0.8em',        
+            height: '0.8em',
             top: 0,
             right: 0,
             color: color?.iconColor,

@@ -39,6 +39,7 @@ import DraggableTreeItem from './DraggableItem';
 import {
   attackTableOpen,
   AttackTreePageOpen,
+  closeAll,
   DerivationTableOpen,
   drawerOpen,
   DsTableOpen,
@@ -100,7 +101,7 @@ const useStyles = makeStyles((theme) => ({
   title: {
     display: 'flex',
     marginLeft: '-7px',
-    padding: "5px",
+    padding: '5px',
     alignItems: 'center'
   }
 }));
@@ -112,6 +113,9 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
+    height: '70vh',
+    // boxShadow: 'inset 0px 0px 7px gray',
+    border: '1px solid gray',
     '&:after': {
       content: '""',
       position: 'absolute',
@@ -126,12 +130,9 @@ const CardStyle = styled(Card)(() =>
 );
 
 const selector = (state) => ({
-  addNode: state.addCyberNode,
-  getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
   model: state.model,
-  getSidebarNode: state.getSidebarNode,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
   threatScenarios: state.threatScenarios,
@@ -148,7 +149,7 @@ const selector = (state) => ({
   reports: state.reports,
   layouts: state.layouts,
   clickedItem: state.clickedItem,
-  setClickedItem: state.setClickedItem,
+  setClickedItem: state.setClickedItem
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -158,12 +159,9 @@ const BrowserCard = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const {
-    addNode,
-    getModels,
     nodes,
     model,
     getModelById,
-    getSidebarNode,
     assets,
     damageScenarios,
     threatScenarios,
@@ -180,7 +178,7 @@ const BrowserCard = () => {
     reports,
     layouts,
     clickedItem,
-    setClickedItem,
+    setClickedItem
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -193,7 +191,7 @@ const BrowserCard = () => {
 
   useEffect(() => {
     getModelById(modelId);
-    setExpanded([modelId])
+    setExpanded([modelId]);
     setClickedItem(modelId);
   }, [modelId]);
 
@@ -215,6 +213,9 @@ const BrowserCard = () => {
 
   const handleClick = async (ModelId, name, id) => {
     setClickedItem(id);
+    if (name === 'assets') {
+      dispatch(closeAll());
+    }
     const get_api = {
       assets: getAssets,
       damage: getDamageScenarios,
@@ -225,7 +226,6 @@ const BrowserCard = () => {
   };
 
   const handleOpenTable = (name) => {
-    // console.log('name', name);
     switch (true) {
       case name.includes('Derivations'):
         dispatch(DerivationTableOpen());
@@ -297,17 +297,19 @@ const BrowserCard = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const isDragged = useMemo(() => nodes?.some(dragCheck), []);
+  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
   function dragCheck(node) {
-    return node.dragged;
+    return node?.dragged;
   }
+
+  // console.log('assets', assets);
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
       <Box color={color?.sidebarContent} className={classes.title}>
         {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={"14px !important"}>
+        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'}>
           {name}
         </Typography>
       </Box>
@@ -351,7 +353,7 @@ const BrowserCard = () => {
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'assets', data.id)}
             onContextMenu={handleNodes}
-            sx={{ ml: -1, p:1 }}
+            sx={{ ml: -1, p: 1 }}
           >
             {data.Details?.map((detail) => (
               <DraggableTreeItem
@@ -385,7 +387,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'damage', data.id)}
-            sx={{ ml: -1, p:1 }}
+            sx={{ ml: -1, p: 1 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
@@ -409,11 +411,11 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'threat', data.id)}
-            sx={{ ml: -1, p:1 }}
+            sx={{ ml: -1, p: 1 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
-                {sub.name === 'Derived Threat Scenarios' &&
+                {sub.name === 'Threat Scenarios' &&
                   sub.Details?.map((detail) =>
                     detail.Details?.map((nodeDetail) =>
                       nodeDetail.props?.map((prop) => {
@@ -449,7 +451,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'attack', data.id)}
-            sx={{ ml: -1, p:1 }}
+            sx={{ ml: -1, p: 1 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -504,7 +506,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, data.name, data.id)}
-            sx={{ ml: -1, p:1 }}
+            sx={{ ml: -1, p: 1 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -524,11 +526,15 @@ const BrowserCard = () => {
   };
   return (
     <>
+      {/* <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
+        Projects
+      </Typography> */}
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
+            // onClick={() => setClickedItem(modelId)}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
           >
