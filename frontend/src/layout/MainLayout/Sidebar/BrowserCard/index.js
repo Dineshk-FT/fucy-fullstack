@@ -260,7 +260,8 @@ const BrowserCard = () => {
     }
   };
 
-  const handleOpenAttackTree = (scene, name) => {
+  const handleOpenAttackTree = (e, scene, name) => {
+    e.stopPropagation();
     // console.log('scene', scene);
     if (name === 'Attack Trees') {
       dispatch(AttackTreePageOpen());
@@ -279,13 +280,15 @@ const BrowserCard = () => {
     setAnchorItemEl(null);
   };
 
-  const handleAddNewNode = () => {
+  const handleAddNewNode = (e) => {
     // dispatch(drawerOpen());
+    e.stopPropagation();
     dispatch(openAddNodeTab());
     setOpenItemRight(false);
   };
 
-  const handleOpenSelectNode = () => {
+  const handleOpenSelectNode = (e) => {
+    e.stopPropagation();
     setOpenNodelist(true);
     setOpenItemRight(false);
   };
@@ -487,7 +490,7 @@ const BrowserCard = () => {
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
                   label={getLabel('DangerousIcon', at_scene.Name)}
-                  onClick={() => handleOpenAttackTree(at_scene, sub.name)}
+                  onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
                 />
               );
             })
