@@ -141,13 +141,13 @@ const EditContent = ({
         <CancelTwoToneIcon />
       </Box>
       <TabContext value={value}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '270px' }}>
+        {/* <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '270px' }}>
           <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
             <Tab label="Text" value="1" sx={{ minWidth: '90px' }} />
             <Tab label="Diagram" value="2" sx={{ minWidth: '90px' }} />
             <Tab label="Style" value="3" sx={{ minWidth: '90px' }} />
           </TabList>
-        </Box>
+        </Box> */}
         <TabPanel value="1" sx={{ p: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
             <InputLabel className={classes.inputlabel}>Name :</InputLabel>
