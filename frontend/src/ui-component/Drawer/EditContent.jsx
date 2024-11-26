@@ -1,9 +1,7 @@
 /*eslint-disable*/
 import React, { useEffect, useState } from 'react';
 import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel } from '@mui/material';
-import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import toast, { Toaster } from 'react-hot-toast';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
@@ -21,8 +19,22 @@ const useStyles = makeStyles(() => ({
     fontFamily: 'Inter',
     fontWeight: 600,
     color: '#000'
+  },
+  bottomPanel: {
+    position: 'fixed',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTop: '1px solid #ccc',
+    zIndex: 1300,
+    padding: '16px',
+    boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.2)',
+    maxHeight: '50vh',
+    width: '65%',
+    overflowY: 'auto'
   }
 }));
+
 const EditContent = ({
   selectedElement,
   nodes,
@@ -40,9 +52,7 @@ const EditContent = ({
   const classes = useStyles();
   const [value, setValue] = useState('1');
   const dispatch = useDispatch();
-  // console.log('details', details);
 
-  // console.log('selectedElement', selectedElement);
   const handleUpdate = () => {
     const template = {
       nodes: nodes,
@@ -54,12 +64,11 @@ const EditContent = ({
       template: JSON.stringify(template)
     };
     update(details)
-      .then((res) => {
+      .then(() => {
         notify('Updated Successfully', 'success');
         RefreshAPI();
       })
-      .catch((err) => {
-        console.log('err', err);
+      .catch(() => {
         notify('Something went wrong', 'error');
       });
   };
@@ -161,7 +170,7 @@ const EditContent = ({
 
   // console.log('details', details);
   return (
-    <>
+    <div className={classes.bottomPanel}>
       <Box sx={{ cursor: 'pointer', float: 'right', mt: 1.5 }} onClick={() => dispatch(ClosePropertiesTab())}>
         <CancelTwoToneIcon />
       </Box>
@@ -174,48 +183,51 @@ const EditContent = ({
           </TabList>
         </Box> */}
         <TabPanel value="1" sx={{ p: 0 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-            <InputLabel className={classes.inputlabel}>Name :</InputLabel>
-            <TextField
-              id="outlined-basic"
-              variant="outlined"
-              value={details?.name}
-              onChange={(e) => handleStyle(e, 'name')}
-              sx={{
-                width: 'auto',
-                '& .MuiInputBase-input': {
-                  height: '0.4rem',
-                  fontSize: fontSize
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 1, mt: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+              <InputLabel className={classes.inputlabel}>Name :</InputLabel>
+              <TextField
+                id="outlined-basic"
+                variant="outlined"
+                value={details?.name}
+                onChange={(e) => handleStyle(e, 'name')}
+                sx={{
+                  width: 'auto',
+                  '& .MuiInputBase-input': {
+                    height: '0.4rem',
+                    fontSize: fontSize
+                  }
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+              <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
+              <Autocomplete
+                multiple
+                id="tags-filled"
+                options={Properties}
+                value={details.properties}
+                onChange={handleChange}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    padding: '3px'
+                  }
+                }}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      sx={{ '& .MuiChip-label': { fontSize: 11 } }}
+                      key={option}
+                      variant="outlined"
+                      label={option}
+                      {...getTagProps({ index })}
+                      onDelete={handleDelete(option)}
+                    />
+                  ))
                 }
-              }}
-            />
-            <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
-
-            <Autocomplete
-              multiple
-              id="tags-filled"
-              options={Properties}
-              value={details.properties}
-              onChange={handleChange}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  padding: '3px'
-                }
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    sx={{ '& .MuiChip-label': { fontSize: 11 } }}
-                    key={option}
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                    onDelete={handleDelete(option)}
-                  />
-                ))
-              }
-              renderInput={(params) => <TextField {...params} variant="outlined" />}
-            />
+                renderInput={(params) => <TextField {...params} variant="outlined" />}
+              />
+            </Box>
             {!selectedElement?.target && (
               <FormControlLabel
                 sx={{ fontSize: fontSize, color: '#000' }}
@@ -223,16 +235,14 @@ const EditContent = ({
                 label="Asset"
               />
             )}
-            <Button variant="outlined" onClick={handleUpdate}>
+            <Button variant="outlined" onClick={handleUpdate} sx={{ height: '50%', marginRight: 1 }}>
               Update
             </Button>
           </Box>
         </TabPanel>
-        <TabPanel value="2">Diagram</TabPanel>
-        <TabPanel value="3">Style</TabPanel>
       </TabContext>
       <Toaster position="top-right" reverseOrder={false} />
-    </>
+    </div>
   );
 };
 

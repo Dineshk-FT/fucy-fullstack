@@ -113,9 +113,10 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height: '70vh',
+    height: '80vh',
     // boxShadow: 'inset 0px 0px 7px gray',
     border: '1px solid gray',
+    borderRadius: '0px',
     '&:after': {
       content: '""',
       position: 'absolute',
@@ -353,7 +354,7 @@ const BrowserCard = () => {
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'assets', data.id)}
             onContextMenu={handleNodes}
-            sx={{ ml: -1, p: 1 }}
+            sx={{ ml: -1, p: 0.7 }}
           >
             {data.Details?.map((detail) => (
               <DraggableTreeItem
@@ -387,7 +388,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'damage', data.id)}
-            sx={{ ml: -1, p: 1 }}
+            sx={{ ml: -1, p: 0.7 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
@@ -411,7 +412,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'threat', data.id)}
-            sx={{ ml: -1, p: 1 }}
+            sx={{ ml: -1, p: 0.7 }}
           >
             {data.subs?.map((sub) => (
               <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
@@ -451,7 +452,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, 'attack', data.id)}
-            sx={{ ml: -1, p: 1 }}
+            sx={{ ml: -1, p: 0.7 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -506,7 +507,7 @@ const BrowserCard = () => {
             nodeId={data.id}
             label={getImageLabel(data.icon, data.name)}
             onClick={() => handleClick(model?._id, data.name, data.id)}
-            sx={{ ml: -1, p: 1 }}
+            sx={{ ml: -1, p: 0.7 }}
           >
             {data?.subs?.map((sub) => (
               <TreeItem
@@ -537,7 +538,7 @@ const BrowserCard = () => {
             // onClick={() => setClickedItem(modelId)}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
-          >
+            >
             <TreeItem
               key={model?._id}
               nodeId={model?._id}
