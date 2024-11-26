@@ -570,7 +570,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
-    console.log('res api page', res);
+    // console.log('res api page', res);
     set({
       model: res,
       assets: {

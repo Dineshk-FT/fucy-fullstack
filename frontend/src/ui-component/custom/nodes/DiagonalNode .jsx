@@ -50,7 +50,6 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
           <div>{data?.label}</div>
           <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
           <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
-          <div>{data?.label}</div>
           {isCrossVisible && (
             <div
               className="delete-icon"
