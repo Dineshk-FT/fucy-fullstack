@@ -240,6 +240,7 @@ export default function MainCanvas() {
   // console.log('redoStack', redoStack);
   // console.log('undoStack', undoStack);
   // console.log('isAttackTreeOpen', isAttackTreeOpen);
+  // console.log('assets', assets);
   useEffect(() => {
     const template = assets?.template;
     setSavedTemplate(template);

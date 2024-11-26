@@ -1,10 +1,10 @@
 /* eslint-disable */
 import { createWithEqualityFn } from 'zustand/traditional';
 import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
-
+import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
-import { ADD_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
+import { ADD_CALL, DELETE_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -65,12 +65,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'ThreatIcon',
     subs: [
       {
+        name: 'Threat Scenarios'
         // id: 31,
-        name: 'Derived Threat Scenarios'
       },
       {
         // id: 32,
-        name: 'Threat Scenarios'
+        name: 'Derived Threat Scenarios'
       }
     ]
   },
@@ -177,15 +177,16 @@ const useStore = createWithEqualityFn((set, get) => ({
   scenerio: {},
   component: [],
 
-  setClickedItem: (item) => set((state) => {
-    if (state.clickedItem.includes(item)) {
-      // If the item is already in the array, remove it
-      return { clickedItem: state.clickedItem.filter((i) => i !== item) };
-    } else {
-      // If the item is not in the array, add it
-      return { clickedItem: [...state.clickedItem, item] };
-    }
-  }),
+  setClickedItem: (item) =>
+    set((state) => {
+      if (state.clickedItem.includes(item)) {
+        // If the item is already in the array, remove it
+        return { clickedItem: state.clickedItem.filter((i) => i !== item) };
+      } else {
+        // If the item is not in the array, add it
+        return { clickedItem: [...state.clickedItem, item] };
+      }
+    }),
 
   setReactFlowInstance: (instance) => set({ reactFlowInstance: instance }),
 
@@ -253,6 +254,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes // set the updated nodes
     }));
   },
+
   onEdgesChange: (changes) => {
     const currentEdges = get().edges; // get current edges
     const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
@@ -389,6 +391,12 @@ const useStore = createWithEqualityFn((set, get) => ({
           }));
 
         intersectingNodesMap[group.id] = intersectingNodes;
+
+        // Add nodeCount to the group's data
+        group.data = {
+          ...group.data,
+          nodeCount: intersectingNodes.length
+        };
       });
 
       // Remove parentId and extent from nodes that are not inside any group
@@ -411,6 +419,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
     return [intersectingNodesMap, nodes];
   },
+
   dragAdd: (newNode) => {
     // console.log('newNode', newNode);
     set((state) => ({
@@ -561,6 +570,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
+    console.log('res api page', res);
     set({
       model: res,
       assets: {
@@ -574,6 +584,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
+    // console.log('res', res);
     set((state) => ({
       assets: {
         ...state.assets,
@@ -824,9 +835,10 @@ const useStore = createWithEqualityFn((set, get) => ({
   // },
   //Delete Section
 
-  deleteNode: async (id) => {
-    const res = await axios.delete(`${configuration.apiBaseUrl}sidebarNode/${id}`);
-    // console.log('res', res);
+  deleteNode: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete-node/assets`;
+    const res = await DELETE_CALL(details, url);
+    return res;
   },
 
   deleteModels: async (ids) => {

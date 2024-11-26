@@ -2,20 +2,16 @@
 import React, { useState } from 'react';
 import { Handle, NodeResizer, NodeToolbar, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { updatedModelState } from '../../../utils/Constraints';
-import { useParams } from 'react-router';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 
 const selector = (state) => ({
   model: state.model,
-  nodes: state.nodes,
-  edges: state.edges,
-  updateModel: state.updateModel,
-  getModelById: state.getModelById
+  deleteNode: state.deleteNode,
+  getAssets: state.getAssets,
+  assets: state.assets
 });
 const CustomNode = ({ id, data, isConnectable, type }) => {
-  const { id: mainId } = useParams();
-  const { model, nodes, edges, updateModel, getModelById } = useStore(selector);
+  const { model, assets, getAssets, deleteNode } = useStore(selector);
   // console.log('model', model);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
@@ -27,16 +23,10 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
   };
 
   const handleDelete = () => {
-    const mod = JSON.parse(JSON.stringify(model));
-    const Nodestate = JSON.parse(JSON.stringify(nodes));
-    const edgeState = JSON.parse(JSON.stringify(edges));
-    const filteredNode = Nodestate.filter((node) => node.id !== id);
-    const filteredEdge = edgeState.filter((edge) => edge.source !== id && edge.target !== id);
-    updateModel(updatedModelState(mod, filteredNode, filteredEdge))
+    deleteNode({ assetId: assets?._id, nodeId: id })
       .then((res) => {
         // console.log('res', res);
-        getModelById(mainId); 
-        setIsVisible(false);
+        getAssets(model?._id);
       })
       .catch((err) => {
         console.log('err', err);
@@ -80,7 +70,7 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
                 borderRadius: '50%',
                 fontSize: '0.8rem',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: 'pointer'
               }}
             >
               x
@@ -90,36 +80,36 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
       </ClickAwayListener>
 
       <Dialog open={isVisible} onClose={() => setIsVisible(false)}>
-        <DialogContent style={{paddingBottom: '5px'}}>
-          <p style={{margin: '0px'}}>Do you want to delete this node from the canvas or permanently?</p>
+        <DialogContent style={{ paddingBottom: '5px' }}>
+          <p style={{ margin: '0px' }}>Do you want to delete this node from the canvas or permanently?</p>
         </DialogContent>
-        <DialogActions style={{display: 'flex', justifyContent: 'space-around'}}>
-            <button
-              onClick={onNodeClick}
-              style={{
-                padding: '6px',
-                fontSize: '0.8rem',
-                border: '1px solid #007bff',
-                background: '#007bff',
-                color: '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              Delete from Canvas
-            </button>
-            <button
-              onClick={handleDelete}
-              style={{
-                padding: '6px',
-                fontSize: '0.8rem',
-                border: '1px solid #dc3545',
-                background: '#dc3545',
-                color: '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              Delete Permanently
-            </button>
+        <DialogActions style={{ display: 'flex', justifyContent: 'space-around' }}>
+          <button
+            onClick={onNodeClick}
+            style={{
+              padding: '6px',
+              fontSize: '0.8rem',
+              border: '1px solid #007bff',
+              background: '#007bff',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            Delete from Canvas
+          </button>
+          <button
+            onClick={handleDelete}
+            style={{
+              padding: '6px',
+              fontSize: '0.8rem',
+              border: '1px solid #dc3545',
+              background: '#dc3545',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            Delete Permanently
+          </button>
         </DialogActions>
       </Dialog>
     </>

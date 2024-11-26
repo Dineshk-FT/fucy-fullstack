@@ -23,7 +23,8 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Tooltip
+  Tooltip,
+  InputLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
@@ -35,6 +36,7 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab } from './constraints';
+import { tableHeight } from '../../store/constant';
 
 const selector = (state) => ({
   model: state.model,
@@ -58,10 +60,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    fontSize: 13,
+    padding: 5
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
+    fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   }
 }));
@@ -108,6 +112,11 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
           }
         }}
       >
+        {!impact && (
+          <InputLabel id="demo-simple-select-label" shrink={false}>
+            Select Impacts
+          </InputLabel>
+        )}
         <Select
           labelId="demo-simple-select-label"
           id="demo-simple-select"
@@ -374,43 +383,28 @@ export default function DsTable() {
 
   const OverallImpact = useCallback((impact) => {
     const pattern = (it) => {
-      // console.log('it', it);
-      return it === 'Negligible'
-        ? (it = 1)
-        : it === 'Minor'
-        ? (it = 2)
-        : it === 'Moderate'
-        ? (it = 3)
-        : it === 'Major'
-        ? (it = 4)
-        : it === 'Severe'
-        ? (it = 5)
-        : (it = 0);
+      return it === 'Negligible' ? 1 : it === 'Minor' ? 2 : it === 'Moderate' ? 3 : it === 'Major' ? 4 : it === 'Severe' ? 5 : 0;
     };
 
-    const avgImpact = (ratio) => {
-      return ratio === 1
+    const impactLabel = (value) => {
+      return value === 1
         ? 'Negligible'
-        : ratio === 2
+        : value === 2
         ? 'Minor'
-        : ratio === 3
+        : value === 3
         ? 'Moderate'
-        : ratio === 4
+        : value === 4
         ? 'Major'
-        : ratio === 5
+        : value === 5
         ? 'Severe'
         : '';
     };
-    const val = Object.values(impact)?.map((it) => {
-      return pattern(it);
-    });
-    let ratio;
-    if (val.length) {
-      const sum = val?.reduce((a, b) => a + b);
-      ratio = sum > 0 ? Math.floor(impact && sum / Object.values(impact).length) : 0;
-    }
-    // console.log('ratio', ratio)
-    return avgImpact(ratio);
+
+    const val = Object.values(impact)?.map((it) => pattern(it));
+
+    const maxImpactValue = val.length ? Math.max(...val) : 0;
+
+    return impactLabel(maxImpactValue);
   }, []);
 
   // Handle page change
@@ -458,23 +452,27 @@ export default function DsTable() {
 
               case item.name === 'Losses of Cybersecurity Properties':
                 cellContent = (
-                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)}>
-                    {row?.cyberLosses?.map((loss) => (
-                      <div
-                        key={loss?.id}
-                        style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
-                      >
-                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
-                        <span>Loss of {loss?.name}</span>
-                      </div>
-                    ))}
+                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)} sx={{ cursor: 'pointer' }}>
+                    {row.cyberLosses.length ? (
+                      row?.cyberLosses?.map((loss) => (
+                        <div
+                          key={loss?.id}
+                          style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                        >
+                          <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
+                          <span>Loss of {loss?.name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <InputLabel>Select losses</InputLabel>
+                    )}
                   </StyledTableCell>
                 );
                 break;
 
               case item.name === 'Assets':
                 cellContent = (
-                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)}>
+                  <StyledTableCell key={index} component="th" scope="row">
                     {row?.cyberLosses?.map((loss) => (
                       <div
                         key={loss?.id}
@@ -488,7 +486,11 @@ export default function DsTable() {
                 break;
               case item.name === 'Overall Impact':
                 cellContent = (
-                  <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(OverallImpact(row?.impacts)) }}>
+                  <StyledTableCell
+                    component="th"
+                    scope="row"
+                    sx={{ background: colorPickerTab(OverallImpact(row?.impacts)), color: '#000' }}
+                  >
                     {OverallImpact(row?.impacts)}
                   </StyledTableCell>
                 );
@@ -545,7 +547,7 @@ export default function DsTable() {
             sx={{
               color: color?.title,
               fontWeight: 600,
-              fontSize: '18px'
+              fontSize: '16px'
             }}
           >
             Damage Scenario Table
@@ -586,7 +588,9 @@ export default function DsTable() {
           },
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
-          }
+          },
+          maxHeight: tableHeight,
+          scrollbarWidth: 'thin'
         }}
       >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">

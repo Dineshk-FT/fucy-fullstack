@@ -45,7 +45,7 @@ export default function Event(props) {
   };
 
   const getBgColor = useCallback(() => {
-    const color = attacks?.scenes.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+    const color = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     if (color) {
       return RatingColor(color['Attack Feasibilities Rating']);
     } else {
