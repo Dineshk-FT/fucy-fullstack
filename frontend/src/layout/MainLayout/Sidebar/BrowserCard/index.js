@@ -117,9 +117,10 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height: '70vh',
+    height: '80vh',
     // boxShadow: 'inset 0px 0px 7px gray',
     border: '1px solid gray',
+    borderRadius: '0px',
     '&:after': {
       content: '""',
       position: 'absolute',

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState } from 'react';
-import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography } from '@mui/material';
+import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography, Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
 import { updatedModelState } from '../../utils/Constraints';
@@ -53,13 +53,11 @@ const AddNewNode = () => {
     properties: [],
     bgColor: ''
   });
-  // console.log('selectedNodeGroupId', selectedNodeGroupId);
+
   const { createNode, updateModel, setNodes, nodes, edges, model, update } = useStore(selector);
-  //Name & type for the new Node
+
   const handleChange = (event) => {
-    const {
-      target: { value, name }
-    } = event;
+    const { target: { value, name } } = event;
     if (name) {
       setNewNode({
         ...newNode,
@@ -69,7 +67,6 @@ const AddNewNode = () => {
   };
 
   const CloseModel = () => {
-    // dispatch(drawerClose());
     dispatch(closeAddNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
@@ -80,9 +77,6 @@ const AddNewNode = () => {
     });
   };
 
-  // console.log('nodes', nodes);
-
-  // For Adding new Node
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataNode = {
@@ -109,76 +103,43 @@ const AddNewNode = () => {
       height: 50,
       isAsset: false
     };
-    const details = {
-      id: selectedNodeGroupId,
-      new_node: dataNode
-    };
-    // const selectedsection = nodeState?.find((nd) => nd.id === selectedItem?.id);
-    // selectedsection?.nodes?.push(dataNode);
-    // console.log('selectedsection', selectedsection);
 
-    function updatePositionWithinRange(position, range) {
+    const details = { id: selectedNodeGroupId, new_node: dataNode };
+
+    const updatePositionWithinRange = (position, range) => {
       const getRandomOffset = (range) => Math.random() * range * 2 - range;
-
-      return {
-        x: position.x + getRandomOffset(range),
-        y: position.y + getRandomOffset(range)
-      };
-    }
+      return { x: position.x + getRandomOffset(range), y: position.y + getRandomOffset(range) };
+    };
 
     const position = { x: 495, y: 250 };
     const range = 50;
-
     const updatedPosition = updatePositionWithinRange(position, range);
+
     if (!selectedNodeGroupId) {
-      const nodeDetail = {
-        ...dataNode,
-        position: updatedPosition
-      };
+      const nodeDetail = { ...dataNode, position: updatedPosition };
       const list = [...nodes, nodeDetail];
       setNodes(list);
-      const template = {
-        nodes: list,
-        edges: edges
-      };
-      const details = {
-        'model-id': model?._id,
-        template: JSON.stringify(template),
-        assetId: assets?._id
-      };
+      const template = { nodes: list, edges: edges };
+      const details = { 'model-id': model?._id, template: JSON.stringify(template), assetId: assets?._id };
 
-      update(details)
-        // updateModel(updatedModelState(mod, list, edges))
-        .then((res) => {
-          // console.log('res', res);
-          if (res.data) {
-            notify(res?.message, 'success');
-
-            // setTimeout(() => {
-            getSidebarNode();
-            // }, []);
-          }
-        })
-        .catch((err) => {
-          console.log('err', err);
-          notify('Something went wrong', 'error');
-        });
+      update(details).then((res) => {
+        if (res.data) {
+          notify(res?.message, 'success');
+          getSidebarNode();
+        }
+      }).catch((err) => {
+        notify('Something went wrong', 'error');
+      });
     } else {
-      createNode(details)
-        .then((res) => {
-          // console.log('res', res);
-          if (res.data) {
-            // setTimeout(() => {
-            getSidebarNode();
-            setSelectedNodeGroupId({});
-            notify('Node created successfully', 'success');
-            // }, []);
-          }
-        })
-        .catch((err) => {
-          console.log('err', err);
-          notify('Something went wrong', 'error');
-        });
+      createNode(details).then((res) => {
+        if (res.data) {
+          getSidebarNode();
+          setSelectedNodeGroupId({});
+          notify('Node created successfully', 'success');
+        }
+      }).catch((err) => {
+        notify('Something went wrong', 'error');
+      });
     }
 
     setNewNode({
@@ -189,110 +150,90 @@ const AddNewNode = () => {
     });
   };
 
-  // console.log('newNode', newNode);
   return (
-    <>
-      <Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1, mx: 3 }}>
-          <Box display="flex" justifyContent="space-between" my={1} alignItems="center">
-            <Typography variant="h4" color="primary">
-              {'Add New '}
-            </Typography>
-            <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
-          </Box>
-          <TextField
-            size="small"
-            id="outlined-basic"
-            label="Name"
-            name="nodeName"
-            variant="outlined"
-            onChange={handleChange}
-            sx={{ '& .MuiFormLabel-root': { fontSize: fontSize } }}
-          />
-          <FormControl
-            size="small"
-            sx={{
-              width: 'inherit',
-              '& .MuiInputBase-input': {
-                fontSize: fontSize
-              }
-            }}
+    <Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p:1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h4" color="primary">Add New Node</Typography>
+          <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
+        </Box>
+        
+        <TextField
+          size="small"
+          label="Name"
+          name="nodeName"
+          variant="outlined"
+          onChange={handleChange}
+          sx={{ fontSize: fontSize }}
+        />
+        
+        <Grid container spacing={1} my={1}>
+          <Grid item xs={6}>
+            <FormControl size="small" fullWidth>
+              <InputLabel id="demo-simple-select-label">Type</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={newNode.type}
+                label="Type"
+                onChange={handleChange}
+                name="type"
+                sx={{ fontSize: fontSize }}
+              >
+                <MenuItem value="input">Input</MenuItem>
+                <MenuItem value="default">Default</MenuItem>
+                <MenuItem value="custom">Custom</MenuItem>
+                <MenuItem value="signal">Signal</MenuItem>
+                <MenuItem value="receiver">Receiver</MenuItem>
+                <MenuItem value="output">Output</MenuItem>
+                <MenuItem value="transceiver">Transceiver</MenuItem>
+                <MenuItem value="transmitter">Transmitter</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={6}>
+            <FormControl size="small" fullWidth>
+              <InputLabel notched id="demo-multiple-chip-label">Properties</InputLabel>
+              <Select
+                labelId="demo-multiple-chip-label"
+                id="demo-multiple-chip"
+                multiple
+                name="properties"
+                value={newNode.properties}
+                onChange={handleChange}
+                input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} sx={{ fontSize: fontSize }} />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {names.map((name) => (
+                  <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
+                    {name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        <Box display="flex" justifyContent="space-between" height='30px'>
+          <Button onClick={CloseModel} variant="outlined" color="warning">Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={!newNode.nodeName || !newNode.type || newNode.properties.length === 0}
           >
-            <InputLabel id="demo-simple-select-label">Type</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={newNode.type}
-              label="type"
-              onChange={handleChange}
-              name="type"
-              sx={{
-                '& .MuiSelect-select': {
-                  fontSize: fontSize
-                }
-              }}
-            >
-              <MenuItem value="input">Input</MenuItem>
-              <MenuItem value="default">Default</MenuItem>
-              <MenuItem value="custom">Custom</MenuItem>
-              <MenuItem value="signal">Signal</MenuItem>
-              <MenuItem value="receiver">Receiver</MenuItem>
-              <MenuItem value="output">Output</MenuItem>
-              <MenuItem value="transceiver">Transceiver</MenuItem>
-              <MenuItem value="transmitter">Transmitter</MenuItem>
-              {/* <MenuItem value="mcu">MicroController</MenuItem>
-                <MenuItem value="memory">Memory</MenuItem> */}
-              {/* <MenuItem value="multihandle">Multi-Handle</MenuItem> */}
-            </Select>
-          </FormControl>
-          <FormControl
-            sx={{
-              width: 'inherit'
-            }}
-            size="small"
-          >
-            <InputLabel notched id="demo-multiple-chip-label">
-              Properties
-            </InputLabel>
-            <Select
-              labelId="demo-multiple-chip-label"
-              id="demo-multiple-chip"
-              multiple
-              name="properties"
-              value={newNode.properties}
-              onChange={handleChange}
-              input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip sx={{ '& .MuiChip-label': { fontSize: fontSize } }} key={value} label={value} />
-                  ))}
-                </Box>
-              )}
-              MenuProps={MenuProps}
-            >
-              {names.map((name) => (
-                <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
-                  {name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Box display="flex" justifyContent="space-between">
-            <Button onClick={CloseModel} variant="outlined" color="warning">
-              cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={!newNode.nodeName || !newNode.type || !newNode.properties.length > 0}
-            >
-              Add
-            </Button>
-          </Box>
+            Add
+          </Button>
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 

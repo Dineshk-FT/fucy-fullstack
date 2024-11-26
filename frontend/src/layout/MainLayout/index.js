@@ -260,8 +260,8 @@ const MainLayout = ({ children }) => {
                     'Damage Scenarios',
                     'Threat Scenarios',
                     'Attack Path Analysis',
-                    'Risk Treatment and Determination',
-                    'Cybersecurity Goals and Requirements'
+                    'Risk Treatment',
+                    'Cybersecurity Goals'
                   ][index]
                 })}
               </Box>

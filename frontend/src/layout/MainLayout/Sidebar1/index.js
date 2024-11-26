@@ -70,7 +70,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const drawer = (
     <>
       <BrowserView>
-        <PerfectScrollbar component="div" style={{ padding: '10px 30px 10px 5px' }}>
+        <PerfectScrollbar component="div" style={{ paddingRight: '40px', paddingLeft: '15px', paddingTop: '15px' }}>
           <BrowserCard template={template} models={models} />
         </PerfectScrollbar>
         <IconButton
@@ -176,6 +176,9 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
                 [theme.breakpoints.up('md')]: {
                   top: !isNavbarClose ? navbarHeight : '0px'
                 }
+              },
+              '& .MuiCardContent-root': {
+                padding: '0px'
               }
             }}
             ModalProps={{ keepMounted: true }}
