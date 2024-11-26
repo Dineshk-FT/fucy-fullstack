@@ -103,6 +103,10 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: '-7px',
     padding: '5px',
     alignItems: 'center'
+  },
+  treeItem: {
+    marginLeft: -10,
+    padding: 2
   }
 }));
 
@@ -187,11 +191,9 @@ const BrowserCard = () => {
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
-  const [expanded, setExpanded] = useState([]);
 
   useEffect(() => {
     getModelById(modelId);
-    setExpanded([modelId]);
     setClickedItem(modelId);
   }, [modelId]);
 
@@ -209,9 +211,19 @@ const BrowserCard = () => {
     { name: 'layouts', scene: layouts }
   ];
 
+  // const handleNodeToggle = (event, nodeIds) => {
+  //   console.log('Expanded/collapsed:', nodeIds);
+  //   // Handle expand/collapse logic here
+  // };
+
+  const handleTitleClick = (event) => {
+    event.stopPropagation(); // Prevent propagation
+    setClickedItem(modelId);
+  };
   // console.log('attackScenarios', attackScenarios);
 
-  const handleClick = async (ModelId, name, id) => {
+  const handleClick = async (event, ModelId, name, id) => {
+    event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
       dispatch(closeAll());
@@ -225,7 +237,9 @@ const BrowserCard = () => {
     await get_api[name](ModelId);
   };
 
-  const handleOpenTable = (name) => {
+  const handleOpenTable = (e, id, name) => {
+    e.stopPropagation();
+    setClickedItem(id);
     switch (true) {
       case name.includes('Derivations'):
         dispatch(DerivationTableOpen());
@@ -237,7 +251,6 @@ const BrowserCard = () => {
         dispatch(TsTableOpen());
         dispatch(setTitle(name));
         break;
-
       case name === 'Attack':
         dispatch(attackTableOpen());
         break;
@@ -341,189 +354,157 @@ const BrowserCard = () => {
 
   // console.log('assets', assets);
 
+  const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
+    <TreeItem
+      key={data.id}
+      nodeId={data.id}
+      label={getImageLabel(data.icon, data.name)}
+      onClick={onClick}
+      onContextMenu={contextMenuHandler}
+      className={classes.treeItem}
+    >
+      {children}
+    </TreeItem>
+  );
+
+  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
+    return subs?.map((sub) => (
+      <TreeItem
+        key={sub.id}
+        nodeId={sub.id}
+        label={getLabel('TopicIcon', sub.name)}
+        onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+        onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+      >
+        {additionalMapping && additionalMapping(sub)}
+      </TreeItem>
+    ));
+  };
+
   const renderTreeItems = (data, type) => {
     if (!data) return null;
 
     switch (type) {
       case 'assets':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'assets', data.id)}
-            onContextMenu={handleNodes}
-            sx={{ ml: -1, p: 1 }}
-          >
-            {data.Details?.map((detail) => (
-              <DraggableTreeItem
-                key={detail.nodeId}
-                nodeId={detail.nodeId}
-                label={detail.name}
-                onDragStart={(e) => onDragStart(e, detail)}
-                sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
-              >
-                {detail.props?.map((prop) => (
-                  <DraggableTreeItem
-                    key={prop.id}
-                    nodeId={prop.id}
-                    label={
-                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                        {`Loss of ${prop.name}`}
-                      </div>
-                    }
-                  />
-                ))}
-              </DraggableTreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'assets', data.id),
+          handleNodes,
+          data.Details?.map((detail) => (
+            <DraggableTreeItem
+              key={detail.nodeId}
+              nodeId={detail.nodeId}
+              label={detail.name}
+              onDragStart={(e) => onDragStart(e, detail)}
+              sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
+            >
+              {detail.props?.map((prop) => (
+                <DraggableTreeItem
+                  key={prop.id}
+                  nodeId={prop.id}
+                  label={
+                    <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                      <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                      {`Loss of ${prop.name}`}
+                    </div>
+                  }
+                />
+              ))}
+            </DraggableTreeItem>
+          ))
         );
 
       case 'damageScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'damage', data.id)}
-            sx={{ ml: -1, p: 1 }}
-          >
-            {data.subs?.map((sub) => (
-              <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
-                {sub.name === 'Damage Scenarios Derivations' &&
-                  sub.Derivations?.map((derivation) => (
-                    <TreeItem key={derivation.id} nodeId={derivation.id} label={getLabel('TopicIcon', derivation.name)} />
-                  ))}
-                {sub.name === 'Damage Scenarios - Collection & Impact Ratings' &&
-                  sub.Details?.map((detail) => (
-                    <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
-                  ))}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'damage', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            if (sub.name === 'Damage Scenarios Derivations') {
+              return sub.Derivations?.map((derivation) => (
+                <TreeItem key={derivation.id} nodeId={derivation.id} label={getLabel('TopicIcon', derivation.name)} />
+              ));
+            }
+            if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
+              return sub.Details?.map((detail) => (
+                <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
+              ));
+            }
+          })
         );
 
       case 'threatScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'threat', data.id)}
-            sx={{ ml: -1, p: 1 }}
-          >
-            {data.subs?.map((sub) => (
-              <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
-                {sub.name === 'Threat Scenarios' &&
-                  sub.Details?.map((detail) =>
-                    detail.Details?.map((nodeDetail) =>
-                      nodeDetail.props?.map((prop) => {
-                        const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
-                          nodeDetail.node
-                        } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'threat', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
+            sub.name === 'Threat Scenarios'
+              ? sub.Details?.flatMap((detail) =>
+                  detail.Details?.flatMap((nodeDetail) =>
+                    nodeDetail.props?.map((prop) => {
+                      const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
+                        nodeDetail.node
+                      } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+                      const Details = { label, type: 'default', dragged: true };
 
-                        const Details = {
-                          label: label,
-                          type: 'default',
-                          dragged: true
-                        };
-                        return (
-                          <DraggableTreeItem
-                            draggable={!isDragged}
-                            key={prop.id}
-                            nodeId={prop.id}
-                            label={getLabel('TopicIcon', label)}
-                            onDragStart={(e) => onDragStart(e, Details)}
-                          />
-                        );
-                      })
-                    )
-                  )}
-              </TreeItem>
-            ))}
-          </TreeItem>
+                      return (
+                        <DraggableTreeItem
+                          draggable={!isDragged}
+                          key={prop.id}
+                          nodeId={prop.id}
+                          label={getLabel('TopicIcon', label)}
+                          onDragStart={(e) => onDragStart(e, Details)}
+                        />
+                      );
+                    })
+                  )
+                )
+              : null
+          )
         );
+
       case 'attackScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'attack', data.id)}
-            sx={{ ml: -1, p: 1 }}
-          >
-            {data?.subs?.map((sub) => (
-              <TreeItem
-                key={sub._id || sub?.id}
-                nodeId={sub._id || sub?.id}
-                label={getLabel('TopicIcon', sub.name)}
-                onClick={() => handleOpenTable(sub.name)}
-                onContextMenu={(e) => handleContext(e, sub?.name)}
-              >
-                {/* {sub?.scenes?.map((detail) => (
-                  <TreeItem
-                    key={detail.ID}
-                    nodeId={detail.ID}
-                    onClick={() => handleOpenAttackTree(detail, sub?.name)}
-                    label={getLabel('DangerousIcon', detail.Name)}
-                  />
-                ))} */}
-                {sub?.scenes?.map((at_scene) => {
-                  const Details = {
-                    label: at_scene?.Name,
-                    nodeId: at_scene?.ID,
-                    type: 'Event',
-                    dragged: true
-                  };
-                  return sub?.name == 'Attack' ? (
-                    <DraggableTreeItem
-                      key={at_scene?.ID}
-                      nodeId={at_scene?.ID}
-                      label={getLabel('DangerousIcon', at_scene?.Name)}
-                      draggable={true}
-                      onDragStart={(e) => onDragStart(e, Details)}
-                    />
-                  ) : (
-                    <TreeItem
-                      key={at_scene?.ID}
-                      nodeId={at_scene?.ID}
-                      label={getLabel('DangerousIcon', at_scene?.Name)}
-                      // onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
-                      onClick={() => handleOpenAttackTree(at_scene, sub?.name)}
-                    ></TreeItem>
-                  );
-                })}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'attack', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
+            sub.scenes?.map((at_scene) => {
+              const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
+
+              return sub.name === 'Attack' ? (
+                <DraggableTreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, Details)}
+                />
+              ) : (
+                <TreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  onClick={() => handleOpenAttackTree(at_scene, sub.name)}
+                />
+              );
+            })
+          )
         );
 
       default:
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, data.name, data.id)}
-            sx={{ ml: -1, p: 1 }}
-          >
-            {data?.subs?.map((sub) => (
-              <TreeItem
-                key={sub._id || sub?.id}
-                nodeId={sub._id || sub?.id}
-                label={getLabel('TopicIcon', sub.name)}
-                onClick={() => handleOpenTable(sub.name)}
-              >
-                {sub?.Details?.map((detail) => (
-                  <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />
-                ))}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, data.name, data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
+            sub.Details?.map((detail) => <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />)
+          )
         );
     }
   };
+
   return (
     <>
       {/* <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
@@ -534,7 +515,8 @@ const BrowserCard = () => {
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
-            // onClick={() => setClickedItem(modelId)}
+            // onNodeToggle={handleNodeToggle}
+            onClick={handleTitleClick}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
           >
