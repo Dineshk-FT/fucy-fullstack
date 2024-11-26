@@ -77,8 +77,6 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   model: state.model,
-  getModelById: state.getModelById,
-  getModels: state.getModels,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario
 });
@@ -126,29 +124,14 @@ const nodetypes = {
 };
 
 export default function AttackBlock({ attackScene }) {
-  const {
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    addNode,
-    addEdge,
-    setNodes,
-    setEdges,
-    model,
-    getModels,
-    getModelById,
-    update,
-    getAttackScenario
-  } = useStore(selector, shallow);
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
+    useStore(selector, shallow);
 
   // console.log('nodes', nodes);
   // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
 
   useEffect(() => {
     setNodes([]);
@@ -174,7 +157,6 @@ export default function AttackBlock({ attackScene }) {
     (event) => {
       event.preventDefault();
       const cyber = event.dataTransfer.getData('application/cyber');
-      // console.log('cyber', cyber);
       let parsedNode;
 
       if (cyber) {
@@ -188,11 +170,10 @@ export default function AttackBlock({ attackScene }) {
       });
 
       if (parsedNode) {
-        // console.log('parsedNode', parsedNode);
         const newNode = {
           id: newId,
           position,
-          type: parsedNode?.type ? parsedNode?.type : parsedNode?.label,
+          type: parsedNode?.type || parsedNode?.label,
           ...parsedNode,
           width: 100,
           height: 70,
@@ -214,7 +195,7 @@ export default function AttackBlock({ attackScene }) {
           }
         };
 
-        const sourceNode = nodes.find((node) => {
+        const targetNode = nodes.find((node) => {
           const nodeBounds = {
             xMin: node.position.x,
             xMax: node.position.x + (node.width || 150),
@@ -227,19 +208,24 @@ export default function AttackBlock({ attackScene }) {
           );
         });
 
-        if (sourceNode) {
+        addNode(newNode);
+
+        if (targetNode) {
           const newEdge = {
             id: uid(),
-            source: sourceNode.id,
+            source: targetNode.id,
             target: newId,
             type: 'step',
-            markerEnd: { type: MarkerType.Arrow }
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              width: 20,
+              height: 20,
+              color: 'black'
+            }
           };
 
           addEdge(newEdge);
         }
-
-        addNode(newNode);
       }
     },
     [reactFlowInstance, nodes, addNode, addEdge]
@@ -268,19 +254,6 @@ export default function AttackBlock({ attackScene }) {
   // console.log('nodes', nodes);
 
   const handleSave = () => {
-    // const atScene = JSON.parse(JSON.stringify(attackScene));
-    // const mod = JSON.parse(JSON.stringify(model));
-    // const selected = mod?.scenarios[3]?.subs[1]?.scenes?.find((ite) => ite.id === atScene?.id);
-    // const selectedIndex = mod?.scenarios[3]?.subs[1]?.scenes?.findIndex((ite) => ite.id === atScene?.id);
-
-    // selected.template = {
-    //   id: uid(),
-    //   nodes: nodes,
-    //   edges: edges
-    // };
-    // mod.scenarios[3].subs[1].scenes.push[selectedIndex] = selected;
-    // // console.log('mod', mod);
-    // // console.log('selected', selected);
     const template = {
       nodes: nodes,
       edges: edges
@@ -308,6 +281,48 @@ export default function AttackBlock({ attackScene }) {
       });
   };
 
+  const onNodeDragStop = (event, draggedNode) => {
+    const { nodes, edges, setEdges } = useStore.getState(); // Access Zustand state
+
+    // Check for overlapping nodes
+    const overlappingNode = nodes.find((node) => {
+      if (node.id === draggedNode.id) return false; // Skip itself
+
+      const nodeBounds = {
+        xMin: node.position.x,
+        xMax: node.position.x + (node.width || 150),
+        yMin: node.position.y,
+        yMax: node.position.y + (node.height || 50)
+      };
+
+      return (
+        draggedNode.position.x > nodeBounds.xMin &&
+        draggedNode.position.x < nodeBounds.xMax &&
+        draggedNode.position.y > nodeBounds.yMin &&
+        draggedNode.position.y < nodeBounds.yMax
+      );
+    });
+
+    if (overlappingNode) {
+      // Create a new edge
+      const newEdge = {
+        id: uid(),
+        source: overlappingNode.id,
+        target: draggedNode.id,
+        type: 'step',
+        markerEnd: {
+          type: 'arrowclosed',
+          width: 20,
+          height: 20,
+          color: 'black'
+        }
+      };
+
+      // Update edges in Zustand store
+      setEdges([...edges, newEdge]);
+    }
+  };
+
   return (
     <div style={{ height: '100%', background: 'white' }}>
       <ReactFlowProvider>
@@ -327,6 +342,7 @@ export default function AttackBlock({ attackScene }) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
           }}
+          onNodeDragStop={onNodeDragStop}
           fitView
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>

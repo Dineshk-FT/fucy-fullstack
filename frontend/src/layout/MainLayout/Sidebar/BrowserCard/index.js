@@ -288,10 +288,12 @@ const BrowserCard = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes]);
+  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
   function dragCheck(node) {
     return node?.dragged;
   }
+
+  console.log('assets', assets);
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];

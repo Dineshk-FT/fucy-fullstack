@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { createWithEqualityFn } from 'zustand/traditional';
 import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
-
+import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 import { ADD_CALL, DELETE_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
@@ -242,6 +242,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes // set the updated nodes
     }));
   },
+
   onEdgesChange: (changes) => {
     const currentEdges = get().edges; // get current edges
     const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
@@ -570,12 +571,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
-    set((state) => ({
-      assets: {
-        ...state.assets,
-        ...(res || { template: { nodes: [], edges: [] }, Details: [] })
-      }
-    }));
+    console.log('res', res);
+    // set((state) => ({
+    //   assets: {
+    //     ...state.assets,
+    //     ...(res || { template: { nodes: [], edges: [] }, Details: [] })
+    //   }
+    // }));
   },
 
   getDamageScenarios: async (modelId) => {

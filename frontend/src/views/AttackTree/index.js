@@ -26,13 +26,14 @@ const AttackTree = () => {
     setSidebarWidth(size.width);
   };
 
+  // console.log('attackScene', attackScene);
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {!isLevelOpen && (
           <Box display="flex" alignItems="center" gap={1} my={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1 }} onClick={handleBack} />
-            <Typography variant="h4">Attack Tree </Typography>
+            <Typography variant="h4">{attackScene?.Name} </Typography>
           </Box>
         )}
         <Paper elevation={3} sx={{ height: '83svh' }}>
