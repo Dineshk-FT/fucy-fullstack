@@ -52,7 +52,7 @@ export const GET_CALL = async (modelId, url) => {
     return res.data;
   } catch (error) {
     console.error('Error in GET_CALL:', error);
-    return error;
+    return error.response.data;
   }
   // const res = await axios(options);
   // return res.data;
@@ -80,7 +80,7 @@ export const UPDATE_CALL = async (details, url) => {
     return res.data;
   } catch (error) {
     console.error('Error in UPDATE_CALL:', error);
-    return error;
+    return error.response.data;
   }
   // const res = await axios(options);
   // return res.data;
@@ -106,7 +106,7 @@ export const ADD_CALL = async (details, url) => {
     return res.data;
   } catch (error) {
     console.error('Error in ADD_CALL:', error);
-    return error;
+    return error.response.data;
   }
   // const res = await axios(options);
   // return res.data;
@@ -132,7 +132,7 @@ export const DELETE_CALL = async (details, url) => {
     return res.data;
   } catch (error) {
     console.error('Error in DELETE_CALL:', error);
-    return error;
+    return error.response.data;
   }
   // const res = await axios(options);
   // return res.data;
