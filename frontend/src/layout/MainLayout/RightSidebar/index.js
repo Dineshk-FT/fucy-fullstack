@@ -1,38 +1,32 @@
 import React from 'react';
 import AddNewNode from '../../../ui-component/Modal/AddNewNode';
-import { Box, Divider } from '@mui/material';
+import { Box } from '@mui/material';
 import MenuCard from '../Sidebar/MenuCard/index1';
 import { useSelector } from 'react-redux';
+
 export default function RightDrawer() {
   const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
 
+  const drawerStyles = {
+    backgroundColor: '#f5f5f5',
+    position: 'sticky',
+    float: 'right',
+    transition: 'width 0.8s',
+    width: 350,
+    height: 'fit-content',
+    maxHeight: '85svh',
+    overflow: 'auto',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: '-1px 0px 10px gray',
+  };
+
   return (
     <React.Fragment>
-      <Box
-        sx={{
-          backgroundColor: '#f5f5f5',
-          position: 'sticky',
-          float: 'right',
-          // left: '50rem',
-          transition: 'width 0.8s',
-          width: 350,
-          height: 'fit-content',
-          maxHeight: '85svh',
-          overflow: 'auto',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '-1px 0px 10px gray'
-          // pr:1
-        }}
-      >
+      <Box sx={drawerStyles}>
+        {propertiesTabOpen && <MenuCard />}
         {addNodeTabOpen && <AddNewNode />}
-        {addNodeTabOpen && propertiesTabOpen && <Divider sx={{ borderBottom: '2px solid black', my: 1, mx: 2 }} />}
-        {propertiesTabOpen && (
-          <Box m={2}>
-            <MenuCard />
-          </Box>
-        )}
       </Box>
     </React.Fragment>
   );
