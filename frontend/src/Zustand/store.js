@@ -541,22 +541,6 @@ const useStore = createWithEqualityFn((set, get) => ({
   // },
 
   //New API's
-  get_Model: async (modelId) => {
-    const FormData = require('form-data');
-    let data = new FormData();
-    data.append('model-id', modelId);
-    const options = {
-      method: 'POST',
-      ...createHeaders(),
-      url: `${configuration.apiBaseUrl}v1/get_details/model`
-    };
-    const res = await axios(options);
-
-    set({
-      model: res.data
-    });
-  },
-
   getModels: async () => {
     const options = {
       method: 'POST',
