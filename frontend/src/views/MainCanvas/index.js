@@ -262,6 +262,25 @@ export default function MainCanvas() {
     setReactFlowInstance(rf);
   };
 
+  // Capture Ctrl + S for saving
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check if Ctrl or Cmd key is pressed along with S
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault(); // Prevent the default save behavior
+        handleSaveToModel(); // Trigger the save action
+      }
+    };
+
+    // Add the event listener when the component mounts
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes, edges]); // Re-run this effect if nodes or edges change
+
   // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {

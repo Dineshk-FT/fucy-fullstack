@@ -62,11 +62,14 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     color: theme.palette.common.white,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
-    padding: 5
+    padding: '2px 8px',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '2px 8px',
+    textAlign: 'center'
   }
 }));
 
@@ -427,9 +430,19 @@ export default function DsTable() {
           sx={{
             '&:last-child td, &:last-child th': { border: 0 },
             '&:nth-of-type(even)': {
-              backgroundColor: '#F4F8FE'
+              backgroundColor: color?.sidebarBG,
+              color: `${color?.sidebarContent} !important`,
             },
-            backgroundColor: isChild ? '#F4F8FE' : ''
+            '&:nth-of-type(odd)': {
+              backgroundColor: color?.sidebarBG,
+              color: `${color?.sidebarContent} !important`,
+            },
+            '& .MuiTableCell-root.MuiTableCell-body': {
+              backgroundColor: color?.sidebarBG,
+              color: `${color?.sidebarContent} !important`,
+            },
+            backgroundColor: isChild ? '#F4F8FE' : '',
+            color: `${color?.sidebarContent} !important`,
           }}
         >
           {Head?.map((item, index) => {

@@ -11,6 +11,8 @@ import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
 import { fontSize } from '../../store/constant';
 import toast, { Toaster } from 'react-hot-toast';
+import ColorTheme from '../../store/ColorTheme';
+import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -43,6 +45,7 @@ function getStyles(name, nodes, theme) {
 }
 
 const AddNewNode = () => {
+  const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -151,11 +154,14 @@ const AddNewNode = () => {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p:1 }}>
+    <Box sx={{background: `${color?.sidebarBG } !important`, color: color?.sidebarContent}}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p:1,  }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h4" color="primary">Add New Node</Typography>
-          <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer' }} />
+          {/* <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer', background: `${color?.sidebarBG } !important`, color: color?.sidebarConten }} /> */}
+          <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={CloseModel}>
+            <CancelTwoToneIcon />
+          </Box>
         </Box>
         
         <TextField
@@ -164,7 +170,15 @@ const AddNewNode = () => {
           name="nodeName"
           variant="outlined"
           onChange={handleChange}
-          sx={{ fontSize: fontSize }}
+          sx={{ 
+            fontSize: fontSize, 
+            background: `${color?.sidebarBG } !important`, 
+            color: color?.sidebarContent,
+            // '& .MuiOutlinedInput-notchedOutline': {
+            //   borderColor: color?.sidebarContent,
+            //   backgroundColor: color?.sidebarBG,
+            // } 
+          }}
         />
         
         <Grid container spacing={1} my={1}>
@@ -178,7 +192,15 @@ const AddNewNode = () => {
                 label="Type"
                 onChange={handleChange}
                 name="type"
-                sx={{ fontSize: fontSize }}
+                sx={{ 
+                  fontSize: fontSize, 
+                  background: `${color?.sidebarBG } !important`, 
+                  color: color?.sidebarContent,
+                  // '& .MuiOutlinedInput-notchedOutline': {
+                  //   borderColor: color?.sidebarContent,
+                  //   backgroundColor: color?.sidebarBG,
+                  // },
+                }}
               >
                 <MenuItem value="input">Input</MenuItem>
                 <MenuItem value="default">Default</MenuItem>
@@ -200,6 +222,15 @@ const AddNewNode = () => {
                 id="demo-multiple-chip"
                 multiple
                 name="properties"
+                sx={{ 
+                  fontSize: fontSize, 
+                  background: `${color?.sidebarBG } !important`, 
+                  color: color?.sidebarContent,
+                  // '& .MuiOutlinedInput-notchedOutline': {
+                  //   borderColor: color?.sidebarContent,
+                  //   backgroundColor: color?.sidebarBG,
+                  // } 
+                }}
                 value={newNode.properties}
                 onChange={handleChange}
                 input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
