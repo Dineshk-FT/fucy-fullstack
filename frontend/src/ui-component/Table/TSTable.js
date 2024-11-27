@@ -23,7 +23,7 @@ import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
-import { Box } from '@mui/system';
+import { Box, maxWidth } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -64,11 +64,14 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     color: theme.palette.common.white,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
-    padding: 5
+    padding: '2px 8px',
+    textAlign: 'center',
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '2px 8px',
+    textAlign: 'center',
   }
 }));
 
@@ -186,9 +189,19 @@ export default function Tstable() {
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
           '&:nth-of-type(even)': {
-            backgroundColor: '#F4F8FE'
+            backgroundColor: color?.sidebarBG,
+            color: `${color?.sidebarContent} !important`,
           },
-          backgroundColor: isChild ? '#F4F8FE' : ''
+          '&:nth-of-type(odd)': {
+            backgroundColor: color?.sidebarBG,
+            color: `${color?.sidebarContent} !important`,
+          },
+          '& .MuiTableCell-root.MuiTableCell-body': {
+            backgroundColor: color?.sidebarBG,
+            color: `${color?.sidebarContent} !important`,
+          },
+          backgroundColor: isChild ? '#F4F8FE' : '',
+          color: `${color?.sidebarContent} !important`,
         }}
       >
         {Head?.map((item, index) => {

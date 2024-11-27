@@ -234,7 +234,8 @@ export default function LeftSection() {
           >
             <Paper
               sx={{
-                background: '#F7F7F7',
+                background: color?.sidebarBG,
+                color: `${color?.sidebarContent} !important`,
                 border: '1px solid #ccc',
                 borderRadius: '8px',
                 padding: '8px',
@@ -294,7 +295,8 @@ export default function LeftSection() {
                       <Paper
                         sx={{
                           pointerEvents: 'auto',
-                          background: '#f5f5f5',
+                          background: color?.sidebarBG,
+                          color: color?.sidebarContent,
                           border: '1px solid #d1d1d1',
                           borderRadius: 1,
                           boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
