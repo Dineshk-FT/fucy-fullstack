@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -237,19 +237,22 @@ export default function AttackBlock({ attackScene }) {
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? attackScene?.templates?.nodes : nodes;
-      const es = useInitialNodes ? attackScene?.templates?.edges : edges;
+      const ns = useInitialNodes ? nodes : nodes;
+      const es = useInitialNodes ? edges : edges;
 
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
 
-        window.requestAnimationFrame(() => fitView());
+        // window.requestAnimationFrame(() => fitView());
       });
     },
     [nodes, edges]
   );
 
+  useLayoutEffect(() => {
+    onLayout({ direction: 'DOWN' });
+  }, []);
   // console.log('model', model);
   // console.log('nodes', nodes);
 
@@ -349,6 +352,9 @@ export default function AttackBlock({ attackScene }) {
             <Button variant="outlined" onClick={handleSave}>
               {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
             </Button>
+            {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined">
+              Align
+            </Button> */}
           </Panel>
           <MiniMap />
           <Controls />
