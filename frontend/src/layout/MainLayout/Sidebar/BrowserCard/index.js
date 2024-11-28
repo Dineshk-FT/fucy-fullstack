@@ -101,7 +101,12 @@ const useStyles = makeStyles((theme) => ({
   title: {
     display: 'flex',
     marginLeft: '-7px',
+    padding: '5px',
     alignItems: 'center'
+  },
+  treeItem: {
+    marginLeft: -10,
+    padding: 2
   }
 }));
 
@@ -112,9 +117,10 @@ const CardStyle = styled(Card)(() =>
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
-    height: '70vh',
+    height: '80vh',
     // boxShadow: 'inset 0px 0px 7px gray',
     border: '1px solid gray',
+    borderRadius: '0px',
     '&:after': {
       content: '""',
       position: 'absolute',
@@ -146,7 +152,9 @@ const selector = (state) => ({
   riskTreatment: state.riskTreatment,
   documents: state.documents,
   reports: state.reports,
-  layouts: state.layouts
+  layouts: state.layouts,
+  clickedItem: state.clickedItem,
+  setClickedItem: state.setClickedItem
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -173,7 +181,9 @@ const BrowserCard = () => {
     riskTreatment,
     documents,
     reports,
-    layouts
+    layouts,
+    clickedItem,
+    setClickedItem
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -185,6 +195,7 @@ const BrowserCard = () => {
 
   useEffect(() => {
     getModelById(modelId);
+    setClickedItem(modelId);
   }, [modelId]);
 
   const scenarios = [
@@ -201,9 +212,20 @@ const BrowserCard = () => {
     { name: 'layouts', scene: layouts }
   ];
 
+  // const handleNodeToggle = (event, nodeIds) => {
+  //   console.log('Expanded/collapsed:', nodeIds);
+  //   // Handle expand/collapse logic here
+  // };
+
+  const handleTitleClick = (event) => {
+    event.stopPropagation(); // Prevent propagation
+    setClickedItem(modelId);
+  };
   // console.log('attackScenarios', attackScenarios);
 
-  const handleClick = async (id, name) => {
+  const handleClick = async (event, ModelId, name, id) => {
+    event.stopPropagation();
+    setClickedItem(id);
     if (name === 'assets') {
       dispatch(closeAll());
     }
@@ -213,10 +235,12 @@ const BrowserCard = () => {
       threat: getThreatScenario,
       attack: getAttackScenario
     };
-    await get_api[name](id);
+    await get_api[name](ModelId);
   };
 
-  const handleOpenTable = (name) => {
+  const handleOpenTable = (e, id, name) => {
+    e.stopPropagation();
+    setClickedItem(id);
     switch (true) {
       case name.includes('Derivations'):
         dispatch(DerivationTableOpen());
@@ -228,7 +252,6 @@ const BrowserCard = () => {
         dispatch(TsTableOpen());
         dispatch(setTitle(name));
         break;
-
       case name === 'Attack':
         dispatch(attackTableOpen());
         break;
@@ -237,7 +260,8 @@ const BrowserCard = () => {
     }
   };
 
-  const handleOpenAttackTree = (scene, name) => {
+  const handleOpenAttackTree = (e, scene, name) => {
+    e.stopPropagation();
     // console.log('scene', scene);
     if (name === 'Attack Trees') {
       dispatch(AttackTreePageOpen());
@@ -256,13 +280,15 @@ const BrowserCard = () => {
     setAnchorItemEl(null);
   };
 
-  const handleAddNewNode = () => {
+  const handleAddNewNode = (e) => {
     // dispatch(drawerOpen());
+    e.stopPropagation();
     dispatch(openAddNodeTab());
     setOpenItemRight(false);
   };
 
-  const handleOpenSelectNode = () => {
+  const handleOpenSelectNode = (e) => {
+    e.stopPropagation();
     setOpenNodelist(true);
     setOpenItemRight(false);
   };
@@ -288,17 +314,19 @@ const BrowserCard = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes]);
+  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
   function dragCheck(node) {
     return node?.dragged;
   }
+
+  // console.log('assets', assets);
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
       <Box color={color?.sidebarContent} className={classes.title}>
         {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit">
+        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'}>
           {name}
         </Typography>
       </Box>
@@ -330,189 +358,157 @@ const BrowserCard = () => {
 
   // console.log('assets', assets);
 
+  const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
+    <TreeItem
+      key={data.id}
+      nodeId={data.id}
+      label={getImageLabel(data.icon, data.name)}
+      onClick={onClick}
+      onContextMenu={contextMenuHandler}
+      className={classes.treeItem}
+    >
+      {children}
+    </TreeItem>
+  );
+
+  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
+    return subs?.map((sub) => (
+      <TreeItem
+        key={sub.id}
+        nodeId={sub.id}
+        label={getLabel('TopicIcon', sub.name)}
+        onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+        onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+      >
+        {additionalMapping && additionalMapping(sub)}
+      </TreeItem>
+    ));
+  };
+
   const renderTreeItems = (data, type) => {
     if (!data) return null;
 
     switch (type) {
       case 'assets':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'assets')}
-            onContextMenu={handleNodes}
-            sx={{ ml: -1 }}
-          >
-            {data.Details?.map((detail) => (
-              <DraggableTreeItem
-                key={detail.nodeId}
-                nodeId={detail.nodeId}
-                label={detail.name}
-                onDragStart={(e) => onDragStart(e, detail)}
-                sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
-              >
-                {detail.props?.map((prop) => (
-                  <DraggableTreeItem
-                    key={prop.id}
-                    nodeId={prop.id}
-                    label={
-                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                        {`Loss of ${prop.name}`}
-                      </div>
-                    }
-                  />
-                ))}
-              </DraggableTreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'assets', data.id),
+          handleNodes,
+          data.Details?.map((detail) => (
+            <DraggableTreeItem
+              key={detail.nodeId}
+              nodeId={detail.nodeId}
+              label={detail.name}
+              onDragStart={(e) => onDragStart(e, detail)}
+              sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
+            >
+              {detail.props?.map((prop) => (
+                <DraggableTreeItem
+                  key={prop.id}
+                  nodeId={prop.id}
+                  label={
+                    <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                      <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                      {`Loss of ${prop.name}`}
+                    </div>
+                  }
+                />
+              ))}
+            </DraggableTreeItem>
+          ))
         );
 
       case 'damageScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'damage')}
-            sx={{ ml: -1 }}
-          >
-            {data.subs?.map((sub) => (
-              <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
-                {sub.name === 'Damage Scenarios Derivations' &&
-                  sub.Derivations?.map((derivation) => (
-                    <TreeItem key={derivation.id} nodeId={derivation.id} label={getLabel('TopicIcon', derivation.name)} />
-                  ))}
-                {sub.name === 'Damage Scenarios - Collection & Impact Ratings' &&
-                  sub.Details?.map((detail) => (
-                    <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
-                  ))}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'damage', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            if (sub.name === 'Damage Scenarios Derivations') {
+              return sub.Derivations?.map((derivation) => (
+                <TreeItem key={derivation.id} nodeId={derivation.id} label={getLabel('TopicIcon', derivation.name)} />
+              ));
+            }
+            if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
+              return sub.Details?.map((detail) => (
+                <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
+              ));
+            }
+          })
         );
 
       case 'threatScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'threat')}
-            sx={{ ml: -1 }}
-          >
-            {data.subs?.map((sub) => (
-              <TreeItem key={sub._id} nodeId={sub._id} label={getLabel('TopicIcon', sub.name)} onClick={() => handleOpenTable(sub.name)}>
-                {sub.name === 'Threat Scenarios' &&
-                  sub.Details?.map((detail) =>
-                    detail.Details?.map((nodeDetail) =>
-                      nodeDetail.props?.map((prop) => {
-                        const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
-                          nodeDetail.node
-                        } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'threat', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
+            sub.name === 'Threat Scenarios'
+              ? sub.Details?.flatMap((detail) =>
+                  detail.Details?.flatMap((nodeDetail) =>
+                    nodeDetail.props?.map((prop) => {
+                      const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
+                        nodeDetail.node
+                      } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+                      const Details = { label, type: 'default', dragged: true };
 
-                        const Details = {
-                          label: label,
-                          type: 'default',
-                          dragged: true
-                        };
-                        return (
-                          <DraggableTreeItem
-                            draggable={!isDragged}
-                            key={prop.id}
-                            nodeId={prop.id}
-                            label={getLabel('TopicIcon', label)}
-                            onDragStart={(e) => onDragStart(e, Details)}
-                          />
-                        );
-                      })
-                    )
-                  )}
-              </TreeItem>
-            ))}
-          </TreeItem>
+                      return (
+                        <DraggableTreeItem
+                          draggable={!isDragged}
+                          key={prop.id}
+                          nodeId={prop.id}
+                          label={getLabel('TopicIcon', label)}
+                          onDragStart={(e) => onDragStart(e, Details)}
+                        />
+                      );
+                    })
+                  )
+                )
+              : null
+          )
         );
+
       case 'attackScenarios':
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, 'attack')}
-            sx={{ ml: -1 }}
-          >
-            {data?.subs?.map((sub) => (
-              <TreeItem
-                key={sub._id || sub?.id}
-                nodeId={sub._id || sub?.id}
-                label={getLabel('TopicIcon', sub.name)}
-                onClick={() => handleOpenTable(sub.name)}
-                onContextMenu={(e) => handleContext(e, sub?.name)}
-              >
-                {/* {sub?.scenes?.map((detail) => (
-                  <TreeItem
-                    key={detail.ID}
-                    nodeId={detail.ID}
-                    onClick={() => handleOpenAttackTree(detail, sub?.name)}
-                    label={getLabel('DangerousIcon', detail.Name)}
-                  />
-                ))} */}
-                {sub?.scenes?.map((at_scene) => {
-                  const Details = {
-                    label: at_scene?.Name,
-                    nodeId: at_scene?.ID,
-                    type: 'Event',
-                    dragged: true
-                  };
-                  return sub?.name == 'Attack' ? (
-                    <DraggableTreeItem
-                      key={at_scene?.ID}
-                      nodeId={at_scene?.ID}
-                      label={getLabel('DangerousIcon', at_scene?.Name)}
-                      draggable={true}
-                      onDragStart={(e) => onDragStart(e, Details)}
-                    />
-                  ) : (
-                    <TreeItem
-                      key={at_scene?.ID}
-                      nodeId={at_scene?.ID}
-                      label={getLabel('DangerousIcon', at_scene?.Name)}
-                      // onDoubleClick={() => handleOpenActionTree(at_scene, sub?.name)}
-                      onClick={() => handleOpenAttackTree(at_scene, sub?.name)}
-                    ></TreeItem>
-                  );
-                })}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'attack', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
+            sub.scenes?.map((at_scene) => {
+              const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
+
+              return sub.name === 'Attack' ? (
+                <DraggableTreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, Details)}
+                />
+              ) : (
+                <TreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
+                />
+              );
+            })
+          )
         );
 
       default:
-        return (
-          <TreeItem
-            key={data.id}
-            nodeId={data.id}
-            label={getImageLabel(data.icon, data.name)}
-            onClick={() => handleClick(model?._id, data.name)}
-            sx={{ ml: -1 }}
-          >
-            {data?.subs?.map((sub) => (
-              <TreeItem
-                key={sub._id || sub?.id}
-                nodeId={sub._id || sub?.id}
-                label={getLabel('TopicIcon', sub.name)}
-                onClick={() => handleOpenTable(sub.name)}
-              >
-                {sub?.Details?.map((detail) => (
-                  <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />
-                ))}
-              </TreeItem>
-            ))}
-          </TreeItem>
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, data.name, data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
+            sub.Details?.map((detail) => <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />)
+          )
         );
     }
   };
+
   return (
     <>
       {/* <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
@@ -522,6 +518,9 @@ const BrowserCard = () => {
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
+            expanded={clickedItem}
+            // onNodeToggle={handleNodeToggle}
+            onClick={handleTitleClick}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
           >
@@ -549,7 +548,19 @@ const BrowserCard = () => {
               ]}
             >
               <ClickAwayListener onClickAway={handleCloseItem}>
-                <Paper className={classes.paper}>
+                <Paper
+                  className={classes.paper}
+                  sx={{
+                    marginTop: '4rem',
+                    marginLeft: '3.1rem',
+                    background: `${color?.canvaSurroundsBG} !important`,
+                    color: color?.sidebarContent,
+                    border: '1px solid #ccc !important',
+                    borderRadius: '8px !important',
+                    padding: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
                   <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
                 </Paper>

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { createWithEqualityFn } from 'zustand/traditional';
 import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
-
+import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 import { ADD_CALL, DELETE_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
@@ -38,6 +38,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedTemplate: {},
   Models: [],
   model: {},
+  clickedItem: [],
   assets: {
     id: 1,
     name: 'Item Model & Assets',
@@ -49,11 +50,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'DamageIcon',
     subs: [
       {
-        // id: 21,
+        id: 21,
         name: 'Damage Scenarios Derivations'
       },
       {
-        // id: 22,
+        id: 22,
         name: 'Damage Scenarios - Collection & Impact Ratings'
       }
     ]
@@ -64,11 +65,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'ThreatIcon',
     subs: [
       {
-        name: 'Threat Scenarios'
-        // id: 31,
+        name: 'Threat Scenarios',
+        id: 31
       },
       {
-        // id: 32,
+        id: 32,
         name: 'Derived Threat Scenarios'
       }
     ]
@@ -114,6 +115,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         ]
       },
       {
+        id: 52,
         name: 'CyberSecurity Controls'
       }
     ]
@@ -140,6 +142,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'CatalogIcon',
     subs: [
       {
+        id: 71,
         name: 'UNICE R.155 Annex 5(WP.29)',
         scenes: []
       }
@@ -151,6 +154,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'RiskIcon',
     subs: [
       {
+        id: 81,
         name: 'Threat Assessment & Risk Treatment',
         scenes: []
       }
@@ -175,6 +179,17 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   scenerio: {},
   component: [],
+
+  setClickedItem: (item) =>
+    set((state) => {
+      if (state.clickedItem.includes(item)) {
+        // If the item is already in the array, remove it
+        return { clickedItem: state.clickedItem.filter((i) => i !== item) };
+      } else {
+        // If the item is not in the array, add it
+        return { clickedItem: [...state.clickedItem, item] };
+      }
+    }),
 
   setReactFlowInstance: (instance) => set({ reactFlowInstance: instance }),
 
@@ -242,6 +257,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes // set the updated nodes
     }));
   },
+
   onEdgesChange: (changes) => {
     const currentEdges = get().edges; // get current edges
     const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
@@ -525,22 +541,6 @@ const useStore = createWithEqualityFn((set, get) => ({
   // },
 
   //New API's
-  get_Model: async (modelId) => {
-    const FormData = require('form-data');
-    let data = new FormData();
-    data.append('model-id', modelId);
-    const options = {
-      method: 'POST',
-      ...createHeaders(),
-      url: `${configuration.apiBaseUrl}v1/get_details/model`
-    };
-    const res = await axios(options);
-
-    set({
-      model: res.data
-    });
-  },
-
   getModels: async () => {
     const options = {
       method: 'POST',
@@ -557,6 +557,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
+    // console.log('res api page', res);
     set({
       model: res,
       assets: {
@@ -570,6 +571,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
+    // console.log('res', res);
     set((state) => ({
       assets: {
         ...state.assets,
@@ -583,8 +585,8 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await GET_CALL(modelId, url);
 
     // Separate the "Derived" and "User-defined" objects
-    const derivedScenario = res.find((item) => item.type === 'Derived');
-    const userDefinedScenario = res.find((item) => item.type === 'User-defined');
+    const derivedScenario = res?.find((item) => item.type === 'Derived');
+    const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
 
     set((state) => ({
       damageScenarios: {
@@ -608,8 +610,8 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await GET_CALL(modelId, url);
 
     // Separate the "Derived" and "User-defined" objects
-    const derivedScenario = res.find((item) => item.type === 'derived');
-    const userDefinedScenario = res.find((item) => item.type === 'User-defined');
+    const derivedScenario = res?.find((item) => item.type === 'derived');
+    const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
 
     set((state) => ({
       threatScenarios: {
@@ -632,9 +634,9 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/attacks`;
     const res = await GET_CALL(modelId, url);
 
-    const attacks = res.find((item) => item.type === 'attack');
-    const attackTrees = res.find((item) => item.type === 'attack_trees');
-    const Vulnerability = res.find((item) => item.type === 'Vulnerability');
+    const attacks = res?.find((item) => item?.type === 'attack');
+    const attackTrees = res?.find((item) => item?.type === 'attack_trees');
+    const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
 
     set((state) => ({
       attackScenarios: {

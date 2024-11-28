@@ -240,6 +240,7 @@ export default function MainCanvas() {
   // console.log('redoStack', redoStack);
   // console.log('undoStack', undoStack);
   // console.log('isAttackTreeOpen', isAttackTreeOpen);
+  // console.log('assets', assets);
   useEffect(() => {
     const template = assets?.template;
     setSavedTemplate(template);
@@ -250,6 +251,7 @@ export default function MainCanvas() {
     // }, 100);
   }, [assets, !isAttackTreeOpen]);
 
+  // console.log('nodes', nodes);
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
@@ -259,6 +261,25 @@ export default function MainCanvas() {
   const onInit = (rf) => {
     setReactFlowInstance(rf);
   };
+
+  // Capture Ctrl + S for saving
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check if Ctrl or Cmd key is pressed along with S
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault(); // Prevent the default save behavior
+        handleSaveToModel(); // Trigger the save action
+      }
+    };
+
+    // Add the event listener when the component mounts
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
   // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(

@@ -25,8 +25,40 @@ import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
 import InitialModal from '../../ui-component/Modal/InitialModal';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../assets/icons';
+import useStore from '../../Zustand/store';
 
 // import Customization from '../Customization';
+
+const items = [
+  {
+    name: 'ItemIcon',
+    id: 1
+  },
+  {
+    name: 'DamageIcon',
+    id: 2
+  },
+  {
+    name: 'ThreatIcon',
+    id: 3
+  },
+  {
+    name: 'AttackIcon',
+    id: 4
+  },
+  {
+    name: 'RiskIcon',
+    id: 8
+  },
+  {
+    name: 'CybersecurityIcon',
+    id: 5
+  },
+]
+
+const selector = (state) => ({
+  setClickedItem: state.setClickedItem
+})
 
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
@@ -92,6 +124,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
 // ==============================|| MAIN LAYOUT ||============================== //
 
 const MainLayout = ({ children }) => {
+  const {setClickedItem} = useStore(selector)
   const color = ColorTheme();
   // console.log('color main', color)
   const theme = useTheme();
@@ -109,6 +142,10 @@ const MainLayout = ({ children }) => {
   const dispatch = useDispatch();
   const handleLeftDrawerToggle = () => {
     dispatch({ type: SET_MENU, opened: !leftDrawerOpened });
+  };
+
+  const handleClick = (item) => {
+    setClickedItem(item); // Dispatch the action to store the clicked item
   };
 
   if (isCanvasPage === 'home')
@@ -137,15 +174,15 @@ const MainLayout = ({ children }) => {
   };
 
   const getImageLabel = (item) => {
-    const Image = imageComponents[item?.icon];
+    const Image = imageComponents[item?.name];
     const isLongLabel = item?.label.length > 40;
     const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
 
     return (
       <Box display="flex" alignItems="center" gap={2}>
-        {Image && <img src={Image} alt={item.label} style={{ height: '15px', width: '15px' }} />}
+        {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
         <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
+          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
             {displayLabel}
           </Typography>
         </Tooltip>
@@ -167,7 +204,7 @@ const MainLayout = ({ children }) => {
             bgcolor: color?.navBG,
             height: !isNavbarClose ? navbarHeight : '0px',
             transition: leftDrawerOpened ? theme.transitions.create('width') : 'none',
-            borderBottom: '1px solid black'
+            borderBottom: `1px solid ${color?.title}`
           }}
         >
           {/* ----------------- Navbar ------------------- */}
@@ -177,28 +214,58 @@ const MainLayout = ({ children }) => {
               transition: 'display 0.8s',
               justifyContent: 'space-between',
               py: 0,
-              borderBottom: '0.2px solid black'
+              borderBottom: `0.2px solid ${color?.title}`
             }}
           >
             {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
             <Header1 />
           </Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 2, px: 4, py:0.5 }}>
-            {['ItemIcon', 'DamageIcon', 'ThreatIcon', 'AttackIcon', 'RiskIcon', 'CybersecurityIcon'].map((icon, index) => (
-              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              gap: 2,
+              px: 4,
+              fontSize: '11px', 
+              '& *': {
+                fontSize: '11px'
+              }
+            }}
+          >
+            {items.map((icon, index) => {
+              const name = icon.name
+              return (
+              <Box
+                key={index}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  cursor: 'pointer',
+                  fontSize: 'inherit',
+                  transition: 'background-color 0.3s, box-shadow 0.3s',
+                  '&:hover': {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px'
+                  }
+                }}
+                onClick={() => handleClick(icon.id)} // Handle click event to dispatch action
+              >
                 {getImageLabel({
-                  icon,
+                  name,
                   label: [
                     'Item Definition',
                     'Damage Scenarios',
                     'Threat Scenarios',
                     'Attack Path Analysis',
-                    'Risk Treatment and Determination',
-                    'Cybersecurity Goals and Requirements'
+                    'Risk Treatment',
+                    'Cybersecurity Goals'
                   ][index]
                 })}
               </Box>
-            ))}
+            )})}
           </Box>
           {isNavbarClose && (
             <Box display="flex" justifyContent="end" onClick={() => dispatch(navbarSlide())}>

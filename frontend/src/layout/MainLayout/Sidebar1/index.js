@@ -20,6 +20,8 @@ import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import MenuCard from '../Sidebar/MenuCard/index1';
+import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import { ClosePropertiesTab } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -46,7 +48,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const { template, fetchModels, models } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
-  const { Properties } = useSelector((state) => state?.pageName);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
@@ -62,32 +63,25 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   };
 
   const handleDrawerToggle = () => {
-    if (drawerOpen) {
-      setSidebarWidth(0);
-    } else {
-      setSidebarWidth(400);
-    }
+    setSidebarWidth(drawerOpen ? 0 : 370);
     drawerToggle();
-    // console.log('Drawer open:', !drawerOpen.open);
   };
 
   const drawer = (
     <>
       <BrowserView>
-        <PerfectScrollbar
-          component="div"
-          style={{
-            paddingLeft: '16px',
-            paddingRight: '40px',
-            paddingTop: '16px'
-          }}
-        >
+        <PerfectScrollbar component="div" style={{ paddingRight: '40px', paddingLeft: '15px', paddingTop: '15px' }}>
           <BrowserCard template={template} models={models} />
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}
           sx={{
             position: 'absolute',
+            border: `1px solid ${color?.title}`,
+            margin: 1,
+            padding: '0px',
+            width: '0.8em',
+            height: '0.8em',
             top: 0,
             right: 0,
             color: color?.iconColor,
@@ -150,6 +144,10 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
               onClick={handleDrawerToggle}
               sx={{
                 position: 'absolute',
+                border: `1px solid ${color?.title}`,
+                padding: '0px',
+                width: '0.8em',
+                height: '0.8em',
                 left: '0px',
                 top: 0,
                 marginTop: `${navbarHeight}px`,
@@ -178,6 +176,9 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
                 [theme.breakpoints.up('md')]: {
                   top: !isNavbarClose ? navbarHeight : '0px'
                 }
+              },
+              '& .MuiCardContent-root': {
+                padding: '0px'
               }
             }}
             ModalProps={{ keepMounted: true }}

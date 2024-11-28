@@ -4,7 +4,7 @@ export const gridSpacing = 3;
 export const drawerWidth = 400;
 export const sidebarWidth = 400;
 export const appDrawerWidth = 320;
-export const navbarHeight = 75;
+export const navbarHeight = 67;
 export const height = '93svh';
 export const fontSize = 13;
 export const tableHeight = 450;
@@ -42,7 +42,7 @@ export const darkTheme = {
   tabBG: '#000',
   selectedTab: 'whitesmoke',
   sidebarBG: '#000',
-  sidebarInnerBG: '#222831',
+  sidebarInnerBG: '#000',
   canvaSurroundsBG: '#000',
   canvasBG: '#222831',
   sidebarContent: 'white',
