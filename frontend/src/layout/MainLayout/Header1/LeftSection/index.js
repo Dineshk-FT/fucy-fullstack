@@ -1,9 +1,34 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
-import { Tooltip, Typography, Box, Popper, Paper } from '@mui/material';
+import { 
+  Tooltip, 
+  Typography, 
+  Box, 
+  Popper, 
+  Paper 
+} from '@mui/material';
+import { 
+  Add as AddIcon, 
+  FolderOpen as OpenIcon, 
+  Delete as DeleteIcon,
+  Undo as UndoIcon,
+  Redo as RedoIcon,
+  ContentCut as CutIcon,
+  ContentCopy as CopyIcon,
+  ContentPaste as PasteIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  Fullscreen as FullscreenIcon,
+  LibraryBooks as LibraryIcon,
+  Image as ImageIcon,
+  TableChart as TableIcon,
+  Link as LinkIcon,
+  SelectAll as SelectAllIcon,
+  DeselectOutlined as DeselectIcon
+} from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
 import ColorTheme from '../../../../store/ColorTheme';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../../../assets/icons';
-import InfoIcon from '@mui/icons-material/Info';
 import SelectProject from '../../../../ui-component/Modal/SelectProject';
 import useStore from '../../../../Zustand/store';
 import AddModel from '../../../../ui-component/Modal/AddModal';
@@ -11,14 +36,32 @@ import Components from '../../../../views/NodeList';
 import TemplateList from '../../../../views/Libraries';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 
-const imageComponents = {
-  AttackIcon,
-  ItemIcon,
-  DamageIcon,
-  ThreatIcon,
-  CybersecurityIcon,
-  RiskIcon
-};
+const MenuItemBox = styled(Box)(({ theme, isactive }) => ({
+  padding: '10px 16px',
+  cursor: 'pointer',
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  transition: 'all 0.2s ease',
+  gap: theme.spacing(1.5),
+  position: 'relative',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    transform: 'translateX(2px)',
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: isactive ? '4px' : '0',
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: '0 8px 8px 0',
+    transition: 'width 0.2s ease',
+  }
+}));
 
 const selector = (state) => ({
   Models: state.Models,
@@ -48,46 +91,44 @@ export default function LeftSection() {
 
   const menuItems = [
     {
-      name: 'File',
+      name: 'Project',
       options: [
-        { label: 'New', action: () => handleOpen('New') },
-        { label: 'Open', action: () => handleOpen('Open') },
-        { label: 'Delete', action: () => handleOpen('Delete') }
-        // { label: 'Save', action: () => console.log('Save') },
-        // { label: 'Exit', action: () => console.log('Exit') }
+        { label: 'New', action: () => handleOpen('New'), icon: AddIcon, shortcut: '⌘N' },
+        { label: 'Open', action: () => handleOpen('Open'), icon: OpenIcon, shortcut: '⌘O' },
+        { label: 'Delete', action: () => handleOpen('Delete'), icon: DeleteIcon, shortcut: '⌘D' }
       ]
     },
     {
       name: 'Edit',
       options: [
-        { label: 'Undo', action: () => console.log('Undo') },
-        { label: 'Redo', action: () => console.log('Redo') },
-        { label: 'Cut', action: () => console.log('Cut') },
-        { label: 'Copy', action: () => console.log('Copy') },
-        { label: 'Paste', action: () => console.log('Paste') }
+        { label: 'Undo', action: () => console.log('Undo'), icon: UndoIcon, shortcut: '⌘Z' },
+        { label: 'Redo', action: () => console.log('Redo '), icon: RedoIcon, shortcut: '⌘Y' },
+        { label: 'Cut', action: () => console.log('Cut'), icon: CutIcon, shortcut: '⌘X' },
+        { label: 'Copy', action: () => console.log('Copy'), icon: CopyIcon, shortcut: '⌘C' },
+        { label: 'Paste', action: () => console.log('Paste'), icon: PasteIcon, shortcut: '⌘V' }
       ]
     },
     {
       name: 'View',
       options: [
-        { label: 'Zoom In', action: () => console.log('Zoom In') },
-        { label: 'Zoom Out', action: () => console.log('Zoom Out') },
-        { label: 'Full Screen', action: () => console.log('Full Screen') }
+        { label: 'Zoom In', action: () => console.log('Zoom In'), icon: ZoomInIcon, shortcut: '⌘+' },
+        { label: 'Zoom Out', action: () => console.log('Zoom Out'), icon: ZoomOutIcon, shortcut: '⌘-' },
+        { label: 'Full Screen', action: () => console.log('Full Screen'), icon: FullscreenIcon, shortcut: '⌘F' }
       ]
     },
     {
       name: 'Select',
       options: [
-        { label: 'Select All', action: () => console.log('Select All') },
-        { label: 'Deselect All', action: () => console.log('Deselect All') }
+        { label: 'Select All', action: () => console.log('Select All'), icon: SelectAllIcon },
+        { label: 'Deselect All', action: () => console.log('Deselect All'), icon: DeselectIcon }
       ]
     },
     {
       name: 'Insert',
       options: [
-        { label: 'Image', action: () => console.log('Image') },
-        { label: 'Table', action: () => console.log('Table') },
-        { label: 'Link', action: () => console.log('Link') }
+        { label: 'Image', action: () => console.log('Image'), icon: ImageIcon },
+        { label: 'Table', action: () => console.log('Table'), icon: TableIcon },
+        { label: 'Link', action: () => console.log('Link'), icon: LinkIcon }
       ]
     },
     {
@@ -95,11 +136,10 @@ export default function LeftSection() {
       options: [
         {
           label: 'System',
-          // action: () => console.log('System'),
+          icon: LibraryIcon,
           subLevel: (
             <Box>
               <TemplateList />
-              {/* <Components /> */}
             </Box>
           )
         }
@@ -110,7 +150,6 @@ export default function LeftSection() {
       options: [
         {
           label: 'Create Component',
-          // action: () => console.log('Component'),
           subLevel: (
             <Box>
               <Components />
@@ -119,60 +158,7 @@ export default function LeftSection() {
         },
       ]
     },
-    // {
-    //   icon: <InfoIcon sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}/>,
-
-    //   options: [
-    //     {
-    //       label: 'Item Definition',
-    //       value: '1',
-    //       icon: 'ItemIcon'
-    //     },
-    //     {
-    //       label: 'Damage Scenarios',
-    //       value: '3',
-    //       icon: 'DamageIcon'
-    //     },
-    //     {
-    //       label: 'Threat Scenarios',
-    //       value: '4',
-    //       icon: 'ThreatIcon'
-    //     },
-    //     {
-    //       label: 'Attack Path Analysis',
-    //       value: '5',
-    //       icon: 'AttackIcon'
-    //     },
-    //     {
-    //       label: 'Risk Treatment and Determination',
-    //       value: '6',
-    //       icon: 'RiskIcon'
-    //     },
-    //     {
-    //       label: 'Cybersecurity Goals and Requirements',
-    //       value: '7',
-    //       icon: 'CybersecurityIcon'
-    //     }
-    //   ]
-    // }
   ];
-
-  const getImageLabel = (item) => {
-    const Image = imageComponents[item?.icon];
-    const isLongLabel = item?.label.length > 40;
-    const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
-
-    return (
-      <Box display="flex" alignItems="center" gap={2}>
-        {Image && <img src={Image} alt={item.label} style={{ height: '20px', width: '20px' }} />}
-        <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter' }}>
-            {displayLabel}
-          </Typography>
-        </Tooltip>
-      </Box>
-    );
-  };
 
   const handleMenuOpen = (event, index) => {
     setAnchorEl(event.currentTarget);
@@ -202,6 +188,30 @@ export default function LeftSection() {
     setOpen({ New: false, Open: false, Delete: false });
   };
 
+  const getMenuItemContent = (option) => {
+    const Icon = option.icon;
+    const isLongLabel = option.label.length > 40;
+    const displayLabel = isLongLabel ? `${option.label.slice(0, 40)}...` : option.label;
+
+    return (
+      <Box display="flex" alignItems="center" gap={1.5}>
+        {Icon && <Icon sx={{ fontSize: 18, color: color?.textPrimary }} />}
+        <Tooltip title={option.label} arrow disableHoverListener={!isLongLabel}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontSize: 12, 
+              color: color?.textPrimary, 
+              fontFamily: 'Inter' 
+            }}
+          >
+            {displayLabel}
+          </Typography>
+        </Tooltip>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
       {menuItems.map((item, index) => (
@@ -223,7 +233,7 @@ export default function LeftSection() {
             }}
             onMouseEnter={(e) => handleMenuOpen(e, index)}
           >
-            {item.name || <Box>{item.icon}</Box>}
+            { item.name}
           </Typography>
           <Popper
             open={selectedMenu === index && Boolean(anchorEl)}
@@ -239,47 +249,21 @@ export default function LeftSection() {
                 border: '1px solid #ccc',
                 borderRadius: '8px',
                 padding: '8px',
-                display: item.icon ? 'flex' : 'block',
-                flexDirection: item.icon ? 'row' : 'column',
-                gap: item.icon ? 2 : 0,
-                flexWrap: item.icon ? 'nowrap' : 'wrap',
+                minWidth: '200px'
               }}
             >
               {item.options.map((option, i) => (
-                <Box
+                <MenuItemBox
                   key={i}
-                  sx={{
-                    padding: item.icon ? '0px':'5px 8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
-                  }}
+                  isactive={selectedSubMenu === i}
                   onMouseEnter={option.subLevel ? (e) => handleSubMenuOpen(e, i) : undefined}
                   onClick={() => {
                     option.action && option.action();
                     handleMenuClose();
                   }}
                 >
-                  {item.icon ? (
-                    getImageLabel(option)
-                  ) : (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: color?.textPrimary,
-                        fontSize: '14px',
-                        fontFamily: 'Inter',
-                        fontWeight: 500,
-                        paddingX: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1
-                      }}
-                    >
-                      {option.label}
-                    </Typography>
-                  )}
+                  {getMenuItemContent(option)}
+                  
                   {option.subLevel && (
                     <Popper
                       open={selectedSubMenu === i && Boolean(subMenuAnchorEl)}
@@ -301,14 +285,14 @@ export default function LeftSection() {
                           borderRadius: 1,
                           boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                           padding: 1,
-                          minWidth: '150px'
+                          minWidth: '200px'
                         }}
                       >
                         {option.subLevel}
                       </Paper>
                     </Popper>
                   )}
-                </Box>
+                </MenuItemBox>
               ))}
             </Paper>
           </Popper>
