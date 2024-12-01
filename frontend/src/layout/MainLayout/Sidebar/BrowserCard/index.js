@@ -44,7 +44,8 @@ import {
   drawerOpen,
   DsTableOpen,
   setAttackScene,
-  TsTableOpen
+  TsTableOpen,
+  riskTreatmentTableOpen
 } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
@@ -146,6 +147,7 @@ const selector = (state) => ({
   getDamageScenarios: state.getDamageScenarios,
   getAttackScenario: state.getAttackScenario,
   attackScenarios: state.attackScenarios,
+  getRiskTreatment: state.getRiskTreatment,
   cybersecurity: state.cybersecurity,
   systemDesign: state.systemDesign,
   catalog: state.catalog,
@@ -174,6 +176,7 @@ const BrowserCard = () => {
     getDamageScenarios,
     getThreatScenario,
     getAttackScenario,
+    getRiskTreatment,
     attackScenarios,
     cybersecurity,
     systemDesign,
@@ -234,6 +237,7 @@ const BrowserCard = () => {
       damage: getDamageScenarios,
       threat: getThreatScenario,
       attack: getAttackScenario
+      // risks: getRiskTreatment
     };
     await get_api[name](ModelId);
   };
@@ -248,12 +252,16 @@ const BrowserCard = () => {
       case name.includes('Collection & Impact Ratings'):
         dispatch(DsTableOpen());
         break;
-      case name.includes('Threat'):
+      case name.includes('Threat Scenarios'):
         dispatch(TsTableOpen());
         dispatch(setTitle(name));
         break;
       case name === 'Attack':
         dispatch(attackTableOpen());
+        break;
+      case name.includes('Threat Assessment'):
+        dispatch(riskTreatmentTableOpen());
+        dispatch(setTitle(name));
         break;
       default:
         break;
@@ -399,6 +407,9 @@ const BrowserCard = () => {
               key={detail.nodeId}
               nodeId={detail.nodeId}
               label={detail.name}
+              onClick={(e) => {
+                e.stopPropagation(), setClickedItem(detail.nodeId);
+              }}
               onDragStart={(e) => onDragStart(e, detail)}
               sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
             >
@@ -406,6 +417,7 @@ const BrowserCard = () => {
                 <DraggableTreeItem
                   key={prop.id}
                   nodeId={prop.id}
+                  onClick={(e) => e.stopPropagation()}
                   label={
                     <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
                       <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
@@ -426,12 +438,22 @@ const BrowserCard = () => {
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
             if (sub.name === 'Damage Scenarios Derivations') {
               return sub.Derivations?.map((derivation) => (
-                <TreeItem key={derivation.id} nodeId={derivation.id} label={getLabel('TopicIcon', derivation.name)} />
+                <TreeItem
+                  onClick={(e) => e.stopPropagation()}
+                  key={derivation.id}
+                  nodeId={derivation.id}
+                  label={getLabel('TopicIcon', derivation.name)}
+                />
               ));
             }
             if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
               return sub.Details?.map((detail) => (
-                <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.Name)} />
+                <TreeItem
+                  onClick={(e) => e.stopPropagation()}
+                  key={detail._id}
+                  nodeId={detail._id}
+                  label={getLabel('DangerousIcon', detail.Name)}
+                />
               ));
             }
           })
@@ -450,7 +472,8 @@ const BrowserCard = () => {
                       const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
                         nodeDetail.node
                       } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
-                      const Details = { label, type: 'default', dragged: true };
+
+                      const Details = { label, type: 'default', dragged: true, nodeId: nodeDetail.nodeId, threatId: prop.id };
 
                       return (
                         <DraggableTreeItem
@@ -459,6 +482,7 @@ const BrowserCard = () => {
                           nodeId={prop.id}
                           label={getLabel('TopicIcon', label)}
                           onDragStart={(e) => onDragStart(e, Details)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                       );
                     })
@@ -484,6 +508,7 @@ const BrowserCard = () => {
                   label={getLabel('DangerousIcon', at_scene.Name)}
                   draggable
                   onDragStart={(e) => onDragStart(e, Details)}
+                  onClick={(e) => e.stopPropagation()}
                 />
               ) : (
                 <TreeItem
@@ -496,6 +521,22 @@ const BrowserCard = () => {
             })
           )
         );
+      case 'riskTreatment':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'risks', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.Derivations?.map((derivation) => (
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={derivation.id}
+                nodeId={derivation.id}
+                label={getLabel('TopicIcon', derivation.name)}
+              />
+            ));
+          })
+        );
 
       default:
         return renderTreeItem(
@@ -503,7 +544,14 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, data.name, data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) =>
-            sub.Details?.map((detail) => <TreeItem key={detail._id} nodeId={detail._id} label={getLabel('DangerousIcon', detail.name)} />)
+            sub.Details?.map((detail) => (
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={detail._id}
+                nodeId={detail._id}
+                label={getLabel('DangerousIcon', detail.name)}
+              />
+            ))
           )
         );
     }

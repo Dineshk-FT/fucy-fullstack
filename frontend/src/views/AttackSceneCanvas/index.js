@@ -24,35 +24,69 @@ const elkOptions = {
   'elk.spacing.nodeNode': '80'
 };
 
-const getLayoutedElements = (nodes, edges, options = {}) => {
+const getLayoutedElements = async (nodes, edges, options = {}) => {
   const isHorizontal = options?.['elk.direction'] === 'RIGHT';
   const graph = {
     id: 'root',
     layoutOptions: options,
     children: nodes.map((node) => ({
-      ...node,
-      targetPosition: isHorizontal ? 'left' : 'top',
-      sourcePosition: isHorizontal ? 'right' : 'bottom',
-      width: 150,
-      height: 50
+      id: node.id,
+      width: node.width || 150,
+      height: node.height || 50
     })),
-    edges: edges
+    edges: edges.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target
+    }))
   };
 
-  return elk
-    .layout(graph)
-    .then((layoutedGraph) => {
-      return {
-        nodes: layoutedGraph.children.map((node) => ({
-          ...node,
-          position: { x: node.x, y: node.y }
-        })),
-        edges: layoutedGraph.edges
-      };
-    })
-    .catch((error) => {
-      console.log('error', error);
+  try {
+    const layoutedGraph = await elk.layout(graph);
+
+    // Map the layouted nodes
+    const layoutedNodes = layoutedGraph.children.map((node) => ({
+      ...nodes.find((n) => n.id === node.id), // Retain existing properties
+      position: { x: node.x, y: node.y }
+    }));
+
+    // Adjust parent node positions
+    // Adjust parent node positions
+    layoutedNodes.forEach((node) => {
+      const childrenEdges = edges.filter((edge) => edge.source === node.id); // Find edges where this node is a parent
+
+      if (childrenEdges.length > 0) {
+        const childNodes = layoutedNodes.filter((n) => childrenEdges.some((edge) => edge.target === n.id));
+
+        if (childNodes.length > 0) {
+          if (isHorizontal) {
+            // Horizontal layout: Adjust vertically
+            const minY = Math.min(...childNodes.map((child) => child.position.y));
+            const maxY = Math.max(...childNodes.map((child) => child.position.y + (child.height || 50)));
+            const centerY = (minY + maxY) / 2;
+
+            node.position.y = centerY - (node.height || 50) / 2; // Center parent vertically
+          } else {
+            // Vertical layout: Adjust horizontally
+            const minX = Math.min(...childNodes.map((child) => child.position.x));
+            const maxX = Math.max(...childNodes.map((child) => child.position.x + (child.width || 150)));
+            const centerX = (minX + maxX) / 2;
+
+            node.position.x = centerX - (node.width || 150) / 2; // Center parent horizontally
+          }
+        }
+      }
     });
+
+    const layoutedEdges = layoutedGraph.edges.map((edge) => ({
+      ...edges.find((e) => e.id === edge.id) // Retain existing edge properties
+    }));
+
+    return { nodes: layoutedNodes, edges: layoutedEdges };
+  } catch (error) {
+    console.error('Error in getLayoutedElements:', error);
+    return { nodes: [], edges: [] };
+  }
 };
 
 // Define CustomStepEdge outside the component
@@ -235,23 +269,34 @@ export default function AttackBlock({ attackScene }) {
   // console.log('edges', edges);
 
   const onLayout = useCallback(
-    ({ direction, useInitialNodes = false }) => {
-      const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? nodes : nodes;
-      const es = useInitialNodes ? edges : edges;
+    async ({ direction, useInitialNodes = false }) => {
+      try {
+        const opts = { 'elk.direction': direction, ...elkOptions };
+        const currentNodes = useInitialNodes ? nodes : [...nodes]; // Ensure nodes are fresh
+        const currentEdges = useInitialNodes ? edges : [...edges]; // Ensure edges are fresh
 
-      getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(currentNodes, currentEdges, opts);
 
-        // window.requestAnimationFrame(() => fitView());
-      });
+        if (layoutedNodes && layoutedEdges) {
+          setNodes(
+            layoutedNodes.map((node) => ({
+              ...node,
+              position: { x: node.position.x, y: node.position.y }, // Ensure position is set
+              data: { ...node.data } // Retain existing data
+            }))
+          );
+
+          setEdges(layoutedEdges);
+        }
+      } catch (error) {
+        console.error('Error during layout:', error);
+      }
     },
-    [nodes, edges]
+    [nodes, edges, setNodes, setEdges]
   );
 
   useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN' });
+    onLayout({ direction: 'DOWN', useInitialNodes: true });
   }, []);
   // console.log('model', model);
   // console.log('nodes', nodes);
@@ -352,9 +397,12 @@ export default function AttackBlock({ attackScene }) {
             <Button variant="outlined" onClick={handleSave}>
               {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
             </Button>
-            {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined">
-              Align
-            </Button> */}
+            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined">
+              vertical
+            </Button>
+            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined">
+              Horizontal
+            </Button>
           </Panel>
           <MiniMap />
           <Controls />

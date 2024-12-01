@@ -25,12 +25,14 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, threatType } from './constraints';
+import { colorPicker, colorPickerTab, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 
 const selector = (state) => ({
   model: state.model,
-  getModel: state.getModelById
+  getModel: state.getModelById,
+  riskTreatment: state.riskTreatment['subs'][0],
+  getRiskTreatment: state.getRiskTreatment
 });
 
 const column = [
@@ -96,20 +98,34 @@ export default function RiskTreatmentTable() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = React.useState(false);
-  const { model, getModel } = useStore(selector, shallow);
+  const { model, getModel, riskTreatment, getRiskTreatment } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
   const { title } = useSelector((state) => state?.pageName);
+
+  // console.log('riskTreatment', riskTreatment);
 
   // Pagination state
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   React.useEffect(() => {
-    getModel(id);
-  }, [id]);
+    const data = riskTreatment?.scenes.map((item) => ({
+      ID: item?.threat_id,
+      'Threat Scenario': item?.label,
+      'Damage Scenarios': `${item?.rowId?.slice(0, 6)} ${item?.damage_scene?.Name}`,
+      'Safety Impact': item?.damage_scene?.impacts['Safety Impact'],
+      'Financial Impact': item?.damage_scene?.impacts['Financial Impact'],
+      'Operational Impact': item?.damage_scene?.impacts['Operational Impact'],
+      'Privacy Impact': item?.damage_scene?.impacts['Privacy Impact'],
+      'Attack Feasibility Rating': ''
+    }));
+    setRows(data);
+    setFiltered(data);
+  }, [riskTreatment?.scenes.length]);
 
+  console.log('rows', rows);
   const Head = React.useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
@@ -130,6 +146,25 @@ export default function RiskTreatmentTable() {
 
   const handleBack = () => {
     dispatch(closeAll());
+  };
+
+  const onDrop = (event) => {
+    // console.log('event', event);
+    event.preventDefault();
+    const cyber = event.dataTransfer.getData('application/cyber');
+    let parsedData;
+
+    if (cyber) {
+      parsedData = JSON.parse(cyber);
+    }
+    // console.log('parsedData', parsedData);
+    const details = {
+      nodeId: parsedData.nodeId,
+      threatId: parsedData.threatId,
+      modelId: model?._id,
+      label: parsedData?.label
+    };
+    getRiskTreatment(details);
   };
 
   const handleSearch = (e) => {
@@ -185,6 +220,13 @@ export default function RiskTreatmentTable() {
                 </StyledTableCell>
               );
               break;
+
+            case item.name.includes('impact'):
+              <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]) }}>
+                {row[item.name] ? row[item.name] : '-'}
+              </StyledTableCell>;
+              break;
+
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} align={'left'}>
@@ -223,7 +265,12 @@ export default function RiskTreatmentTable() {
           </Button> */}
         </Box>
       </Box>
-      <TableContainer component={Paper}>
+
+      <TableContainer
+        component={Paper}
+        onDrop={onDrop}
+        onDragOver={(e) => e.preventDefault()} // Allow drop by preventing the default behavior
+      >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
@@ -239,6 +286,7 @@ export default function RiskTreatmentTable() {
           </TableBody>
         </Table>
       </TableContainer>
+
       <TablePagination
         component="div"
         count={filtered.length}
