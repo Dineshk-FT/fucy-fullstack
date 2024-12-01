@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useEffect, useState } from 'react';
-import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel } from '@mui/material';
+import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel, Typography } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabPanel from '@mui/lab/TabPanel';
 import toast, { Toaster } from 'react-hot-toast';
@@ -9,6 +9,7 @@ import { ClosePropertiesTab } from '../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
 import { fontSize } from '../../store/constant';
 import { makeStyles } from '@mui/styles';
+import ColorTheme from '../../store/ColorTheme';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 const notify = (message, status) => toast[status](message);
@@ -17,14 +18,12 @@ const useStyles = makeStyles(() => ({
   inputlabel: {
     fontSize: fontSize,
     fontFamily: 'Inter',
-    fontWeight: 600,
-    color: '#000'
+    fontWeight: 600
   },
   bottomPanel: {
     position: 'fixed',
     bottom: 0,
     right: 0,
-    backgroundColor: '#fff',
     borderTop: '1px solid #ccc',
     zIndex: 1300,
     padding: '16px',
@@ -49,6 +48,7 @@ const EditContent = ({
   assets,
   update
 }) => {
+  const color = ColorTheme();
   const classes = useStyles();
   const [value, setValue] = useState('1');
   const dispatch = useDispatch();
@@ -170,8 +170,11 @@ const EditContent = ({
 
   // console.log('details', details);
   return (
-    <div className={classes.bottomPanel}>
-      <Box sx={{ cursor: 'pointer', float: 'right', mt: 1.5 }} onClick={() => dispatch(ClosePropertiesTab())}>
+    <Box className={classes.bottomPanel} sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent }}>
+      <Typography variant="h4" color="primary">
+        Change the Properties
+      </Typography>
+      <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={() => dispatch(ClosePropertiesTab())}>
         <CancelTwoToneIcon />
       </Box>
       <TabContext value={value}>
@@ -193,6 +196,8 @@ const EditContent = ({
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
                   width: 'auto',
+                  background: `${color?.sidebarBG} !important`,
+                  color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
                     height: '0.4rem',
                     fontSize: fontSize
@@ -230,7 +235,7 @@ const EditContent = ({
             </Box>
             {!selectedElement?.target && (
               <FormControlLabel
-                sx={{ fontSize: fontSize, color: '#000' }}
+                sx={{ fontSize: fontSize, color: color?.sidebarContent }}
                 control={<Checkbox onChange={handleChecked} checked={Boolean(selectedElement?.isAsset)} />}
                 label="Asset"
               />
@@ -242,7 +247,7 @@ const EditContent = ({
         </TabPanel>
       </TabContext>
       <Toaster position="top-right" reverseOrder={false} />
-    </div>
+    </Box>
   );
 };
 

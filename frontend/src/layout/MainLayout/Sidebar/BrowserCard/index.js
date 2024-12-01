@@ -596,7 +596,19 @@ const BrowserCard = () => {
               ]}
             >
               <ClickAwayListener onClickAway={handleCloseItem}>
-                <Paper className={classes.paper}>
+                <Paper
+                  className={classes.paper}
+                  sx={{
+                    marginTop: '4rem',
+                    marginLeft: '3.1rem',
+                    background: `${color?.canvaSurroundsBG} !important`,
+                    color: color?.sidebarContent,
+                    border: '1px solid #ccc !important',
+                    borderRadius: '8px !important',
+                    padding: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
                   <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
                 </Paper>
