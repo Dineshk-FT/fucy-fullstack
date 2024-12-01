@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
-import { ADD_CALL, DELETE_CALL, GET_CALL, UPDATE_CALL } from '../API/api';
+import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, UPDATE_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -653,6 +653,25 @@ const useStore = createWithEqualityFn((set, get) => ({
           {
             ...state.attackScenarios.subs[2],
             ...Vulnerability
+          }
+        ]
+      }
+    }));
+  },
+
+  getRiskTreatment: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
+    const res = await GET_CALL_WITH_DETAILS(details, url);
+    set((state) => ({
+      riskTreatment: {
+        ...state.riskTreatment,
+        subs: [
+          {
+            ...state.riskTreatment.subs[0],
+            scenes: [
+              ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
+              res // Add the new res
+            ]
           }
         ]
       }

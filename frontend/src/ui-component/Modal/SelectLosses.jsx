@@ -79,7 +79,7 @@ export default function SelectLosses({
         }))
     };
 
-    console.log('filteredDetails', filteredDetails);
+    // console.log('filteredDetails', filteredDetails);
 
     const info = {
       'model-id': model?._id,
