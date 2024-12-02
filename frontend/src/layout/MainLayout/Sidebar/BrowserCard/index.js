@@ -198,6 +198,7 @@ const BrowserCard = () => {
 
   useEffect(() => {
     getModelById(modelId);
+    getAssets(modelId);
     setClickedItem(modelId);
   }, [modelId]);
 
