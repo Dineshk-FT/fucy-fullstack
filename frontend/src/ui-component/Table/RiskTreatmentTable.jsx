@@ -32,7 +32,8 @@ const selector = (state) => ({
   model: state.model,
   getModel: state.getModelById,
   riskTreatment: state.riskTreatment['subs'][0],
-  getRiskTreatment: state.getRiskTreatment
+  getRiskTreatment: state.getRiskTreatment,
+  addRiskTreatment: state.addRiskTreatment
 });
 
 const column = [
@@ -98,7 +99,7 @@ export default function RiskTreatmentTable() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = React.useState(false);
-  const { model, getModel, riskTreatment, getRiskTreatment } = useStore(selector, shallow);
+  const { model, riskTreatment, getRiskTreatment, addRiskTreatment } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
@@ -111,10 +112,10 @@ export default function RiskTreatmentTable() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   React.useEffect(() => {
-    const data = riskTreatment?.scenes.map((item) => ({
+    const data = riskTreatment?.Details.map((item) => ({
       ID: item?.threat_id,
       'Threat Scenario': item?.label,
-      'Damage Scenarios': `${item?.rowId?.slice(0, 6)} ${item?.damage_scene?.Name}`,
+      'Damage Scenarios': `${item?.row_id?.slice(0, 6)} ${item?.damage_scene?.Name}`,
       'Safety Impact': item?.damage_scene?.impacts['Safety Impact'],
       'Financial Impact': item?.damage_scene?.impacts['Financial Impact'],
       'Operational Impact': item?.damage_scene?.impacts['Operational Impact'],
@@ -123,9 +124,9 @@ export default function RiskTreatmentTable() {
     }));
     setRows(data);
     setFiltered(data);
-  }, [riskTreatment?.scenes.length]);
+  }, [riskTreatment?.Details.length]);
 
-  console.log('rows', rows);
+  // console.log('rows', rows);
   const Head = React.useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
@@ -164,7 +165,7 @@ export default function RiskTreatmentTable() {
       modelId: model?._id,
       label: parsedData?.label
     };
-    getRiskTreatment(details);
+    addRiskTreatment(details);
   };
 
   const handleSearch = (e) => {
@@ -221,10 +222,12 @@ export default function RiskTreatmentTable() {
               );
               break;
 
-            case item.name.includes('impact'):
-              <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]) }}>
-                {row[item.name] ? row[item.name] : '-'}
-              </StyledTableCell>;
+            case item.name.includes('Impact'):
+              return (
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]), color: '#000' }}>
+                  {row[item.name] ? row[item.name] : '-'}
+                </StyledTableCell>
+              );
               break;
 
             case typeof row[item.name] !== 'object':

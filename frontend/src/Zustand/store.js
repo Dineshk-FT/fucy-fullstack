@@ -156,7 +156,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       {
         id: 81,
         name: 'Threat Assessment & Risk Treatment',
-        scenes: []
+        Details: []
       }
     ]
   },
@@ -658,24 +658,35 @@ const useStore = createWithEqualityFn((set, get) => ({
       }
     }));
   },
-
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
-    const res = await GET_CALL_WITH_DETAILS(details, url);
-    set((state) => ({
-      riskTreatment: {
-        ...state.riskTreatment,
-        subs: [
-          {
-            ...state.riskTreatment.subs[0],
-            scenes: [
-              ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
-              res // Add the new res
-            ]
-          }
-        ]
-      }
-    }));
+    const res = await GET_CALL(details, url);
+    if (!res?.error) {
+      set((state) => ({
+        riskTreatment: {
+          ...state.riskTreatment,
+          subs: [
+            {
+              ...state.riskTreatment.subs[0],
+              ...res
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        riskTreatment: {
+          ...state.riskTreatment,
+          subs: [
+            {
+              id: 81,
+              name: 'Threat Assessment & Risk Treatment',
+              Details: []
+            }
+          ]
+        }
+      }));
+    }
   },
 
   //Update Section
@@ -752,6 +763,28 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await ADD_CALL(details, url);
     return res;
   },
+
+  addRiskTreatment: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/riskDetAndTreat`;
+    const res = await ADD_CALL(details, url);
+    // console.log('res', res);
+    return res;
+    // set((state) => ({
+    //   riskTreatment: {
+    //     ...state.riskTreatment,
+    //     subs: [
+    //       {
+    //         ...state.riskTreatment.subs[0],
+    //         scenes: [
+    //           ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
+    //           res // Add the new res
+    //         ]
+    //       }
+    //     ]
+    //   }
+    // }));
+  },
+
   createComponent: async (newTemplate) => {
     const FormData = require('form-data');
     let data = new FormData();

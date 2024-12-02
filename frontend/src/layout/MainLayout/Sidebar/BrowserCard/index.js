@@ -236,8 +236,8 @@ const BrowserCard = () => {
       assets: getAssets,
       damage: getDamageScenarios,
       threat: getThreatScenario,
-      attack: getAttackScenario
-      // risks: getRiskTreatment
+      attack: getAttackScenario,
+      risks: getRiskTreatment
     };
     await get_api[name](ModelId);
   };
@@ -606,7 +606,7 @@ const BrowserCard = () => {
                     border: '1px solid #ccc !important',
                     borderRadius: '8px !important',
                     padding: '8px',
-                    cursor: 'pointer',
+                    cursor: 'pointer'
                   }}
                 >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
