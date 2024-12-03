@@ -97,6 +97,10 @@ const LeftSection = () => {
     },
   ];
 
+  const handleCloseNewModal = () => {
+    setOpenModal((prev) => ({ ...prev, Open: false }));
+  };
+
   const handleCloseOpenModal = () => {
     setOpenModal((prev) => ({ ...prev, Open: false }));
   };
@@ -208,7 +212,7 @@ const LeftSection = () => {
       </Box>
 
       {/* Modals */}
-      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={handleCloseModal} />}
+      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={handleCloseNewModal} />}
       {openModal.Rename && (
         <RenameProject open={openModal.Rename} handleClose={handleCloseRenameModal} Models={Models} />
       )}
