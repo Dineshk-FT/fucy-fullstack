@@ -34,3 +34,16 @@ export const updatedModelState = (mod, nodes, edges) => {
 
   return mod;
 };
+
+export const style = {
+  fontSize: '16px',
+  fontFamily: 'Inter',
+  fontStyle: 'normal',
+  fontWeight: 500,
+  textAlign: 'center',
+  color: 'white',
+  textDecoration: 'none',
+  borderColor: 'black',
+  borderWidth: '2px',
+  borderStyle: 'solid'
+};

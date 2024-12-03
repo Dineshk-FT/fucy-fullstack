@@ -160,26 +160,27 @@ const nodetypes = {
 export default function AttackBlock({ attackScene }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
     useStore(selector, shallow);
-
+  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
   // console.log('nodes', nodes);
   // console.log('edges', edges);
+  // console.log('isAttackTreeOpen', isAttackTreeOpen);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
-  useEffect(() => {
-    setNodes([]);
-    setEdges([]);
-  }, []);
+  // useEffect(() => {
+  //   setNodes([]);
+  //   setEdges([]);
+  // }, [attackScene, isAttackTreeOpen]);
 
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
         setNodes(attackScene?.templates?.nodes ?? []);
         setEdges(attackScene?.templates?.edges ?? []);
-      }, 10);
+      }, 200);
     }
-  }, [attackScene]);
+  }, [attackScene, isAttackTreeOpen]);
 
   useEffect(() => {
     if (reactFlowInstance) {

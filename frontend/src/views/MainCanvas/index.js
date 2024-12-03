@@ -50,7 +50,7 @@ import ColorTheme from '../../store/ColorTheme';
 import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
 import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
-import { updatedModelState } from '../../utils/Constraints';
+import { style } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
@@ -58,6 +58,7 @@ import { Button } from '@mui/material';
 import RiskTreatmentTable from '../../ui-component/Table/RiskTreatmentTable';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
+
 const elk = new ELK();
 
 const elkOptions = {
@@ -120,7 +121,8 @@ const selector = (state) => ({
   redo: state.redo,
   undoStack: state.undoStack,
   redoStack: state.redoStack,
-  assets: state.assets
+  assets: state.assets,
+  attackScenarios: state.attackScenarios
 });
 
 //Edge line styling
@@ -201,7 +203,8 @@ export default function MainCanvas() {
     redoStack,
     assets,
     update,
-    getAssets
+    getAssets,
+    attackScenarios
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -231,25 +234,39 @@ export default function MainCanvas() {
     isRiskTableOpen
   } = useSelector((state) => state?.currentId);
 
-  useEffect(() => {
-    // console.log('initial');
+  const handleClear = () => {
     setNodes([]);
     setEdges([]);
-  }, [!isAttackTreeOpen]);
+  };
+
+  useEffect(() => {
+    handleClear();
+  }, []);
 
   // console.log('redoStack', redoStack);
   // console.log('undoStack', undoStack);
-  // console.log('isAttackTreeOpen', isAttackTreeOpen);
   // console.log('assets', assets);
-  useEffect(() => {
-    const template = assets?.template;
-    setSavedTemplate(template);
-    onSaveInitial(template);
-    // setTimeout(() => {
-    onRestore(template);
+  const onRestore = useCallback(
+    (temp) => {
+      // console.log('temp', temp);
+      if (temp) {
+        setNodes(temp.nodes);
+        setEdges(temp.edges);
+      } else {
+        handleClear();
+      }
+    },
+    [reactFlowInstance]
+  );
 
-    // }, 100);
-  }, [assets, !isAttackTreeOpen]);
+  useEffect(() => {
+    if (!isAttackTreeOpen) {
+      const template = assets?.template;
+      setSavedTemplate(template);
+      onSaveInitial(template);
+      onRestore(template);
+    }
+  }, [assets]);
 
   // console.log('nodes', nodes);
   useEffect(() => {
@@ -435,16 +452,7 @@ export default function MainCanvas() {
             label: parsedNode.data['label'],
             style: {
               backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
-              fontSize: '16px',
-              fontFamily: 'Inter',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              textAlign: 'center',
-              color: 'white',
-              textDecoration: 'none',
-              borderColor: 'black',
-              borderWidth: '2px',
-              borderStyle: 'solid'
+              ...style
             }
           }
         };
@@ -461,16 +469,7 @@ export default function MainCanvas() {
             nodeId: parsedNodeItem.nodeId,
             style: {
               backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
-              fontSize: '16px',
-              fontFamily: 'Inter',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              textAlign: 'center',
-              color: 'white',
-              textDecoration: 'none',
-              borderColor: 'black',
-              borderWidth: '2px',
-              borderStyle: 'solid'
+              ...style
             }
           },
           properties: parsedNodeItem.props || []
@@ -491,16 +490,7 @@ export default function MainCanvas() {
               ...node?.data,
               style: {
                 backgroundColor: node.data['bgColor'],
-                fontSize: '16px',
-                fontFamily: 'Inter',
-                fontStyle: 'normal',
-                fontWeight: 500,
-                textAlign: 'center',
-                color: 'white',
-                textDecoration: 'none',
-                borderColor: 'black',
-                borderWidth: '2px',
-                borderStyle: 'solid'
+                ...style
               }
             },
             type: node.type,
@@ -549,24 +539,6 @@ export default function MainCanvas() {
       localStorage.setItem(flowKey, JSON.stringify(temp));
     }
   }, []);
-
-  const onRestore = useCallback(
-    (temp) => {
-      // console.log('temp', temp);
-      if (temp) {
-        setNodes(temp.nodes);
-        setEdges(temp.edges);
-      } else {
-        handleClear();
-      }
-    },
-    [reactFlowInstance]
-  );
-
-  const handleClear = () => {
-    setNodes([]);
-    setEdges([]);
-  };
 
   const handleSaveToModel = () => {
     // model - id,
