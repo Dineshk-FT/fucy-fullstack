@@ -98,7 +98,7 @@ const LeftSection = () => {
   ];
 
   const handleCloseNewModal = () => {
-    setOpenModal((prev) => ({ ...prev, Open: false }));
+    setOpenModal((prev) => ({ ...prev, New: false }));
   };
 
   const handleCloseOpenModal = () => {
