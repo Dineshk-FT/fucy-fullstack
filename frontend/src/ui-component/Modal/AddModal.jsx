@@ -103,7 +103,8 @@ export default function AddModel({ open, handleClose, getModels }) {
         onClose={handleClose}
         aria-describedby="alert-dialog-slide-description"
       >
-        <DialogTitle sx={{ fontSize: 20, fontFamily: 'Inter' }}>{'Add Project'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb:0 }}>{'Add Project'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14, fontFamily: 'italic', pt:0, pb:1 }}>{'Name of your project to create a new model.'}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
