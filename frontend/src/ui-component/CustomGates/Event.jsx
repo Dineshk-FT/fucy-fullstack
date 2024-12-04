@@ -4,7 +4,6 @@ import { Handle, Position } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Menu, MenuItem, TextField } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
@@ -49,7 +48,7 @@ export default function Event(props) {
     if (color) {
       return RatingColor(color['Attack Feasibilities Rating']);
     } else {
-      return 'transparent';
+      return 'gray';
     }
   }, []);
 
@@ -71,9 +70,8 @@ export default function Event(props) {
           onContextMenu={handleOpenModal}
           display="flex"
           alignItems="center"
-          sx={{ p: 2, border: '1px solid grey', minWidth: 100, color: 'gray' }}
+          sx={{ p: 2, border: `1px solid ${bgColor}`, minWidth: 100, color: 'gray' }}
         >
-          <WarningAmberIcon color="error" />
           <TextField
             value={inputValue}
             onChange={handleChange}
@@ -86,21 +84,8 @@ export default function Event(props) {
             }}
           />
         </Box>
-        <Box
-          my={1}
-          sx={{
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            border: '1px solid black',
-            bgcolor: bgColor,
-            color: 'black',
-            alignContent: 'center',
-            textAlign: 'center'
-          }}
-        >
-          {props?.id?.slice(0, 5)}
-        </Box>
+
+        {/* {props?.id?.slice(0, 5)} */}
       </Box>
       <Handle type="source" position={Position.Bottom} />
       <Menu

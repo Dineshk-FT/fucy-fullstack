@@ -690,9 +690,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   //Update Section
-
+  updateModelName: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/model-name`;
+    const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
   updateDamageScenario: async (details) => {
-    // const { id, detailId, cyberLosses } = details;
     const url = `${configuration.apiBaseUrl}v1/update/damage_scenario`;
     const res = await UPDATE_CALL(details, url);
     // console.log('res', res);
@@ -700,7 +704,6 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   updateAttackScenario: async (details) => {
-    // const { id, detailId, cyberLosses } = details;
     const url = `${configuration.apiBaseUrl}v1/update/attacks`;
     const res = await UPDATE_CALL(details, url);
     // console.log('res', res);

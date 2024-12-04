@@ -63,6 +63,6 @@ export const colorPickerTab = (value) => {
     case 'Negligible':
       return 'lightgreen';
     default:
-      return 'white';
+      return '#f7f7f7';
   }
 };

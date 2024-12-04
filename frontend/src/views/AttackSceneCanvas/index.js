@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType } from 'reactflow';
+import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType, Background } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import useStore from '../../Zustand/store';
@@ -15,6 +15,7 @@ import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
+import { style } from '../../utils/Constraints';
 
 const elk = new ELK();
 
@@ -157,29 +158,29 @@ const nodetypes = {
   [`Voting Gate`]: VotingGate
 };
 
-export default function AttackBlock({ attackScene }) {
+export default function AttackBlock({ attackScene, color }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
     useStore(selector, shallow);
-
-  // console.log('nodes', nodes);
+  console.log('nodes', nodes);
   // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
-
-  useEffect(() => {
-    setNodes([]);
-    setEdges([]);
-  }, []);
+  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
 
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
         setNodes(attackScene?.templates?.nodes ?? []);
         setEdges(attackScene?.templates?.edges ?? []);
-      }, 10);
+      }, 200);
     }
-  }, [attackScene]);
+  }, [attackScene, isAttackTreeOpen]);
+
+  // useEffect(() => {
+  //   setNodes([]);
+  //   setEdges([]);
+  // }, []);
 
   useEffect(() => {
     if (reactFlowInstance) {
@@ -217,14 +218,7 @@ export default function AttackBlock({ attackScene }) {
             style: {
               color: 'black',
               backgroundColor: 'transparent',
-              fontSize: '16px',
-              fontFamily: 'Inter',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              textAlign: 'center',
-              borderColor: 'black',
-              borderWidth: '2px',
-              borderStyle: 'solid'
+              ...style
             }
           }
         };
@@ -244,7 +238,11 @@ export default function AttackBlock({ attackScene }) {
 
         addNode(newNode);
 
-        if (targetNode) {
+        console.log('newNode', newNode);
+        console.log('targetNode', targetNode);
+        const condition =
+          (targetNode.type == 'default' && newNode.type.includes('Gate')) || (targetNode.type.includes('Gate') && newNode.type == 'Event');
+        if (condition) {
           const newEdge = {
             id: uid(),
             source: targetNode.id,
@@ -350,8 +348,13 @@ export default function AttackBlock({ attackScene }) {
         draggedNode.position.y < nodeBounds.yMax
       );
     });
-
-    if (overlappingNode) {
+    console.log('draggedNode', draggedNode);
+    console.log('overlappingNode', overlappingNode);
+    const condition =
+      (overlappingNode.type == 'default' && draggedNode.type.includes('Gate')) ||
+      (overlappingNode.type.includes('Gate') && draggedNode.type == 'Event') ||
+      (overlappingNode.type == 'Event' && draggedNode.type.includes('Gate'));
+    if (condition) {
       // Create a new edge
       const newEdge = {
         id: uid(),
@@ -369,6 +372,10 @@ export default function AttackBlock({ attackScene }) {
       // Update edges in Zustand store
       setEdges([...edges, newEdge]);
     }
+  };
+
+  const buttonStyle = {
+    background: color?.canvasBG
   };
 
   return (
@@ -393,19 +400,20 @@ export default function AttackBlock({ attackScene }) {
           onNodeDragStop={onNodeDragStop}
           fitView
         >
-          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>
-            <Button variant="outlined" onClick={handleSave}>
+          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
+            <Button variant="outlined" onClick={handleSave} sx={buttonStyle}>
               {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
             </Button>
-            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined">
+            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
               vertical
             </Button>
-            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined">
+            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
               Horizontal
             </Button>
           </Panel>
-          <MiniMap />
+          <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
           <Controls />
+          <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
         </ReactFlow>
       </ReactFlowProvider>
       <Toaster position="top-right" reverseOrder={false} />

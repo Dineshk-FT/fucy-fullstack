@@ -12,11 +12,12 @@ const selector = (state) => ({
   setEdges: state.setEdges,
   assets: state.assets,
   update: state.updateAssets,
-  getAssets: state.getAssets
+  getAssets: state.getAssets,
+  getDamageScenarios: state.getDamageScenarios
 });
 const MenuCard = () => {
   const dispatch = useDispatch();
-  const { nodes, edges, setEdges, setNodes, model, assets, update, getAssets } = useStore(selector);
+  const { nodes, edges, setEdges, setNodes, model, assets, update, getAssets, getDamageScenarios } = useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const setSelectedElement = (node) => dispatch(setSelectedBlock(node));
 
@@ -27,6 +28,7 @@ const MenuCard = () => {
 
   const RefreshAPI = () => {
     getAssets(model?._id);
+    getDamageScenarios(model?._id);
   };
 
   return (

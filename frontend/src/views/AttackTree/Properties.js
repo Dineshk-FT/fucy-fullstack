@@ -1,9 +1,9 @@
 import React from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import EventIcon from '@mui/icons-material/Event'; 
-import OrIcon from '@mui/icons-material/HelpOutline'; 
-import AndIcon from '@mui/icons-material/Equalizer'; 
+import EventIcon from '@mui/icons-material/Event';
+import OrIcon from '@mui/icons-material/HelpOutline';
+import AndIcon from '@mui/icons-material/Equalizer';
 import VoteIcon from '@mui/icons-material/HowToVote';
 import TransferIcon from '@mui/icons-material/TransferWithinAStation';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
@@ -53,14 +53,14 @@ const Properties = () => {
         defaultExpandIcon={<ChevronRightIcon />}
         defaultExpanded={['Attack Tree']}
       >
-        <TreeItem 
-          nodeId="Attack Tree" 
+        <TreeItem
+          nodeId="Attack Tree"
           label={<span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Attack Tree</span>}
-          style={{paddingTop: 6}}
+          style={{ paddingTop: 6 }}
         >
           {gates.map((item) => (
             <DraggableTreeItem
-              style={{paddingTop: 12}}
+              style={{ paddingTop: 12 }}
               draggable={true}
               key={item.nodeId}
               nodeId={item.nodeId}

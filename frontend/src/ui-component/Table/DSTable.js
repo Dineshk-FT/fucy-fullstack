@@ -43,6 +43,7 @@ const selector = (state) => ({
   getModelById: state.getModelById,
   getModels: state.getModels,
   update: state.updateDamageScenario,
+  getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
@@ -96,7 +97,7 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
 const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
   // console.log('name', name);
   return (
-    <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(impact) }}>
+    <StyledTableCell component="th" scope="row" sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
           width: 130,
@@ -158,7 +159,10 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios } = useStore(selector, shallow);
+  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios, getThreatScenario } = useStore(
+    selector,
+    shallow
+  );
   const [stakeHolder] = useState(false);
   const classes = useStyles();
   const { id } = useParams();
@@ -431,18 +435,18 @@ export default function DsTable() {
             '&:last-child td, &:last-child th': { border: 0 },
             '&:nth-of-type(even)': {
               backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`,
+              color: `${color?.sidebarContent} !important`
             },
             '&:nth-of-type(odd)': {
               backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`,
+              color: `${color?.sidebarContent} !important`
             },
             '& .MuiTableCell-root.MuiTableCell-body': {
               backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`,
+              color: `${color?.sidebarContent} !important`
             },
             backgroundColor: isChild ? '#F4F8FE' : '',
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           }}
         >
           {Head?.map((item, index) => {
@@ -502,7 +506,7 @@ export default function DsTable() {
                   <StyledTableCell
                     component="th"
                     scope="row"
-                    sx={{ background: colorPickerTab(OverallImpact(row?.impacts)), color: '#000' }}
+                    sx={{ backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`, color: '#000' }}
                   >
                     {OverallImpact(row?.impacts)}
                   </StyledTableCell>
@@ -650,6 +654,7 @@ export default function DsTable() {
           setSelectedRow={setSelectedRow}
           update={update}
           getModelById={getModelById}
+          getThreatScenario={getThreatScenario}
           getModels={getModels}
           id={id}
         />

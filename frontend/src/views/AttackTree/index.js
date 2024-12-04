@@ -9,8 +9,10 @@ import Properties from './Properties';
 import Levels from '../AttackSceneCanvas/Levels';
 import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
+import ColorTheme from '../../store/ColorTheme';
 
 const AttackTree = () => {
+  const color = ColorTheme();
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -31,9 +33,13 @@ const AttackTree = () => {
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {!isLevelOpen && (
+          // <Box display="flex" alignItems="center" gap={1} my={1}>
+          //   <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1 }} onClick={handleBack} />
+          //   <Typography variant="h4">{attackScene?.Name} </Typography>
+          // </Box>
           <Box display="flex" alignItems="center" gap={1} my={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1 }} onClick={handleBack} />
-            <Typography variant="h4">{attackScene?.Name} </Typography>
+            <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{attackScene?.Name}</Typography>
           </Box>
         )}
         <Paper elevation={3} sx={{ height: '83svh' }}>
@@ -62,14 +68,14 @@ const AttackTree = () => {
               handleSize={[10, Infinity]}
             > */}
             <Grid item sx={{ flexGrow: 1 }}>
-              {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} /> : <Levels />}
+              {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} color={color} /> : <Levels />}
             </Grid>
             {/* </ResizableBox> */}
             <Grid
               item
-              sx={{ borderLeft: '1px solid black', height: '100%' }} // Fill the ResizableBox
+              sx={{ borderLeft: '1px solid black', height: '100%', backgroundColor: color?.canvasBG, color: color?.title }} // Fill the ResizableBox
             >
-              <Properties />
+              <Properties color={color} />
             </Grid>
           </Grid>
         </Paper>
