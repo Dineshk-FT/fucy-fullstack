@@ -64,6 +64,7 @@ export default function DsDerivationTable() {
 
   const [page, setPage] = React.useState(0); // Add state for page
   const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
+  const [columnWidths, setColumnWidths] = React.useState({});
 
   const Head = React.useMemo(() => {
     return [
@@ -120,6 +121,29 @@ export default function DsDerivationTable() {
     setPage(0);
   };
 
+  const handleResizeStart = (e, columnId) => {
+    const startX = e.clientX;
+  
+    // Get the starting width of the column
+    const headerCell = e.target.parentNode;
+    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+  
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX; // Calculate movement direction
+      const newWidth = Math.max(50, startWidth + delta); // Set a minimum width of 50px
+  
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+  
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };  
+
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
       <StyledTableRow
@@ -129,18 +153,18 @@ export default function DsDerivationTable() {
           '&:last-child td, &:last-child th': { border: 0 },
           '&:nth-of-type(even)': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           '&:nth-of-type(odd)': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           '& .MuiTableCell-root.MuiTableCell-body': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           backgroundColor: isChild ? '#F4F8FE' : '',
-          color: `${color?.sidebarContent} !important`,
+          color: `${color?.sidebarContent} !important`
         }}
       >
         {Head?.map((item, index) => {
@@ -163,7 +187,7 @@ export default function DsDerivationTable() {
 
             case typeof row[item.name] !== 'object':
               cellContent = (
-                <StyledTableCell key={index} align={'left'}>
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                   {row[item.name] ? row[item.name] : '-'}
                 </StyledTableCell>
               );
@@ -233,7 +257,22 @@ export default function DsDerivationTable() {
             <TableHead>
               <TableRow>
                 {Head?.map((hd) => (
-                  <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
+                  <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                    {hd?.name}
+                    <div
+                      className="resize-handle"
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: '5px',
+                        height: '100%',
+                        cursor: 'col-resize',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                    />
+                  </StyledTableCell>
                 ))}
               </TableRow>
             </TableHead>
