@@ -96,6 +96,7 @@ export default function Tstable() {
   // Pagination state
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [columnWidths, setColumnWidths] = React.useState({});
 
   const Head = React.useMemo(() => {
     if (title.includes('Derived')) {
@@ -181,6 +182,29 @@ export default function Tstable() {
     setPage(0);
   };
 
+  const handleResizeStart = (e, columnId) => {
+    const startX = e.clientX;
+  
+    // Use the actual width of the column if no width is set in state
+    const headerCell = e.target.parentNode;
+    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+  
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX; // Calculate movement direction
+      const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
+  
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+  
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
       <StyledTableRow
@@ -190,18 +214,18 @@ export default function Tstable() {
           '&:last-child td, &:last-child th': { border: 0 },
           '&:nth-of-type(even)': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           '&:nth-of-type(odd)': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           '& .MuiTableCell-root.MuiTableCell-body': {
             backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`,
+            color: `${color?.sidebarContent} !important`
           },
           backgroundColor: isChild ? '#F4F8FE' : '',
-          color: `${color?.sidebarContent} !important`,
+          color: `${color?.sidebarContent} !important`
         }}
       >
         {Head?.map((item, index) => {
@@ -221,7 +245,7 @@ export default function Tstable() {
               break;
             case typeof row[item.name] !== 'object':
               cellContent = (
-                <StyledTableCell key={index} align={'left'}>
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                   {row[item.name] ? row[item.name] : '-'}
                 </StyledTableCell>
               );
@@ -279,7 +303,25 @@ export default function Tstable() {
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
+                <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                {hd?.name}
+                <div
+                  className="resize-handle"
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: '5px',
+                    height: '100%',
+                    cursor: 'col-resize',
+                    backgroundColor: 'transparent',
+                    '& .MuiTableCell-root': {
+                      transition: 'width 0.2s ease'
+                    }
+                  }}
+                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                />
+              </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>

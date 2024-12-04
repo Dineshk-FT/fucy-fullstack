@@ -13,17 +13,15 @@ import MenuList from '@mui/material/MenuList';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibrary';
-import { drawerOpen } from '../../store/slices/CurrentIdSlice';
 import { useDispatch } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { openAddNodeTab } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   paper: {
-    marginLeft: '1.7rem',
-    marginTop: '2rem',
     zIndex: 1400,
     pointerEvents: 'auto',
+    cursor: 'grab',
     background: '#f5f5f5',
     border: '1px solid #d1d1d1',
     borderRadius: '8px',
@@ -46,30 +44,25 @@ const useStyles = makeStyles(() => ({
 }));
 
 const selector = (state) => ({
-  sidebarNodes: state.sidebarNodes,
-  getSidebarNode: state.getSidebarNode
+  sidebarNodes: state.sidebarNodes
 });
 
 const Components = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [openModal, setOpenModal] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState(null);
   const { sidebarNodes } = useStore(selector);
   const color = ColorTheme();
-
-  const [hoveredItem, setHoveredItem] = useState(null);
 
   const handleMouseEnter = (event, item) => {
     setHoveredItem(item);
     setAnchorEl(event.currentTarget);
-    setOpenModal(true);
   };
 
   const handleMouseLeave = () => {
     setHoveredItem(null);
-    setOpenModal(false);
     setAnchorEl(null);
   };
 
@@ -80,8 +73,6 @@ const Components = () => {
   };
 
   const handleOpen = (item) => {
-    // console.log('item', item);
-    // dispatch(drawerOpen());
     dispatch(openAddNodeTab());
     dispatch(setSelectedNodeGroupId(item?._id));
   };
@@ -98,7 +89,14 @@ const Components = () => {
       <Box
         component="nav"
         aria-label="sidebar"
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, overflowX: 'hidden' }}
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 2,
+          overflowX: 'auto',
+          borderRadius: '8px'
+        }}
       >
         {sidebarNodes?.map((item, i) => (
           <Box
@@ -106,40 +104,61 @@ const Components = () => {
             display="flex"
             flexDirection="column"
             alignItems="center"
-            gap={1}
             onMouseEnter={(e) => handleMouseEnter(e, item)}
             onMouseLeave={handleMouseLeave}
+            sx={{ cursor: 'pointer' }}
           >
             <Avatar
               {...stringAvatar(item?.name)}
               variant="rounded"
               sx={{
-                width: 56,
-                height: 56,
+                width: 25,
+                height: 25,
+                fontSize: '12px',
                 '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
               }}
             />
-            <Typography variant="h6" color={'#1d97fc'}>
+            <Typography variant="body2" color={'#1d97fc'} noWrap sx={{ fontSize: '10px' }}>
               {item?.name}
             </Typography>
-            <Popper open={openModal && hoveredItem === item} anchorEl={anchorEl} placement="right-start" transition disablePortal={false}>
+            <Popper
+              open={Boolean(anchorEl) && hoveredItem === item}
+              anchorEl={anchorEl}
+              placement="bottom"
+              transition
+              disablePortal={false}
+              sx={{ zIndex: 1500, '&:hover': { cursor: 'grab' } }}
+            >
               {({ TransitionProps }) => (
                 <Grow
                   {...TransitionProps}
                   style={{
-                    transformOrigin: 'left top'
+                    transformOrigin: 'top center'
                   }}
                 >
-                  <Paper onMouseLeave={handleMouseLeave} sx={{ backgroundColor: color?.leftbarBG }} className={classes?.paper}>
+                  <Paper
+                    sx={{
+                      backgroundColor: color?.leftbarBG,
+                      zIndex: 1500,
+                      '&:hover': { cursor: 'grab' }
+                    }}
+                    className={classes.paper}
+                  >
                     <ClickAwayListener onClickAway={handleMouseLeave}>
-                      <MenuList autoFocusItem={openModal} sx={{ height: 'auto', maxHeight: 600 }}>
+                      <MenuList autoFocusItem={hoveredItem === item}>
                         {item?.nodes?.map((node) => (
-                          <MenuItem draggable onDragStart={(event) => onDragStart(event, node)} key={node?.id} onClick={handleMouseLeave}>
+                          <MenuItem draggable onDragStart={(event) => onDragStart(event, node)} key={node?.id} onClick={handleMouseLeave} sx={{'&:hover': { cursor: 'grab' }}}>
                             {node?.data['label']}
                           </MenuItem>
                         ))}
                         <MenuItem>
-                          <Button sx={{ margin: 0 }} onClick={() => handleOpen(item)} variant="outlined" fullWidth>
+                          <Button
+                            sx={{
+                              margin: 0,
+                            }}
+                            onClick={() => handleOpen(item)}
+                            variant="outlined"
+                          >
                             + Add
                           </Button>
                         </MenuItem>
@@ -154,24 +173,21 @@ const Components = () => {
         <Fab
           size="small"
           color="primary"
-          variant="outlined"
           aria-label="add"
           onClick={() => setOpenAdd(true)}
           sx={{
-            mb: 1.5,
-            width: '35px',
-            height: '25px',
             background: 'transparent',
+            boxShadow: 'none',
             color: '#2196f3',
             border: '2px solid #2196f3',
-            '&:hover': {
-              color: 'white'
-            }
+            width: '30px',
+            height: '30px',
+            minHeight: '30px',
+            '&:hover': { color: 'white' }
           }}
         >
           <AddIcon />
         </Fab>
-        {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer', my: 1, border: '1px solid' }} /> */}
       </Box>
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
     </>

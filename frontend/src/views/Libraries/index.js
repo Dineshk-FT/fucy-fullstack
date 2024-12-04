@@ -15,9 +15,12 @@ const useStyles = makeStyles(() => ({
     background: '#f5f5f5',
     borderRadius: '8px',
     padding: '8px',
-    minWidth: '150px',
+    textAlign: 'center',
+    fontSize: '12px',
+    minWidth: '120px',
     '&:hover': {
-      backgroundColor: 'rgba(0, 0, 0, 0.1)'
+      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+      cursor: 'grab'
     },
     maxHeight: '300px',
     overflowY: 'auto',
@@ -31,7 +34,7 @@ const useStyles = makeStyles(() => ({
     '&::-webkit-scrollbar-track': {
       background: 'rgba(0, 0, 0, 0.1)'
     }
-  },
+  }
 }));
 
 const selector = (state) => ({
@@ -53,15 +56,17 @@ export default function TemplateList() {
   };
 
   return (
-    <>
-      <Box component="nav" aria-label="sidebar" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {template.map((text, index) => (
-          <div key={index} className={classes?.library} onDragStart={(event) => onDragStart(event, text)} draggable>
-            {text['name']}
-          </div>
-        ))}
-        {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer' }} onClick={() => window.location.reload()} /> */}
-      </Box>
-    </>
+    <Box
+      // component="nav"
+      aria-label="sidebar"
+      sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}
+    >
+      {template.map((text, index) => (
+        <div key={index} className={classes?.library} onDragStart={(event) => onDragStart(event, text)} draggable>
+          {text['name']}
+        </div>
+      ))}
+      {/* <AddIcon sx={{ fontSize: 20, color: 'blue', cursor: 'pointer' }} onClick={() => window.location.reload()} /> */}
+    </Box>
   );
 }

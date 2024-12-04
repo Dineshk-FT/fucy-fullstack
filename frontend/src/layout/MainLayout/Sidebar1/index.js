@@ -111,7 +111,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         height={Infinity}
         axis="x"
         minConstraints={[250, 0]}
-        maxConstraints={[450, Infinity]}
+        maxConstraints={[650, Infinity]}
         onResize={handleResize}
         handle={
           <span

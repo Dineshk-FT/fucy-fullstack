@@ -214,13 +214,13 @@ const MainLayout = ({ children }) => {
               transition: 'display 0.8s',
               justifyContent: 'space-between',
               py: 0,
-              borderBottom: `0.2px solid ${color?.title}`
+              // borderBottom: `0.2px solid ${color?.title}`
             }}
           >
             {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
             <Header1 />
           </Toolbar>
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -266,7 +266,7 @@ const MainLayout = ({ children }) => {
                 })}
               </Box>
             )})}
-          </Box>
+          </Box> */}
           {isNavbarClose && (
             <Box display="flex" justifyContent="end" onClick={() => dispatch(navbarSlide())}>
               <ArrowSquareDown size="20" color={isDark ? 'white' : 'black'} />
