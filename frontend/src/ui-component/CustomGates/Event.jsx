@@ -1,9 +1,9 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Handle, Position } from 'reactflow';
+import React, { useCallback, useState } from 'react';
+import { Handle, Position, NodeResizer } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { Box, Menu, MenuItem, TextField } from '@mui/material';
+import { Box, Menu, MenuItem, TextField, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
@@ -48,13 +48,11 @@ export default function Event(props) {
     if (color) {
       return RatingColor(color['Attack Feasibilities Rating']);
     } else {
-      return 'gray';
+      return 'grey';
     }
   }, []);
 
   const bgColor = getBgColor();
-
-  // console.log('bgColor', bgColor);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -64,14 +62,13 @@ export default function Event(props) {
 
   return (
     <>
+      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={150} minHeight={140} />
       <Handle type="target" position={Position.Top} />
       <Box display="flex" flexDirection="column" alignItems="center">
-        <Box
-          onContextMenu={handleOpenModal}
-          display="flex"
-          alignItems="center"
-          sx={{ p: 2, border: `1px solid ${bgColor}`, minWidth: 100, color: 'gray' }}
-        >
+        <Box onContextMenu={handleOpenModal} display="flex" alignItems="center" sx={{ p: 2, minWidth: 100, color: 'gray' }}>
+          <Typography variant="body2" sx={{ position: 'absolute', top: 0, left: 5 }}>
+            {props?.id?.slice(0, 5)}
+          </Typography>
           <TextField
             value={inputValue}
             onChange={handleChange}
@@ -84,8 +81,6 @@ export default function Event(props) {
             }}
           />
         </Box>
-
-        {/* {props?.id?.slice(0, 5)} */}
       </Box>
       <Handle type="source" position={Position.Bottom} />
       <Menu

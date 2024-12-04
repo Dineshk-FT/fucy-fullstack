@@ -6,7 +6,7 @@ import { colorPickerTab } from './colorPicker';
 export default function ANDGate(props) {
   return (
     <div>
-      <CustomHandle type="target" position={Position.Top} style={{ top: '15px', opacity: 0 }} isConnectable={1} />
+      <CustomHandle type="target" position={Position.Top} style={{ top: '28px', opacity: 0 }} isConnectable={1} />
       <svg
         width="100px"
         height="100px"
@@ -22,7 +22,7 @@ export default function ANDGate(props) {
           d="M105 105v302h151c148 0 148-302 0-302H105zm-89"
         />
       </svg>
-      <Handle type="source" position={Position.Bottom} style={{ bottom: '10px', opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} style={{ bottom: '25px', opacity: 0 }} />
     </div>
   );
 }

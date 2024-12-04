@@ -276,6 +276,46 @@ const useStore = createWithEqualityFn((set, get) => ({
       edges: addEdge(Connect, get().edges)
     });
   },
+
+  onConnectAttack: (connection) => {
+    const { nodes, edges, set } = useStore.getState(); // Access Zustand state
+
+    // Extract source and target nodes from the connection
+    const sourceNode = nodes.find((node) => node.id === connection.source);
+    const targetNode = nodes.find((node) => node.id === connection.target);
+
+    // Ensure sourceNode and targetNode exist
+    if (!sourceNode || !targetNode) {
+      console.log('Connection error: Source or Target node not found.');
+      return;
+    }
+
+    // Flexible connection rules for default and Event types
+    let condition = true;
+    if (sourceNode.type === 'default' || sourceNode.type === 'Event' || targetNode.type === 'default' || targetNode.type === 'Event') {
+      condition =
+        (sourceNode.type === 'default' && targetNode.type.includes('Gate')) ||
+        (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) ||
+        (sourceNode.type.includes('Gate') && targetNode.type === 'Event') ||
+        (sourceNode.type === 'Event' && targetNode.type.includes('Gate'));
+    }
+
+    if (condition) {
+      const newConnection = { ...connection, data: { label: '' } };
+
+      // Update Zustand edges state
+      set({
+        edges: addEdge(newConnection, edges)
+      });
+
+      console.log('Connection successful:', newConnection);
+    } else {
+      console.log(
+        `Connection not allowed: Invalid connection between source type "${sourceNode.type}" and target type "${targetNode.type}".`
+      );
+    }
+  },
+
   setNodes: (newNodes) => {
     set({
       nodes: newNodes
