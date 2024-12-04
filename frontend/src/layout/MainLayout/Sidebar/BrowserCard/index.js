@@ -136,6 +136,7 @@ const CardStyle = styled(Card)(() =>
 );
 
 const selector = (state) => ({
+  getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
   model: state.model,
@@ -167,6 +168,7 @@ const BrowserCard = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const {
+    getModels,
     nodes,
     model,
     getModelById,
@@ -215,7 +217,11 @@ const BrowserCard = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       setIsEditing(false); // Exit edit mode
-      updateModelName({ 'model-id': model?._id, name: currentName }); // Call API
+      updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
+        if (res) {
+          getModels();
+        }
+      });
     }
   };
   useEffect(() => {
