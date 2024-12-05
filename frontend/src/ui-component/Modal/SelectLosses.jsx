@@ -13,7 +13,6 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 
 export default function SelectLosses({
-  damageScenarios,
   details,
   setDetails,
   damageID,
@@ -21,41 +20,49 @@ export default function SelectLosses({
   open,
   handleClose,
   model,
-  rows,
-  setRows,
   selectedRow,
-  setSelectedRow,
-  getModelById,
-  getModels,
-  id,
   update,
   getThreatScenario
 }) {
-  // console.log('selectedRow', selectedRow);
-  // console.log('details', details);
-  const handleChange = (e, prop, item) => {
-    // console.log('e.target.checked', e.target.checked);
-    // console.log('prop', prop);
-    // console.log('item', item);
-    const value = JSON.parse(JSON.stringify(details));
-    const selectedItem = item.props.find((pr) => pr.id === prop.id);
-    const Itemindex = item.props.findIndex((pr) => pr.id === prop.id);
-    const index = value.findIndex((ind) => ind?.nodeId === item?.nodeId);
-    // console.log('index', index);
-    if (!prop.isSelected && e.target.checked) {
-      selectedItem.isSelected = true;
-    } else {
-      selectedItem.isSelected = false;
+  const handleParentChange = (e, item) => {
+    e.stopPropagation();
+    if (!item.props || item.props.length === 0) return; // Skip if no props
+    const isChecked = e.target.checked;
+    const updatedDetails = JSON.parse(JSON.stringify(details));
+    const index = updatedDetails.findIndex((ind) => ind?.nodeId === item?.nodeId);
+
+    if (index !== -1) {
+      updatedDetails[index].props.forEach((prop) => {
+        prop.isSelected = isChecked;
+      });
     }
-    // console.log('selectedItem', selectedItem);
-    value[index]['props'][Itemindex] = selectedItem;
-    // console.log('value', value);
-    setDetails(value);
+
+    setDetails(updatedDetails);
   };
 
-  // console.log('selectedRow', selectedRow);
+  const handleChildChange = (e, prop, item) => {
+    const updatedDetails = JSON.parse(JSON.stringify(details));
+    const parentIndex = updatedDetails.findIndex((ind) => ind?.nodeId === item?.nodeId);
+
+    if (parentIndex !== -1) {
+      const childIndex = updatedDetails[parentIndex].props.findIndex((pr) => pr.id === prop.id);
+      if (childIndex !== -1) {
+        updatedDetails[parentIndex].props[childIndex].isSelected = e.target.checked;
+      }
+    }
+
+    setDetails(updatedDetails);
+  };
+
+  const isParentChecked = (item) => {
+    if (!item.props || item.props.length === 0) {
+      return { allSelected: false, someSelected: false };
+    }
+    const allSelected = item.props.every((prop) => prop.isSelected);
+    const someSelected = item.props.some((prop) => prop.isSelected);
+    return { allSelected, someSelected };
+  };
   const handleClick = () => {
-    // console.log('details', details);
     const losses = details?.flatMap(
       (dtl) =>
         dtl?.props
@@ -68,7 +75,8 @@ export default function SelectLosses({
     );
 
     const filteredDetails = {
-      rowId: selectedRow?.ID,
+      rowId: selectedRow?.id,
+      id: selectedRow?.ID,
       Details: details
         .filter((item) => item.props.some((prop) => prop.isSelected))
         .map((item) => ({
@@ -80,12 +88,10 @@ export default function SelectLosses({
         }))
     };
 
-    // console.log('filteredDetails', filteredDetails);
-
     const info = {
       'model-id': model?._id,
       id: damageID,
-      detailId: selectedRow?.ID,
+      detailId: selectedRow?.id,
       cyberLosses: JSON.stringify(losses),
       threats: JSON.stringify(filteredDetails)
     };
@@ -97,6 +103,7 @@ export default function SelectLosses({
       })
       .catch((err) => console.log('err', err));
   };
+
   return (
     <React.Fragment>
       <Dialog
@@ -106,7 +113,8 @@ export default function SelectLosses({
         aria-describedby="alert-dialog-description"
         sx={{
           '& .MuiPaper-root': {
-            width: '-webkit-fill-available'
+            width: '-webkit-fill-available',
+            height: 400
           }
         }}
       >
@@ -123,30 +131,62 @@ export default function SelectLosses({
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-              {details?.map((item, i) => (
-                <TreeItem key={`a${i}`} nodeId={`a${i}`} label={item?.name}>
-                  {item?.props?.map((pr, ind) => (
-                    <TreeItem
-                      key={`${i}${ind}`}
-                      nodeId={`${i}${ind}`}
-                      label={
+              {details?.map((item, i) => {
+                const { allSelected, someSelected } = isParentChecked(item);
+                return (
+                  <TreeItem
+                    key={`a${i}`}
+                    nodeId={`a${i}`}
+                    label={
+                      <div onClick={(e) => e.stopPropagation()} /* Prevent TreeItem toggle */>
                         <FormGroup>
                           <FormControlLabel
                             sx={{
-                              margin: '-6px',
                               '& .MuiTypography-root': {
-                                fontSize: '13px'
+                                fontSize: '14px',
+                                fontWeight: 600
                               }
                             }}
-                            control={<Checkbox size="small" onChange={(e) => handleChange(e, pr, item)} />}
-                            label={`Loss of ${pr.name}`}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={allSelected}
+                                indeterminate={!allSelected && someSelected}
+                                disabled={!item.props || item.props.length === 0} // Disable if no props
+                                onChange={(e) => handleParentChange(e, item)}
+                                onClick={(e) => e.stopPropagation()} // Prevents TreeItem toggle
+                              />
+                            }
+                            label={item?.name}
                           />
                         </FormGroup>
-                      }
-                    />
-                  ))}
-                </TreeItem>
-              ))}
+                      </div>
+                    }
+                  >
+                    {item?.props?.map((pr, ind) => (
+                      <TreeItem
+                        key={`${i}${ind}`}
+                        nodeId={`${i}${ind}`}
+                        label={
+                          <FormGroup>
+                            <FormControlLabel
+                              sx={{
+                                margin: '-6px',
+                                '& .MuiTypography-root': {
+                                  fontSize: '13px',
+                                  color: '#000'
+                                }
+                              }}
+                              control={<Checkbox size="small" checked={pr?.isSelected} onChange={(e) => handleChildChange(e, pr, item)} />}
+                              label={`Loss of ${pr.name}`}
+                            />
+                          </FormGroup>
+                        }
+                      />
+                    ))}
+                  </TreeItem>
+                );
+              })}
             </TreeView>
           </DialogContentText>
         </DialogContent>

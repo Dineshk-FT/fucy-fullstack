@@ -278,7 +278,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   onConnectAttack: (connection) => {
-    const { nodes, edges, set } = useStore.getState(); // Access Zustand state
+    const { nodes, edges } = useStore.getState(); // Access Zustand state
 
     // Extract source and target nodes from the connection
     const sourceNode = nodes.find((node) => node.id === connection.source);
@@ -290,30 +290,36 @@ const useStore = createWithEqualityFn((set, get) => ({
       return;
     }
 
-    // Flexible connection rules for default and Event types
-    let condition = true;
-    if (sourceNode.type === 'default' || sourceNode.type === 'Event' || targetNode.type === 'default' || targetNode.type === 'Event') {
-      condition =
-        (sourceNode.type === 'default' && targetNode.type.includes('Gate')) ||
-        (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) ||
-        (sourceNode.type.includes('Gate') && targetNode.type === 'Event') ||
-        (sourceNode.type === 'Event' && targetNode.type.includes('Gate'));
-    }
-
-    if (condition) {
+    // Allow unrestricted connection if both nodes are of type "Gate"
+    if (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) {
       const newConnection = { ...connection, data: { label: '' } };
 
       // Update Zustand edges state
       set({
         edges: addEdge(newConnection, edges)
       });
-
-      console.log('Connection successful:', newConnection);
-    } else {
-      console.log(
-        `Connection not allowed: Invalid connection between source type "${sourceNode.type}" and target type "${targetNode.type}".`
-      );
+      return;
     }
+
+    // Determine the parent node based on which node has data.connections
+    const parent = sourceNode.data?.connections ? sourceNode : targetNode.data?.connections ? targetNode : null;
+    const child = parent === sourceNode ? targetNode : sourceNode;
+
+    // Check if the child node's type matches any type in the parent's connections
+    const isMatchingType = parent.data.connections?.some((connection) => connection.type === child.type);
+
+    if (!isMatchingType) {
+      // console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
+      return;
+    }
+
+    // Proceed with creating the connection
+    const newConnection = { ...connection, data: { label: '' } };
+
+    // Update Zustand edges state
+    set({
+      edges: addEdge(newConnection, edges)
+    });
   },
 
   setNodes: (newNodes) => {

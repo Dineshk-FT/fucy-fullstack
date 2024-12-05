@@ -256,10 +256,12 @@ export default function DsTable() {
     setSearchTerm(value);
   };
 
+  console.log('damageScenarios', damageScenarios['Details']);
   useEffect(() => {
     if (damageScenarios['Details']) {
-      const scene = damageScenarios['Details']?.map((ls) => ({
-        ID: `DS${ls?.key}`,
+      const scene = damageScenarios['Details']?.map((ls, i) => ({
+        id: ls._id,
+        ID: `DS${ls?.key ?? i + 1}`,
         Name: ls?.Name,
         'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],

@@ -62,7 +62,7 @@ export default function Event(props) {
 
   return (
     <>
-      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={150} minHeight={140} />
+      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={150} minHeight={100} />
       <Handle type="target" position={Position.Top} />
       <Box display="flex" flexDirection="column" alignItems="center">
         <Box onContextMenu={handleOpenModal} display="flex" alignItems="center" sx={{ p: 2, minWidth: 100, color: 'gray' }}>

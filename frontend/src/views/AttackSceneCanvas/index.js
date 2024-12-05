@@ -106,7 +106,7 @@ const selector = (state) => ({
   edges: state.edges,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
-  onConnect: state.onConnect,
+  onConnect: state.onConnectAttack,
   addNode: state.dragAdd,
   addEdge: state.addEdge,
   setNodes: state.setNodes,
@@ -209,8 +209,6 @@ export default function AttackBlock({ attackScene, color }) {
       );
     });
 
-    // console.log('draggedNode', draggedNode);
-    // console.log('overlappingNode', overlappingNode);
     if (overlappingNode) {
       // Flexible condition for default or Event type nodes
       let condition = true;
@@ -248,11 +246,16 @@ export default function AttackBlock({ attackScene, color }) {
         // Update overlappingNode's data with the new connection
         const updatedNodes = nodes.map((node) => {
           if (node.id === overlappingNode.id) {
+            // Avoid duplication in connections
+            const updatedConnections = node.data.connections || [];
+            if (!updatedConnections.some((connection) => connection.id === draggedNode.id)) {
+              updatedConnections.push({ id: draggedNode.id, type: draggedNode.type });
+            }
             return {
               ...node,
               data: {
                 ...node.data,
-                connections: [...(node.data.connections || []), { id: draggedNode.id, type: draggedNode.type }]
+                connections: updatedConnections
               }
             };
           }
