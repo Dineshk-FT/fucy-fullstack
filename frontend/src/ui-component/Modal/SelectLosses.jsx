@@ -28,7 +28,8 @@ export default function SelectLosses({
   getModelById,
   getModels,
   id,
-  update
+  update,
+  getThreatScenario
 }) {
   // console.log('selectedRow', selectedRow);
   // console.log('details', details);
@@ -92,6 +93,7 @@ export default function SelectLosses({
       .then((res) => {
         handleClose();
         refreshAPI();
+        getThreatScenario(model?._id);
       })
       .catch((err) => console.log('err', err));
   };

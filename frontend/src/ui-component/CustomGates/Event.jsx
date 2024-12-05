@@ -1,10 +1,9 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Handle, Position } from 'reactflow';
+import React, { useCallback, useState } from 'react';
+import { Handle, Position, NodeResizer } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { Box, Menu, MenuItem, TextField } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { Box, Menu, MenuItem, TextField, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
@@ -49,13 +48,11 @@ export default function Event(props) {
     if (color) {
       return RatingColor(color['Attack Feasibilities Rating']);
     } else {
-      return 'transparent';
+      return 'grey';
     }
   }, []);
 
   const bgColor = getBgColor();
-
-  // console.log('bgColor', bgColor);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -65,15 +62,13 @@ export default function Event(props) {
 
   return (
     <>
+      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={150} minHeight={140} />
       <Handle type="target" position={Position.Top} />
       <Box display="flex" flexDirection="column" alignItems="center">
-        <Box
-          onContextMenu={handleOpenModal}
-          display="flex"
-          alignItems="center"
-          sx={{ p: 2, border: '1px solid grey', minWidth: 100, color: 'gray' }}
-        >
-          <WarningAmberIcon color="error" />
+        <Box onContextMenu={handleOpenModal} display="flex" alignItems="center" sx={{ p: 2, minWidth: 100, color: 'gray' }}>
+          <Typography variant="body2" sx={{ position: 'absolute', top: 0, left: 5 }}>
+            {props?.id?.slice(0, 5)}
+          </Typography>
           <TextField
             value={inputValue}
             onChange={handleChange}
@@ -85,21 +80,6 @@ export default function Event(props) {
               }
             }}
           />
-        </Box>
-        <Box
-          my={1}
-          sx={{
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            border: '1px solid black',
-            bgcolor: bgColor,
-            color: 'black',
-            alignContent: 'center',
-            textAlign: 'center'
-          }}
-        >
-          {props?.id?.slice(0, 5)}
         </Box>
       </Box>
       <Handle type="source" position={Position.Bottom} />

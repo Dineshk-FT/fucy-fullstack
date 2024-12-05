@@ -156,7 +156,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       {
         id: 81,
         name: 'Threat Assessment & Risk Treatment',
-        scenes: []
+        Details: []
       }
     ]
   },
@@ -276,6 +276,46 @@ const useStore = createWithEqualityFn((set, get) => ({
       edges: addEdge(Connect, get().edges)
     });
   },
+
+  onConnectAttack: (connection) => {
+    const { nodes, edges, set } = useStore.getState(); // Access Zustand state
+
+    // Extract source and target nodes from the connection
+    const sourceNode = nodes.find((node) => node.id === connection.source);
+    const targetNode = nodes.find((node) => node.id === connection.target);
+
+    // Ensure sourceNode and targetNode exist
+    if (!sourceNode || !targetNode) {
+      console.log('Connection error: Source or Target node not found.');
+      return;
+    }
+
+    // Flexible connection rules for default and Event types
+    let condition = true;
+    if (sourceNode.type === 'default' || sourceNode.type === 'Event' || targetNode.type === 'default' || targetNode.type === 'Event') {
+      condition =
+        (sourceNode.type === 'default' && targetNode.type.includes('Gate')) ||
+        (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) ||
+        (sourceNode.type.includes('Gate') && targetNode.type === 'Event') ||
+        (sourceNode.type === 'Event' && targetNode.type.includes('Gate'));
+    }
+
+    if (condition) {
+      const newConnection = { ...connection, data: { label: '' } };
+
+      // Update Zustand edges state
+      set({
+        edges: addEdge(newConnection, edges)
+      });
+
+      console.log('Connection successful:', newConnection);
+    } else {
+      console.log(
+        `Connection not allowed: Invalid connection between source type "${sourceNode.type}" and target type "${targetNode.type}".`
+      );
+    }
+  },
+
   setNodes: (newNodes) => {
     set({
       nodes: newNodes
@@ -658,30 +698,45 @@ const useStore = createWithEqualityFn((set, get) => ({
       }
     }));
   },
-
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
-    const res = await GET_CALL_WITH_DETAILS(details, url);
-    set((state) => ({
-      riskTreatment: {
-        ...state.riskTreatment,
-        subs: [
-          {
-            ...state.riskTreatment.subs[0],
-            scenes: [
-              ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
-              res // Add the new res
-            ]
-          }
-        ]
-      }
-    }));
+    const res = await GET_CALL(details, url);
+    if (!res?.error) {
+      set((state) => ({
+        riskTreatment: {
+          ...state.riskTreatment,
+          subs: [
+            {
+              ...state.riskTreatment.subs[0],
+              ...res
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        riskTreatment: {
+          ...state.riskTreatment,
+          subs: [
+            {
+              id: 81,
+              name: 'Threat Assessment & Risk Treatment',
+              Details: []
+            }
+          ]
+        }
+      }));
+    }
   },
 
   //Update Section
-
+  updateModelName: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/model-name`;
+    const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
   updateDamageScenario: async (details) => {
-    // const { id, detailId, cyberLosses } = details;
     const url = `${configuration.apiBaseUrl}v1/update/damage_scenario`;
     const res = await UPDATE_CALL(details, url);
     // console.log('res', res);
@@ -689,7 +744,6 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   updateAttackScenario: async (details) => {
-    // const { id, detailId, cyberLosses } = details;
     const url = `${configuration.apiBaseUrl}v1/update/attacks`;
     const res = await UPDATE_CALL(details, url);
     // console.log('res', res);
@@ -752,6 +806,28 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await ADD_CALL(details, url);
     return res;
   },
+
+  addRiskTreatment: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/riskDetAndTreat`;
+    const res = await ADD_CALL(details, url);
+    // console.log('res', res);
+    return res;
+    // set((state) => ({
+    //   riskTreatment: {
+    //     ...state.riskTreatment,
+    //     subs: [
+    //       {
+    //         ...state.riskTreatment.subs[0],
+    //         scenes: [
+    //           ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
+    //           res // Add the new res
+    //         ]
+    //       }
+    //     ]
+    //   }
+    // }));
+  },
+
   createComponent: async (newTemplate) => {
     const FormData = require('form-data');
     let data = new FormData();

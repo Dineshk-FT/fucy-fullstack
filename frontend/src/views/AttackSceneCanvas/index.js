@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType } from 'reactflow';
+import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType, Background } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import useStore from '../../Zustand/store';
@@ -15,6 +15,7 @@ import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
+import { style } from '../../utils/Constraints';
 
 const elk = new ELK();
 
@@ -157,35 +158,118 @@ const nodetypes = {
   [`Voting Gate`]: VotingGate
 };
 
-export default function AttackBlock({ attackScene }) {
+export default function AttackBlock({ attackScene, color }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
     useStore(selector, shallow);
-
   // console.log('nodes', nodes);
   // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
 
-  useEffect(() => {
-    setNodes([]);
-    setEdges([]);
-  }, []);
-
+  // console.log('attackScene', attackScene);
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
         setNodes(attackScene?.templates?.nodes ?? []);
         setEdges(attackScene?.templates?.edges ?? []);
-      }, 10);
+      }, 300);
     }
-  }, [attackScene]);
+  }, [attackScene, isAttackTreeOpen]);
+
+  // useEffect(() => {
+  //   setNodes([]);
+  //   setEdges([]);
+  // }, []);
 
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
     }
   }, [reactFlowInstance, nodes?.length]);
+
+  const handleConnection = (draggedNode) => {
+    const { nodes, edges, setEdges, setNodes } = useStore.getState(); // Access Zustand state
+    const overlappingNode = nodes.find((node) => {
+      if (node.id === draggedNode.id) return false; // Skip itself
+
+      const nodeBounds = {
+        xMin: node.position.x,
+        xMax: node.position.x + (node.width || 150),
+        yMin: node.position.y,
+        yMax: node.position.y + (node.height || 50)
+      };
+
+      return (
+        draggedNode.position.x > nodeBounds.xMin &&
+        draggedNode.position.x < nodeBounds.xMax &&
+        draggedNode.position.y > nodeBounds.yMin &&
+        draggedNode.position.y < nodeBounds.yMax
+      );
+    });
+
+    // console.log('draggedNode', draggedNode);
+    // console.log('overlappingNode', overlappingNode);
+    if (overlappingNode) {
+      // Flexible condition for default or Event type nodes
+      let condition = true;
+      if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
+        condition =
+          (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
+          (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
+          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event') ||
+          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate'));
+      }
+
+      // Check if the draggedNode's type is already connected
+      const hasDifferentGate =
+        overlappingNode.data.connections?.some((connection) => connection.type.includes('Gate') && connection.type !== draggedNode.type) ||
+        false;
+
+      if (condition && !hasDifferentGate) {
+        // Create a new edge
+        const newEdge = {
+          id: uid(),
+          source: overlappingNode.id,
+          target: draggedNode.id,
+          type: 'step',
+          markerEnd: {
+            type: 'arrowclosed',
+            width: 20,
+            height: 20,
+            color: 'black'
+          }
+        };
+
+        // Update edges in Zustand store
+        setEdges([...edges, newEdge]);
+
+        // Update overlappingNode's data with the new connection
+        const updatedNodes = nodes.map((node) => {
+          if (node.id === overlappingNode.id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                connections: [...(node.data.connections || []), { id: draggedNode.id, type: draggedNode.type }]
+              }
+            };
+          }
+          return node;
+        });
+
+        // Update nodes in Zustand store
+        setNodes(updatedNodes);
+      }
+      // else if (hasDifferentGate) {
+      //   console.log(`Connection not allowed: Node of type "${draggedNode.type}" is already connected to the parent node.`);
+      // }
+    }
+    // else {
+    //   console.log(`Connection not allowed: Overlapping node type must be "default" or "Event", but found "${overlappingNode?.type}".`);
+    // }
+  };
 
   const onDrop = useCallback(
     (event) => {
@@ -215,51 +299,47 @@ export default function AttackBlock({ attackScene }) {
             label: parsedNode?.label,
             nodeId: parsedNode?.nodeId,
             style: {
-              color: 'black',
+              ...style,
               backgroundColor: 'transparent',
-              fontSize: '16px',
-              fontFamily: 'Inter',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              textAlign: 'center',
-              borderColor: 'black',
-              borderWidth: '2px',
-              borderStyle: 'solid'
+              color: 'black'
             }
           }
         };
-
-        const targetNode = nodes.find((node) => {
-          const nodeBounds = {
-            xMin: node.position.x,
-            xMax: node.position.x + (node.width || 150),
-            yMin: node.position.y,
-            yMax: node.position.y + (node.height || 50)
-          };
-
-          return (
-            position.x > nodeBounds.xMin && position.x < nodeBounds.xMax && position.y > nodeBounds.yMin && position.y < nodeBounds.yMax
-          );
-        });
-
         addNode(newNode);
+        handleConnection(newNode);
+        // const targetNode = nodes.find((node) => {
+        //   const nodeBounds = {
+        //     xMin: node.position.x,
+        //     xMax: node.position.x + (node.width || 150),
+        //     yMin: node.position.y,
+        //     yMax: node.position.y + (node.height || 50)
+        //   };
 
-        if (targetNode) {
-          const newEdge = {
-            id: uid(),
-            source: targetNode.id,
-            target: newId,
-            type: 'step',
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 20,
-              height: 20,
-              color: 'black'
-            }
-          };
+        //   return (
+        //     position.x > nodeBounds.xMin && position.x < nodeBounds.xMax && position.y > nodeBounds.yMin && position.y < nodeBounds.yMax
+        //   );
+        // });
 
-          addEdge(newEdge);
-        }
+        // console.log('newNode', newNode);
+        // console.log('targetNode', targetNode);
+        // const condition =
+        //   (targetNode.type == 'default' && newNode.type.includes('Gate')) || (targetNode.type.includes('Gate') && newNode.type == 'Event');
+        // if (condition) {
+        //   const newEdge = {
+        //     id: uid(),
+        //     source: targetNode.id,
+        //     target: newId,
+        //     type: 'step',
+        //     markerEnd: {
+        //       type: MarkerType.ArrowClosed,
+        //       width: 20,
+        //       height: 20,
+        //       color: 'black'
+        //     }
+        //   };
+
+        //   addEdge(newEdge);
+        // }
       }
     },
     [reactFlowInstance, nodes, addNode, addEdge]
@@ -330,45 +410,89 @@ export default function AttackBlock({ attackScene }) {
   };
 
   const onNodeDragStop = (event, draggedNode) => {
-    const { nodes, edges, setEdges } = useStore.getState(); // Access Zustand state
-
     // Check for overlapping nodes
-    const overlappingNode = nodes.find((node) => {
-      if (node.id === draggedNode.id) return false; // Skip itself
 
-      const nodeBounds = {
-        xMin: node.position.x,
-        xMax: node.position.x + (node.width || 150),
-        yMin: node.position.y,
-        yMax: node.position.y + (node.height || 50)
-      };
+    handleConnection(draggedNode);
+    // const overlappingNode = nodes.find((node) => {
+    //   if (node.id === draggedNode.id) return false; // Skip itself
 
-      return (
-        draggedNode.position.x > nodeBounds.xMin &&
-        draggedNode.position.x < nodeBounds.xMax &&
-        draggedNode.position.y > nodeBounds.yMin &&
-        draggedNode.position.y < nodeBounds.yMax
-      );
-    });
+    //   const nodeBounds = {
+    //     xMin: node.position.x,
+    //     xMax: node.position.x + (node.width || 150),
+    //     yMin: node.position.y,
+    //     yMax: node.position.y + (node.height || 50)
+    //   };
 
-    if (overlappingNode) {
-      // Create a new edge
-      const newEdge = {
-        id: uid(),
-        source: overlappingNode.id,
-        target: draggedNode.id,
-        type: 'step',
-        markerEnd: {
-          type: 'arrowclosed',
-          width: 20,
-          height: 20,
-          color: 'black'
-        }
-      };
+    //   return (
+    //     draggedNode.position.x > nodeBounds.xMin &&
+    //     draggedNode.position.x < nodeBounds.xMax &&
+    //     draggedNode.position.y > nodeBounds.yMin &&
+    //     draggedNode.position.y < nodeBounds.yMax
+    //   );
+    // });
 
-      // Update edges in Zustand store
-      setEdges([...edges, newEdge]);
-    }
+    // console.log('draggedNode', draggedNode);
+    // console.log('overlappingNode', overlappingNode);
+    // if (overlappingNode) {
+    //   // Flexible condition for default or Event type nodes
+    //   let condition = true;
+    //   if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
+    //     condition =
+    //       (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
+    //       (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
+    //       (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event') ||
+    //       (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate'));
+    //   }
+
+    //   // Check if the draggedNode's type is already connected
+    //   const hasDifferentGate =
+    //     overlappingNode.data.connections?.some((connection) => connection.type.includes('Gate') && connection.type !== draggedNode.type) ||
+    //     false;
+
+    //   if (condition && !hasDifferentGate) {
+    //     // Create a new edge
+    //     const newEdge = {
+    //       id: uid(),
+    //       source: overlappingNode.id,
+    //       target: draggedNode.id,
+    //       type: 'step',
+    //       markerEnd: {
+    //         type: 'arrowclosed',
+    //         width: 20,
+    //         height: 20,
+    //         color: 'black'
+    //       }
+    //     };
+
+    //     // Update edges in Zustand store
+    //     setEdges([...edges, newEdge]);
+
+    //     // Update overlappingNode's data with the new connection
+    //     const updatedNodes = nodes.map((node) => {
+    //       if (node.id === overlappingNode.id) {
+    //         return {
+    //           ...node,
+    //           data: {
+    //             ...node.data,
+    //             connections: [...(node.data.connections || []), { id: draggedNode.id, type: draggedNode.type }]
+    //           }
+    //         };
+    //       }
+    //       return node;
+    //     });
+
+    //     // Update nodes in Zustand store
+    //     setNodes(updatedNodes);
+    //   } else if (hasDifferentGate) {
+    //     console.log(`Connection not allowed: Node of type "${draggedNode.type}" is already connected to the parent node.`);
+    //   }
+    // } else {
+    //   console.log(`Connection not allowed: Overlapping node type must be "default" or "Event", but found "${overlappingNode?.type}".`);
+    // }
+  };
+
+  const buttonStyle = {
+    background: color?.canvasBG
   };
 
   return (
@@ -393,19 +517,20 @@ export default function AttackBlock({ attackScene }) {
           onNodeDragStop={onNodeDragStop}
           fitView
         >
-          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: 'white' }}>
-            <Button variant="outlined" onClick={handleSave}>
+          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
+            <Button variant="outlined" onClick={handleSave} sx={buttonStyle}>
               {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
             </Button>
-            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined">
+            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
               vertical
             </Button>
-            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined">
+            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
               Horizontal
             </Button>
           </Panel>
-          <MiniMap />
+          <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
           <Controls />
+          <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
         </ReactFlow>
       </ReactFlowProvider>
       <Toaster position="top-right" reverseOrder={false} />

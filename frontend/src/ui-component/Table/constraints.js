@@ -50,11 +50,12 @@ export const threatType = (value) => {
 };
 
 export const colorPickerTab = (value) => {
-  switch (value) {
+  const trimmed = value.trim();
+  switch (trimmed) {
     case 'Severe':
       return 'red';
     case 'Major':
-      return 'orange';
+      return '#FCAE1E';
     case 'Moderate':
       return 'yellow';
     case 'Minor':
@@ -62,6 +63,6 @@ export const colorPickerTab = (value) => {
     case 'Negligible':
       return 'lightgreen';
     default:
-      return 'white';
+      return '#f7f7f7';
   }
 };

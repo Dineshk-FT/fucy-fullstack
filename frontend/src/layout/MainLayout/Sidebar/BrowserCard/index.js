@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useMemo } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import ColorTheme from '../../../../store/ColorTheme';
@@ -136,6 +136,7 @@ const CardStyle = styled(Card)(() =>
 );
 
 const selector = (state) => ({
+  getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
   model: state.model,
@@ -156,7 +157,8 @@ const selector = (state) => ({
   reports: state.reports,
   layouts: state.layouts,
   clickedItem: state.clickedItem,
-  setClickedItem: state.setClickedItem
+  setClickedItem: state.setClickedItem,
+  updateModelName: state.updateModelName
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -166,6 +168,7 @@ const BrowserCard = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const {
+    getModels,
     nodes,
     model,
     getModelById,
@@ -186,7 +189,8 @@ const BrowserCard = () => {
     reports,
     layouts,
     clickedItem,
-    setClickedItem
+    setClickedItem,
+    updateModelName
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -195,11 +199,40 @@ const BrowserCard = () => {
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentName, setCurrentName] = useState('');
 
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (e) => {
+    setCurrentName(e.target.value);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setIsEditing(false); // Exit edit mode
+      updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
+        if (res) {
+          getModels();
+        }
+      });
+    }
+  };
   useEffect(() => {
     getModelById(modelId);
+    getAssets(modelId);
     setClickedItem(modelId);
   }, [modelId]);
+
+  useEffect(() => {
+    setCurrentName(model?.name);
+  }, [model]);
 
   const scenarios = [
     { name: 'assets', scene: assets },
@@ -236,8 +269,8 @@ const BrowserCard = () => {
       assets: getAssets,
       damage: getDamageScenarios,
       threat: getThreatScenario,
-      attack: getAttackScenario
-      // risks: getRiskTreatment
+      attack: getAttackScenario,
+      risks: getRiskTreatment
     };
     await get_api[name](ModelId);
   };
@@ -300,8 +333,7 @@ const BrowserCard = () => {
     setOpenNodelist(true);
     setOpenItemRight(false);
   };
-  // console.log('damageScenarios', damageScenarios);
-  // console.log('threatScenarios', threatScenarios.subs[0].Details);
+
   const handleContext = (e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -575,7 +607,27 @@ const BrowserCard = () => {
             <TreeItem
               key={model?._id}
               nodeId={model?._id}
-              label={getTitleLabel('ModelIcon', model?.name, model?._id)}
+              label={
+                isEditing ? (
+                  <TextField
+                    value={currentName}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      my: 0.6,
+                      '& .MuiOutlinedInput-root': { fontSize: '13px' },
+                      '& .MuiInputBase-input': { padding: '4px 14px' },
+                      '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' }
+                    }}
+                  />
+                ) : (
+                  <Box onDoubleClick={handleDoubleClick}>{getTitleLabel('ModelIcon', currentName, model?._id)}</Box>
+                )
+              }
               sx={{ '& .Mui-selected': { backgroundColor: 'none !important' } }}
             >
               {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
@@ -606,7 +658,7 @@ const BrowserCard = () => {
                     border: '1px solid #ccc !important',
                     borderRadius: '8px !important',
                     padding: '8px',
-                    cursor: 'pointer',
+                    cursor: 'pointer'
                   }}
                 >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>

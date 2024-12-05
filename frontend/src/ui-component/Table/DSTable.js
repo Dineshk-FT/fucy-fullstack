@@ -43,6 +43,7 @@ const selector = (state) => ({
   getModelById: state.getModelById,
   getModels: state.getModels,
   update: state.updateDamageScenario,
+  getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
@@ -96,7 +97,7 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
 const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
   // console.log('name', name);
   return (
-    <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(impact) }}>
+    <StyledTableCell component="th" scope="row" sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
           width: 130,
@@ -158,7 +159,10 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios } = useStore(selector, shallow);
+  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios, getThreatScenario } = useStore(
+    selector,
+    shallow
+  );
   const [stakeHolder] = useState(false);
   const classes = useStyles();
   const { id } = useParams();
@@ -255,7 +259,7 @@ export default function DsTable() {
   useEffect(() => {
     if (damageScenarios['Details']) {
       const scene = damageScenarios['Details']?.map((ls) => ({
-        ID: ls?._id,
+        ID: `DS${ls?.key}`,
         Name: ls?.Name,
         'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
@@ -424,23 +428,23 @@ export default function DsTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Use the actual width of the column if no width is set in state
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -526,7 +530,7 @@ export default function DsTable() {
                   <StyledTableCell
                     component="th"
                     scope="row"
-                    sx={{ background: colorPickerTab(OverallImpact(row?.impacts)), color: '#000' }}
+                    sx={{ backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`, color: '#000' }}
                   >
                     {OverallImpact(row?.impacts)}
                   </StyledTableCell>
@@ -635,24 +639,24 @@ export default function DsTable() {
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                {hd?.name}
-                <div
-                  className="resize-handle"
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent',
-                    '& .MuiTableCell-root': {
-                      transition: 'width 0.2s ease'
-                    }
-                  }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                  {hd?.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      '& .MuiTableCell-root': {
+                        transition: 'width 0.2s ease'
+                      }
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -692,6 +696,7 @@ export default function DsTable() {
           setSelectedRow={setSelectedRow}
           update={update}
           getModelById={getModelById}
+          getThreatScenario={getThreatScenario}
           getModels={getModels}
           id={id}
         />
