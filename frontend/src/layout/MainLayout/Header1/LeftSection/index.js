@@ -29,6 +29,7 @@ import AddModel from "../../../../ui-component/Modal/AddModal";
 import RenameProject from "../../../../ui-component/Modal/RenameModal";
 import DeleteProject from "../../../../ui-component/Modal/DeleteProjects";
 import useStore from "../../../../Zustand/store";
+import ColorTheme from '../../../../store/ColorTheme';
 
 const LeftSection = () => {
   const selector = (state) => ({
@@ -38,6 +39,7 @@ const LeftSection = () => {
     getSidebarNode: state.getSidebarNode,
     getTemplates: state.getTemplates,
   });
+  const color = ColorTheme();
   const { Models, getModels, deleteModels, getSidebarNode, getTemplates } =
     useStore(selector);
 
@@ -131,7 +133,7 @@ const LeftSection = () => {
             sx={{
               cursor: "pointer",
               fontSize: "12px",
-              color: activeTab === tab.name ? "blue" : "#555",
+              color: activeTab === tab.name ? "blue" : color.title,
               fontWeight: activeTab === tab.name ? "bold" : "normal",
               margin: "0 8px",
               padding: "2px 4px",
@@ -152,7 +154,7 @@ const LeftSection = () => {
           flexWrap: "wrap",
           padding: "8px",
           borderRadius: "10px",
-          backgroundColor: "#fff",
+          backgroundColor: color.canvasBG,
           border: "1px solid #ddd",
         }}
       >
@@ -179,10 +181,10 @@ const LeftSection = () => {
                         sx={{
                           padding: "6px",
                           fontSize: "12px",
-                          color: "#555",
-                          backgroundColor: "#f9f9f9",
+                          color: color.title,
+                          backgroundColor: color?.sidebarBG,
                           border: "1px solid #ddd",
-                          "&:hover": { backgroundColor: "#f0f0f0" },
+                          "&:hover": { backgroundColor: color.sidebarBG },
                         }}
                       >
                         <Icon fontSize="extra-small" />
@@ -193,7 +195,7 @@ const LeftSection = () => {
                         marginTop: "4px",
                         fontSize: "8px",
                         textAlign: "center",
-                        color: "#555",
+                        color: color.title,
                       }}
                     >
                       {option.label}
