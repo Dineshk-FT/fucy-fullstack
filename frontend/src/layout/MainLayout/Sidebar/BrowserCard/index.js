@@ -112,22 +112,16 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const CardStyle = styled(Card)(() =>
-  // { theme }
   ({
-    // background: theme.palette.primary.light,
     marginBottom: '22px',
     overflow: 'hidden',
     position: 'relative',
     height: '80vh',
-    // boxShadow: 'inset 0px 0px 7px gray',
     border: '1px solid gray',
     borderRadius: '0px',
     '&:after': {
       content: '""',
       position: 'absolute',
-      // width: '157px',
-      // height: '157px',
-      // background: theme.palette.primary[200],
       borderRadius: '50%',
       top: '-105px',
       right: '-96px'
@@ -216,7 +210,7 @@ const BrowserCard = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      setIsEditing(false); // Exit edit mode
+      setIsEditing(false); 
       updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
         if (res) {
           getModels();
@@ -248,16 +242,10 @@ const BrowserCard = () => {
     { name: 'layouts', scene: layouts }
   ];
 
-  // const handleNodeToggle = (event, nodeIds) => {
-  //   console.log('Expanded/collapsed:', nodeIds);
-  //   // Handle expand/collapse logic here
-  // };
-
   const handleTitleClick = (event) => {
-    event.stopPropagation(); // Prevent propagation
+    event.stopPropagation();
     setClickedItem(modelId);
   };
-  // console.log('attackScenarios', attackScenarios);
 
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
@@ -303,7 +291,6 @@ const BrowserCard = () => {
 
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
-    // console.log('scene', scene);
     if (name === 'Attack Trees') {
       dispatch(AttackTreePageOpen());
       dispatch(setAttackScene(scene));
@@ -322,7 +309,6 @@ const BrowserCard = () => {
   };
 
   const handleAddNewNode = (e) => {
-    // dispatch(drawerOpen());
     e.stopPropagation();
     dispatch(openAddNodeTab());
     setOpenItemRight(false);
@@ -347,7 +333,6 @@ const BrowserCard = () => {
   };
 
   const onDragStart = (event, item) => {
-    // console.log('item', item);
     const parseFile = JSON.stringify(item);
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.setData('application/dragItem', parseFile);
@@ -358,8 +343,6 @@ const BrowserCard = () => {
   function dragCheck(node) {
     return node?.dragged;
   }
-
-  // console.log('assets', assets);
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
@@ -395,8 +378,6 @@ const BrowserCard = () => {
       </div>
     );
   };
-
-  // console.log('assets', assets);
 
   const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
     <TreeItem
@@ -591,15 +572,11 @@ const BrowserCard = () => {
 
   return (
     <>
-      {/* <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
-        Projects
-      </Typography> */}
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
-            // onNodeToggle={handleNodeToggle}
             onClick={handleTitleClick}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
@@ -642,7 +619,7 @@ const BrowserCard = () => {
                 {
                   name: 'offset',
                   options: {
-                    offset: [-10, -50] // Adjust these values as needed
+                    offset: [-10, -50] 
                   }
                 }
               ]}
