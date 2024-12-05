@@ -87,11 +87,14 @@ export default function SelectNodeList({ open, handleClose }) {
       >
         <DialogTitle sx={{ cursor: 'move' }} id="draggable-dialog-title">
           <Typography variant="h3" color="primary">
-            {'Add Node'}
+            {'Select the Node'}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ borderBottom: '1px solid black', paddingTop:'4px'}}>
+            Select a node from the list below to add it to your model.
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
+          <DialogContentText id="alert-dialog-description"  sx={{ maxHeight: 300, overflow: 'auto' }}>
             <NodeList setSelected={setSelected} />
           </DialogContentText>
         </DialogContent>
