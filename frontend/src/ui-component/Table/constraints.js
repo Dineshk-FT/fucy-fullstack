@@ -50,7 +50,7 @@ export const threatType = (value) => {
 };
 
 export const colorPickerTab = (value) => {
-  const trimmed = value.trim();
+  const trimmed = value?.trim();
   switch (trimmed) {
     case 'Severe':
       return 'red';

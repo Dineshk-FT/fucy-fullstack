@@ -46,7 +46,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
     addDamageScene(details)
       .then((res) => {
         // console.log('res', res);
-        if (res) {
+        if (res.message) {
           // setTimeout(() => {
           notify(res?.message, 'success');
           // window.location.reload();
@@ -59,6 +59,8 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
             cyberLosses: []
           });
           // }, 500);
+        } else {
+          notify('something went wrong', 'error');
         }
       })
       .catch((err) => {

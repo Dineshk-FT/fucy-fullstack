@@ -54,34 +54,63 @@ export default function Event(props) {
 
   const bgColor = getBgColor();
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    update(props?.id, value);
+  const calculateMinWidth = (text) => {
+    // Adjust multiplier and base width to suit your design
+    const baseWidth = 100;
+    const multiplier = 10; // Width per character
+    return baseWidth + text.length * multiplier;
   };
+
+  const minWidth = calculateMinWidth(inputValue);
 
   return (
     <>
-      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={150} minHeight={100} />
+      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={minWidth} minHeight={60} />
       <Handle type="target" position={Position.Top} />
-      <Box display="flex" flexDirection="column" alignItems="center">
-        <Box onContextMenu={handleOpenModal} display="flex" alignItems="center" sx={{ p: 2, minWidth: 100, color: 'gray' }}>
-          <Typography variant="body2" sx={{ position: 'absolute', top: 0, left: 5 }}>
-            {props?.id?.slice(0, 5)}
-          </Typography>
-          <TextField
-            value={inputValue}
-            onChange={handleChange}
-            variant="outlined"
-            fullWidth
-            sx={{
-              '& fieldset': {
-                border: 'none'
-              }
-            }}
-          />
-        </Box>
+      <Box
+        onContextMenu={handleOpenModal}
+        display="flex"
+        alignItems="center"
+        sx={{
+          p: 2,
+          color: 'gray',
+          position: 'relative',
+          minWidth: minWidth,
+          maxWidth: '100%', // Ensures it doesn't overflow the container
+          height: 'inherit',
+          width: 'inherit'
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 5
+          }}
+        >
+          {props?.id?.slice(0, 5)}
+        </Typography>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            update(props?.id, e.target.value);
+          }}
+          style={{
+            width: `${Math.max(inputValue.length * 10, minWidth)}px`, // Dynamically adjust width
+            background: 'transparent',
+            border: 'none',
+            textAlign: 'center',
+            outline: 'none',
+            padding: 0, // Removes padding
+            fontSize: '1rem', // Matches Typography size
+            color: 'inherit' // Inherits text color
+          }}
+        />
       </Box>
+
       <Handle type="source" position={Position.Bottom} />
       <Menu
         id="basic-menu"

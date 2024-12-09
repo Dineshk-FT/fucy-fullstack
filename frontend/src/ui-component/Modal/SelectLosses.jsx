@@ -74,6 +74,8 @@ export default function SelectLosses({
           })) || []
     );
 
+    let key = 0;
+
     const filteredDetails = {
       rowId: selectedRow?.id,
       id: selectedRow?.ID,
@@ -82,7 +84,12 @@ export default function SelectLosses({
         .map((item) => ({
           node: item?.name,
           nodeId: item?.nodeId,
-          props: item.props.filter((prop) => prop.isSelected),
+          props: item.props
+            .filter((prop) => prop.isSelected)
+            .map((prop, index) => ({
+              ...prop,
+              key: index + 1 // Add an incrementing key starting from 1
+            })),
           name: selectedRow?.Name,
           description: selectedRow['Description/ Scalability']
         }))

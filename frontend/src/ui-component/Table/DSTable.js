@@ -261,7 +261,7 @@ export default function DsTable() {
     if (damageScenarios['Details']) {
       const scene = damageScenarios['Details']?.map((ls, i) => ({
         id: ls._id,
-        ID: `DS${ls?.key ?? i + 1}`,
+        ID: `DS${ls?.key?.toString().padStart(3, '0') ?? (i + 1).toString().padStart(3, '0')}`,
         Name: ls?.Name,
         'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
@@ -685,22 +685,15 @@ export default function DsTable() {
       {openCl && (
         <SelectLosses
           open={openCl}
-          damageScenarios={damageScenarios}
           details={details}
           setDetails={setDetails}
           damageID={damageID}
           refreshAPI={refreshAPI}
           handleClose={handleCloseCl}
           model={model}
-          rows={rows}
-          setRows={setRows}
           selectedRow={selectedRow}
-          setSelectedRow={setSelectedRow}
           update={update}
-          getModelById={getModelById}
           getThreatScenario={getThreatScenario}
-          getModels={getModels}
-          id={id}
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />

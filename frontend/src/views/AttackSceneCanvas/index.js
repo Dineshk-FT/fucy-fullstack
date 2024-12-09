@@ -310,39 +310,6 @@ export default function AttackBlock({ attackScene, color }) {
         };
         addNode(newNode);
         handleConnection(newNode);
-        // const targetNode = nodes.find((node) => {
-        //   const nodeBounds = {
-        //     xMin: node.position.x,
-        //     xMax: node.position.x + (node.width || 150),
-        //     yMin: node.position.y,
-        //     yMax: node.position.y + (node.height || 50)
-        //   };
-
-        //   return (
-        //     position.x > nodeBounds.xMin && position.x < nodeBounds.xMax && position.y > nodeBounds.yMin && position.y < nodeBounds.yMax
-        //   );
-        // });
-
-        // console.log('newNode', newNode);
-        // console.log('targetNode', targetNode);
-        // const condition =
-        //   (targetNode.type == 'default' && newNode.type.includes('Gate')) || (targetNode.type.includes('Gate') && newNode.type == 'Event');
-        // if (condition) {
-        //   const newEdge = {
-        //     id: uid(),
-        //     source: targetNode.id,
-        //     target: newId,
-        //     type: 'step',
-        //     markerEnd: {
-        //       type: MarkerType.ArrowClosed,
-        //       width: 20,
-        //       height: 20,
-        //       color: 'black'
-        //     }
-        //   };
-
-        //   addEdge(newEdge);
-        // }
       }
     },
     [reactFlowInstance, nodes, addNode, addEdge]
@@ -416,82 +383,6 @@ export default function AttackBlock({ attackScene, color }) {
     // Check for overlapping nodes
 
     handleConnection(draggedNode);
-    // const overlappingNode = nodes.find((node) => {
-    //   if (node.id === draggedNode.id) return false; // Skip itself
-
-    //   const nodeBounds = {
-    //     xMin: node.position.x,
-    //     xMax: node.position.x + (node.width || 150),
-    //     yMin: node.position.y,
-    //     yMax: node.position.y + (node.height || 50)
-    //   };
-
-    //   return (
-    //     draggedNode.position.x > nodeBounds.xMin &&
-    //     draggedNode.position.x < nodeBounds.xMax &&
-    //     draggedNode.position.y > nodeBounds.yMin &&
-    //     draggedNode.position.y < nodeBounds.yMax
-    //   );
-    // });
-
-    // console.log('draggedNode', draggedNode);
-    // console.log('overlappingNode', overlappingNode);
-    // if (overlappingNode) {
-    //   // Flexible condition for default or Event type nodes
-    //   let condition = true;
-    //   if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
-    //     condition =
-    //       (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
-    //       (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
-    //       (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event') ||
-    //       (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate'));
-    //   }
-
-    //   // Check if the draggedNode's type is already connected
-    //   const hasDifferentGate =
-    //     overlappingNode.data.connections?.some((connection) => connection.type.includes('Gate') && connection.type !== draggedNode.type) ||
-    //     false;
-
-    //   if (condition && !hasDifferentGate) {
-    //     // Create a new edge
-    //     const newEdge = {
-    //       id: uid(),
-    //       source: overlappingNode.id,
-    //       target: draggedNode.id,
-    //       type: 'step',
-    //       markerEnd: {
-    //         type: 'arrowclosed',
-    //         width: 20,
-    //         height: 20,
-    //         color: 'black'
-    //       }
-    //     };
-
-    //     // Update edges in Zustand store
-    //     setEdges([...edges, newEdge]);
-
-    //     // Update overlappingNode's data with the new connection
-    //     const updatedNodes = nodes.map((node) => {
-    //       if (node.id === overlappingNode.id) {
-    //         return {
-    //           ...node,
-    //           data: {
-    //             ...node.data,
-    //             connections: [...(node.data.connections || []), { id: draggedNode.id, type: draggedNode.type }]
-    //           }
-    //         };
-    //       }
-    //       return node;
-    //     });
-
-    //     // Update nodes in Zustand store
-    //     setNodes(updatedNodes);
-    //   } else if (hasDifferentGate) {
-    //     console.log(`Connection not allowed: Node of type "${draggedNode.type}" is already connected to the parent node.`);
-    //   }
-    // } else {
-    //   console.log(`Connection not allowed: Overlapping node type must be "default" or "Event", but found "${overlappingNode?.type}".`);
-    // }
   };
 
   const buttonStyle = {

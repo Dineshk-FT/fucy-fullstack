@@ -1,5 +1,5 @@
 /* eslint-disable */
-import * as React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router';
@@ -17,7 +17,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  InputLabel
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,13 +28,16 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, colorPickerTab, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
+import SelectAttacks from '../Modal/SelectAttacks';
+import { ThreatIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   model: state.model,
   getModel: state.getModelById,
   riskTreatment: state.riskTreatment['subs'][0],
   getRiskTreatment: state.getRiskTreatment,
-  addRiskTreatment: state.addRiskTreatment
+  addRiskTreatment: state.addRiskTreatment,
+  attackScenarios: state.attackScenarios['subs']
 });
 
 const column = [
@@ -98,20 +102,33 @@ export default function RiskTreatmentTable() {
   const classes = useStyles();
   const { id } = useParams();
   const dispatch = useDispatch();
-  const [openTs, setOpenTs] = React.useState(false);
-  const { model, riskTreatment, getRiskTreatment, addRiskTreatment } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
+  const [openTs, setOpenTs] = useState(false);
+  const [openSelect, setOpenSelect] = useState(false);
+  const [selectedRow, setSelectedRow] = useState({});
+  const [details, setDetails] = useState({});
+
+  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, attackScenarios } = useStore(selector, shallow);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
 
+  const handleOpenSelect = (row) => {
+    setSelectedRow(row);
+    setOpenSelect(true);
+  };
+
+  const handleCloseSelect = () => {
+    setOpenSelect(false);
+    setSelectedRow({});
+  };
   // console.log('riskTreatment', riskTreatment);
 
   // Pagination state
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const data = riskTreatment?.Details.map((item) => ({
       ID: item?.threat_id,
       'Threat Scenario': item?.label,
@@ -124,10 +141,11 @@ export default function RiskTreatmentTable() {
     }));
     setRows(data);
     setFiltered(data);
-  }, [riskTreatment?.Details.length]);
+    setDetails(attackScenarios);
+  }, [riskTreatment?.Details.length, attackScenarios]);
 
   // console.log('rows', rows);
-  const Head = React.useMemo(() => {
+  const Head = useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
       col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
@@ -149,6 +167,7 @@ export default function RiskTreatmentTable() {
     dispatch(closeAll());
   };
 
+  // console.log('details', details);
   const onDrop = (event) => {
     // console.log('event', event);
     event.preventDefault();
@@ -222,6 +241,20 @@ export default function RiskTreatmentTable() {
               );
               break;
 
+            case item.name === 'Attack Tree or Attack Path(s)':
+              cellContent = (
+                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
+                  {row[item.name] && row[item.name].length ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={ThreatIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item.name]}</span>
+                    </span>
+                  ) : (
+                    <InputLabel>Select attack path</InputLabel>
+                  )}
+                </StyledTableCell>
+              );
+              break;
             case item.name.includes('Impact'):
               return (
                 <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]), color: '#000' }}>
@@ -299,6 +332,7 @@ export default function RiskTreatmentTable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
+      {openSelect && <SelectAttacks open={openSelect} handleClose={handleCloseSelect} details={details} />}
     </Box>
   );
 }

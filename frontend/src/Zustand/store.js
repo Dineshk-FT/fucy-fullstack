@@ -618,12 +618,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
     // console.log('res', res);
-    set((state) => ({
-      assets: {
-        ...state.assets,
-        ...(res || { template: { nodes: [], edges: [] }, Details: [] })
-      }
-    }));
+    if (!res.error) {
+      set((state) => ({
+        assets: {
+          ...state.assets,
+          ...(res || { template: { nodes: [], edges: [] }, Details: [] })
+        }
+      }));
+    }
   },
 
   getDamageScenarios: async (modelId) => {
@@ -633,22 +635,39 @@ const useStore = createWithEqualityFn((set, get) => ({
     // Separate the "Derived" and "User-defined" objects
     const derivedScenario = res?.find((item) => item.type === 'Derived');
     const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
-
-    set((state) => ({
-      damageScenarios: {
-        ...state.damageScenarios,
-        subs: [
-          {
-            ...state.damageScenarios.subs[0],
-            ...derivedScenario // Spread the "Derived" object into the first subs element
-          },
-          {
-            ...state.damageScenarios.subs[1],
-            ...userDefinedScenario // Spread the "User-defined" object into the second subs element
-          }
-        ]
-      }
-    }));
+    if (!res?.error) {
+      set((state) => ({
+        damageScenarios: {
+          ...state.damageScenarios,
+          subs: [
+            {
+              ...state.damageScenarios.subs[0],
+              ...derivedScenario // Spread the "Derived" object into the first subs element
+            },
+            {
+              ...state.damageScenarios.subs[1],
+              ...userDefinedScenario // Spread the "User-defined" object into the second subs element
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        damageScenarios: {
+          ...state.damageScenarios,
+          subs: [
+            {
+              id: 21,
+              name: 'Damage Scenarios Derivations'
+            },
+            {
+              id: 22,
+              name: 'Damage Scenarios - Collection & Impact Ratings'
+            }
+          ]
+        }
+      }));
+    }
   },
 
   getThreatScenario: async (modelId) => {
@@ -659,21 +678,39 @@ const useStore = createWithEqualityFn((set, get) => ({
     const derivedScenario = res?.find((item) => item.type === 'derived');
     const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
 
-    set((state) => ({
-      threatScenarios: {
-        ...state.threatScenarios,
-        subs: [
-          {
-            ...state.threatScenarios.subs[0],
-            ...derivedScenario // Spread the "Derived" object into the first subs element
-          },
-          {
-            ...state.threatScenarios.subs[1],
-            ...userDefinedScenario // Spread the "User-defined" object into the second subs element
-          }
-        ]
-      }
-    }));
+    if (!res?.error) {
+      set((state) => ({
+        threatScenarios: {
+          ...state.threatScenarios,
+          subs: [
+            {
+              ...state.threatScenarios.subs[0],
+              ...derivedScenario // Spread the "Derived" object into the first subs element
+            },
+            {
+              ...state.threatScenarios.subs[1],
+              ...userDefinedScenario // Spread the "User-defined" object into the second subs element
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        threatScenarios: {
+          ...state.threatScenarios,
+          subs: [
+            {
+              name: 'Threat Scenarios',
+              id: 31
+            },
+            {
+              id: 32,
+              name: 'Derived Threat Scenarios'
+            }
+          ]
+        }
+      }));
+    }
   },
 
   getAttackScenario: async (modelId) => {
@@ -684,25 +721,47 @@ const useStore = createWithEqualityFn((set, get) => ({
     const attackTrees = res?.find((item) => item?.type === 'attack_trees');
     const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
 
-    set((state) => ({
-      attackScenarios: {
-        ...state.attackScenarios,
-        subs: [
-          {
-            ...state.attackScenarios.subs[0],
-            ...attacks
-          },
-          {
-            ...state.attackScenarios.subs[1],
-            ...attackTrees
-          },
-          {
-            ...state.attackScenarios.subs[2],
-            ...Vulnerability
-          }
-        ]
-      }
-    }));
+    if (!res?.error) {
+      set((state) => ({
+        attackScenarios: {
+          ...state.attackScenarios,
+          subs: [
+            {
+              ...state.attackScenarios.subs[0],
+              ...attacks
+            },
+            {
+              ...state.attackScenarios.subs[1],
+              ...attackTrees
+            },
+            {
+              ...state.attackScenarios.subs[2],
+              ...Vulnerability
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        attackScenarios: {
+          ...state.attackScenarios,
+          subs: [
+            {
+              id: 41,
+              name: 'Attack'
+            },
+            {
+              id: 42,
+              name: 'Attack Trees'
+            },
+            {
+              id: 43,
+              name: 'Vulnerability Analysis'
+            }
+          ]
+        }
+      }));
+    }
   },
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
@@ -783,7 +842,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   updateAttackNode: (nodeId, name) => {
     set((state) => {
-      let node = state.nodes.find((ite) => ite.id === nodeId);
+      let node = JSON.parse(JSON.stringify(state.nodes)).find((ite) => ite.id === nodeId);
       const ind = state.nodes.findIndex((ite) => ite.id === nodeId);
       node.data.label = name;
       state.nodes[ind] = node;

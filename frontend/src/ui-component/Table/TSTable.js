@@ -1,8 +1,7 @@
 /* eslint-disable */
-import * as React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
@@ -17,27 +16,32 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  InputLabel
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
-import { Box, maxWidth } from '@mui/system';
+import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableHeight } from '../../store/constant';
+import SelectDamageScenes from '../Modal/SelectDamageScenes';
+import { DamageIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   model: state.model,
   derived: state.threatScenarios.subs[0],
   userDefined: state.threatScenarios.subs[1],
-  getThreatScenario: state.getThreatScenario
+  getDamageScenarios: state.getDamageScenarios,
+  getThreatScenario: state.getThreatScenario,
+  damageScenarios: state.damageScenarios['subs'][1]
 });
 
 const column = [
-  { id: 1, name: 'ID' },
+  { id: 1, name: 'SNo' },
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
@@ -65,13 +69,13 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   }
 }));
 
@@ -84,21 +88,35 @@ const StyledTableRow = styled(TableRow)(() => ({
 export default function Tstable() {
   const color = ColorTheme();
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
-  const [openTs, setOpenTs] = React.useState(false);
-  const { model, derived, userDefined, getThreatScenario } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
+  const [openTs, setOpenTs] = useState(false);
+  const [openSelect, setOpenSelect] = useState(false);
+  const [selectedRow, setSelectedRow] = useState({});
+  const [details, setDetails] = useState({});
+
+  const { model, derived, userDefined, getThreatScenario, damageScenarios, getDamageScenarios } = useStore(selector, shallow);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
 
+  // console.log('damageScenarios', damageScenarios);
   // Pagination state
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [columnWidths, setColumnWidths] = React.useState({});
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [columnWidths, setColumnWidths] = useState({});
 
-  const Head = React.useMemo(() => {
+  const handleOpenSelect = (row) => {
+    setSelectedRow(row);
+    setOpenSelect(true);
+  };
+
+  const handleCloseSelect = () => {
+    setOpenSelect(false);
+    setSelectedRow({});
+  };
+
+  const Head = useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
       col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
@@ -108,24 +126,30 @@ export default function Tstable() {
     }
   }, [title]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    getDamageScenarios(model?._id);
+  }, []);
+
+  useEffect(() => {
     if (derived['Details']) {
+      let id = 0;
       const mod1 = derived['Details']
-        ?.map((detail) =>
-          detail?.Details?.map((nodedetail) =>
-            nodedetail?.props?.map((prop) => {
+        ?.map((detail) => {
+          return detail?.Details?.map((nodedetail) => {
+            return nodedetail?.props?.map((prop) => {
+              // console.log('detail', detail);
+              id++;
               return {
+                SNo: `TS${id.toString().padStart(3, '0')}`,
                 ID: prop?.id.slice(0, 6),
-                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node} for Damage Scene ${nodedetail?.nodeId.slice(0, 6)}`,
-                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${
-                  nodedetail?.node
-                } for Damage Scene ${nodedetail?.nodeId?.slice(0, 6)}`,
+                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node} for Damage Scene ${detail?.id}`,
+                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} for Damage Scene ${detail?.id}`,
                 losses: [],
                 'Losses of Cybersecurity Properties': prop?.name
               };
-            })
-          )
-        )
+            });
+          });
+        })
         .flat(2);
 
       const mappedDetails = Array.isArray(userDefined['Details'])
@@ -139,11 +163,17 @@ export default function Tstable() {
               : {}
           )
         : [];
+
       const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
+      const data = {
+        name: damageScenarios?.name,
+        scenes: damageScenarios?.Details
+      };
+      setDetails(damageScenarios);
     }
-  }, [derived, userDefined]);
+  }, [derived, userDefined, damageScenarios]);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -184,23 +214,23 @@ export default function Tstable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Use the actual width of the column if no width is set in state
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -240,6 +270,20 @@ export default function Tstable() {
                       Loss of {row[item.name]}
                     </span>
                   </span>
+                </StyledTableCell>
+              );
+              break;
+            case item.name === 'Damage Scenarios':
+              cellContent = (
+                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
+                  {row[item.name] && row[item.name].length ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item.name]}</span>
+                    </span>
+                  ) : (
+                    <InputLabel>Select Damage Scenario</InputLabel>
+                  )}
                 </StyledTableCell>
               );
               break;
@@ -304,24 +348,24 @@ export default function Tstable() {
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                {hd?.name}
-                <div
-                  className="resize-handle"
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent',
-                    '& .MuiTableCell-root': {
-                      transition: 'width 0.2s ease'
-                    }
-                  }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                  {hd?.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      '& .MuiTableCell-root': {
+                        transition: 'width 0.2s ease'
+                      }
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -341,6 +385,7 @@ export default function Tstable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
+      {openSelect && <SelectDamageScenes open={openSelect} handleClose={handleCloseSelect} details={details} />}
     </Box>
   );
 }

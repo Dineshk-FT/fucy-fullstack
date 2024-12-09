@@ -38,7 +38,7 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
   }
 }));
 const Head = [
-  { id: 1, name: 'ID' },
+  { id: 1, name: 'SNO' },
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
@@ -71,13 +71,13 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   }
 }));
 
@@ -296,9 +296,10 @@ export default function AttackTreeTable() {
 
   React.useEffect(() => {
     if (attacks['scenes']) {
-      const mod1 = attacks['scenes']?.map((dt) => {
+      const mod1 = attacks['scenes']?.map((dt, i) => {
         // console.log('prp', prp);
         return {
+          SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
           ID: dt.id || dt?.ID,
           Name: dt.name || dt?.Name,
           Description: `This is the description for ${dt.Name || dt?.name}`,
@@ -448,23 +449,23 @@ export default function AttackTreeTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Use the actual width of the column if no width is set in state
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -563,24 +564,24 @@ export default function AttackTreeTable() {
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                {hd?.name}
-                <div
-                  className="resize-handle"
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent',
-                    '& .MuiTableCell-root': {
-                      transition: 'width 0.2s ease'
-                    }
-                  }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                  {hd?.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      '& .MuiTableCell-root': {
+                        transition: 'width 0.2s ease'
+                      }
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
