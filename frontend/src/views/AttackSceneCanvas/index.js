@@ -183,6 +183,8 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
+
+    setCopiedNode(node);
   
     setContextMenu({
       visible: true,

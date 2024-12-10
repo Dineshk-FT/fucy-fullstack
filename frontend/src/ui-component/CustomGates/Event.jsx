@@ -56,9 +56,8 @@ export default function Event(props) {
 
   const calculateMinWidth = (text) => {
     // Adjust multiplier and base width to suit your design
-    const baseWidth = 100;
-    const multiplier = 10; // Width per character
-    return baseWidth + text.length * multiplier;
+    const baseWidth = 50;
+    return baseWidth + text.length;
   };
 
   const minWidth = calculateMinWidth(inputValue);
@@ -78,20 +77,27 @@ export default function Event(props) {
           minWidth: minWidth,
           maxWidth: '100%', // Ensures it doesn't overflow the container
           height: 'inherit',
-          width: 'inherit'
+          width: 'inherit',
         }}
       >
         <Typography
           variant="body2"
           sx={{
             position: 'absolute',
-            top: 0,
-            left: 5
+            top: 4,
+            left: 4,
+            backgroundColor: '#000',
+            color: '#fff',
+            borderRadius: '12px',
+            padding: '2px 8px',
+            fontSize: '10px',
+            fontWeight: 600
           }}
         >
           {props?.id?.slice(0, 5)}
         </Typography>
         <input
+          variant="outlined"
           type="text"
           value={inputValue}
           onChange={(e) => {
@@ -100,11 +106,12 @@ export default function Event(props) {
           }}
           style={{
             width: `${Math.max(inputValue.length * 10, minWidth)}px`, // Dynamically adjust width
-            background: 'transparent',
-            border: 'none',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
             padding: 0, // Removes padding
+            marginTop: '15px',
             fontSize: '1rem', // Matches Typography size
             color: 'inherit' // Inherits text color
           }}
