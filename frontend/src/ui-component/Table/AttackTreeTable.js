@@ -1,5 +1,6 @@
 /*eslint-disable*/
 import * as React from 'react';
+import { useState, useRef } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -222,55 +223,93 @@ const options = {
 };
 
 const SelectableCell = ({ item, row, handleChange, name }) => {
+  const [open, setOpen] = useState(false); // Manage open state of dropdown
+  const selectRef = useRef(null); // Reference to select element
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleFocus = () => {
+    setOpen(true); // Keep dropdown open when the select is focused
+  };
+
+  const handleBlur = (e) => {
+    // Delay the closing of the dropdown to allow click inside
+    setTimeout(() => {
+      if (!selectRef.current.contains(e.relatedTarget)) {
+        setOpen(false); // Only close if focus is moved outside the select dropdown
+      }
+    }, 100);
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from opening
+    // Optionally open dropdown on right-click too
+    setOpen(true);
+  };
+
   return (
-    <StyledTableCell component="th" scope="row">
+    <StyledTableCell
+      component="th"
+      scope="row"
+      onClick={handleOpen} // Open on left click
+      onContextMenu={handleContextMenu} // Open on right click and prevent context menu
+    >
       <FormControl
         sx={{
           width: 130,
           background: 'transparent',
           '& .MuiInputBase-root': {
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
           },
           '& .MuiSelect-select': {
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
           },
           '& .MuiSvgIcon-root': {
-            display: 'none'
+            display: 'none',
           },
           '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none'
-          }
+            border: 'none',
+          },
         }}
       >
         <Select
+          ref={selectRef} // Assign ref to the Select element
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           value={row[item.name]}
           onChange={(e) => handleChange(e, row)}
           name={name}
+          open={open} // Control dropdown visibility with open state
+          onClose={handleClose} // Close dropdown manually
+          onFocus={handleFocus} // Open dropdown on focus
+          onBlur={handleBlur} // Control dropdown closing on blur
         >
-          {options[item.name]?.map((item) => {
-            const isLong = item?.label.length > 18;
+          {options[item.name]?.map((option) => {
+            const isLong = option?.label.length > 18;
             return (
-              <MenuItem key={item?.value} value={item?.value}>
+              <MenuItem key={option?.value} value={option?.value}>
                 <HtmlTooltip
                   placement="left"
                   title={
                     <Typography
                       sx={{
-                        // backgroundColor: 'black',
-                        // color: 'white',
                         fontSize: '14px',
                         fontWeight: 600,
-                        padding: '8px', // Optional: Adds some padding for better spacing
-                        borderRadius: '4px' // Optional: Adds rounded corners
+                        padding: '8px',
+                        borderRadius: '4px',
                       }}
                     >
-                      {item?.description}
+                      {option?.description}
                     </Typography>
                   }
                 >
-                  {<Typography variant="h5">{item?.label}</Typography>}
+                  <Typography variant="h5">{option?.label}</Typography>
                 </HtmlTooltip>
               </MenuItem>
             );
