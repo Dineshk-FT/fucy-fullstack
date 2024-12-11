@@ -11,22 +11,23 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   model: state.model,
   attacks: state.attackScenarios['subs'][0],
-  addAttackScene: state.addAttackScene
+  addAttackScene: state.addAttackScene,
 });
 
 export default function Event(props) {
   const { update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
-  const [openDialog, setOpenDialog] = useState(false);  // State to control the dialog visibility
+  const [openDialog, setOpenDialog] = useState(false);
+  const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
 
   // Open the dialog on double-click
   const handleOpenDialog = (e) => {
     e.preventDefault();
-    setOpenDialog(true);  // Show the dialog
+    setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false);  // Close the dialog
+    setOpenDialog(false);
   };
 
   const handleClick = () => {
@@ -34,12 +35,12 @@ export default function Event(props) {
       modelId: model?._id,
       type: 'attack',
       attackId: props.id,
-      name: inputValue
+      name: inputValue,
     };
     addAttackScene(details).then((res) => {
       if (res) {
         getAttackScenario(model?._id);
-        setOpenDialog(false);  // Close dialog on successful conversion
+        setOpenDialog(false);
       }
     });
   };
@@ -55,28 +56,38 @@ export default function Event(props) {
 
   const bgColor = getBgColor();
 
-  const calculateMinWidth = (text) => {
-    // Adjust multiplier and base width to suit your design
-    const baseWidth = 50;
-    return baseWidth + text.length;
+  // Calculate font size dynamically based on node dimensions
+  const calculateFontSize = () => {
+    const baseFontSize = 14; // Base font size
+    return Math.max(baseFontSize, (nodeDimensions.width + nodeDimensions.height) / 15);
   };
 
-  const minWidth = calculateMinWidth(inputValue);
+  const fontSize = calculateFontSize();
+  const inputPadding = 5; // Padding inside the input box
 
   return (
     <>
-      <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={minWidth} minHeight={60} />
+      <NodeResizer
+        lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }}
+        minWidth={100}
+        minHeight={60}
+        onResize={(event, params) => {
+          setNodeDimensions({ width: params.width, height: params.height });
+        }}
+      />
       <Handle type="target" position={Position.Top} />
       <Box
-        onDoubleClick={handleOpenDialog}  // Open the dialog on double-click
+        onDoubleClick={handleOpenDialog}
         display="flex"
         alignItems="center"
+        justifyContent="center"
         sx={{
           p: 2,
           color: 'gray',
           position: 'relative',
-          minWidth: minWidth,
-          maxWidth: '100%', // Ensures it doesn't overflow the container
+          minWidth: `${nodeDimensions.width}px`,
+          minHeight: `${nodeDimensions.height}px`,
+          maxWidth: '100%',
           height: 'inherit',
           width: 'inherit',
         }}
@@ -92,13 +103,12 @@ export default function Event(props) {
             borderRadius: '12px',
             padding: '2px 8px',
             fontSize: '10px',
-            fontWeight: 600
+            fontWeight: 600,
           }}
         >
           {props?.id?.slice(0, 5)}
         </Typography>
         <input
-          variant="outlined"
           type="text"
           value={inputValue}
           onChange={(e) => {
@@ -106,15 +116,16 @@ export default function Event(props) {
             update(props?.id, e.target.value);
           }}
           style={{
-            width: `${Math.max(inputValue.length * 10, minWidth)}px`, // Dynamically adjust width
+            width: `${nodeDimensions.width - 20}px`, // Adjust width relative to node size
+            height: `${fontSize * 2}px`, // Height proportional to font size
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
             borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
-            padding: 0, // Removes padding
-            marginTop: '15px',
-            fontSize: '1rem', // Matches Typography size
-            color: 'inherit' // Inherits text color
+            fontSize: `${fontSize}px`, // Dynamically adjust font size
+            color: 'inherit',
+            padding: `${inputPadding}px`, // Consistent padding
+            border: '1px solid #ccc',
           }}
         />
       </Box>
