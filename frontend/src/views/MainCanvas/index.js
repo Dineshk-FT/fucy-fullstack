@@ -235,7 +235,7 @@ export default function MainCanvas() {
     isRiskTableOpen
   } = useSelector((state) => state?.currentId);
 
-  const [copiedNode, setCopiedNode] = useState(null);
+  const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
 
@@ -667,8 +667,8 @@ export default function MainCanvas() {
     event.preventDefault();
 
     // Check if there's a copied node
-    const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
-    if (copiedNodes && copiedNodes.length > 0) {
+    // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+    if (copiedNode && copiedNode.length > 0) {
       setContextMenu({
         visible: true,
         x: event.clientX,
@@ -683,17 +683,18 @@ export default function MainCanvas() {
   const handleMenuOptionClick = (option) => {
     if (option === 'Copy' && copiedNode) {
       const nodeToCopy = [copiedNode];
-      localStorage.removeItem('copiedNode'); // Clear any previous data
-      localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
+      // localStorage.removeItem('copiedNode'); // Clear any previous data
+      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
+      setCopiedNode(nodeToCopy);
       notify('Node copied!', 'success');
     }
 
     if (option === 'Paste') {
-      const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
 
       // Ensure copiedNodes is an array and contains data
-      if (Array.isArray(copiedNodes) && copiedNodes.length > 0) {
-        copiedNodes.forEach((node) => {
+      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+        copiedNode.forEach((node) => {
           const newNode = {
             ...node,
             id: uid(),
