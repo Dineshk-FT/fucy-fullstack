@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { Handle, Position, NodeResizer } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { Box, Menu, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({
@@ -17,16 +17,16 @@ const selector = (state) => ({
 export default function Event(props) {
   const { update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
   const [inputValue, setInputValue] = useState(props.data.label);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const openRight = Boolean(anchorEl);
+  const [openDialog, setOpenDialog] = useState(false);  // State to control the dialog visibility
 
-  const handleOpenModal = (e) => {
+  // Open the dialog on double-click
+  const handleOpenDialog = (e) => {
     e.preventDefault();
-    setAnchorEl(e.currentTarget);
+    setOpenDialog(true);  // Show the dialog
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);  // Close the dialog
   };
 
   const handleClick = () => {
@@ -39,6 +39,7 @@ export default function Event(props) {
     addAttackScene(details).then((res) => {
       if (res) {
         getAttackScenario(model?._id);
+        setOpenDialog(false);  // Close dialog on successful conversion
       }
     });
   };
@@ -50,7 +51,7 @@ export default function Event(props) {
     } else {
       return 'grey';
     }
-  }, []);
+  }, [attacks, props?.id, props?.data?.nodeId]);
 
   const bgColor = getBgColor();
 
@@ -67,7 +68,7 @@ export default function Event(props) {
       <NodeResizer lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }} minWidth={minWidth} minHeight={60} />
       <Handle type="target" position={Position.Top} />
       <Box
-        onContextMenu={handleOpenModal}
+        onDoubleClick={handleOpenDialog}  // Open the dialog on double-click
         display="flex"
         alignItems="center"
         sx={{
@@ -119,25 +120,30 @@ export default function Event(props) {
       </Box>
 
       <Handle type="source" position={Position.Bottom} />
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={openRight}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': 'basic-button'
-        }}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right'
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right'
-        }}
-      >
-        <MenuItem onClick={handleClick}>Convert to Attack</MenuItem>
-      </Menu>
+
+      {/* Dialog for converting to Attack */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Convert to Attack</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">Are you sure you want to convert this node to an attack?</Typography>
+          <TextField
+            label="Attack Name"
+            variant="outlined"
+            fullWidth
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleClick} color="primary">
+            Convert
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
