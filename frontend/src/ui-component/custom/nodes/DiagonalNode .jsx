@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
+  nodes: state.nodes,
   model: state.model,
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
@@ -14,7 +15,7 @@ const selector = (state) => ({
 });
 export default function DiagonalNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { model, assets, getAssets, deleteNode } = useStore(selector);
+  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector);
   // console.log('model', model);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
@@ -41,6 +42,12 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
         console.log('err', err);
       });
   };
+
+  const copiedNodes = nodes.filter(node => node.type === "copied");
+
+  // Check if the current node is a copied node
+  const isCopiedNode = copiedNodes.some(node => node.id === id);
+
   return (
     <>
       <NodeResizer />
@@ -133,6 +140,7 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
           >
             Delete from Canvas
           </button>
+          {!isCopiedNode && ( 
           <button
             onClick={handleDelete}
             style={{
@@ -146,6 +154,7 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
           >
             Delete Permanently
           </button>
+        )}
         </DialogActions>
       </Dialog>
     </>
