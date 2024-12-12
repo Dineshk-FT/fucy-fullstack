@@ -23,8 +23,11 @@ const elk = new ELK();
 
 const elkOptions = {
   'elk.algorithm': 'layered',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-  'elk.spacing.nodeNode': '80'
+  'elk.direction': 'DOWN',
+  'elk.layered.spacing.nodeNodeBetweenLayers': '70', // More spacing between layers
+  'elk.spacing.nodeNode': '10', // Spacing between nodes in the same layer
+  'elk.layered.considerModelOrder': true, // Respect input order when arranging
+  'elk.layered.mergeEdges': true, // Merge edges where possible for clarity
 };
 
 const getLayoutedElements = async (nodes, edges, options = {}) => {

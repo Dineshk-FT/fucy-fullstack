@@ -248,10 +248,7 @@ export default function MainCanvas() {
     handleClear();
   }, []);
 
-  // console.log('redoStack', redoStack);
-  // console.log('undoStack', undoStack);
-  // console.log('isAttackTreeOpen', isAttackTreeOpen);
-  // console.log('assets', assets);
+
   useEffect(() => {
     if (!isAttackTreeOpen) {
       const template = assets?.template;
@@ -261,7 +258,6 @@ export default function MainCanvas() {
     }
   }, [assets]);
 
-  // console.log('nodes', nodes);
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
@@ -291,13 +287,11 @@ export default function MainCanvas() {
     };
   }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
-  // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
       const ns = useInitialNodes ? nodes : nodes;
       const es = useInitialNodes ? nodes : edges;
-      //  console.log('nodes layout', nodes)
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
@@ -311,8 +305,6 @@ export default function MainCanvas() {
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
-    // console.log('nodes in', nodes);
-
     let updated = nodes.map((item1) => {
       const match = values.find((item2) => item2.id === item1.id);
       return match ? match : item1;
@@ -513,14 +505,10 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
-  // console.log('nodes', nodes);
-  // console.log('edges', edges);
 
   const RefreshAPI = () => {
     getAssets(model?._id);
   };
-
-  // console.log('model?._id', model?._id);
 
   const handleClose = () => {
     setOpenTemplate(false);
@@ -535,7 +523,6 @@ export default function MainCanvas() {
 
   const onRestore = useCallback(
     (temp) => {
-      // console.log('temp', temp);
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
@@ -584,13 +571,10 @@ export default function MainCanvas() {
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
-    // console.log('reactFlowInstance', reactFlowInstance);
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
   };
   const handleSidebarOpen = (e, node) => {
-    // console.log('e', e);
-    // console.log('node', node);
     e.preventDefault();
     if (node.type !== 'group') {
       dispatch(OpenPropertiesTab());
@@ -698,6 +682,7 @@ export default function MainCanvas() {
           const newNode = {
             ...node,
             id: uid(),
+            type: 'copied',
             position: {
               x: contextMenu.x - 100,
               y: contextMenu.y - 50
