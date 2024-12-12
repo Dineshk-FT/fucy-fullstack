@@ -58,6 +58,10 @@ import { Button } from '@mui/material';
 import RiskTreatmentTable from '../../ui-component/Table/RiskTreatmentTable';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
+import toast, { Toaster } from 'react-hot-toast';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+
 const elk = new ELK();
 
 const elkOptions = {
@@ -231,6 +235,10 @@ export default function MainCanvas() {
     isRiskTableOpen
   } = useSelector((state) => state?.currentId);
 
+  const [copiedNode, setCopiedNode] = useState([]);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
+  const notify = (message, status) => toast[status](message);
+
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
@@ -240,10 +248,7 @@ export default function MainCanvas() {
     handleClear();
   }, []);
 
-  // console.log('redoStack', redoStack);
-  // console.log('undoStack', undoStack);
-  // console.log('isAttackTreeOpen', isAttackTreeOpen);
-  // console.log('assets', assets);
+
   useEffect(() => {
     if (!isAttackTreeOpen) {
       const template = assets?.template;
@@ -253,7 +258,6 @@ export default function MainCanvas() {
     }
   }, [assets]);
 
-  // console.log('nodes', nodes);
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
@@ -283,13 +287,11 @@ export default function MainCanvas() {
     };
   }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
-  // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
       const ns = useInitialNodes ? nodes : nodes;
       const es = useInitialNodes ? nodes : edges;
-      //  console.log('nodes layout', nodes)
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
@@ -303,8 +305,6 @@ export default function MainCanvas() {
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
-    // console.log('nodes in', nodes);
-
     let updated = nodes.map((item1) => {
       const match = values.find((item2) => item2.id === item1.id);
       return match ? match : item1;
@@ -505,14 +505,10 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
-  // console.log('nodes', nodes);
-  // console.log('edges', edges);
 
   const RefreshAPI = () => {
     getAssets(model?._id);
   };
-
-  // console.log('model?._id', model?._id);
 
   const handleClose = () => {
     setOpenTemplate(false);
@@ -527,7 +523,6 @@ export default function MainCanvas() {
 
   const onRestore = useCallback(
     (temp) => {
-      // console.log('temp', temp);
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
@@ -576,13 +571,10 @@ export default function MainCanvas() {
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
-    // console.log('reactFlowInstance', reactFlowInstance);
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
   };
   const handleSidebarOpen = (e, node) => {
-    // console.log('e', e);
-    // console.log('node', node);
     e.preventDefault();
     if (node.type !== 'group') {
       dispatch(OpenPropertiesTab());
@@ -641,6 +633,81 @@ export default function MainCanvas() {
   };
   // console.log('isRightDrawerOpen', isRightDrawerOpen);
 
+  const handleNodeContextMenu = (event, node) => {
+    event.preventDefault();
+
+    setCopiedNode(node);
+
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      options: ['Copy', 'Paste'],
+      node
+    });
+  };
+
+  const handleCanvasContextMenu = (event) => {
+    event.preventDefault();
+
+    // Check if there's a copied node
+    // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+    if (copiedNode && copiedNode.length > 0) {
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: ['Copy', 'Paste']
+      });
+    } else {
+      console.log('No copied node available');
+    }
+  };
+
+  const handleMenuOptionClick = (option) => {
+    if (option === 'Copy' && copiedNode) {
+      const nodeToCopy = [copiedNode];
+      // localStorage.removeItem('copiedNode'); // Clear any previous data
+      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
+      setCopiedNode(nodeToCopy);
+      notify('Node copied!', 'success');
+    }
+
+    if (option === 'Paste') {
+      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+
+      // Ensure copiedNodes is an array and contains data
+      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+        copiedNode.forEach((node) => {
+          const newNode = {
+            ...node,
+            id: uid(),
+            type: 'copied',
+            position: {
+              x: contextMenu.x - 100,
+              y: contextMenu.y - 50
+            }
+          };
+
+          const nodetoPaste = [...nodes, newNode];
+          setNodes(nodetoPaste);
+        });
+
+        // localStorage.removeItem('copiedNode');
+      } else {
+        console.error('No valid copied node found');
+      }
+    }
+
+    setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   // console.log('nodes', nodes);
   if (isDsTableOpen) return <DsTable />;
   if (isDerivationTableOpen) return <DsDerivationTable />;
@@ -653,7 +720,11 @@ export default function MainCanvas() {
 
   return (
     <>
-      <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }} ref={reactFlowWrapper}>
+      <div
+        style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
+        ref={reactFlowWrapper}
+        onContextMenu={handleCanvasContextMenu}
+      >
         {propertiesTabOpen && (
           <Header
             selectedElement={selectedElement}
@@ -692,6 +763,7 @@ export default function MainCanvas() {
             onNodeClick={handleSelectNode}
             defaultPosition={[0, 0]}
             defaultZoom={1}
+            onNodeContextMenu={handleNodeContextMenu}
             // onContextMenu={createGroup}
             // onNodeContextMenu={handleSidebarOpen}
             // onEdgeContextMenu={handleSidebarOpen}
@@ -717,6 +789,47 @@ export default function MainCanvas() {
             {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
+        {contextMenu.visible && (
+          <div
+            style={{
+              position: 'absolute',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
+              zIndex: 1000,
+              width: '90px', // Defined width for consistency
+              padding: '8px 0',
+              fontFamily: 'Arial, sans-serif',
+              fontSize: '12px'
+            }}
+          >
+            {contextMenu.options.map((option) => (
+              <div
+                key={option}
+                style={{
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
+                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+                }}
+                onClick={() => handleMenuOptionClick(option)}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
+                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+              >
+                <span style={{ marginRight: '8px' }}>
+                  {option === 'Copy' && <ContentCopyIcon />}
+                  {option === 'Paste' && <ContentPasteIcon />}
+                </span>
+                {option}
+              </div>
+            ))}
+          </div>
+        )}
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}

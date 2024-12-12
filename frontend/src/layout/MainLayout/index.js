@@ -29,32 +29,32 @@ import useStore from '../../Zustand/store';
 
 // import Customization from '../Customization';
 
-const items = [
-  {
-    name: 'ItemIcon',
-    id: 1
-  },
-  {
-    name: 'DamageIcon',
-    id: 2
-  },
-  {
-    name: 'ThreatIcon',
-    id: 3
-  },
-  {
-    name: 'AttackIcon',
-    id: 4
-  },
-  {
-    name: 'RiskIcon',
-    id: 8
-  },
-  {
-    name: 'CybersecurityIcon',
-    id: 5
-  },
-]
+// const items = [
+//   {
+//     name: 'ItemIcon',
+//     id: 1
+//   },
+//   {
+//     name: 'DamageIcon',
+//     id: 2
+//   },
+//   {
+//     name: 'ThreatIcon',
+//     id: 3
+//   },
+//   {
+//     name: 'AttackIcon',
+//     id: 4
+//   },
+//   {
+//     name: 'RiskIcon',
+//     id: 8
+//   },
+//   {
+//     name: 'CybersecurityIcon',
+//     id: 5
+//   },
+// ]
 
 const selector = (state) => ({
   setClickedItem: state.setClickedItem
@@ -173,22 +173,22 @@ const MainLayout = ({ children }) => {
     RiskIcon
   };
 
-  const getImageLabel = (item) => {
-    const Image = imageComponents[item?.name];
-    const isLongLabel = item?.label.length > 40;
-    const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
+  // const getImageLabel = (item) => {
+  //   const Image = imageComponents[item?.name];
+  //   const isLongLabel = item?.label.length > 40;
+  //   const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
 
-    return (
-      <Box display="flex" alignItems="center" gap={2}>
-        {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
-        <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
-            {displayLabel}
-          </Typography>
-        </Tooltip>
-      </Box>
-    );
-  };
+  //   return (
+  //     <Box display="flex" alignItems="center" gap={2}>
+  //       {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
+  //       <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
+  //         <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
+  //           {displayLabel}
+  //         </Typography>
+  //       </Tooltip>
+  //     </Box>
+  //   );
+  // };
 
   return (
     <>

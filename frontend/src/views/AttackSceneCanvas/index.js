@@ -17,13 +17,18 @@ import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 
 const elk = new ELK();
 
 const elkOptions = {
   'elk.algorithm': 'layered',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-  'elk.spacing.nodeNode': '80'
+  'elk.direction': 'DOWN',
+  'elk.layered.spacing.nodeNodeBetweenLayers': '70', // More spacing between layers
+  'elk.spacing.nodeNode': '10', // Spacing between nodes in the same layer
+  'elk.layered.considerModelOrder': true, // Respect input order when arranging
+  'elk.layered.mergeEdges': true // Merge edges where possible for clarity
 };
 
 const getLayoutedElements = async (nodes, edges, options = {}) => {
@@ -52,7 +57,6 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
       position: { x: node.x, y: node.y }
     }));
 
-    // Adjust parent node positions
     // Adjust parent node positions
     layoutedNodes.forEach((node) => {
       const childrenEdges = edges.filter((edge) => edge.source === node.id); // Find edges where this node is a parent
@@ -90,11 +94,6 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
     return { nodes: [], edges: [] };
   }
 };
-
-// Define CustomStepEdge outside the component
-// function CustomStepEdge({ edges, setEdges, ...props }) {
-//   return <StepEdge {...props} edges={edges} setEdges={setEdges} />;
-// }
 
 // Define edge types outside and pass edges, setEdges as props
 const edgeTypes = {
@@ -162,12 +161,12 @@ const nodetypes = {
 export default function AttackBlock({ attackScene, color }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
     useStore(selector, shallow);
-  // console.log('nodes', nodes);
-  // console.log('edges', edges);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
+  const [copiedNode, setCopiedNode] = useState([]);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
 
   // console.log('attackScene', attackScene);
   useEffect(() => {
@@ -179,16 +178,88 @@ export default function AttackBlock({ attackScene, color }) {
     }
   }, [attackScene, isAttackTreeOpen]);
 
-  // useEffect(() => {
-  //   setNodes([]);
-  //   setEdges([]);
-  // }, []);
-
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
     }
   }, [reactFlowInstance, nodes?.length]);
+
+  const handleNodeContextMenu = (event, node) => {
+    event.preventDefault();
+
+    setCopiedNode(node);
+
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      options: ['Copy', 'Paste'],
+      node
+    });
+  };
+
+  const handleCanvasContextMenu = (event) => {
+    event.preventDefault();
+
+    // Check if there's a copied node
+    // const copiedNodes = JSON.parse(localStorage.getItem("copiedNode"));
+    // if (copiedNodes && copiedNodes.length > 0) {
+    if (copiedNode && copiedNode.length > 0) {
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: ['Copy', 'Paste']
+      });
+    } else {
+      console.log('No copied node available');
+    }
+  };
+
+  const handleMenuOptionClick = (option) => {
+    if (option === 'Copy' && copiedNode) {
+      const nodeToCopy = [copiedNode];
+      // localStorage.removeItem('copiedNode'); // Clear any previous data
+      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
+      setCopiedNode(nodeToCopy);
+      notify('Node copied!', 'success');
+    }
+
+    if (option === 'Paste') {
+      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+
+      // Ensure copiedNodes is an array and contains data
+      // if (Array.isArray(copiedNodes) && copiedNodes.length > 0) {
+      //   copiedNodes.forEach((node) => {
+      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+        copiedNode.forEach((node) => {
+          const newNode = {
+            ...node,
+            id: uid(),
+            position: {
+              x: contextMenu.x - 100,
+              y: contextMenu.y - 50
+            }
+          };
+
+          const nodetoPaste = [...nodes, newNode];
+          setNodes(nodetoPaste);
+        });
+
+        // localStorage.removeItem('copiedNode');
+      } else {
+        console.error('No valid copied node found');
+      }
+    }
+
+    setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const handleConnection = (draggedNode) => {
     const { nodes, edges, setEdges, setNodes } = useStore.getState(); // Access Zustand state
@@ -266,13 +337,7 @@ export default function AttackBlock({ attackScene, color }) {
         // Update nodes in Zustand store
         setNodes(updatedNodes);
       }
-      // else if (hasDifferentGate) {
-      //   console.log(`Connection not allowed: Node of type "${draggedNode.type}" is already connected to the parent node.`);
-      // }
     }
-    // else {
-    //   console.log(`Connection not allowed: Overlapping node type must be "default" or "Event", but found "${overlappingNode?.type}".`);
-    // }
   };
 
   const onDrop = useCallback(
@@ -282,7 +347,11 @@ export default function AttackBlock({ attackScene, color }) {
       let parsedNode;
 
       if (cyber) {
-        parsedNode = JSON.parse(cyber);
+        try {
+          parsedNode = JSON.parse(cyber); // Ensure it's properly parsed
+        } catch (err) {
+          console.error('Failed to parse dropped data:', err);
+        }
       }
 
       const newId = uid();
@@ -296,16 +365,22 @@ export default function AttackBlock({ attackScene, color }) {
       }
 
       if (parsedNode) {
+        const newId = uid();
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY
+        });
+
         const newNode = {
           id: newId,
           position,
-          type: parsedNode?.type || parsedNode?.label,
+          type: parsedNode.type || parsedNode.label,
           ...parsedNode,
           width: 100,
           height: 70,
           data: {
-            label: parsedNode?.label,
-            nodeId: parsedNode?.nodeId,
+            label: parsedNode.label,
+            nodeId: parsedNode.nodeId,
             style: {
               ...style,
               backgroundColor: 'transparent',
@@ -319,9 +394,6 @@ export default function AttackBlock({ attackScene, color }) {
     },
     [reactFlowInstance, nodes, addNode, addEdge]
   );
-
-  // console.log('nodes', nodes);
-  // console.log('edges', edges);
 
   const onLayout = useCallback(
     async ({ direction, useInitialNodes = false }) => {
@@ -353,8 +425,6 @@ export default function AttackBlock({ attackScene, color }) {
   useLayoutEffect(() => {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
   }, []);
-  // console.log('model', model);
-  // console.log('nodes', nodes);
 
   const handleSave = () => {
     const template = {
@@ -367,7 +437,6 @@ export default function AttackBlock({ attackScene, color }) {
       id: attackScene?.ID,
       templates: JSON.stringify(template)
     };
-    // dispatch(setAttackScene(selected));
     update(details)
       .then((res) => {
         if (res) {
@@ -396,7 +465,7 @@ export default function AttackBlock({ attackScene, color }) {
   // console.log('nodes', nodes);
 
   return (
-    <div style={{ height: '100%', background: 'white' }}>
+    <div style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
@@ -415,6 +484,7 @@ export default function AttackBlock({ attackScene, color }) {
             event.dataTransfer.dropEffect = 'move';
           }}
           onNodeDragStop={onNodeDragStop}
+          onNodeContextMenu={handleNodeContextMenu}
           fitView
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
@@ -433,6 +503,47 @@ export default function AttackBlock({ attackScene, color }) {
           <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
         </ReactFlow>
       </ReactFlowProvider>
+      {contextMenu.visible && (
+        <div
+          style={{
+            position: 'absolute',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            background: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
+            zIndex: 1000,
+            width: '90px', // Defined width for consistency
+            padding: '8px 0',
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '12px'
+          }}
+        >
+          {contextMenu.options.map((option) => (
+            <div
+              key={option}
+              style={{
+                padding: '4px 8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
+                transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+              }}
+              onClick={() => handleMenuOptionClick(option)}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
+              onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+            >
+              <span style={{ marginRight: '8px' }}>
+                {option === 'Copy' && <ContentCopyIcon />}
+                {option === 'Paste' && <ContentPasteIcon />}
+              </span>
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
       <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
