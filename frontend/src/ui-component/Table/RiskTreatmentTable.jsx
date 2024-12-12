@@ -106,6 +106,7 @@ export default function RiskTreatmentTable() {
   const [openSelect, setOpenSelect] = useState(false);
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
+  const [selectedScene, setSelectedScene] = useState(null);
 
   const { model, riskTreatment, getRiskTreatment, addRiskTreatment, attackScenarios } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
@@ -141,7 +142,9 @@ export default function RiskTreatmentTable() {
     }));
     setRows(data);
     setFiltered(data);
-    setDetails(attackScenarios);
+    const attacktrees = attackScenarios.find((item) => item.type == 'attack_trees');
+    setDetails(attacktrees);
+    // console.log('attacktrees', attacktrees);
   }, [riskTreatment?.Details.length, attackScenarios]);
 
   // console.log('rows', rows);
@@ -332,7 +335,15 @@ export default function RiskTreatmentTable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
-      {openSelect && <SelectAttacks open={openSelect} handleClose={handleCloseSelect} details={details} />}
+      {openSelect && (
+        <SelectAttacks
+          open={openSelect}
+          handleClose={handleCloseSelect}
+          details={details}
+          selectedScene={selectedScene}
+          setSelectedScene={setSelectedScene}
+        />
+      )}
     </Box>
   );
 }

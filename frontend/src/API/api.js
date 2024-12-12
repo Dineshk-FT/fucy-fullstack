@@ -2,7 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { configuration } from '../services/baseApiService';
 import axios from 'axios';
-import { createHeaders } from '../Zustand/store';
+import { createHeaders, createHeadersForJson } from '../Zustand/store';
 
 const FormData = require('form-data');
 
@@ -58,6 +58,25 @@ export const GET_CALL = async (modelId, url) => {
   // return res.data;
 };
 
+export const GET_CALL_WITH_DETAILS = async (modelId, url) => {
+  let data = new FormData();
+  data.append('model-id', modelId);
+  console.log('createHeadersForJson', createHeadersForJson());
+
+  try {
+    const res = await axios({
+      method: 'POST',
+      url: url,
+      ...createHeadersForJson(),
+      data: data
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error in GET_CALL:', error);
+    return error.response?.data || { error: 'Unknown error occurred' };
+  }
+};
+
 export const UPDATE_CALL = async (details, url) => {
   const trimmed = Object.fromEntries(
     Object.entries(details)
@@ -86,30 +105,33 @@ export const UPDATE_CALL = async (details, url) => {
   // return res.data;
 };
 
-export const GET_CALL_WITH_DETAILS = async (details, url) => {
-  const trimmed = Object.fromEntries(
-    Object.entries(details).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
-  );
-  // console.log('trimmed', trimmed);
-  let data = new FormData();
-  for (const [key, value] of Object.entries(trimmed)) {
-    data.append(key, value);
-  }
-
+export const PATCH_CALL = async (details, url) => {
   try {
+    // Optimize trimming logic
+    const cleanedDetails = {};
+    for (const key in details) {
+      const value = details[key];
+      cleanedDetails[key] = typeof value === 'string' ? value.trim() : value;
+    }
+
+    // Build FormData efficiently
+    const formData = new FormData();
+    Object.entries(cleanedDetails).forEach(([key, value]) => formData.append(key, value));
+
+    // Make API call
     const res = await axios({
-      method: 'POST',
-      url: url,
-      ...createHeaders(),
-      data: data
+      method: 'PATCH',
+      url,
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' }, // Ensure proper headers
+      ...createHeaders() // Ensure this does not overwrite Content-Type
     });
+
     return res.data;
   } catch (error) {
-    console.error('Error in ADD_CALL:', error);
-    return error.response.data;
+    console.error('Error in PATCH_CALL:', error);
+    return error.response?.data || { error: 'Unknown error occurred' };
   }
-  // const res = await axios(options);
-  // return res.data;
 };
 
 export const ADD_CALL = async (details, url) => {

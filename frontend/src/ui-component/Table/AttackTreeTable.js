@@ -309,7 +309,7 @@ export default function AttackTreeTable() {
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
           'Window of Opportunity': dt['Window of Opportunity'] ?? '',
           Equipment: dt?.Equipment ?? '',
-          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'] ?? ''
+          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'].length ? dt['Attack Feasibilities Rating'] : 'Low'
         };
       });
 

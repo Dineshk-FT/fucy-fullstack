@@ -12,12 +12,40 @@ import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 
-export default function SelectDamageScenes({ details, open, handleClose }) {
-  const handleChange = (e, detail) => {};
+export default function SelectDamageScenes({ details, open, handleClose, selectedRow, id, updateThreatScenario, refreshAPI }) {
+  const [damageScene, setDamageScene] = React.useState([]);
+  // console.log('details', details);
+  // console.log('  damageScene', damageScene);
+  const handleChange = (e, detail, index) => {
+    const { _id, Name } = detail;
+    const isChecked = e.target.checked;
+
+    setDamageScene((prev) => {
+      if (isChecked) {
+        return [...prev, { _id, Name, key: `DS${(index + 1).toString().padStart(3, '0')}` }];
+      } else {
+        return prev.filter((item) => item._id !== _id);
+      }
+    });
+  };
 
   // console.log('selectedRow', selectedRow);
-  //   console.log('details', details);
-  const handleClick = () => {};
+  const handleClick = () => {
+    const details = {
+      id: id,
+      rowId: selectedRow?.rowId,
+      nodeId: selectedRow?.nodeId,
+      propId: selectedRow?.ID,
+      damageScene: JSON.stringify(damageScene)
+    };
+    updateThreatScenario(details)
+      .then((res) => {
+        if (res.message) {
+          refreshAPI();
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
 
   return (
     <React.Fragment>
@@ -47,27 +75,35 @@ export default function SelectDamageScenes({ details, open, handleClose }) {
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
               <TreeItem nodeId={details?.name} label={details?.name} sx={{ color: '#000', fontWeight: 600 }}>
-                {details?.Details?.map((detail) => (
-                  <TreeItem
-                    key={detail?._id}
-                    nodeId={detail?._id}
-                    label={
-                      <FormGroup>
-                        <FormControlLabel
-                          sx={{
-                            margin: '-6px',
-                            '& .MuiTypography-root': {
-                              fontSize: '13px',
-                              color: '#000'
+                {details?.Details?.map((detail, ind) => {
+                  return (
+                    <TreeItem
+                      key={detail?._id}
+                      nodeId={detail?._id}
+                      label={
+                        <FormGroup>
+                          <FormControlLabel
+                            sx={{
+                              margin: '-6px',
+                              '& .MuiTypography-root': {
+                                fontSize: '13px',
+                                color: '#000'
+                              }
+                            }}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={damageScene.some((item) => item._id === detail._id)}
+                                onChange={(e) => handleChange(e, detail, ind)}
+                              />
                             }
-                          }}
-                          control={<Checkbox size="small" onChange={(e) => handleChange(e, detail)} />}
-                          label={detail.Name}
-                        />
-                      </FormGroup>
-                    }
-                  />
-                ))}
+                            label={detail.Name}
+                          />
+                        </FormGroup>
+                      }
+                    />
+                  );
+                })}
               </TreeItem>
             </TreeView>
           </DialogContentText>

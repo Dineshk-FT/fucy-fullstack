@@ -1,18 +1,9 @@
-import React, { useState, useRef } from "react";
-import {
-  List,
-  ListItemButton,
-  ListItemText,
-  Button,
-  CircularProgress,
-  Box,
-  Typography,
-  Popper,
-  Paper,
-} from "@mui/material";
-import toast from "react-hot-toast";
+/*eslint-disable*/
+import React, { useState, useRef } from 'react';
+import { List, ListItemButton, ListItemText, Button, CircularProgress, Box, Typography, Popper, Paper } from '@mui/material';
+import toast from 'react-hot-toast';
 
-export default function DeleteProject({ open, handleClose, Models, deleteModels, isLoading }) {
+export default function DeleteProject({ open, handleClose, Models, deleteModels, isLoading, getModels }) {
   const [selectedModels, setSelectedModels] = useState([]);
   const notify = (message, status) => toast[status](message);
 
@@ -20,47 +11,53 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
 
   const handleModelClick = (id) => {
     setSelectedModels((prevSelected) =>
-      prevSelected.includes(id)
-        ? prevSelected.filter((modelId) => modelId !== id)
-        : [...prevSelected, id]
+      prevSelected.includes(id) ? prevSelected.filter((modelId) => modelId !== id) : [...prevSelected, id]
     );
   };
 
   const handleDelete = () => {
-    deleteModels(selectedModels)
+    deleteModels({ 'model-ids': selectedModels })
       .then((res) => {
+        console.log('res', res);
         if (res) {
-          notify(res.message ?? "Model deleted successfully", "success");
+          notify(res.message ?? 'Models deleted successfully', 'success');
+          getModels();
           handleClose();
         }
       })
       .catch((err) => {
-        console.log("err", err);
-        notify("Something Went Wrong", "error");
+        console.log('err', err);
+        notify('Something Went Wrong', 'error');
         handleClose();
       });
   };
 
   return (
     <>
-      <Popper open={open} anchorEl={anchorRef.current} placement="bottom-end" disablePortal={false} style={{ zIndex: 1500, top: 90, left: 150 }}>
+      <Popper
+        open={open}
+        anchorEl={anchorRef.current}
+        placement="bottom-end"
+        disablePortal={false}
+        style={{ zIndex: 1500, top: 90, left: 150 }}
+      >
         <Paper
           sx={{
             width: 220, // Reduced width
             padding: 1, // Reduced padding
             borderRadius: 2,
-            backgroundColor: "background.paper",
+            backgroundColor: 'background.paper',
             boxShadow: 1,
-            zIndex: 1500, // Ensure it's above other elements
+            zIndex: 1500 // Ensure it's above other elements
           }}
         >
           <Typography
             sx={{
               fontSize: 14, // Reduced font size
               fontWeight: 600,
-              color: "primary.main",
+              color: 'primary.main',
               pb: 0.5, // Reduced bottom padding
-              textAlign: "center",
+              textAlign: 'center'
             }}
           >
             Select Projects to Delete
@@ -68,22 +65,22 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
 
           <Box
             sx={{
-              maxHeight: "150px", // Reduced height of the dropdown list
-              overflowY: "auto",
+              maxHeight: '150px', // Reduced height of the dropdown list
+              overflowY: 'auto',
               borderRadius: 1,
-              border: "1px solid",
-              borderColor: "divider",
-              backgroundColor: "#fafafa",
+              border: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: '#fafafa',
               boxShadow: 1,
-              mb: 1, // Reduced bottom margin
+              mb: 1 // Reduced bottom margin
             }}
           >
             {isLoading ? (
-              <Box sx={{ textAlign: "center", py: 2 }}>
+              <Box sx={{ textAlign: 'center', py: 2 }}>
                 <CircularProgress size={20} />
               </Box>
             ) : Models?.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center' }}>
                 No projects available.
               </Typography>
             ) : (
@@ -97,38 +94,31 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
                       py: 0.5,
                       px: 1,
                       borderRadius: 1,
-                      backgroundColor:
-                        selectedModels.includes(model?._id) ? "#fd5c63" : "transparent",
-                      color:
-                        selectedModels.includes(model?._id) ? "white" : "text.primary",
-                      "&:hover": {
-                        backgroundColor: selectedModels.includes(model?._id)
-                          ? "darkred"
-                          : "action.hover",
-                      },
+                      backgroundColor: selectedModels.includes(model?._id) ? '#fd5c63' : 'transparent',
+                      color: selectedModels.includes(model?._id) ? 'white' : 'text.primary',
+                      '&:hover': {
+                        backgroundColor: selectedModels.includes(model?._id) ? 'darkred' : 'action.hover'
+                      }
                     }}
                   >
-                    <ListItemText
-                      sx={{ "& .MuiTypography-root": { color: "inherit" } }}
-                      primary={model?.name}
-                    />
+                    <ListItemText sx={{ '& .MuiTypography-root': { color: 'inherit' } }} primary={model?.name} />
                   </ListItemButton>
                 ))}
               </List>
             )}
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
             <Button
               onClick={handleClose}
               variant="outlined"
               color="warning"
               sx={{
                 fontWeight: 500,
-                textTransform: "none",
+                textTransform: 'none',
                 fontSize: 10,
-                padding: "4px 6px",
-                minWidth: 60,
+                padding: '4px 6px',
+                minWidth: 60
               }}
             >
               Close
@@ -140,10 +130,10 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
               disabled={selectedModels.length === 0}
               sx={{
                 fontWeight: 500,
-                textTransform: "none",
+                textTransform: 'none',
                 fontSize: 10,
                 minWidth: 60,
-                padding: "4px 6px",
+                padding: '4px 6px'
               }}
             >
               Delete

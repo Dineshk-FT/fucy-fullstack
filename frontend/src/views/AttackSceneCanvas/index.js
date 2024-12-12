@@ -16,6 +16,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { style } from '../../utils/Constraints';
+import SaveIcon from '@mui/icons-material/Save';
 
 const elk = new ELK();
 
@@ -289,6 +290,10 @@ export default function AttackBlock({ attackScene, color }) {
         x: event.clientX,
         y: event.clientY
       });
+      const filtered = nodes.filter((node) => node.type == 'default');
+      if (filtered.length == 1 && parsedNode.type === 'default') {
+        return;
+      }
 
       if (parsedNode) {
         const newNode = {
@@ -388,6 +393,7 @@ export default function AttackBlock({ attackScene, color }) {
   const buttonStyle = {
     background: color?.canvasBG
   };
+  // console.log('nodes', nodes);
 
   return (
     <div style={{ height: '100%', background: 'white' }}>
@@ -412,15 +418,15 @@ export default function AttackBlock({ attackScene, color }) {
           fitView
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
-            <Button variant="outlined" onClick={handleSave} sx={buttonStyle}>
-              {attackScene?.templates?.nodes.length ? 'Update' : 'Add'}
+            <Button variant="outlined" onClick={handleSave} startIcon={<SaveIcon />} sx={buttonStyle}>
+              {'Save'}
             </Button>
             <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
-              vertical
+              auto-align
             </Button>
-            <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
+            {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
               Horizontal
-            </Button>
+            </Button> */}
           </Panel>
           <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
           <Controls />

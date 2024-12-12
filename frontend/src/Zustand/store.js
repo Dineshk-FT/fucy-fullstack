@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
-import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, UPDATE_CALL } from '../API/api';
+import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../API/api';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -15,6 +15,23 @@ export const createHeaders = () => {
     console.error('No  user Id found');
   } else {
     // headers['Content-Type'] = `application/json`;
+    headers['user-id'] = userId;
+  }
+
+  headers['Cache-Control'] = 'no-cache';
+
+  return { headers };
+};
+
+export const createHeadersForJson = () => {
+  const userId = sessionStorage.getItem('user-id');
+
+  let headers = {};
+
+  if (!userId) {
+    console.error('No  user Id found');
+  } else {
+    headers['Content-Type'] = `application/json`;
     headers['user-id'] = userId;
   }
 
@@ -632,27 +649,30 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/damage_scenarios`;
     const res = await GET_CALL(modelId, url);
 
-    // Separate the "Derived" and "User-defined" objects
-    const derivedScenario = res?.find((item) => item.type === 'Derived');
-    const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
-    if (!res?.error) {
-      set((state) => ({
-        damageScenarios: {
-          ...state.damageScenarios,
-          subs: [
-            {
-              ...state.damageScenarios.subs[0],
-              ...derivedScenario // Spread the "Derived" object into the first subs element
-            },
-            {
-              ...state.damageScenarios.subs[1],
-              ...userDefinedScenario // Spread the "User-defined" object into the second subs element
-            }
-          ]
-        }
-      }));
-    } else {
-      set((state) => ({
+    set((state) => {
+      if (!res?.error) {
+        const derivedScenario = res.find((item) => item.type === 'Derived') || {};
+        const userDefinedScenario = res.find((item) => item.type === 'User-defined') || {};
+
+        return {
+          damageScenarios: {
+            ...state.damageScenarios,
+            subs: [
+              {
+                ...state.damageScenarios.subs[0],
+                ...derivedScenario // Update Derived
+              },
+              {
+                ...state.damageScenarios.subs[1],
+                ...userDefinedScenario // Update User-defined
+              }
+            ]
+          }
+        };
+      }
+
+      // Fallback: No data or error state
+      return {
         damageScenarios: {
           ...state.damageScenarios,
           subs: [
@@ -666,8 +686,8 @@ const useStore = createWithEqualityFn((set, get) => ({
             }
           ]
         }
-      }));
-    }
+      };
+    });
   },
 
   getThreatScenario: async (modelId) => {
@@ -806,6 +826,19 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await UPDATE_CALL(details, url);
     // console.log('res', res);
     return res;
+  },
+
+  updateThreatScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/threat_scenario`;
+    const res = await PATCH_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+  updateImpact: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update-impacts/damage_scenerio`;
+
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
   },
 
   updateAttackScenario: async (details) => {
@@ -988,20 +1021,37 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
-  deleteModels: async (ids) => {
-    // console.log('ids', ids);
-    let data = new FormData();
-    data.append('model_ids', ids);
-    try {
-      const URL = `${configuration.apiBaseUrl}delete/model`;
-      const response = await axios.post(URL, data);
-      // console.log('response', response);
-      return response.data;
-    } catch (err) {
-      console.log('err', err);
-      throw err; // Re-throwing the error to handle it in calling code if needed
-    }
+  deleteModels: async (details) => {
+    // console.log('details', details);
+    let url = `${configuration.apiBaseUrl}v1/delete/models`;
+    const res = await DELETE_CALL(details, url);
+    return res;
   },
+  deleteDamageScenario: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/damage_scenario`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
+  deleteThreatScenario: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/threat_scenarios`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
+
+  // deleteModels: async (ids) => {
+
+  //   let data = new FormData();
+  //   data.append('model_ids', ids);
+  //   try {
+  //     const URL = `${configuration.apiBaseUrl}delete/model`;
+  //     const response = await axios.post(URL, data);
+  //     // console.log('response', response);
+  //     return response.data;
+  //   } catch (err) {
+  //     console.log('err', err);
+  //     throw err; // Re-throwing the error to handle it in calling code if needed
+  //   }
+  // },
 
   deleteTemplate: async (id) => {
     const res = await axios.delete(`${configuration.apiBaseUrl}template/${id}`);

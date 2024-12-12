@@ -10,9 +10,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup, Radio } from '@mui/material';
 
-export default function SelectAttacks({ details, open, handleClose }) {
+export default function SelectAttacks({ details, open, handleClose, selectedScene, setSelectedScene }) {
   const handleChange = (e, detail) => {};
 
   // console.log('selectedRow', selectedRow);
@@ -46,31 +46,31 @@ export default function SelectAttacks({ details, open, handleClose }) {
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-              {details?.map((item, i) => (
-                <TreeItem key={item?._id} nodeId={item?._id} label={item?.name} sx={{ color: '#000', fontWeight: 600 }}>
-                  {item?.scenes?.map((scene, ind) => (
-                    <TreeItem
-                      key={scene?.ID}
-                      nodeId={scene?.ID}
-                      label={
-                        <FormGroup>
-                          <FormControlLabel
-                            sx={{
-                              margin: '-6px',
-                              '& .MuiTypography-root': {
-                                fontSize: '13px',
-                                color: '#000'
-                              }
-                            }}
-                            control={<Checkbox size="small" onChange={(e) => handleChange(e, scene)} />}
-                            label={scene?.Name}
-                          />
-                        </FormGroup>
-                      }
-                    />
-                  ))}
-                </TreeItem>
-              ))}
+              <TreeItem key={details?._id} nodeId={details?._id} label={details?.name} sx={{ color: '#000', fontWeight: 600 }}>
+                {details?.scenes?.map((scene, ind) => (
+                  <TreeItem
+                    key={scene?.ID}
+                    nodeId={scene?.ID}
+                    label={
+                      <FormGroup>
+                        <FormControlLabel
+                          sx={{
+                            margin: '-6px',
+                            '& .MuiTypography-root': {
+                              fontSize: '13px',
+                              color: '#000'
+                            }
+                          }}
+                          control={
+                            <Radio size="small" checked={selectedScene === scene?.Name} onChange={() => setSelectedScene(scene?.Name)} />
+                          }
+                          label={scene?.Name}
+                        />
+                      </FormGroup>
+                    }
+                  />
+                ))}
+              </TreeItem>
             </TreeView>
           </DialogContentText>
         </DialogContent>

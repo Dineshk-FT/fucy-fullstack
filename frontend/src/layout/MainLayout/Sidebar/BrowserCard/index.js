@@ -111,23 +111,21 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const CardStyle = styled(Card)(() =>
-  ({
-    marginBottom: '22px',
-    overflow: 'hidden',
-    position: 'relative',
-    height: '80vh',
-    border: '1px solid gray',
-    borderRadius: '0px',
-    '&:after': {
-      content: '""',
-      position: 'absolute',
-      borderRadius: '50%',
-      top: '-105px',
-      right: '-96px'
-    }
-  })
-);
+const CardStyle = styled(Card)(() => ({
+  marginBottom: '22px',
+  overflow: 'hidden',
+  position: 'relative',
+  height: '80vh',
+  border: '1px solid gray',
+  borderRadius: '0px',
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    borderRadius: '50%',
+    top: '-105px',
+    right: '-96px'
+  }
+}));
 
 const selector = (state) => ({
   getModels: state.getModels,
@@ -210,7 +208,7 @@ const BrowserCard = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      setIsEditing(false); 
+      setIsEditing(false);
       updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
         if (res) {
           getModels();
@@ -339,10 +337,10 @@ const BrowserCard = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
-  function dragCheck(node) {
-    return node?.dragged;
-  }
+  // const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
+  // function dragCheck(node) {
+  //   return node?.dragged;
+  // }
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
@@ -367,13 +365,14 @@ const BrowserCard = () => {
       </div>
     );
   };
-  const getLabel = (icon, name) => {
+  const getLabel = (icon, name, index) => {
     const IconComponent = iconComponents[icon];
     return (
       <div className={classes.labelRoot}>
         {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
         <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
           {name}
+          {index && `- [${index}]`}
         </Typography>
       </div>
     );
@@ -449,23 +448,24 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            // console.log('sub.Derivations.length', sub?.Derivations?.length);
             if (sub.name === 'Damage Scenarios Derivations') {
-              return sub.Derivations?.map((derivation) => (
+              return sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={derivation.id}
                   nodeId={derivation.id}
-                  label={getLabel('TopicIcon', derivation.name)}
+                  label={getLabel('TopicIcon', derivation.name, i + 1)}
                 />
               ));
             }
             if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
-              return sub.Details?.map((detail) => (
+              return sub.Details?.map((detail, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={detail._id}
                   nodeId={detail._id}
-                  label={getLabel('DangerousIcon', detail.Name)}
+                  label={getLabel('DangerousIcon', detail.Name, i + 1)}
                 />
               ));
             }
@@ -477,32 +477,35 @@ const BrowserCard = () => {
           data,
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
-            sub.name === 'Threat Scenarios'
-              ? sub.Details?.flatMap((detail) =>
-                  detail.Details?.flatMap((nodeDetail) =>
-                    nodeDetail.props?.map((prop) => {
-                      const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            let key = 0;
+            return sub.name === 'Threat Scenarios'
+              ? sub.Details?.flatMap((detail) => {
+                  // console.log('detail', detail);
+                  return detail.Details?.flatMap((nodeDetail) =>
+                    nodeDetail.props?.map((prop, i) => {
+                      key++;
+                      const label = `[TS${key.toString().padStart(3, '0')}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
                         nodeDetail.node
-                      } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+                      } for Damage Scene ${detail?.id}`;
 
                       const Details = { label, type: 'default', dragged: true, nodeId: nodeDetail.nodeId, threatId: prop.id };
 
                       return (
                         <DraggableTreeItem
-                          draggable={!isDragged}
-                          key={prop.id}
-                          nodeId={prop.id}
-                          label={getLabel('TopicIcon', label)}
+                          draggable={true}
+                          key={prop.id.concat(detail.rowId)}
+                          nodeId={prop.id.concat(detail.rowId)}
+                          label={getLabel('TopicIcon', label, key)}
                           onDragStart={(e) => onDragStart(e, Details)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       );
                     })
-                  )
-                )
-              : null
-          )
+                  );
+                })
+              : null;
+          })
         );
 
       case 'attackScenarios':
@@ -511,14 +514,14 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'attack', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
-            sub.scenes?.map((at_scene) => {
+            sub.scenes?.map((at_scene, i) => {
               const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
 
               return sub.name === 'Attack' ? (
                 <DraggableTreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
                   draggable
                   onDragStart={(e) => onDragStart(e, Details)}
                   onClick={(e) => e.stopPropagation()}
@@ -527,7 +530,7 @@ const BrowserCard = () => {
                 <TreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
                   onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
                 />
               );
@@ -619,7 +622,7 @@ const BrowserCard = () => {
                 {
                   name: 'offset',
                   options: {
-                    offset: [-10, -50] 
+                    offset: [-10, -50]
                   }
                 }
               ]}

@@ -37,7 +37,8 @@ const selector = (state) => ({
   userDefined: state.threatScenarios.subs[1],
   getDamageScenarios: state.getDamageScenarios,
   getThreatScenario: state.getThreatScenario,
-  damageScenarios: state.damageScenarios['subs'][1]
+  damageScenarios: state.damageScenarios['subs'][1],
+  updateThreatScenario: state.updateThreatScenario
 });
 
 const column = [
@@ -94,13 +95,18 @@ export default function Tstable() {
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
 
-  const { model, derived, userDefined, getThreatScenario, damageScenarios, getDamageScenarios } = useStore(selector, shallow);
+  const { model, derived, userDefined, getThreatScenario, damageScenarios, getDamageScenarios, updateThreatScenario } = useStore(
+    selector,
+    shallow
+  );
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
 
   // console.log('damageScenarios', damageScenarios);
+  // console.log('derived', derived);
+
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -114,6 +120,10 @@ export default function Tstable() {
   const handleCloseSelect = () => {
     setOpenSelect(false);
     setSelectedRow({});
+  };
+  const refreshAPI = () => {
+    getThreatScenario(model?._id);
+    handleCloseSelect();
   };
 
   const Head = useMemo(() => {
@@ -141,10 +151,13 @@ export default function Tstable() {
               id++;
               return {
                 SNo: `TS${id.toString().padStart(3, '0')}`,
-                ID: prop?.id.slice(0, 6),
+                ID: prop?.id,
+                rowId: detail?.rowId,
+                nodeId: nodedetail?.nodeId,
                 Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node} for Damage Scene ${detail?.id}`,
                 Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} for Damage Scene ${detail?.id}`,
                 losses: [],
+                'Damage Scenarios': prop?.damage_scenes ?? [],
                 'Losses of Cybersecurity Properties': prop?.name
               };
             });
@@ -277,13 +290,24 @@ export default function Tstable() {
               cellContent = (
                 <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
                   {row[item.name] && row[item.name].length ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item.name]}</span>
-                    </span>
+                    row[item.name].map((damage, i) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
+                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                          [{damage?.key}]{damage?.Name}
+                        </span>
+                      </span>
+                    ))
                   ) : (
                     <InputLabel>Select Damage Scenario</InputLabel>
                   )}
+                </StyledTableCell>
+              );
+              break;
+            case item.name === 'ID':
+              cellContent = (
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                  {row[item.name] ? row[item.name].slice(0, 6) : '-'}
                 </StyledTableCell>
               );
               break;
@@ -385,7 +409,17 @@ export default function Tstable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
-      {openSelect && <SelectDamageScenes open={openSelect} handleClose={handleCloseSelect} details={details} />}
+      {openSelect && (
+        <SelectDamageScenes
+          open={openSelect}
+          handleClose={handleCloseSelect}
+          details={details}
+          selectedRow={selectedRow}
+          id={derived['_id']}
+          updateThreatScenario={updateThreatScenario}
+          refreshAPI={refreshAPI}
+        />
+      )}
     </Box>
   );
 }

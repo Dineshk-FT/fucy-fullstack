@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import CircleIcon from '@mui/icons-material/Circle';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
@@ -35,19 +34,20 @@ import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
-import { colorPicker, colorPickerTab } from './constraints';
+import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
 import { tableHeight } from '../../store/constant';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const selector = (state) => ({
   model: state.model,
-  getModelById: state.getModelById,
-  getModels: state.getModels,
   update: state.updateDamageScenario,
+  updateImpact: state.updateImpact,
   getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
-  damageID: state.damageScenarios['subs'][1]['_id']
+  damageID: state.damageScenarios['subs'][1]['_id'],
+  deleteDamageScenario: state.deleteDamageScenario
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -159,13 +159,11 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios, getThreatScenario } = useStore(
-    selector,
-    shallow
-  );
+  const { model, update, damageScenarios, Details, damageID, getDamageScenarios, getThreatScenario, updateImpact, deleteDamageScenario } =
+    useStore(selector, shallow);
+
   const [stakeHolder] = useState(false);
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const [openDs, setOpenDs] = useState(false);
   const [openCl, setOpenCl] = useState(false);
@@ -176,57 +174,48 @@ export default function DsTable() {
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
   const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
+  const [columnWidths, setColumnWidths] = useState({});
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  // console.log('selectedRows', selectedRows);
+  console.log('damageID', damageID);
+  const handleDeleteSelected = () => {
+    const details = {
+      id: damageID,
+      detailId: selectedRows
+    };
+    deleteDamageScenario(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res.message ?? 'Deleted successfully', 'success');
+          getDamageScenarios(model?._id);
+          setSelectedRows([]);
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const toggleRowSelection = (rowId) => {
+    setSelectedRows(
+      (prevSelectedRows) =>
+        prevSelectedRows.includes(rowId)
+          ? prevSelectedRows.filter((id) => id !== rowId) // Unselect if already selected
+          : [...prevSelectedRows, rowId] // Select if not selected
+    );
+  };
 
   const notify = (message, status) => toast[status](message);
 
   // console.log('damageID', damageID);
   const Head = useMemo(() => {
     if (stakeHolder) {
-      return [
-        { id: 1, name: 'ID' },
-        { id: 2, name: 'Name' },
-        { id: 3, name: 'Damage Scenario' },
-        { id: 4, name: 'Description/ Scalability' },
-        { id: 5, name: 'Losses of Cybersecurity Properties' },
-        { id: 6, name: 'Assets' },
-        { id: 7, name: 'Component/Message' },
-        { id: 8, name: 'Safety Impact per StakeHolder' },
-        { id: 9, name: 'Financial Impact per StakeHolder' },
-        { id: 10, name: 'Operational Impact per StakeHolder' },
-        { id: 11, name: 'Privacy Impact per StakeHolder' },
-        { id: 12, name: 'Impact Justification by Stakeholder' },
-        { id: 13, name: 'Safety Impact' },
-        { id: 14, name: 'Financial Impact' },
-        { id: 15, name: 'Operational Impact' },
-        { id: 16, name: 'Privacy Impact' },
-        { id: 17, name: 'Impact Justification' },
-        { id: 18, name: 'Associated Threat Scenarios' },
-        { id: 19, name: 'Overall Impact' },
-        { id: 20, name: 'Asset is Evaluated' },
-        { id: 21, name: 'Cybersecurity Properties are Evaluated' },
-        { id: 22, name: 'Unevaluated Cybersecurity Properties' }
-      ];
+      return stakeHeader;
     } else {
-      return [
-        { id: 1, name: 'ID' },
-        { id: 2, name: 'Name' },
-        { id: 3, name: 'Damage Scenario' },
-        { id: 4, name: 'Description/ Scalability' },
-        { id: 5, name: 'Losses of Cybersecurity Properties' },
-        { id: 6, name: 'Assets' },
-        { id: 7, name: 'Component/Message' },
-        { id: 13, name: 'Safety Impact' },
-        { id: 14, name: 'Financial Impact' },
-        { id: 15, name: 'Operational Impact' },
-        { id: 16, name: 'Privacy Impact' },
-        { id: 17, name: 'Impact Justification' },
-        { id: 18, name: 'Associated Threat Scenarios' },
-        { id: 19, name: 'Overall Impact' },
-        { id: 20, name: 'Asset is Evaluated' },
-        { id: 21, name: 'Cybersecurity Properties are Evaluated' },
-        { id: 22, name: 'Unevaluated Cybersecurity Properties' }
-      ];
+      return DSTableHeader;
     }
   }, []);
 
@@ -256,7 +245,7 @@ export default function DsTable() {
     setSearchTerm(value);
   };
 
-  console.log('damageScenarios', damageScenarios['Details']);
+  // console.log('damageScenarios', damageScenarios['Details']);
   useEffect(() => {
     if (damageScenarios['Details']) {
       const scene = damageScenarios['Details']?.map((ls, i) => ({
@@ -302,10 +291,10 @@ export default function DsTable() {
 
     const info = {
       id: damageID,
-      detailId: seleced?.ID,
+      detailId: seleced?.id,
       impacts: JSON.stringify(seleced['impacts'])
     };
-    update(info)
+    updateImpact(info)
       .then((res) => {
         // console.log('res', res);
         refreshAPI();
@@ -325,68 +314,6 @@ export default function DsTable() {
     return false;
   };
 
-  const options = [
-    {
-      value: 'Severe',
-      label: 'Severe',
-      description: {
-        'Safety Impact': 'Life-threatening or fatal injuries.',
-        'Financial Impact':
-          'The financial damage leads to significant loss for the affected road user with substantial effects on their ability to meet financial obligations.',
-        'Operational Impact':
-          'The operational damage leads to a loss of important or all vehicle functions. EXAMPLE 1: Major malfunction in the steering system leads to a loss of directional control. EXAMPLE 2: Significant loss in the braking system causes a severe reduction in braking force. EXAMPLE 3: Significant loss in other important functions of the vehicle.',
-        'Privacy Impact':
-          'The privacy damage leads to significant or very harmful impacts to the road user. The information regarding the road user’s identity is available and easy to link to PII (personally identifiable information), leading to severe harm or loss. The information belongs to third parties as well.'
-      }
-    },
-    {
-      value: 'Major',
-      label: 'Major',
-      description: {
-        'Safety Impact': 'Severe and/or irreversible injuries or significant physical harm.',
-        'Financial Impact':
-          'The financial damage leads to notable loss for the affected road user, but the financial ability of the road user to meet financial obligations is not fundamentally impacted.',
-        'Operational Impact':
-          'The operational damage leads to partial degradation of a vehicle function. EXAMPLE 4: Degradation in steering or braking capacity.',
-        'Privacy Impact':
-          'The privacy damage has a notable impact on the road user. The information may be difficult to link to PII but is of a significant nature and has risks to PII principal.'
-      }
-    },
-    {
-      value: 'Moderate',
-      label: 'Moderate',
-      description: {
-        'Safety Impact': 'Reversible physical injuries requiring treatment.',
-        'Financial Impact':
-          'The financial damage is noticeable but does not significantly affect the financial situation of the road user.',
-        'Operational Impact':
-          'The operational damage leads to noticeable degradation of a vehicle function. EXAMPLE 5: Slight degradation in steering capability.',
-        'Privacy Impact':
-          'The privacy damage leads to moderate consequences to the road user. The information regarding the road user is not sensitive.'
-      }
-    },
-    {
-      value: 'Minor',
-      label: 'Minor',
-      description: {
-        'Safety Impact': 'Light physical injuries, may require first aid.',
-        'Financial Impact': 'The financial damage is small and can be easily absorbed by the affected road user.',
-        'Operational Impact': 'The operational damage leads to an insignificant or no noticeable impact on vehicle operation.',
-        'Privacy Impact':
-          'The privacy damage has a light impact or no effect at all. The information is low-risk and difficult to link to PII.'
-      }
-    },
-    {
-      value: 'Negligible',
-      label: 'Negligible',
-      description: {
-        'Safety Impact': 'No physical injuries.',
-        'Financial Impact': 'The financial damage is so low that it has no significant effect on the road user.',
-        'Operational Impact': "The operational damage leads to an insignificant or no post-collision damage to a vehicle's functionality.",
-        'Privacy Impact': 'The privacy damage has no effect on the road user or their personal information.'
-      }
-    }
-  ];
   const handleBack = () => {
     dispatch(closeAll());
   };
@@ -452,27 +379,31 @@ export default function DsTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const isSelected = selectedRows.includes(row.id);
     return (
       <>
         <StyledTableRow
           key={row.name}
           data={row}
           sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            '&:nth-of-type(odd)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            backgroundColor: isChild ? '#F4F8FE' : '',
-            color: `${color?.sidebarContent} !important`
+            backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+            cursor: 'pointer',
+            color: `${color?.sidebarContent} !important`,
+            '&:last-child td, &:last-child th': { border: 0 }
+            // '&:nth-of-type(even)': {
+            //   backgroundColor: color?.sidebarBG,
+            //   color: `${color?.sidebarContent} !important`
+            // },
+            // '&:nth-of-type(odd)': {
+            //   backgroundColor: color?.sidebarBG,
+            //   color: `${color?.sidebarContent} !important`
+            // },
+            // '& .MuiTableCell-root.MuiTableCell-body': {
+            //   backgroundColor: color?.sidebarBG,
+            //   color: `${color?.sidebarContent} !important`
+            // }
+            // backgroundColor: isChild ? '#F4F8FE' : '',
+            // color: `${color?.sidebarContent} !important`
           }}
         >
           {Head?.map((item, index) => {
@@ -547,6 +478,19 @@ export default function DsTable() {
                 );
                 break;
 
+              case item.name === 'ID':
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    style={{ width: columnWidths[item.id] || 'auto' }}
+                    align="left"
+                    onClick={() => toggleRowSelection(row.id)}
+                  >
+                    {row[item.name] ? row[item.name] : '-'}
+                  </StyledTableCell>
+                );
+                break;
+
               case typeof row[item.name] !== 'object':
                 cellContent = (
                   <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -612,6 +556,16 @@ export default function DsTable() {
           <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
+          <Button
+            sx={{ float: 'right', mb: 2 }}
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0}
+          >
+            Delete
+          </Button>
         </Box>
       </Box>
 
@@ -663,14 +617,16 @@ export default function DsTable() {
             </TableRow>
           </TableHead>
           <TableBody>
+            <StyledTableCell></StyledTableCell>
             {filtered?.map((row, rowkey) => (
-              <RenderTableRow key={rowkey} row={row} rowKey={rowkey} />
+              <>
+                <RenderTableRow row={row} rowKey={rowkey} />
+              </>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Pagination placed outside of the scrollable area */}
       <TablePagination
         component="div"
         count={filtered.length}
@@ -681,7 +637,7 @@ export default function DsTable() {
       />
 
       {/* Modals */}
-      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} id={id} rows={rows} notify={notify} />}
+      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses
           open={openCl}
