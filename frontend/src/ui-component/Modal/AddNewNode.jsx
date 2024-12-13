@@ -20,7 +20,7 @@ const MenuProps = {
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 300
+      width: 'inherit'
     }
   }
 };
@@ -60,7 +60,9 @@ const AddNewNode = () => {
   const { createNode, updateModel, setNodes, nodes, edges, model, update } = useStore(selector);
 
   const handleChange = (event) => {
-    const { target: { value, name } } = event;
+    const {
+      target: { value, name }
+    } = event;
     if (name) {
       setNewNode({
         ...newNode,
@@ -100,7 +102,7 @@ const AddNewNode = () => {
           borderStyle: 'solid'
         }
       },
-      type: newNode.type,
+      type: 'default',
       properties: newNode.properties,
       width: 120,
       height: 50,
@@ -125,24 +127,28 @@ const AddNewNode = () => {
       const template = { nodes: list, edges: edges };
       const details = { 'model-id': model?._id, template: JSON.stringify(template), assetId: assets?._id };
 
-      update(details).then((res) => {
-        if (res.data) {
-          notify(res?.message, 'success');
-          getSidebarNode();
-        }
-      }).catch((err) => {
-        notify('Something went wrong', 'error');
-      });
+      update(details)
+        .then((res) => {
+          if (res.data) {
+            notify(res?.message, 'success');
+            getSidebarNode();
+          }
+        })
+        .catch((err) => {
+          notify('Something went wrong', 'error');
+        });
     } else {
-      createNode(details).then((res) => {
-        if (res.data) {
-          getSidebarNode();
-          setSelectedNodeGroupId({});
-          notify('Node created successfully', 'success');
-        }
-      }).catch((err) => {
-        notify('Something went wrong', 'error');
-      });
+      createNode(details)
+        .then((res) => {
+          if (res.data) {
+            getSidebarNode();
+            setSelectedNodeGroupId({});
+            notify('Node created successfully', 'success');
+          }
+        })
+        .catch((err) => {
+          notify('Something went wrong', 'error');
+        });
     }
 
     setNewNode({
@@ -154,35 +160,37 @@ const AddNewNode = () => {
   };
 
   return (
-    <Box sx={{background: `${color?.sidebarBG } !important`, color: color?.sidebarContent}}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p:1,  }}>
+    <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h4" color="primary">Add New Node</Typography>
+          <Typography variant="h4" color="primary">
+            Add New Node
+          </Typography>
           {/* <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer', background: `${color?.sidebarBG } !important`, color: color?.sidebarConten }} /> */}
           <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={CloseModel}>
             <CancelTwoToneIcon />
           </Box>
         </Box>
-        
+
         <TextField
           size="small"
           label="Name"
           name="nodeName"
           variant="outlined"
           onChange={handleChange}
-          sx={{ 
-            fontSize: fontSize, 
-            background: `${color?.sidebarBG } !important`, 
-            color: color?.sidebarContent,
+          sx={{
+            fontSize: fontSize,
+            background: `${color?.sidebarBG} !important`,
+            color: color?.sidebarContent
             // '& .MuiOutlinedInput-notchedOutline': {
             //   borderColor: color?.sidebarContent,
             //   backgroundColor: color?.sidebarBG,
-            // } 
+            // }
           }}
         />
-        
+
         <Grid container spacing={1} my={1}>
-          <Grid item xs={6}>
+          {/* <Grid item xs={6}>
             <FormControl size="small" fullWidth>
               <InputLabel id="demo-simple-select-label">Type</InputLabel>
               <Select
@@ -192,10 +200,10 @@ const AddNewNode = () => {
                 label="Type"
                 onChange={handleChange}
                 name="type"
-                sx={{ 
-                  fontSize: fontSize, 
-                  background: `${color?.sidebarBG } !important`, 
-                  color: color?.sidebarContent,
+                sx={{
+                  fontSize: fontSize,
+                  background: `${color?.sidebarBG} !important`,
+                  color: color?.sidebarContent
                   // '& .MuiOutlinedInput-notchedOutline': {
                   //   borderColor: color?.sidebarContent,
                   //   backgroundColor: color?.sidebarBG,
@@ -212,24 +220,26 @@ const AddNewNode = () => {
                 <MenuItem value="transmitter">Transmitter</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={6}>
+          <Grid item xs={12}>
             <FormControl size="small" fullWidth>
-              <InputLabel notched id="demo-multiple-chip-label">Properties</InputLabel>
+              <InputLabel notched id="demo-multiple-chip-label">
+                Properties
+              </InputLabel>
               <Select
                 labelId="demo-multiple-chip-label"
                 id="demo-multiple-chip"
                 multiple
                 name="properties"
-                sx={{ 
-                  fontSize: fontSize, 
-                  background: `${color?.sidebarBG } !important`, 
-                  color: color?.sidebarContent,
+                sx={{
+                  fontSize: fontSize,
+                  background: `${color?.sidebarBG} !important`,
+                  color: color?.sidebarContent
                   // '& .MuiOutlinedInput-notchedOutline': {
                   //   borderColor: color?.sidebarContent,
                   //   backgroundColor: color?.sidebarBG,
-                  // } 
+                  // }
                 }}
                 value={newNode.properties}
                 onChange={handleChange}
@@ -253,13 +263,11 @@ const AddNewNode = () => {
           </Grid>
         </Grid>
 
-        <Box display="flex" justifyContent="space-between" height='30px'>
-          <Button onClick={CloseModel} variant="outlined" color="warning">Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={!newNode.nodeName || !newNode.type || newNode.properties.length === 0}
-          >
+        <Box display="flex" justifyContent="space-between" height="30px">
+          <Button onClick={CloseModel} variant="outlined" color="warning">
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={!newNode.nodeName || newNode.properties.length === 0}>
             Add
           </Button>
         </Box>

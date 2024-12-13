@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -94,10 +94,43 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
   }
 }));
 
+const renderMenuItem = (option, name) => (
+  <MenuItem key={option?.value} value={option?.value}>
+    <HtmlTooltip
+      placement="left"
+      title={
+        <Typography
+          sx={{
+            // backgroundColor: 'black',
+            // color: 'white',
+            fontSize: '14px',
+            fontWeight: 600,
+            padding: '8px', // Optional: Adds some padding for better spacing
+            borderRadius: '4px' // Optional: Adds rounded corners
+          }}
+        >
+          {option?.description[name]}
+        </Typography>
+      }
+    >
+      {option?.label}
+    </HtmlTooltip>
+  </MenuItem>
+);
+
 const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
   // console.log('name', name);
+  const [open, setOpen] = useState(false); // Manage open state of dropdown
+  const selectRef = useRef(null);
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!open) {
+      setOpen(true); // Open dropdown on left-click only if not already open
+    }
+  };
   return (
-    <StyledTableCell component="th" scope="row" sx={{ background: `${colorPickerTab(impact)} !important` }}>
+    <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
           width: 130,
@@ -122,35 +155,16 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
           </InputLabel>
         )}
         <Select
+          ref={selectRef}
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           name={name}
           value={impact}
           onChange={(e) => handleChange(e, row)}
+          open={open}
+          onClose={() => setOpen(false)}
         >
-          {options?.map((item) => (
-            <MenuItem key={item?.value} value={item?.value}>
-              <HtmlTooltip
-                placement="left"
-                title={
-                  <Typography
-                    sx={{
-                      // backgroundColor: 'black',
-                      // color: 'white',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      padding: '8px', // Optional: Adds some padding for better spacing
-                      borderRadius: '4px' // Optional: Adds rounded corners
-                    }}
-                  >
-                    {item?.description[name]}
-                  </Typography>
-                }
-              >
-                {item?.label}
-              </HtmlTooltip>
-            </MenuItem>
-          ))}
+          {options?.map((option) => renderMenuItem(option, name))}
         </Select>
       </FormControl>
     </StyledTableCell>
@@ -178,7 +192,7 @@ export default function DsTable() {
   const [selectedRows, setSelectedRows] = useState([]);
 
   // console.log('selectedRows', selectedRows);
-  console.log('damageID', damageID);
+  // console.log('damageID', damageID);
   const handleDeleteSelected = () => {
     const details = {
       id: damageID,
@@ -284,6 +298,7 @@ export default function DsTable() {
   };
 
   const handleChange = (e, row) => {
+    e.stopPropagation();
     const { name, value } = e.target;
     const seleced = JSON.parse(JSON.stringify(row));
     seleced['impacts'][`${name}`] = value;
@@ -356,6 +371,7 @@ export default function DsTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
+    console.log('e', e);
     const startX = e.clientX;
 
     // Use the actual width of the column if no width is set in state
@@ -374,8 +390,8 @@ export default function DsTable() {
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseup', handleMouseUp, { passive: true });
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
@@ -387,7 +403,7 @@ export default function DsTable() {
           data={row}
           sx={{
             backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
-            cursor: 'pointer',
+
             color: `${color?.sidebarContent} !important`,
             '&:last-child td, &:last-child th': { border: 0 }
             // '&:nth-of-type(even)': {
@@ -482,7 +498,7 @@ export default function DsTable() {
                 cellContent = (
                   <StyledTableCell
                     key={index}
-                    style={{ width: columnWidths[item.id] || 'auto' }}
+                    style={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
                     align="left"
                     onClick={() => toggleRowSelection(row.id)}
                   >
