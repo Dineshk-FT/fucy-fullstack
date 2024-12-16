@@ -195,6 +195,7 @@ export default function DsTable() {
   // console.log('damageID', damageID);
   const handleDeleteSelected = () => {
     const details = {
+      'model-id': model?._id,
       id: damageID,
       detailId: selectedRows
     };
@@ -203,6 +204,7 @@ export default function DsTable() {
         if (!res.error) {
           notify(res.message ?? 'Deleted successfully', 'success');
           getDamageScenarios(model?._id);
+          getThreatScenario(model?._id);
           setSelectedRows([]);
         } else {
           notify('Something went wrong', 'error');
