@@ -249,7 +249,10 @@ export default function DsTable() {
     const { value } = e.target;
     if (value.length > 0) {
       const filterValue = rows.filter((rw) => {
-        if (rw.name.toLowerCase().includes(value) || rw.Description.toLowerCase().includes(value)) {
+        if (
+          rw.Name.toLowerCase().includes(value.toLowerCase()) ||
+          rw['Description/ Scalability']?.toLowerCase().includes(value.toLowerCase())
+        ) {
           return rw;
         }
       });

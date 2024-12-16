@@ -248,7 +248,6 @@ const BrowserCard = () => {
   };
 
   const handleClick = async (event, ModelId, name, id) => {
-    setNodes([]);
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
