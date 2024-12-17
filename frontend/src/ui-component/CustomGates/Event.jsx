@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useState } from 'react';
-import { Handle, Position, NodeResizer } from 'reactflow';
+import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
@@ -12,13 +12,20 @@ const selector = (state) => ({
   model: state.model,
   attacks: state.attackScenarios['subs'][0],
   addAttackScene: state.addAttackScene,
+  nodes: state.nodes,
 });
 
 export default function Event(props) {
-  const { update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
+  const { nodes, update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
+  const { setNodes } = useReactFlow();
   const [inputValue, setInputValue] = useState(props.data.label);
   const [openDialog, setOpenDialog] = useState(false);
   const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleDeleteFromCanvas = () => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
+  };
 
   // Open the dialog on double-click
   const handleOpenDialog = (e) => {
@@ -91,6 +98,8 @@ export default function Event(props) {
           height: 'inherit',
           width: 'inherit',
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <Typography
           variant="body2"
@@ -128,6 +137,39 @@ export default function Event(props) {
             border: '1px solid #ccc',
           }}
         />
+        <div
+          className="delete-icon"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleDeleteFromCanvas();
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteFromCanvas();
+          }}
+          style={{
+            position: 'absolute',
+            width: '20px',
+            height: '19px',
+            top: '4px',
+            right: '4px',
+            background: '#f83e3e',
+            borderRadius: '50%',
+            fontSize: '0.8rem',
+            color: 'white',
+            cursor: 'pointer',
+            opacity: isHovered ? 1 : 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            transition: 'opacity 0.2s ease-in-out',
+          }}
+        >
+          x
+        </div>
       </Box>
 
       <Handle type="source" position={Position.Bottom} />
