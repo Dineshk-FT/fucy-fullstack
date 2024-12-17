@@ -43,7 +43,7 @@ const OutputNode = ({ id, data, isConnectable, type }) => {
       });
   };
 
-  const copiedNodes = nodes.filter(node => node.type === "copied");
+  const copiedNodes = nodes.filter(node => node.isCopied === true);
 
   // Check if the current node is a copied node
   const isCopiedNode = copiedNodes.some(node => node.id === id);

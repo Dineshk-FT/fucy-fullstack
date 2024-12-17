@@ -124,7 +124,9 @@ const selector = (state) => ({
   redo: state.redo,
   undoStack: state.undoStack,
   redoStack: state.redoStack,
-  assets: state.assets
+  assets: state.assets,
+  isNodePasted: state.isNodePasted,
+  setIsNodePasted: state.setIsNodePasted
 });
 
 //Edge line styling
@@ -205,7 +207,9 @@ export default function MainCanvas() {
     redoStack,
     assets,
     update,
-    getAssets
+    getAssets,
+    isNodePasted,
+    setIsNodePasted,
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -539,6 +543,12 @@ export default function MainCanvas() {
       nodes: nodes,
       edges: edges
     };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
     const details = {
       'model-id': model?._id,
       template: JSON.stringify(template),
@@ -681,7 +691,7 @@ export default function MainCanvas() {
           const newNode = {
             ...node,
             id: uid(),
-            type: 'copied',
+            isCopied: true,
             position: {
               x: contextMenu.x - 100,
               y: contextMenu.y - 50
