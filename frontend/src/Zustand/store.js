@@ -1061,7 +1061,15 @@ const useStore = createWithEqualityFn((set, get) => ({
         alert('Deleted Succesfully');
       });
     }
-  }
+  },
+
+  isNodePasted: true, 
+
+  // Function to toggle or set `isNodePasted`
+setIsNodePasted: (value) => 
+  set(() => {
+    return { isNodePasted: value };
+  }),
 }));
 
 export default useStore;
