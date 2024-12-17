@@ -15,7 +15,7 @@ const selector = (state) => ({
 });
 const CustomNode = ({ id, data, isConnectable, type }) => {
   const dispatch = useDispatch();
-  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector);
+  const { isNodePasted ,nodes, model, assets, getAssets, deleteNode } = useStore(selector);
   // console.log('model', model);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
@@ -43,7 +43,7 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
       });
   };
 
-  const copiedNodes = nodes.filter(node => node.type === "copied");
+  const copiedNodes = nodes.filter(node => node.isCopied === true);
 
   // Check if the current node is a copied node
   const isCopiedNode = copiedNodes.some(node => node.id === id);
@@ -140,7 +140,7 @@ const CustomNode = ({ id, data, isConnectable, type }) => {
           >
             Delete from Canvas
           </button>
-          {!isCopiedNode && ( 
+          {!isCopiedNode && !isNodePasted && ( 
           <button
             onClick={handleDelete}
             style={{
