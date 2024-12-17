@@ -26,10 +26,10 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, colorPickerTab, threatType } from './constraints';
+import { colorPicker, colorPickerTab, OverallImpact, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
-import { ThreatIcon } from '../../assets/icons';
+import { ThreatIcon, DamageIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   model: state.model,
@@ -130,16 +130,19 @@ export default function RiskTreatmentTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
-    const data = riskTreatment?.Details.map((item) => ({
-      ID: item?.threat_id,
-      'Threat Scenario': item?.label,
-      'Damage Scenarios': `${item?.row_id?.slice(0, 6)} ${item?.damage_scene?.Name}`,
-      'Safety Impact': item?.damage_scene?.impacts['Safety Impact'],
-      'Financial Impact': item?.damage_scene?.impacts['Financial Impact'],
-      'Operational Impact': item?.damage_scene?.impacts['Operational Impact'],
-      'Privacy Impact': item?.damage_scene?.impacts['Privacy Impact'],
-      'Attack Feasibility Rating': ''
-    }));
+    const data = riskTreatment?.Details.map((item) => {
+      // console.log('item', item);
+      return {
+        ID: item?.threat_id,
+        'Threat Scenario': item?.label,
+        'Damage Scenarios': item?.damage_scenarios,
+        'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
+        'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
+        'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
+        'Privacy Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Privacy Impact']) ?? '',
+        'Attack Feasibility Rating': ''
+      };
+    });
     setRows(data);
     setFiltered(data);
     const attacktrees = attackScenarios.find((item) => item.type == 'attack_trees');
@@ -185,7 +188,8 @@ export default function RiskTreatmentTable() {
       nodeId: parsedData.nodeId,
       threatId: parsedData.threatId,
       modelId: model?._id,
-      label: parsedData?.label
+      label: parsedData?.label,
+      damageId: parsedData?.damageId
     };
     addRiskTreatment(details);
   };
@@ -258,12 +262,30 @@ export default function RiskTreatmentTable() {
                 </StyledTableCell>
               );
               break;
-            case item.name.includes('Impact'):
-              return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]), color: '#000' }}>
-                  {row[item.name] ? row[item.name] : '-'}
+            case item.name === 'Damage Scenarios':
+              cellContent = (
+                <StyledTableCell component="th" scope="row">
+                  {row[item.name] && row[item.name].length ? (
+                    row[item.name].map((damage, i) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
+                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{damage?.Name}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <InputLabel>N/A</InputLabel>
+                  )}
                 </StyledTableCell>
               );
+              break;
+            case item.name.includes('Impact'):
+              const impact = OverallImpact(row[item?.name]);
+              return (
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(impact), color: '#000' }}>
+                  {impact}
+                </StyledTableCell>
+              );
+
               break;
 
             case typeof row[item.name] !== 'object':

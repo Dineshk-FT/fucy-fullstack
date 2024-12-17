@@ -492,7 +492,14 @@ const BrowserCard = () => {
                         nodeDetail.node
                       } for Damage Scene ${detail?.id}`;
 
-                      const Details = { label, type: 'default', dragged: true, nodeId: nodeDetail.nodeId, threatId: prop.id };
+                      const Details = {
+                        label,
+                        type: 'default',
+                        dragged: true,
+                        nodeId: nodeDetail.nodeId,
+                        threatId: prop.id,
+                        damageId: detail?.rowId
+                      };
 
                       return (
                         <DraggableTreeItem

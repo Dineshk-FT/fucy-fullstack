@@ -793,7 +793,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               ...state.riskTreatment.subs[0],
-              ...res
+              Details: [...res]
             }
           ]
         }

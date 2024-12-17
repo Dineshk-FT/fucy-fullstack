@@ -32,7 +32,7 @@ const elkOptions = {
 };
 
 const getLayoutedElements = async (nodes, edges, options = {}) => {
-  const isHorizontal = options?.['elk.direction'] === 'RIGHT';
+  // Create the graph structure with children nodes and edges
   const graph = {
     id: 'root',
     layoutOptions: options,
@@ -49,41 +49,46 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
   };
 
   try {
+    // Perform the layout using ELK
     const layoutedGraph = await elk.layout(graph);
 
-    // Map the layouted nodes
-    const layoutedNodes = layoutedGraph.children.map((node) => ({
-      ...nodes.find((n) => n.id === node.id), // Retain existing properties
-      position: { x: node.x, y: node.y }
-    }));
+    // Map the layouted nodes, applying small adjustments based on the ELK layout
+    const layoutedNodes = layoutedGraph.children.map((node) => {
+      const originalNode = nodes.find((n) => n.id === node.id);
 
-    // Adjust parent node positions
-    layoutedNodes.forEach((node) => {
-      const childrenEdges = edges.filter((edge) => edge.source === node.id); // Find edges where this node is a parent
+      // Apply small adjustments relative to the original positions
+      const newPosition = {
+        x: originalNode.position.x + (node.x - originalNode.position.x) * 0.1, // Apply small adjustments to x
+        y: originalNode.position.y + (node.y - originalNode.position.y) * 0.1 // Apply small adjustments to y
+      };
 
-      if (childrenEdges.length > 0) {
-        const childNodes = layoutedNodes.filter((n) => childrenEdges.some((edge) => edge.target === n.id));
+      return {
+        ...originalNode, // Retain existing properties
+        position: newPosition
+      };
+    });
 
-        if (childNodes.length > 0) {
-          if (isHorizontal) {
-            // Horizontal layout: Adjust vertically
-            const minY = Math.min(...childNodes.map((child) => child.position.y));
-            const maxY = Math.max(...childNodes.map((child) => child.position.y + (child.height || 50)));
-            const centerY = (minY + maxY) / 2;
+    // Align nodes that are within 50 units of each other along the same Y-axis
+    const range = 80; // The range within which nodes will be aligned
+    let lastAlignedY = null; // The Y position of the last aligned node
 
-            node.position.y = centerY - (node.height || 50) / 2; // Center parent vertically
-          } else {
-            // Vertical layout: Adjust horizontally
-            const minX = Math.min(...childNodes.map((child) => child.position.x));
-            const maxX = Math.max(...childNodes.map((child) => child.position.x + (child.width || 150)));
-            const centerX = (minX + maxX) / 2;
-
-            node.position.x = centerX - (node.width || 150) / 2; // Center parent horizontally
-          }
+    layoutedNodes.forEach((node, index) => {
+      if (lastAlignedY === null) {
+        // Set the first node's Y position as the base
+        lastAlignedY = node.position.y;
+      } else {
+        // Check if the current node's Y position is within range of the previous node
+        if (Math.abs(node.position.y - lastAlignedY) <= range) {
+          // If within range, align this node with the previous one
+          node.position.y = lastAlignedY;
+        } else {
+          // If not within range, update the last aligned Y to this node's position
+          lastAlignedY = node.position.y;
         }
       }
     });
 
+    // Map the layouted edges
     const layoutedEdges = layoutedGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id) // Retain existing edge properties
     }));
