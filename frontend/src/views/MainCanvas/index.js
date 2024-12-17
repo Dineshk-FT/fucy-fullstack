@@ -252,7 +252,6 @@ export default function MainCanvas() {
     handleClear();
   }, []);
 
-
   useEffect(() => {
     if (!isAttackTreeOpen) {
       const template = assets?.template;
@@ -696,7 +695,8 @@ export default function MainCanvas() {
             position: {
               x: contextMenu.x - 100,
               y: contextMenu.y - 50
-            }
+            },
+            selected: false
           };
 
           const nodetoPaste = [...nodes, newNode];
