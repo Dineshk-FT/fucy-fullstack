@@ -4,8 +4,8 @@ import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 
 const AttackNode = ({ data, isConnectable, type, id }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
-  const { nodes, setNodes } = useReactFlow();
-
+  const { setNodes } = useReactFlow();
+  // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
   const calculateFontSize = () => {
     const baseFontSize = 14; // Base font size
@@ -88,7 +88,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
           boxSizing: 'border-box',
           border: '1px solid #ccc',
           borderRadius: '4px',
-          backgroundColor: data?.style?.backgroundColor || '#fff',
+          backgroundColor: '#fff',
           overflow: 'hidden'
         }}
       >

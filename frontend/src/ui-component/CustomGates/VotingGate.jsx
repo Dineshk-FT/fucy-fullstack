@@ -31,18 +31,18 @@ export default function VotingGate(props) {
   };
   return (
     <div
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleDeleteFromCanvas();
-          }
-        }}
-        onContextMenu={handleopenModel}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{ position: 'relative', width: '100px', height: '100px' }}
-      >
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleDeleteFromCanvas();
+        }
+      }}
+      // onContextMenu={handleopenModel}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ position: 'relative', width: '100px', height: '100px' }}
+    >
       <CustomHandle type="target" position={Position.Top} style={{ top: '28px', opacity: 0 }} isConnectable={1} />
       <svg width="100px" height="100px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -58,38 +58,38 @@ export default function VotingGate(props) {
       <Handle type="source" position={Position.Bottom} style={{ bottom: '25px', opacity: 0 }} />
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}
       <div
-          className="delete-icon"
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              handleDeleteFromCanvas();
-            }
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
+        className="delete-icon"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
             handleDeleteFromCanvas();
-          }}
-          style={{
-            position: 'absolute',
-            width: '20px',
-            height: '19px',
-            top: '12px',
-            right: '0px',
-            background: '#f83e3e',
-            borderRadius: '50%',
-            fontSize: '0.8rem',
-            color: 'white',
-            cursor: 'pointer',
-            opacity: isHovered ? 1 : 0,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            transition: 'opacity 0.2s ease-in-out'
-          }}
-        >
-          x
-        </div>
+          }
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDeleteFromCanvas();
+        }}
+        style={{
+          position: 'absolute',
+          width: '20px',
+          height: '19px',
+          top: '12px',
+          right: '0px',
+          background: '#f83e3e',
+          borderRadius: '50%',
+          fontSize: '0.8rem',
+          color: 'white',
+          cursor: 'pointer',
+          opacity: isHovered ? 1 : 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          transition: 'opacity 0.2s ease-in-out'
+        }}
+      >
+        x
+      </div>
     </div>
   );
 }

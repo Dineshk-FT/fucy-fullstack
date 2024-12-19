@@ -19,6 +19,7 @@ import { style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 
 const elk = new ELK();
 
@@ -118,7 +119,10 @@ const selector = (state) => ({
   setEdges: state.setEdges,
   model: state.model,
   update: state.updateAttackScenario,
-  getAttackScenario: state.getAttackScenario
+  getAttackScenario: state.getAttackScenario,
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  addAttackScene: state.addAttackScene,
+  addcybersecurityScene: state.addcybersecurityScene
 });
 
 // Edge line styling
@@ -164,15 +168,30 @@ const nodetypes = {
 };
 
 export default function AttackBlock({ attackScene, color }) {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
-    useStore(selector, shallow);
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    addEdge,
+    setNodes,
+    setEdges,
+    model,
+    update,
+    getAttackScenario,
+    getCyberSecurityScenario,
+    addAttackScene,
+    addcybersecurityScene
+  } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
-
+  const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
   useEffect(() => {
     if (attackScene) {
@@ -191,21 +210,19 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
-
     setCopiedNode(node);
-
+    setSelectedNode(node);
     setContextMenu({
       visible: true,
       x: event.clientX,
       y: event.clientY,
-      options: ['Copy', 'Paste'],
+      options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
       node
     });
   };
 
   const handleCanvasContextMenu = (event) => {
     event.preventDefault();
-
     // Check if there's a copied node
     // const copiedNodes = JSON.parse(localStorage.getItem("copiedNode"));
     // if (copiedNodes && copiedNodes.length > 0) {
@@ -222,39 +239,68 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   const handleMenuOptionClick = (option) => {
-    if (option === 'Copy' && copiedNode) {
-      const nodeToCopy = [copiedNode];
-      // localStorage.removeItem('copiedNode'); // Clear any previous data
-      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
-      setCopiedNode(nodeToCopy);
-      notify('Node copied!', 'success');
-    }
+    switch (option) {
+      case 'Copy':
+        if (copiedNode) {
+          const nodeToCopy = [copiedNode];
+          setCopiedNode(nodeToCopy);
+          notify('Node copied!', 'success');
+        }
+        break;
+      case 'Paste':
+        if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+          copiedNode.forEach((node) => {
+            const newNode = {
+              ...node,
+              id: uid(),
+              position: {
+                x: contextMenu.x - 100,
+                y: contextMenu.y - 50
+              }
+            };
 
-    if (option === 'Paste') {
-      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
-
-      // Ensure copiedNodes is an array and contains data
-      // if (Array.isArray(copiedNodes) && copiedNodes.length > 0) {
-      //   copiedNodes.forEach((node) => {
-      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
-        copiedNode.forEach((node) => {
-          const newNode = {
-            ...node,
-            id: uid(),
-            position: {
-              x: contextMenu.x - 100,
-              y: contextMenu.y - 50
-            }
-          };
-
-          const nodetoPaste = [...nodes, newNode];
-          setNodes(nodetoPaste);
+            const nodetoPaste = [...nodes, newNode];
+            setNodes(nodetoPaste);
+          });
+        } else {
+          console.error('No valid copied node found');
+        }
+        break;
+      case 'Convert to attack':
+        const details = {
+          modelId: model?._id,
+          type: 'attack',
+          attackId: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addAttackScene(details).then((res) => {
+          if (!res.error) {
+            getAttackScenario(model?._id);
+            notify(res.message ?? 'converted to Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
         });
-
-        // localStorage.removeItem('copiedNode');
-      } else {
-        console.error('No valid copied node found');
-      }
+        break;
+      case 'convert to requirement':
+        const detail = {
+          modelId: model?._id,
+          type: 'cybersecurity_requirements',
+          id: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addcybersecurityScene(detail).then((res) => {
+          console.log('res', res);
+          if (!res.error) {
+            getCyberSecurityScenario(model?._id);
+            notify(res.message ?? 'converted to Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+        break;
+      default:
+        break;
     }
 
     setContextMenu({ visible: false, x: 0, y: 0 });
@@ -519,7 +565,7 @@ export default function AttackBlock({ attackScene, color }) {
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
             zIndex: 1000,
-            width: '90px', // Defined width for consistency
+            width: 'fit-content', // Defined width for consistency
             padding: '8px 0',
             fontFamily: 'Arial, sans-serif',
             fontSize: '12px'
@@ -543,6 +589,8 @@ export default function AttackBlock({ attackScene, color }) {
               <span style={{ marginRight: '8px' }}>
                 {option === 'Copy' && <ContentCopyIcon />}
                 {option === 'Paste' && <ContentPasteIcon />}
+                {option.includes('attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
+                {option.includes('requirement') && <img src={CybersecurityIcon} alt="attack" height="20px" width="20px" />}
               </span>
               {option}
             </div>

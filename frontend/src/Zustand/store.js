@@ -117,19 +117,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     subs: [
       {
         id: 51,
-        name: 'CyberSecurity Goals and Requirements',
-        subs: [
-          {
-            id: 511,
-            name: 'CyberSecurity Goals',
-            scenes: []
-          },
-          {
-            id: 512,
-            name: 'CyberSecurity Requirements',
-            scenes: []
-          }
-        ]
+        name: 'CyberSecurity Goals'
+      },
+      {
+        id: 53,
+        name: 'CyberSecurity Requirements'
       },
       {
         id: 52,
@@ -783,9 +775,61 @@ const useStore = createWithEqualityFn((set, get) => ({
       }));
     }
   },
+
+  getCyberSecurityScenario: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/cybersecurity`;
+    const res = await GET_CALL(modelId, url);
+
+    const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
+    const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
+    const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
+
+    if (!res?.error) {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              ...state.cybersecurity.subs[0],
+              ...goals
+            },
+            {
+              ...state.cybersecurity.subs[1],
+              ...requirements
+            },
+            {
+              ...state.cybersecurity.subs[2],
+              ...controls
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              id: 51,
+              name: 'CyberSecurity Goals'
+            },
+            {
+              id: 53,
+              name: 'CyberSecurity Requirements'
+            },
+            {
+              id: 52,
+              name: 'CyberSecurity Controls'
+            }
+          ]
+        }
+      }));
+    }
+  },
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
     const res = await GET_CALL(details, url);
+
     if (!res?.error) {
       set((state) => ({
         riskTreatment: {
@@ -860,6 +904,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+
+  updateRiskTreatment: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/riskDetAndTreat`;
+    const res = await PATCH_CALL(details, url);
     console.log('res', res);
     return res;
   },
@@ -901,6 +952,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   addAttackScene: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/attacks`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
+
+  addcybersecurityScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/cybersecurity`;
     const res = await ADD_CALL(details, url);
     return res;
   },
@@ -1063,13 +1120,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  isNodePasted: true, 
+  isNodePasted: true,
 
   // Function to toggle or set `isNodePasted`
-setIsNodePasted: (value) => 
-  set(() => {
-    return { isNodePasted: value };
-  }),
+  setIsNodePasted: (value) =>
+    set(() => {
+      return { isNodePasted: value };
+    })
 }));
 
 export default useStore;

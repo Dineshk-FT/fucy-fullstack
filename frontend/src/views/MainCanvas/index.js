@@ -61,6 +61,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import CyberRequirementTable from '../../ui-component/Table/CyberRequirementTable';
 
 const elk = new ELK();
 
@@ -112,8 +113,7 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   model: state.model,
-  getModels: state.getModels,
-  getModelById: state.getModelById,
+
   update: state.updateAssets,
   getAssets: state.getAssets,
   getGroupedNodes: state.getGroupedNodes,
@@ -194,9 +194,7 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
-    getModelById,
     model,
-    getModels,
     getGroupedNodes,
     reactFlowInstance,
     setReactFlowInstance,
@@ -209,7 +207,7 @@ export default function MainCanvas() {
     update,
     getAssets,
     isNodePasted,
-    setIsNodePasted,
+    setIsNodePasted
   } = useStore(selector, shallow);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -724,7 +722,7 @@ export default function MainCanvas() {
   if (isTsTableOpen) return <Tstable />;
   if (isAttackTreeOpen) return <AttackTree model={model} />;
   if (isCyberBlockOpen) return <CyberSecurityBlock />;
-  if (isCyberTableOpen) return <CyberSecurityTable />;
+  if (isCyberTableOpen) return <CyberRequirementTable />;
   if (isAttackTableOpen) return <AttackTreeTable />;
   if (isRiskTableOpen) return <RiskTreatmentTable />;
 

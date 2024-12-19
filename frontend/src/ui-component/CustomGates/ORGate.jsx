@@ -39,7 +39,7 @@ export default function ORGate(props) {
             handleDeleteFromCanvas();
           }
         }}
-        onContextMenu={handleopenModal}
+        // onContextMenu={handleopenModal}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{ position: 'relative', width: '100px', height: '100px' }}
