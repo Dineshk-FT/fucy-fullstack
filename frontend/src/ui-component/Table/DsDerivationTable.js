@@ -93,16 +93,16 @@ export default function DsDerivationTable() {
 
   const handleSearch = (e) => {
     const { value } = e.target;
+    // console.log('value', value);
+
     if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw.task.toLowerCase().includes(value)) {
-          return rw;
-        }
-      });
+      const filterValue = rows.filter((rw) => rw['Task/Requirement'].toLowerCase().includes(value.toLowerCase()));
+      // console.log('filterValue', filterValue);
       setFiltered(filterValue);
     } else {
       setFiltered(rows);
     }
+
     setSearchTerm(value);
   };
 
@@ -123,26 +123,26 @@ export default function DsDerivationTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Get the starting width of the column
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Set a minimum width of 50px
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };  
+  };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (

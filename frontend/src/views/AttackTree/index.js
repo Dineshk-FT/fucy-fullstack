@@ -10,9 +10,16 @@ import Levels from '../AttackSceneCanvas/Levels';
 import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import ColorTheme from '../../store/ColorTheme';
+import useStore from '../../Zustand/store';
 
+const selector = (state) => ({
+  getAssets: state.getAssets,
+  model: state.model,
+  setNodes: state.setNodes
+});
 const AttackTree = () => {
   const color = ColorTheme();
+  const { getAssets, model, setNodes } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -20,7 +27,9 @@ const AttackTree = () => {
   const [sidebarWidth, setSidebarWidth] = useState(750); // Initial width of the sidebar
 
   const handleBack = () => {
+    setNodes([]);
     dispatch(closeAll());
+    getAssets(model?._id);
   };
 
   // Update the width when resizing

@@ -151,7 +151,8 @@ const selector = (state) => ({
   layouts: state.layouts,
   clickedItem: state.clickedItem,
   setClickedItem: state.setClickedItem,
-  updateModelName: state.updateModelName
+  updateModelName: state.updateModelName,
+  setNodes: state.setNodes
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -183,7 +184,8 @@ const BrowserCard = () => {
     layouts,
     clickedItem,
     setClickedItem,
-    updateModelName
+    updateModelName,
+    setNodes
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -298,6 +300,7 @@ const BrowserCard = () => {
   };
 
   const handleOpenAttackTree = (e, scene, name) => {
+    setNodes([]);
     e.stopPropagation();
     if (name === 'Attack Trees') {
       dispatch(AttackTreePageOpen());
