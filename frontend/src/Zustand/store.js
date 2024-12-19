@@ -196,6 +196,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   scenerio: {},
   component: [],
+  originalNodes: [],
 
   setClickedItem: (item) =>
     set((state) => {
@@ -635,6 +636,9 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
     // console.log('res', res);
+    set({
+      originalNodes: res.Details
+    })
     if (!res.error) {
       set((state) => ({
         assets: {

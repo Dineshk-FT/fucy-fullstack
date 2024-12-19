@@ -20,15 +20,15 @@ export default function ORGate(props) {
     setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
 
-  const handleopenModal = (e) => {
-    e.preventDefault();
-    // console.log('props', props)
-    setOpen(true);
-  };
+  // const handleopenModal = (e) => {
+  //   e.preventDefault();
+  //   // console.log('props', props)
+  //   setOpen(true);
+  // };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
+  // const handleClose = () => {
+  //   setOpen(false);
+  // };
   return (
     <>
       <div
@@ -39,7 +39,7 @@ export default function ORGate(props) {
             handleDeleteFromCanvas();
           }
         }}
-        onContextMenu={handleopenModal}
+        // onContextMenu={handleopenModal}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{ position: 'relative', width: '100px', height: '100px' }}
@@ -56,7 +56,7 @@ export default function ORGate(props) {
           />
         </svg>
         <Handle type="source" position={Position.Bottom} style={{ bottom: '40px', opacity: 0 }} />
-        {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}
+        {/* {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />} */}
         <div
           className="delete-icon"
           role="button"

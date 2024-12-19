@@ -52,6 +52,7 @@ import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
+import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 
 const imageComponents = {
   AttackIcon,
@@ -193,6 +194,15 @@ const BrowserCard = () => {
   const [subName, setSubName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
+  const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+
+  const handleOpenDocumentDialog = () => {
+    setOpenDocumentDialog(true);
+  };
+
+  const handleCloseDocumentDialog = () => {
+    setOpenDocumentDialog(false);
+  };
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -554,6 +564,17 @@ const BrowserCard = () => {
           })
         );
 
+      case 'documents':
+        return renderTreeItem(
+          data,
+          (e) => {
+            e.stopPropagation();
+            handleOpenDocumentDialog(); 
+          },
+          null,
+          null
+        );
+
       default:
         return renderTreeItem(
           data,
@@ -575,6 +596,8 @@ const BrowserCard = () => {
 
   return (
     <>
+      <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
+
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
