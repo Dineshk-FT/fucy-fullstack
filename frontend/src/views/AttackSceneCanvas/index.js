@@ -19,6 +19,7 @@ import { style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 
 const elk = new ELK();
 
@@ -32,7 +33,7 @@ const elkOptions = {
 };
 
 const getLayoutedElements = async (nodes, edges, options = {}) => {
-  const isHorizontal = options?.['elk.direction'] === 'RIGHT';
+  // Create the graph structure with children nodes and edges
   const graph = {
     id: 'root',
     layoutOptions: options,
@@ -49,41 +50,46 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
   };
 
   try {
+    // Perform the layout using ELK
     const layoutedGraph = await elk.layout(graph);
 
-    // Map the layouted nodes
-    const layoutedNodes = layoutedGraph.children.map((node) => ({
-      ...nodes.find((n) => n.id === node.id), // Retain existing properties
-      position: { x: node.x, y: node.y }
-    }));
+    // Map the layouted nodes, applying small adjustments based on the ELK layout
+    const layoutedNodes = layoutedGraph.children.map((node) => {
+      const originalNode = nodes.find((n) => n.id === node.id);
 
-    // Adjust parent node positions
-    layoutedNodes.forEach((node) => {
-      const childrenEdges = edges.filter((edge) => edge.source === node.id); // Find edges where this node is a parent
+      // Apply small adjustments relative to the original positions
+      const newPosition = {
+        x: originalNode.position.x + (node.x - originalNode.position.x) * 0.1, // Apply small adjustments to x
+        y: originalNode.position.y + (node.y - originalNode.position.y) * 0.1 // Apply small adjustments to y
+      };
 
-      if (childrenEdges.length > 0) {
-        const childNodes = layoutedNodes.filter((n) => childrenEdges.some((edge) => edge.target === n.id));
+      return {
+        ...originalNode, // Retain existing properties
+        position: newPosition
+      };
+    });
 
-        if (childNodes.length > 0) {
-          if (isHorizontal) {
-            // Horizontal layout: Adjust vertically
-            const minY = Math.min(...childNodes.map((child) => child.position.y));
-            const maxY = Math.max(...childNodes.map((child) => child.position.y + (child.height || 50)));
-            const centerY = (minY + maxY) / 2;
+    // Align nodes that are within 50 units of each other along the same Y-axis
+    const range = 80; // The range within which nodes will be aligned
+    let lastAlignedY = null; // The Y position of the last aligned node
 
-            node.position.y = centerY - (node.height || 50) / 2; // Center parent vertically
-          } else {
-            // Vertical layout: Adjust horizontally
-            const minX = Math.min(...childNodes.map((child) => child.position.x));
-            const maxX = Math.max(...childNodes.map((child) => child.position.x + (child.width || 150)));
-            const centerX = (minX + maxX) / 2;
-
-            node.position.x = centerX - (node.width || 150) / 2; // Center parent horizontally
-          }
+    layoutedNodes.forEach((node, index) => {
+      if (lastAlignedY === null) {
+        // Set the first node's Y position as the base
+        lastAlignedY = node.position.y;
+      } else {
+        // Check if the current node's Y position is within range of the previous node
+        if (Math.abs(node.position.y - lastAlignedY) <= range) {
+          // If within range, align this node with the previous one
+          node.position.y = lastAlignedY;
+        } else {
+          // If not within range, update the last aligned Y to this node's position
+          lastAlignedY = node.position.y;
         }
       }
     });
 
+    // Map the layouted edges
     const layoutedEdges = layoutedGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id) // Retain existing edge properties
     }));
@@ -113,7 +119,10 @@ const selector = (state) => ({
   setEdges: state.setEdges,
   model: state.model,
   update: state.updateAttackScenario,
-  getAttackScenario: state.getAttackScenario
+  getAttackScenario: state.getAttackScenario,
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  addAttackScene: state.addAttackScene,
+  addcybersecurityScene: state.addcybersecurityScene
 });
 
 // Edge line styling
@@ -159,15 +168,30 @@ const nodetypes = {
 };
 
 export default function AttackBlock({ attackScene, color }) {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addEdge, setNodes, setEdges, model, update, getAttackScenario } =
-    useStore(selector, shallow);
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    addEdge,
+    setNodes,
+    setEdges,
+    model,
+    update,
+    getAttackScenario,
+    getCyberSecurityScenario,
+    addAttackScene,
+    addcybersecurityScene
+  } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
-
+  const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
   useEffect(() => {
     if (attackScene) {
@@ -186,21 +210,19 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
-
     setCopiedNode(node);
-
+    setSelectedNode(node);
     setContextMenu({
       visible: true,
       x: event.clientX,
       y: event.clientY,
-      options: ['Copy', 'Paste'],
+      options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
       node
     });
   };
 
   const handleCanvasContextMenu = (event) => {
     event.preventDefault();
-
     // Check if there's a copied node
     // const copiedNodes = JSON.parse(localStorage.getItem("copiedNode"));
     // if (copiedNodes && copiedNodes.length > 0) {
@@ -217,39 +239,68 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   const handleMenuOptionClick = (option) => {
-    if (option === 'Copy' && copiedNode) {
-      const nodeToCopy = [copiedNode];
-      // localStorage.removeItem('copiedNode'); // Clear any previous data
-      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
-      setCopiedNode(nodeToCopy);
-      notify('Node copied!', 'success');
-    }
+    switch (option) {
+      case 'Copy':
+        if (copiedNode) {
+          const nodeToCopy = [copiedNode];
+          setCopiedNode(nodeToCopy);
+          notify('Node copied!', 'success');
+        }
+        break;
+      case 'Paste':
+        if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+          copiedNode.forEach((node) => {
+            const newNode = {
+              ...node,
+              id: uid(),
+              position: {
+                x: contextMenu.x - 100,
+                y: contextMenu.y - 50
+              }
+            };
 
-    if (option === 'Paste') {
-      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
-
-      // Ensure copiedNodes is an array and contains data
-      // if (Array.isArray(copiedNodes) && copiedNodes.length > 0) {
-      //   copiedNodes.forEach((node) => {
-      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
-        copiedNode.forEach((node) => {
-          const newNode = {
-            ...node,
-            id: uid(),
-            position: {
-              x: contextMenu.x - 100,
-              y: contextMenu.y - 50
-            }
-          };
-
-          const nodetoPaste = [...nodes, newNode];
-          setNodes(nodetoPaste);
+            const nodetoPaste = [...nodes, newNode];
+            setNodes(nodetoPaste);
+          });
+        } else {
+          console.error('No valid copied node found');
+        }
+        break;
+      case 'Convert to attack':
+        const details = {
+          modelId: model?._id,
+          type: 'attack',
+          attackId: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addAttackScene(details).then((res) => {
+          if (!res.error) {
+            getAttackScenario(model?._id);
+            notify(res.message ?? 'converted to Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
         });
-
-        // localStorage.removeItem('copiedNode');
-      } else {
-        console.error('No valid copied node found');
-      }
+        break;
+      case 'convert to requirement':
+        const detail = {
+          modelId: model?._id,
+          type: 'cybersecurity_requirements',
+          id: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addcybersecurityScene(detail).then((res) => {
+          console.log('res', res);
+          if (!res.error) {
+            getCyberSecurityScenario(model?._id);
+            notify(res.message ?? 'converted to Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+        break;
+      default:
+        break;
     }
 
     setContextMenu({ visible: false, x: 0, y: 0 });
@@ -514,7 +565,7 @@ export default function AttackBlock({ attackScene, color }) {
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
             zIndex: 1000,
-            width: '90px', // Defined width for consistency
+            width: 'fit-content', // Defined width for consistency
             padding: '8px 0',
             fontFamily: 'Arial, sans-serif',
             fontSize: '12px'
@@ -538,6 +589,8 @@ export default function AttackBlock({ attackScene, color }) {
               <span style={{ marginRight: '8px' }}>
                 {option === 'Copy' && <ContentCopyIcon />}
                 {option === 'Paste' && <ContentPasteIcon />}
+                {option.includes('attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
+                {option.includes('requirement') && <img src={CybersecurityIcon} alt="attack" height="20px" width="20px" />}
               </span>
               {option}
             </div>

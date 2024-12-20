@@ -45,6 +45,7 @@ import {
   DsTableOpen,
   setAttackScene,
   TsTableOpen,
+  cyberTableOpen,
   riskTreatmentTableOpen
 } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
@@ -142,6 +143,7 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   attackScenarios: state.attackScenarios,
   getRiskTreatment: state.getRiskTreatment,
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
   cybersecurity: state.cybersecurity,
   systemDesign: state.systemDesign,
   catalog: state.catalog,
@@ -174,6 +176,7 @@ const BrowserCard = () => {
     getThreatScenario,
     getAttackScenario,
     getRiskTreatment,
+    getCyberSecurityScenario,
     attackScenarios,
     cybersecurity,
     systemDesign,
@@ -244,7 +247,7 @@ const BrowserCard = () => {
     { name: 'threatScenarios', scene: threatScenarios },
     { name: 'attackScenarios', scene: attackScenarios },
     { name: 'cybersecurity', scene: cybersecurity },
-    { name: 'systemDesign', scene: systemDesign },
+    // { name: 'systemDesign', scene: systemDesign },
     { name: 'catalog', scene: catalog },
     { name: 'riskTreatment', scene: riskTreatment },
     { name: 'documents', scene: documents },
@@ -268,12 +271,14 @@ const BrowserCard = () => {
       damage: getDamageScenarios,
       threat: getThreatScenario,
       attack: getAttackScenario,
-      risks: getRiskTreatment
+      risks: getRiskTreatment,
+      cybersecurity: getCyberSecurityScenario
     };
     await get_api[name](ModelId);
   };
 
   const handleOpenTable = (e, id, name) => {
+    // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
     switch (true) {
@@ -294,6 +299,9 @@ const BrowserCard = () => {
         dispatch(riskTreatmentTableOpen());
         dispatch(setTitle(name));
         break;
+      case name === 'CyberSecurity Requirements':
+        dispatch(cyberTableOpen());
+        dispatch(setTitle(name));
       default:
         break;
     }
@@ -384,8 +392,8 @@ const BrowserCard = () => {
       <div className={classes.labelRoot}>
         {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
         <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+          {index && `${index}. `}
           {name}
-          {index && `- [${index}]`}
         </Typography>
       </div>
     );
@@ -502,7 +510,14 @@ const BrowserCard = () => {
                         nodeDetail.node
                       } for Damage Scene ${detail?.id}`;
 
-                      const Details = { label, type: 'default', dragged: true, nodeId: nodeDetail.nodeId, threatId: prop.id };
+                      const Details = {
+                        label,
+                        type: 'default',
+                        dragged: true,
+                        nodeId: nodeDetail.nodeId,
+                        threatId: prop.id,
+                        damageId: detail?.rowId
+                      };
 
                       return (
                         <DraggableTreeItem
@@ -563,6 +578,17 @@ const BrowserCard = () => {
                 nodeId={derivation.id}
                 label={getLabel('TopicIcon', derivation.name)}
               />
+            ));
+          })
+        );
+      case 'cybersecurity':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.scenes?.map((scene) => (
+              <TreeItem onClick={(e) => e.stopPropagation()} key={scene.ID} nodeId={scene.ID} label={getLabel('TopicIcon', scene.Name)} />
             ));
           })
         );

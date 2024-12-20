@@ -12,12 +12,40 @@ import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Checkbox, FormControlLabel, FormGroup, Radio } from '@mui/material';
 
-export default function SelectAttacks({ details, open, handleClose, selectedScene, setSelectedScene }) {
-  const handleChange = (e, detail) => {};
-
+export default function SelectAttacks({
+  details,
+  open,
+  handleClose,
+  selectedScene,
+  setSelectedScene,
+  updateRiskTreatment,
+  selectedRow,
+  getRiskTreatment,
+  model
+}) {
+  const handleChange = (scene) => {
+    setSelectedScene(scene);
+  };
+  // console.log('selectedScene', selectedScene);
   // console.log('selectedRow', selectedRow);
   //   console.log('details', details);
-  const handleClick = () => {};
+  const handleClick = () => {
+    const details = {
+      attackTreeId: selectedScene?.ID,
+      threatId: selectedRow.ID,
+      'model-id': model?._id
+    };
+
+    // console.log('details', details);
+    updateRiskTreatment(details)
+      .then((res) => {
+        if (res) {
+          handleClose();
+          getRiskTreatment(model?._id);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
 
   return (
     <React.Fragment>
@@ -61,9 +89,7 @@ export default function SelectAttacks({ details, open, handleClose, selectedScen
                               color: '#000'
                             }
                           }}
-                          control={
-                            <Radio size="small" checked={selectedScene === scene?.Name} onChange={() => setSelectedScene(scene?.Name)} />
-                          }
+                          control={<Radio size="small" checked={selectedScene?.ID === scene?.ID} onChange={() => handleChange(scene)} />}
                           label={scene?.Name}
                         />
                       </FormGroup>

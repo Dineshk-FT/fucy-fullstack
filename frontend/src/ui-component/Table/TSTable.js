@@ -154,8 +154,8 @@ export default function Tstable() {
                 ID: prop?.id,
                 rowId: detail?.rowId,
                 nodeId: nodedetail?.nodeId,
-                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node} for Damage Scene ${detail?.id}`,
-                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} for Damage Scene ${detail?.id}`,
+                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node}`,
+                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node}`,
                 losses: [],
                 'Damage Scenarios': prop?.damage_scenes ?? [],
                 'Losses of Cybersecurity Properties': prop?.name
