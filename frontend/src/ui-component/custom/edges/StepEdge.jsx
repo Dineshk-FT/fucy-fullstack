@@ -136,8 +136,8 @@ export default function StepEdge({
     <>
       <BaseEdge
         path={edgePath}
-        markerEnd={isMarkerVisible.end && markerEnd}
-        markerStart={isMarkerVisible.start && markerStart}
+        markerEnd={isMarkerVisible.end ? markerEnd : undefined} 
+        markerStart={isMarkerVisible.start ? markerStart : undefined}
         style={style}
       />
       <EdgeLabelRenderer>

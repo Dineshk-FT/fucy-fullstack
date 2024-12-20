@@ -771,8 +771,8 @@ export default function MainCanvas() {
             connectionMode="loose"
             onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
-            defaultPosition={[0, 0]}
-            defaultZoom={1}
+            defaultposition={[0, 0]}
+            defaultzoom={1}
             onNodeContextMenu={handleNodeContextMenu}
             // onContextMenu={createGroup}
             // onNodeContextMenu={handleSidebarOpen}
