@@ -62,7 +62,7 @@ const selector = (state) => ({
 
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open, isclose, color, drawerOpen }) => {
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(({ theme, open, isclose, color, drawerOpen }) => {
   // console.log('color', color)
   // console.log('isclose', isclose)
   return {
@@ -72,7 +72,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
     paddingLeft: !drawerOpen ? '2rem' : 'auto',
     // border: '1px solid gray',
     maxWidth: 'auto', // minHeight:'inherit',
-    minHeight: isclose == true ? `100svh` : `93svh`,
+    minHeight: isclose ? `100svh` : `93svh`,
     // height:!isNavbarClose ? `80svh`:`auto`,
     marginRight: 0,
     ...(!open && {
@@ -85,7 +85,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
       [theme.breakpoints.up('md')]: {
         // marginLeft: -drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
-        marginTop: isclose == true ? `0` : navbarHeight
+        marginTop: isclose ? `0` : navbarHeight
       },
       [theme.breakpoints.down('md')]: {
         // marginLeft: '20px',
