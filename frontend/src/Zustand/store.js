@@ -116,23 +116,15 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'CybersecurityIcon',
     subs: [
       {
-        id: '51',
-        name: 'CyberSecurity Goals and Requirements',
-        subs: [
-          {
-            id: '511',
-            name: 'CyberSecurity Goals',
-            scenes: []
-          },
-          {
-            id: '512',
-            name: 'CyberSecurity Requirements',
-            scenes: []
-          }
-        ]
+        id: 51,
+        name: 'CyberSecurity Goals'
       },
       {
-        id: '52',
+        id: 53,
+        name: 'CyberSecurity Requirements'
+      },
+      {
+        id: 52,
         name: 'CyberSecurity Controls'
       }
     ]
@@ -787,6 +779,58 @@ const useStore = createWithEqualityFn((set, get) => ({
       }));
     }
   },
+
+  getCyberSecurityScenario: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/cybersecurity`;
+    const res = await GET_CALL(modelId, url);
+
+    const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
+    const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
+    const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
+
+    if (!res?.error) {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              ...state.cybersecurity.subs[0],
+              ...goals
+            },
+            {
+              ...state.cybersecurity.subs[1],
+              ...requirements
+            },
+            {
+              ...state.cybersecurity.subs[2],
+              ...controls
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              id: 51,
+              name: 'CyberSecurity Goals'
+            },
+            {
+              id: 53,
+              name: 'CyberSecurity Requirements'
+            },
+            {
+              id: 52,
+              name: 'CyberSecurity Controls'
+            }
+          ]
+        }
+      }));
+    }
+  },
+
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
     const res = await GET_CALL(details, url);
@@ -909,6 +953,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
+  addcybersecurityScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/cybersecurity`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   addRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/riskDetAndTreat`;
     const res = await ADD_CALL(details, url);

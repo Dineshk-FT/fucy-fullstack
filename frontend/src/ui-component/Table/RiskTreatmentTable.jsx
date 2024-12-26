@@ -275,7 +275,8 @@ export default function RiskTreatmentTable() {
                       </span>
                     </span>
                   ) : (
-                    <InputLabel>Select attack path</InputLabel>
+                    // <InputLabel>Select attack path</InputLabel>
+                    <InputLabel> - </InputLabel>
                   )}
                 </StyledTableCell>
               );
@@ -331,7 +332,7 @@ export default function RiskTreatmentTable() {
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>{title} Table</Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={3} my={1.5}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
