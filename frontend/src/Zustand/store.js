@@ -638,7 +638,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     set({
       originalNodes: res.Details
-    })
+    });
     if (!res.error) {
       set((state) => ({
         assets: {
@@ -797,7 +797,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               ...state.riskTreatment.subs[0],
-              ...res
+              Details: [...res]
             }
           ]
         }
@@ -1067,13 +1067,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  isNodePasted: true, 
+  isNodePasted: true,
 
   // Function to toggle or set `isNodePasted`
-setIsNodePasted: (value) => 
-  set(() => {
-    return { isNodePasted: value };
-  }),
+  setIsNodePasted: (value) =>
+    set(() => {
+      return { isNodePasted: value };
+    })
 }));
 
 export default useStore;
