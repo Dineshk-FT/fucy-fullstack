@@ -193,6 +193,7 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
+
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
@@ -239,6 +240,7 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   const handleMenuOptionClick = (option) => {
+    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
     switch (option) {
       case 'Copy':
         if (copiedNode) {
@@ -269,6 +271,7 @@ export default function AttackBlock({ attackScene, color }) {
       case 'Convert to attack':
         const details = {
           modelId: model?._id,
+          threatId: threatId,
           type: 'attack',
           attackId: selectedNode?.id,
           name: selectedNode?.data?.label
@@ -285,12 +288,13 @@ export default function AttackBlock({ attackScene, color }) {
       case 'convert to requirement':
         const detail = {
           modelId: model?._id,
+          threatId: threatId,
           type: 'cybersecurity_requirements',
           id: selectedNode?.id,
           name: selectedNode?.data?.label
         };
         addcybersecurityScene(detail).then((res) => {
-          console.log('res', res);
+          // console.log('res', res);
           if (!res.error) {
             getCyberSecurityScenario(model?._id);
             notify(res.message ?? 'converted to Attack', 'success');
@@ -314,6 +318,7 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleConnection = (draggedNode) => {
     const { nodes, edges, setEdges, setNodes } = useStore.getState(); // Access Zustand state
+
     const overlappingNode = nodes.find((node) => {
       if (node.id === draggedNode.id) return false; // Skip itself
 
@@ -333,14 +338,14 @@ export default function AttackBlock({ attackScene, color }) {
     });
 
     if (overlappingNode) {
-      // Flexible condition for default or Event type nodes
+      // Updated condition for default or Event type nodes
       let condition = true;
       if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
         condition =
           (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
           (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event') ||
-          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate'));
+          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate')) ||
+          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event'); // Added this case
       }
 
       // Check if the draggedNode's type is already connected
@@ -388,6 +393,37 @@ export default function AttackBlock({ attackScene, color }) {
         // Update nodes in Zustand store
         setNodes(updatedNodes);
       }
+    } else {
+      // Remove edge if moved from some distance (150 in x or y)
+      const connectedEdge = edges.find((edge) => edge.target === draggedNode.id);
+      if (connectedEdge) {
+        const sourceNode = nodes.find((node) => node.id === connectedEdge.source);
+        if (sourceNode) {
+          const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
+          const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
+
+          if (distanceX > 200 || distanceY > 200) {
+            // Remove edge and connection
+            const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
+            setEdges(updatedEdges);
+
+            const updatedNodes = nodes.map((node) => {
+              if (node.data?.connections) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    connections: node.data.connections.filter((connection) => connection.id !== draggedNode.id)
+                  }
+                };
+              }
+              return node;
+            });
+
+            setNodes(updatedNodes);
+          }
+        }
+      }
     }
   };
 
@@ -405,11 +441,6 @@ export default function AttackBlock({ attackScene, color }) {
         }
       }
 
-      const newId = uid();
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY
-      });
       const filtered = nodes.filter((node) => node.type == 'default');
       if (filtered.length == 1 && parsedNode.type === 'default') {
         return;
@@ -482,17 +513,22 @@ export default function AttackBlock({ attackScene, color }) {
       nodes: nodes,
       edges: edges
     };
+
+    // Extract threatId from nodes with type: "default"
+    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
       id: attackScene?.ID,
-      templates: JSON.stringify(template)
+      templates: JSON.stringify(template),
+      threatId: threatId
     };
+
     update(details)
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            notify(attackScene?.templates ? 'Updated Successfully' : 'Added Successfully', 'success');
+            notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
           }, 500);
         }
@@ -504,7 +540,7 @@ export default function AttackBlock({ attackScene, color }) {
       });
   };
 
-  const onNodeDragStop = (event, draggedNode) => {
+  const onNodeDrag = (event, draggedNode) => {
     // Check for overlapping nodes
 
     handleConnection(draggedNode);
@@ -534,7 +570,8 @@ export default function AttackBlock({ attackScene, color }) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
           }}
-          onNodeDragStop={onNodeDragStop}
+          onNodeDrag={onNodeDrag}
+          // onNodeDragStop={onNodeDragStop}
           onNodeContextMenu={handleNodeContextMenu}
           fitView
         >

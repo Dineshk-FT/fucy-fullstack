@@ -1,12 +1,41 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
+import useStore from '../../../Zustand/store';
+import { RatingColor } from '../../Table/constraints';
 
+const selector = (state) => ({
+  nodes: state.nodes
+});
 const AttackNode = ({ data, isConnectable, type, id }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
+  const { nodes } = useStore(selector);
   const { setNodes } = useReactFlow();
   // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
+  // console.log('nodes', nodes);
+  const getHighestRating = (nodes) => {
+    const priorityOrder = {
+      'Very Low': 1,
+      Low: 2,
+      Medium: 3,
+      High: 4
+    };
+
+    // Extract all ratings and find the highest
+    const ratings = nodes
+      .map((node) => node?.data?.rating) // Get all ratings
+      .filter(Boolean); // Remove undefined or null ratings
+
+    const highestRating = ratings.reduce((highest, current) => {
+      return priorityOrder[current] > priorityOrder[highest] ? current : highest;
+    }, 'Very Low'); // Default to 'Very Low' if no ratings exist
+
+    return highestRating;
+  };
+
+  const borderColor = RatingColor(getHighestRating(nodes));
+
   const calculateFontSize = () => {
     const baseFontSize = 14; // Base font size
     const maxFontSize = 24; // Maximum font size
@@ -86,7 +115,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
           height: `${nodeDimensions.height}px`,
           padding: '8px',
           boxSizing: 'border-box',
-          border: '1px solid #ccc',
+          border: `2px solid ${borderColor ?? '#ccc'}`,
           borderRadius: '4px',
           backgroundColor: '#fff',
           overflow: 'hidden'

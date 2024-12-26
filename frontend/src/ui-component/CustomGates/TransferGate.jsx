@@ -97,7 +97,7 @@ export default function TransferGate(props) {
             />
           </svg>
         </div>
-        <Handle type="source" position={Position.Bottom} style={{ bottom: '40px', opacity: 0 }} />
+        <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
       </div>
       {/* {isLevelOpen && <Levels label={data?.label} id={id}/>} */}
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}

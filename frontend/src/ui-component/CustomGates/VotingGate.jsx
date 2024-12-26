@@ -55,7 +55,7 @@ export default function VotingGate(props) {
 
         <path fill="none" stroke={colorPickerTab(props?.data?.status)} strokeWidth="6" d="M105 407 L350 165" />
       </svg>
-      <Handle type="source" position={Position.Bottom} style={{ bottom: '25px', opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}
       <div
         className="delete-icon"

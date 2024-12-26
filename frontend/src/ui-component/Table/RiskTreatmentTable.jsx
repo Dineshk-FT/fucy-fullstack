@@ -265,7 +265,8 @@ export default function RiskTreatmentTable() {
 
             case item.name === 'Attack Tree or Attack Path(s)':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
+                // onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}
+                <StyledTableCell component="th" scope="row">
                   {row[item.name] !== null ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <img src={AttackIcon} alt="damage" height="10px" width="10px" />

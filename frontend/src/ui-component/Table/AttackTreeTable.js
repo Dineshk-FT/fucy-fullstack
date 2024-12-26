@@ -17,7 +17,8 @@ import {
   styled,
   Tooltip,
   TablePagination,
-  ClickAwayListener
+  ClickAwayListener,
+  InputLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
@@ -132,11 +133,17 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
           '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
         }}
       >
+        {!row[item.name] && (
+          <InputLabel id="demo-simple-select-label" shrink={false}>
+            Select Value
+          </InputLabel>
+        )}
         <Select
           ref={selectRef}
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           value={row[item.name]}
+          placeholder="Select value"
           onChange={(e) => handleChange(e, row)}
           name={name}
           open={open}
@@ -208,7 +215,7 @@ export default function AttackTreeTable() {
 
   const getRating = (value) => {
     if (value >= 0 && value <= 13) {
-      return 'Low';
+      return 'High';
     } else if (value >= 14 && value <= 19) {
       return 'Medium';
     } else if (value >= 20 && value <= 24) {
@@ -217,6 +224,7 @@ export default function AttackTreeTable() {
       return 'Very low';
     }
   };
+
   // console.log('rows', rows);
   const handleChange = (e, row) => {
     e.stopPropagation();

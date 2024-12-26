@@ -1,22 +1,24 @@
 /*eslint-disable*/
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
+import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
   getAttackScenario: state.getAttackScenario,
   model: state.model,
   attacks: state.attackScenarios['subs'][0],
+  requirements: state.cybersecurity['subs'][1],
   addAttackScene: state.addAttackScene,
-  nodes: state.nodes,
+  nodes: state.nodes
 });
 
 export default function Event(props) {
-  const { nodes, update, model, addAttackScene, getAttackScenario, attacks } = useStore(selector, shallow);
+  const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const [inputValue, setInputValue] = useState(props.data.label);
   const [openDialog, setOpenDialog] = useState(false);
@@ -26,6 +28,30 @@ export default function Event(props) {
   const handleDeleteFromCanvas = () => {
     setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
+  // console.log('nodes', nodes);
+
+  const updateNodeRating = useCallback(() => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
+        if (attack) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              rating: attack['Attack Feasibilities Rating'] // Update rating dynamically
+            }
+          };
+        }
+        return node;
+      })
+    );
+  }, [attacks, setNodes]);
+
+  // Call this function after rendering or whenever attacks data changes
+  useEffect(() => {
+    updateNodeRating();
+  }, [updateNodeRating]);
 
   // Open the dialog on double-click
   const handleOpenDialog = (e) => {
@@ -42,7 +68,7 @@ export default function Event(props) {
       modelId: model?._id,
       type: 'attack',
       attackId: props.id,
-      name: inputValue,
+      name: inputValue
     };
     addAttackScene(details).then((res) => {
       if (res) {
@@ -51,6 +77,12 @@ export default function Event(props) {
       }
     });
   };
+
+  const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks]);
+  const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements]);
+  function check(scene) {
+    return scene.ID === props.id || scene.ID === props.data.nodeId;
+  }
 
   const getBgColor = useCallback(() => {
     const color = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
@@ -63,6 +95,8 @@ export default function Event(props) {
 
   const bgColor = getBgColor();
 
+  // console.log('bgColor', bgColor);
+  // console.log('props.data.style', props.data.style);
   // Calculate font size dynamically based on node dimensions
   const calculateFontSize = () => {
     const baseFontSize = 14; // Base font size
@@ -75,7 +109,7 @@ export default function Event(props) {
   return (
     <>
       <NodeResizer
-        lineStyle={{ backgroundColor: bgColor, borderWidth: '2px' }}
+        lineStyle={{ backgroundColor: bgColor ?? 'gray', borderWidth: '2px' }}
         minWidth={100}
         minHeight={60}
         onResize={(event, params) => {
@@ -84,11 +118,12 @@ export default function Event(props) {
       />
       <Handle type="target" position={Position.Top} />
       <Box
-        onDoubleClick={handleOpenDialog}
+        // onDoubleClick={handleOpenDialog}
         display="flex"
         alignItems="center"
         justifyContent="center"
         sx={{
+          // ...props.data.style,
           p: 2,
           color: 'gray',
           position: 'relative',
@@ -97,11 +132,12 @@ export default function Event(props) {
           maxWidth: '100%',
           height: 'inherit',
           width: 'inherit',
+          backgroundColor: '#f7f7f7'
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Typography
+        {/* <Typography
           variant="body2"
           sx={{
             position: 'absolute',
@@ -112,11 +148,22 @@ export default function Event(props) {
             borderRadius: '12px',
             padding: '2px 8px',
             fontSize: '10px',
-            fontWeight: 600,
+            fontWeight: 600
           }}
         >
           {props?.id?.slice(0, 5)}
-        </Typography>
+        </Typography> */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 4,
+            left: 4
+          }}
+        >
+          {isAttack && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
+          {isRequirement && <img src={CybersecurityIcon} alt="attack" height="20px" width="20px" />}
+        </Box>
+
         <input
           type="text"
           value={inputValue}
@@ -125,16 +172,17 @@ export default function Event(props) {
             update(props?.id, e.target.value);
           }}
           style={{
+            marginRight: '10px',
             width: `${nodeDimensions.width - 20}px`, // Adjust width relative to node size
             height: `${fontSize * 2}px`, // Height proportional to font size
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backgroundColor: 'inherit',
             borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
             fontSize: `${fontSize}px`, // Dynamically adjust font size
             color: 'inherit',
             padding: `${inputPadding}px`, // Consistent padding
-            border: '1px solid #ccc',
+            border: 'none'
           }}
         />
         <div
@@ -165,7 +213,7 @@ export default function Event(props) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            transition: 'opacity 0.2s ease-in-out',
+            transition: 'opacity 0.2s ease-in-out'
           }}
         >
           x
