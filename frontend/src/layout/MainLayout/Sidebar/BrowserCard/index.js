@@ -260,11 +260,23 @@ const BrowserCard = () => {
     setClickedItem(modelId);
   };
 
+  const handleAddNewNode = (e) => {
+    e.stopPropagation();
+    dispatch(openAddNodeTab());
+    setOpenItemRight(false);
+  };
+
+  const handleCloseItem = () => {
+    setOpenItemRight(false);
+    setAnchorItemEl(null);
+  };
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
       dispatch(closeAll());
+    } else {
+      handleCloseItem();
     }
     const get_api = {
       assets: getAssets,
@@ -320,17 +332,6 @@ const BrowserCard = () => {
     e.preventDefault();
     setAnchorItemEl(e.currentTarget);
     setOpenItemRight((prev) => !prev);
-  };
-
-  const handleCloseItem = () => {
-    setOpenItemRight(false);
-    setAnchorItemEl(null);
-  };
-
-  const handleAddNewNode = (e) => {
-    e.stopPropagation();
-    dispatch(openAddNodeTab());
-    setOpenItemRight(false);
   };
 
   const handleOpenSelectNode = (e) => {
@@ -598,7 +599,7 @@ const BrowserCard = () => {
           data,
           (e) => {
             e.stopPropagation();
-            handleOpenDocumentDialog(); 
+            handleOpenDocumentDialog();
           },
           null,
           null

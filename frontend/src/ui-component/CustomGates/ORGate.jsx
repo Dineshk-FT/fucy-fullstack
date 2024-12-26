@@ -5,12 +5,14 @@ import CustomHandle from './CustomHandle';
 import { colorPickerTab } from './colorPicker';
 import AddPropertiesGate from '../Modal/AddPropertiesGate';
 import useStore from '../../Zustand/store';
+import ColorTheme from '../../store/ColorTheme';
 
 const selector = (state) => ({
   nodes: state.nodes
 });
 
 export default function ORGate(props) {
+  const color = ColorTheme();
   const [open, setOpen] = useState(false);
   const { nodes } = useStore(selector);
   const { setNodes } = useReactFlow();
@@ -48,7 +50,7 @@ export default function ORGate(props) {
         <svg width="100px" height="100px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
           <path
             fill="none"
-            stroke={colorPickerTab(props?.data?.status)}
+            stroke={color?.stroke}
             //eslint-disable-next-line
             strokeWidth="6"
             transform="rotate(-90 256 256)"

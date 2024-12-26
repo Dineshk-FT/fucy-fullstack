@@ -41,6 +41,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const selector = (state) => ({
   model: state.model,
   update: state.updateDamageScenario,
+  updateDerived: state.updateDerivedDamageScenario,
   updateImpact: state.updateImpact,
   getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
@@ -173,8 +174,18 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
 
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, update, damageScenarios, Details, damageID, getDamageScenarios, getThreatScenario, updateImpact, deleteDamageScenario } =
-    useStore(selector, shallow);
+  const {
+    model,
+    update,
+    damageScenarios,
+    Details,
+    damageID,
+    getDamageScenarios,
+    getThreatScenario,
+    updateImpact,
+    deleteDamageScenario,
+    updateDerived
+  } = useStore(selector, shallow);
 
   const [stakeHolder] = useState(false);
   const classes = useStyles();
@@ -191,6 +202,25 @@ export default function DsTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
 
+  const handleChecked = (value, item, rowId) => {
+    const details = {
+      id: damageScenarios?._id,
+      'detail-id': rowId
+    };
+    if (item === 'Asset is Evaluated') {
+      details.isAssetEvaluated = !value;
+    } else {
+      details.isCybersecurityEvaluated = !value;
+    }
+    // console.log('details', details);
+    updateDerived(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(model?._id);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
   // console.log('selectedRows', selectedRows);
   // console.log('damageID', damageID);
   const handleDeleteSelected = () => {
@@ -274,6 +304,8 @@ export default function DsTable() {
         Name: ls?.Name,
         'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
+        'Asset is Evaluated': ls?.is_asset_evaluated === 'true' ? true : false,
+        'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true' ? true : false,
         impacts: ls?.impacts
           ? {
               'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
@@ -495,7 +527,7 @@ export default function DsTable() {
               case item.name.includes('Evaluated'):
                 cellContent = (
                   <StyledTableCell component="th" scope="row">
-                    <Checkbox {...label} />
+                    <Checkbox {...label} checked={row[item.name]} onChange={() => handleChecked(row[item.name], item.name, row?.id)} />
                   </StyledTableCell>
                 );
                 break;

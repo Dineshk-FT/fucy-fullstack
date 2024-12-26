@@ -4,12 +4,14 @@ import { Handle, Position, useReactFlow } from 'reactflow';
 import CustomHandle from './CustomHandle';
 import { colorPickerTab } from './colorPicker';
 import useStore from '../../Zustand/store';
+import ColorTheme from '../../store/ColorTheme';
 
 const selector = (state) => ({
   nodes: state.nodes
 });
 
 export default function ANDGate(props) {
+  const color = ColorTheme();
   const { nodes } = useStore(selector);
   const { setNodes } = useReactFlow();
   const [isHovered, setIsHovered] = useState(false);
@@ -35,7 +37,7 @@ export default function ANDGate(props) {
       <svg width="100px" height="100px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
         <path
           fill="none"
-          stroke={colorPickerTab(props?.data?.status)}
+          stroke={color?.stroke}
           strokeWidth="6"
           transform="rotate(-90 256 256)"
           d="M105 105v302h151c148 0 148-302 0-302H105zm-89"

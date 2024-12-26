@@ -876,6 +876,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
+  updateDerivedDamageScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/derived_damage_scenario`;
+    const res = await PATCH_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+
   updateThreatScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/threat_scenario`;
     const res = await PATCH_CALL(details, url);

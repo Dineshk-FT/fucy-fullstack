@@ -5,6 +5,7 @@ import CustomHandle from './CustomHandle';
 import { colorPickerTab } from './colorPicker';
 import AddPropertiesGate from '../Modal/AddPropertiesGate';
 import useStore from '../../Zustand/store';
+import ColorTheme from '../../store/ColorTheme';
 
 const selector = (state) => ({
   nodes: state.nodes
@@ -12,6 +13,7 @@ const selector = (state) => ({
 
 export default function VotingGate(props) {
   const [open, setOpen] = useState(false);
+  const color = ColorTheme();
   const { nodes } = useStore(selector);
   const { setNodes } = useReactFlow();
   const [isHovered, setIsHovered] = useState(false);
@@ -47,13 +49,13 @@ export default function VotingGate(props) {
       <svg width="100px" height="100px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
         <path
           fill="none"
-          stroke={colorPickerTab(props?.data?.status)}
+          stroke={color?.stroke}
           strokeWidth="6"
           transform="rotate(-90 256 256)"
           d="M105 105v302h151c148 0 148-302 0-302H105zm-89"
         />
 
-        <path fill="none" stroke={colorPickerTab(props?.data?.status)} strokeWidth="6" d="M105 407 L350 165" />
+        <path fill="none" stroke={color?.stroke} strokeWidth="6" d="M105 407 L350 165" />
       </svg>
       <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}
