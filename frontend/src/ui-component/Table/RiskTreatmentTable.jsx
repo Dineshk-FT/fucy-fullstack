@@ -25,7 +25,7 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, colorPickerTab, OverallImpact, threatType } from './constraints';
+import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
 import { AttackIcon, DamageIcon } from '../../assets/icons';
@@ -144,7 +144,7 @@ export default function RiskTreatmentTable() {
         'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
         'Privacy Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Privacy Impact']) ?? '',
         'Attack Tree or Attack Path(s)': item?.attack_scene,
-        'Attack Feasibility Rating': ''
+        'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? ''
       };
     });
     setRows(data);
@@ -304,6 +304,13 @@ export default function RiskTreatmentTable() {
               return (
                 <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(impact), color: '#000' }}>
                   {impact}
+                </StyledTableCell>
+              );
+            case item.name === 'Attack Feasibility Rating':
+              const bgColor = RatingColor(row[item?.name]);
+              return (
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: bgColor, color: '#000' }}>
+                  {row[item?.name]}
                 </StyledTableCell>
               );
 
