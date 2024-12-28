@@ -181,9 +181,10 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
             fontSize: '0.8rem',
             color: 'white',
             cursor: 'pointer',
-            // opacity: isHovered ? 1 : 0,
-            display: 'grid',
-            alignContent: 'center',
+            opacity: isHovered ? 1 : 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
             transition: 'opacity 0.2s ease-in-out'
           }}
         >
