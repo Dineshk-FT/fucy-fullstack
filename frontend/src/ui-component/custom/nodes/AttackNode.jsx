@@ -60,7 +60,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
     const maxFontSize = 24; // Maximum font size
     const minFontSize = 8; // Minimum font size
     const sizeFactor = Math.min(nodeDimensions.width, nodeDimensions.height); // Factor based on the smaller dimension
-    const calculatedFontSize = sizeFactor / 9; // Adjust divisor to tweak scaling
+    const calculatedFontSize = sizeFactor / 9.5; // Adjust divisor to tweak scaling
     return Math.min(maxFontSize, Math.max(minFontSize, calculatedFontSize));
   };
 
@@ -181,7 +181,9 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
             fontSize: '0.8rem',
             color: 'white',
             cursor: 'pointer',
-            opacity: isHovered ? 1 : 0,
+            // opacity: isHovered ? 1 : 0,
+            display: 'grid',
+            alignContent: 'center',
             transition: 'opacity 0.2s ease-in-out'
           }}
         >
