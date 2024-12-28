@@ -210,16 +210,18 @@ export default function AttackBlock({ attackScene, color }) {
   }, [reactFlowInstance, nodes?.length]);
 
   const handleNodeContextMenu = (event, node) => {
-    event.preventDefault();
-    setCopiedNode(node);
-    setSelectedNode(node);
-    setContextMenu({
-      visible: true,
-      x: event.clientX,
-      y: event.clientY,
-      options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
-      node
-    });
+    if (node.type !== 'default') {
+      event.preventDefault();
+      setCopiedNode(node);
+      setSelectedNode(node);
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
+        node
+      });
+    }
   };
 
   const handleCanvasContextMenu = (event) => {
@@ -402,7 +404,7 @@ export default function AttackBlock({ attackScene, color }) {
           const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
           const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
 
-          if (distanceX > 200 || distanceY > 200) {
+          if (distanceX > 450 || distanceY > 450) {
             // Remove edge and connection
             const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
             setEdges(updatedEdges);
@@ -458,15 +460,17 @@ export default function AttackBlock({ attackScene, color }) {
           position,
           type: parsedNode.type || parsedNode.label,
           ...parsedNode,
-          width: 100,
-          height: 70,
+          // width: 150,
+          // height: 100,
           data: {
             label: parsedNode.label,
             nodeId: parsedNode.nodeId,
             style: {
               ...style,
               backgroundColor: 'transparent',
-              color: 'black'
+              color: 'black',
+              width: 150,
+              height: 100
             }
           }
         };

@@ -1,19 +1,38 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { RatingColor } from '../../Table/constraints';
+import { useSelector } from 'react-redux';
 
 const selector = (state) => ({
-  nodes: state.nodes
+  nodes: state.nodes,
+  updateOverallRating: state.updateOverallRating,
+  attackId: state.attackScenarios.subs[1]['_id']
 });
 const AttackNode = ({ data, isConnectable, type, id }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
-  const { nodes } = useStore(selector);
+  const { nodes, updateOverallRating, attackId } = useStore(selector);
   const { setNodes } = useReactFlow();
+  const { attackScene } = useSelector((state) => state?.currentId);
+
+  const [isHovered, setIsHovered] = useState(false);
   // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
   // console.log('nodes', nodes);
+  const handleDeleteFromCanvas = () => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
+  };
+
+  const handleupdate = useCallback((rating) => {
+    const details = {
+      id: attackId,
+      'scene-id': attackScene?.ID,
+      rating: rating
+    };
+    console.log('details', details);
+    // updateOverallRating(details)
+  }, []);
   const getHighestRating = (nodes) => {
     const priorityOrder = {
       'Very Low': 1,
@@ -30,7 +49,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
     const highestRating = ratings.reduce((highest, current) => {
       return priorityOrder[current] > priorityOrder[highest] ? current : highest;
     }, 'Very Low'); // Default to 'Very Low' if no ratings exist
-
+    // handleupdate(highestRating);
     return highestRating;
   };
 
@@ -102,6 +121,8 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
       />
       <div
         className={`my-custom-node ${type}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         style={{
           ...data?.style,
           fontSize: `${fontSize}px`, // Dynamically set font size
@@ -136,6 +157,36 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
           {data?.label}
         </div>
         <Handle className="handle" type="source" id="b" position={Position.Bottom} isConnectable={isConnectable} />
+        <div
+          className="delete-icon"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleDeleteFromCanvas();
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteFromCanvas();
+          }}
+          style={{
+            position: 'absolute',
+            width: '16px',
+            height: '16px',
+            top: '2px',
+            right: '2px',
+            background: '#f83e3e',
+            borderRadius: '50%',
+            fontSize: '0.8rem',
+            color: 'white',
+            cursor: 'pointer',
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 0.2s ease-in-out'
+          }}
+        >
+          x
+        </div>
       </div>
     </>
   );
