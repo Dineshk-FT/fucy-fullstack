@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useEffect, useState } from 'react';
-import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel, Typography } from '@mui/material';
+import { Chip, InputLabel, Box, TextField, Autocomplete, Button, Checkbox, FormControlLabel, Typography, Paper } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabPanel from '@mui/lab/TabPanel';
 import toast, { Toaster } from 'react-hot-toast';
@@ -214,6 +214,8 @@ const EditContent = ({
                 value={details.properties}
                 onChange={handleChange}
                 sx={{
+                  minWidth: '150px',
+                  maxWidth: '350px',
                   '& .MuiOutlinedInput-root': {
                     padding: '3px'
                   }

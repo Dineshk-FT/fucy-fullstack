@@ -620,6 +620,86 @@ const useStore = createWithEqualityFn((set, get) => ({
         id: '1',
         name: 'Item Model & Assets',
         icon: 'ItemIcon'
+      },
+      damageScenarios: {
+        id: '2',
+        name: 'Damage Scenarios Identification and Impact Ratings',
+        icon: 'DamageIcon',
+        subs: [
+          {
+            id: '21',
+            name: 'Damage Scenarios Derivations'
+          },
+          {
+            id: '22',
+            name: 'Damage Scenarios - Collection & Impact Ratings'
+          }
+        ]
+      },
+      threatScenarios: {
+        id: '3',
+        name: 'Threat Scenarios Identification',
+        icon: 'ThreatIcon',
+        subs: [
+          {
+            name: 'Threat Scenarios',
+            id: '31'
+          },
+          {
+            id: '32',
+            name: 'Derived Threat Scenarios'
+          }
+        ]
+      },
+      attackScenarios: {
+        id: '4',
+        name: 'Attack Path Analysis and Attack Feasability Rating',
+        icon: 'AttackIcon',
+        subs: [
+          {
+            id: '41',
+            name: 'Attack'
+          },
+          {
+            id: '42',
+            name: 'Attack Trees'
+          },
+          {
+            id: '43',
+            name: 'Vulnerability Analysis'
+          }
+        ]
+      },
+      riskTreatment: {
+        id: '8',
+        name: 'Risk Determination and Risk Treatment Decision',
+        icon: 'RiskIcon',
+        subs: [
+          {
+            id: '81',
+            name: 'Threat Assessment & Risk Treatment',
+            Details: []
+          }
+        ]
+      },
+      cybersecurity: {
+        id: '5',
+        name: 'CyberSecurity Goals, Claims and Requirements',
+        icon: 'CybersecurityIcon',
+        subs: [
+          {
+            id: 51,
+            name: 'CyberSecurity Goals'
+          },
+          {
+            id: 53,
+            name: 'CyberSecurity Requirements'
+          },
+          {
+            id: 52,
+            name: 'CyberSecurity Controls'
+          }
+        ]
       }
     });
   },
@@ -690,11 +770,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/threat_scenarios`;
     const res = await GET_CALL(modelId, url);
 
-    // Separate the "Derived" and "User-defined" objects
-    const derivedScenario = res?.find((item) => item.type === 'derived');
-    const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
-
     if (!res?.error) {
+      // Separate the "Derived" and "User-defined" objects
+      const derivedScenario = res?.find((item) => item.type === 'derived');
+      const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
       set((state) => ({
         threatScenarios: {
           ...state.threatScenarios,
@@ -733,11 +812,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/attacks`;
     const res = await GET_CALL(modelId, url);
 
-    const attacks = res?.find((item) => item?.type === 'attack');
-    const attackTrees = res?.find((item) => item?.type === 'attack_trees');
-    const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
-
+    // console.log('res', res);
     if (!res?.error) {
+      const attacks = res?.find((item) => item?.type === 'attack');
+      const attackTrees = res?.find((item) => item?.type === 'attack_trees');
+      const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
       set((state) => ({
         attackScenarios: {
           ...state.attackScenarios,

@@ -36,7 +36,11 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
   // Create the graph structure with children nodes and edges
   const graph = {
     id: 'root',
-    layoutOptions: options,
+    layoutOptions: {
+      'elk.algorithm': 'layered', // Base layout algorithm
+      'elk.spacing.nodeNode': 50, // Space between nodes
+      ...options // Allow additional options
+    },
     children: nodes.map((node) => ({
       id: node.id,
       width: node.width || 150,
@@ -53,46 +57,71 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
     // Perform the layout using ELK
     const layoutedGraph = await elk.layout(graph);
 
-    // Map the layouted nodes, applying small adjustments based on the ELK layout
+    // Helper function to check overlap between two nodes
+    const isOverlapping = (node1, node2) => {
+      const buffer = 10; // Small buffer
+      return (
+        Math.abs(node1.position.x - node2.position.x) < (node1.width || 150) / 2 + (node2.width || 150) / 2 + buffer &&
+        Math.abs(node1.position.y - node2.position.y) < (node1.height || 50) / 2 + (node2.height || 50) / 2 + buffer
+      );
+    };
+
+    // Adjust overlapping nodes iteratively
+    const resolveOverlaps = (nodes) => {
+      let adjusted = true;
+
+      while (adjusted) {
+        adjusted = false;
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const node1 = nodes[i];
+            const node2 = nodes[j];
+
+            // Check if nodes are within 100 in the y-axis
+            if (Math.abs(node1.position.y - node2.position.y) <= 100) {
+              // Align them in the same line
+              node2.position.y = node1.position.y;
+
+              // Prevent overlap
+              if (isOverlapping(node1, node2)) {
+                const dx = node2.position.x - node1.position.x || 1; // Avoid zero division
+                const shiftAmount = (node1.width || 150) / 2 + (node2.width || 150) / 2 + 10; // Add spacing
+
+                // Adjust x positions to separate nodes
+                node2.position.x = node1.position.x + Math.sign(dx) * shiftAmount;
+                adjusted = true;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    // Map the layouted nodes with minimal adjustments
     const layoutedNodes = layoutedGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
 
-      // Apply small adjustments relative to the original positions
-      const newPosition = {
-        x: originalNode.position.x + (node.x - originalNode.position.x) * 0.1, // Apply small adjustments to x
-        y: originalNode.position.y + (node.y - originalNode.position.y) * 0.1 // Apply small adjustments to y
-      };
-
       return {
-        ...originalNode, // Retain existing properties
-        position: newPosition
+        ...originalNode,
+        position: {
+          x: originalNode.position.x + (node.x - originalNode.position.x) * 0.2,
+          y: originalNode.position.y + (node.y - originalNode.position.y) * 0.2
+        }
       };
     });
 
-    // Align nodes that are within 50 units of each other along the same Y-axis
-    const range = 80; // The range within which nodes will be aligned
-    let lastAlignedY = null; // The Y position of the last aligned node
+    // Resolve any remaining overlaps
+    resolveOverlaps(layoutedNodes);
 
-    layoutedNodes.forEach((node, index) => {
-      if (lastAlignedY === null) {
-        // Set the first node's Y position as the base
-        lastAlignedY = node.position.y;
-      } else {
-        // Check if the current node's Y position is within range of the previous node
-        if (Math.abs(node.position.y - lastAlignedY) <= range) {
-          // If within range, align this node with the previous one
-          node.position.y = lastAlignedY;
-        } else {
-          // If not within range, update the last aligned Y to this node's position
-          lastAlignedY = node.position.y;
-        }
-      }
+    // Map the layouted edges with minimal changes
+    const layoutedEdges = layoutedGraph.edges.map((edge) => {
+      const originalEdge = edges.find((e) => e.id === edge.id);
+      return {
+        ...originalEdge,
+        points: edge.sections[0]?.bendPoints || [] // Include bend points for clarity
+      };
     });
-
-    // Map the layouted edges
-    const layoutedEdges = layoutedGraph.edges.map((edge) => ({
-      ...edges.find((e) => e.id === edge.id) // Retain existing edge properties
-    }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
   } catch (error) {
