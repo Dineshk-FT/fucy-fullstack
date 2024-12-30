@@ -11,6 +11,7 @@ import { levelOpen } from '../../store/slices/CurrentIdSlice';
 import CustomHandle from './CustomHandle';
 import AddPropertiesGate from '../Modal/AddPropertiesGate';
 import { colorPickerTab } from './colorPicker';
+import ColorTheme from '../../store/ColorTheme';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
@@ -18,6 +19,8 @@ const selector = (state) => ({
 });
 export default function TransferGate(props) {
   const dispatch = useDispatch();
+  const color = ColorTheme();
+
   const [inputValue, setInputValue] = useState('');
   const { nodes, update } = useStore(selector);
   const [open, setOpen] = useState(false);
@@ -79,9 +82,10 @@ export default function TransferGate(props) {
             type="text"
             style={{
               width: '100px',
+              color: color?.stroke,
               textAlign: 'center',
               background: 'transparent',
-              border: `1px solid ${colorPickerTab(props?.data?.status)}`
+              border: `1px solid ${color?.stroke}`
             }}
             onChange={handleChange}
             value={inputValue}
@@ -89,7 +93,7 @@ export default function TransferGate(props) {
           <svg width="100px" height="100px" viewBox="0 100 512 512" xmlns="http://www.w3.org/2000/svg">
             <path
               fill="none"
-              stroke={colorPickerTab(props?.data?.status)}
+              stroke={color?.stroke}
               //eslint-disable-next-line
               strokeWidth="6"
               transform="rotate(-90 256 256)"
@@ -97,7 +101,7 @@ export default function TransferGate(props) {
             />
           </svg>
         </div>
-        <Handle type="source" position={Position.Bottom} style={{ bottom: '40px', opacity: 0 }} />
+        <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
       </div>
       {/* {isLevelOpen && <Levels label={data?.label} id={id}/>} */}
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}

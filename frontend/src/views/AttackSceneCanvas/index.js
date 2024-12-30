@@ -36,7 +36,11 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
   // Create the graph structure with children nodes and edges
   const graph = {
     id: 'root',
-    layoutOptions: options,
+    layoutOptions: {
+      'elk.algorithm': 'layered', // Base layout algorithm
+      'elk.spacing.nodeNode': 50, // Space between nodes
+      ...options // Allow additional options
+    },
     children: nodes.map((node) => ({
       id: node.id,
       width: node.width || 150,
@@ -53,46 +57,71 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
     // Perform the layout using ELK
     const layoutedGraph = await elk.layout(graph);
 
-    // Map the layouted nodes, applying small adjustments based on the ELK layout
+    // Helper function to check overlap between two nodes
+    const isOverlapping = (node1, node2) => {
+      const buffer = 10; // Small buffer
+      return (
+        Math.abs(node1.position.x - node2.position.x) < (node1.width || 150) / 2 + (node2.width || 150) / 2 + buffer &&
+        Math.abs(node1.position.y - node2.position.y) < (node1.height || 50) / 2 + (node2.height || 50) / 2 + buffer
+      );
+    };
+
+    // Adjust overlapping nodes iteratively
+    const resolveOverlaps = (nodes) => {
+      let adjusted = true;
+
+      while (adjusted) {
+        adjusted = false;
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const node1 = nodes[i];
+            const node2 = nodes[j];
+
+            // Check if nodes are within 100 in the y-axis
+            if (Math.abs(node1.position.y - node2.position.y) <= 100) {
+              // Align them in the same line
+              node2.position.y = node1.position.y;
+
+              // Prevent overlap
+              if (isOverlapping(node1, node2)) {
+                const dx = node2.position.x - node1.position.x || 1; // Avoid zero division
+                const shiftAmount = (node1.width || 150) / 2 + (node2.width || 150) / 2 + 10; // Add spacing
+
+                // Adjust x positions to separate nodes
+                node2.position.x = node1.position.x + Math.sign(dx) * shiftAmount;
+                adjusted = true;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    // Map the layouted nodes with minimal adjustments
     const layoutedNodes = layoutedGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
 
-      // Apply small adjustments relative to the original positions
-      const newPosition = {
-        x: originalNode.position.x + (node.x - originalNode.position.x) * 0.1, // Apply small adjustments to x
-        y: originalNode.position.y + (node.y - originalNode.position.y) * 0.1 // Apply small adjustments to y
-      };
-
       return {
-        ...originalNode, // Retain existing properties
-        position: newPosition
+        ...originalNode,
+        position: {
+          x: originalNode.position.x + (node.x - originalNode.position.x) * 0.2,
+          y: originalNode.position.y + (node.y - originalNode.position.y) * 0.2
+        }
       };
     });
 
-    // Align nodes that are within 50 units of each other along the same Y-axis
-    const range = 80; // The range within which nodes will be aligned
-    let lastAlignedY = null; // The Y position of the last aligned node
+    // Resolve any remaining overlaps
+    resolveOverlaps(layoutedNodes);
 
-    layoutedNodes.forEach((node, index) => {
-      if (lastAlignedY === null) {
-        // Set the first node's Y position as the base
-        lastAlignedY = node.position.y;
-      } else {
-        // Check if the current node's Y position is within range of the previous node
-        if (Math.abs(node.position.y - lastAlignedY) <= range) {
-          // If within range, align this node with the previous one
-          node.position.y = lastAlignedY;
-        } else {
-          // If not within range, update the last aligned Y to this node's position
-          lastAlignedY = node.position.y;
-        }
-      }
+    // Map the layouted edges with minimal changes
+    const layoutedEdges = layoutedGraph.edges.map((edge) => {
+      const originalEdge = edges.find((e) => e.id === edge.id);
+      return {
+        ...originalEdge,
+        points: edge.sections[0]?.bendPoints || [] // Include bend points for clarity
+      };
     });
-
-    // Map the layouted edges
-    const layoutedEdges = layoutedGraph.edges.map((edge) => ({
-      ...edges.find((e) => e.id === edge.id) // Retain existing edge properties
-    }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
   } catch (error) {
@@ -193,6 +222,7 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
+
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
@@ -209,16 +239,18 @@ export default function AttackBlock({ attackScene, color }) {
   }, [reactFlowInstance, nodes?.length]);
 
   const handleNodeContextMenu = (event, node) => {
-    event.preventDefault();
-    setCopiedNode(node);
-    setSelectedNode(node);
-    setContextMenu({
-      visible: true,
-      x: event.clientX,
-      y: event.clientY,
-      options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
-      node
-    });
+    if (node.type !== 'default') {
+      event.preventDefault();
+      setCopiedNode(node);
+      setSelectedNode(node);
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
+        node
+      });
+    }
   };
 
   const handleCanvasContextMenu = (event) => {
@@ -239,6 +271,7 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   const handleMenuOptionClick = (option) => {
+    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
     switch (option) {
       case 'Copy':
         if (copiedNode) {
@@ -269,6 +302,7 @@ export default function AttackBlock({ attackScene, color }) {
       case 'Convert to attack':
         const details = {
           modelId: model?._id,
+          threatId: threatId,
           type: 'attack',
           attackId: selectedNode?.id,
           name: selectedNode?.data?.label
@@ -285,12 +319,13 @@ export default function AttackBlock({ attackScene, color }) {
       case 'convert to requirement':
         const detail = {
           modelId: model?._id,
+          threatId: threatId,
           type: 'cybersecurity_requirements',
           id: selectedNode?.id,
           name: selectedNode?.data?.label
         };
         addcybersecurityScene(detail).then((res) => {
-          console.log('res', res);
+          // console.log('res', res);
           if (!res.error) {
             getCyberSecurityScenario(model?._id);
             notify(res.message ?? 'converted to Attack', 'success');
@@ -314,6 +349,7 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleConnection = (draggedNode) => {
     const { nodes, edges, setEdges, setNodes } = useStore.getState(); // Access Zustand state
+
     const overlappingNode = nodes.find((node) => {
       if (node.id === draggedNode.id) return false; // Skip itself
 
@@ -333,14 +369,14 @@ export default function AttackBlock({ attackScene, color }) {
     });
 
     if (overlappingNode) {
-      // Flexible condition for default or Event type nodes
+      // Updated condition for default or Event type nodes
       let condition = true;
       if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
         condition =
           (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
           (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event') ||
-          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate'));
+          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate')) ||
+          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event'); // Added this case
       }
 
       // Check if the draggedNode's type is already connected
@@ -388,6 +424,37 @@ export default function AttackBlock({ attackScene, color }) {
         // Update nodes in Zustand store
         setNodes(updatedNodes);
       }
+    } else {
+      // Remove edge if moved from some distance (150 in x or y)
+      const connectedEdge = edges.find((edge) => edge.target === draggedNode.id);
+      if (connectedEdge) {
+        const sourceNode = nodes.find((node) => node.id === connectedEdge.source);
+        if (sourceNode) {
+          const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
+          const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
+
+          if (distanceX > 450 || distanceY > 450) {
+            // Remove edge and connection
+            const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
+            setEdges(updatedEdges);
+
+            const updatedNodes = nodes.map((node) => {
+              if (node.data?.connections) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    connections: node.data.connections.filter((connection) => connection.id !== draggedNode.id)
+                  }
+                };
+              }
+              return node;
+            });
+
+            setNodes(updatedNodes);
+          }
+        }
+      }
     }
   };
 
@@ -405,11 +472,6 @@ export default function AttackBlock({ attackScene, color }) {
         }
       }
 
-      const newId = uid();
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY
-      });
       const filtered = nodes.filter((node) => node.type == 'default');
       if (filtered.length == 1 && parsedNode.type === 'default') {
         return;
@@ -427,15 +489,17 @@ export default function AttackBlock({ attackScene, color }) {
           position,
           type: parsedNode.type || parsedNode.label,
           ...parsedNode,
-          width: 100,
-          height: 70,
+          // width: 150,
+          // height: 100,
           data: {
             label: parsedNode.label,
             nodeId: parsedNode.nodeId,
             style: {
               ...style,
               backgroundColor: 'transparent',
-              color: 'black'
+              color: 'black',
+              width: 150,
+              height: 100
             }
           }
         };
@@ -482,17 +546,22 @@ export default function AttackBlock({ attackScene, color }) {
       nodes: nodes,
       edges: edges
     };
+
+    // Extract threatId from nodes with type: "default"
+    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
       id: attackScene?.ID,
-      templates: JSON.stringify(template)
+      templates: JSON.stringify(template),
+      threatId: threatId
     };
+
     update(details)
       .then((res) => {
         if (res) {
           setTimeout(() => {
-            notify(attackScene?.templates ? 'Updated Successfully' : 'Added Successfully', 'success');
+            notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
           }, 500);
         }
@@ -504,7 +573,7 @@ export default function AttackBlock({ attackScene, color }) {
       });
   };
 
-  const onNodeDragStop = (event, draggedNode) => {
+  const onNodeDrag = (event, draggedNode) => {
     // Check for overlapping nodes
 
     handleConnection(draggedNode);
@@ -534,7 +603,8 @@ export default function AttackBlock({ attackScene, color }) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
           }}
-          onNodeDragStop={onNodeDragStop}
+          onNodeDrag={onNodeDrag}
+          // onNodeDragStop={onNodeDragStop}
           onNodeContextMenu={handleNodeContextMenu}
           fitView
         >

@@ -166,9 +166,10 @@ export default function Tstable() {
         .flat(2);
 
       const mappedDetails = Array.isArray(userDefined['Details'])
-        ? userDefined['Details'].map((detail) =>
+        ? userDefined['Details'].map((detail, i) =>
             detail && typeof detail === 'object'
               ? {
+                  SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
                   ID: detail?.id || null,
                   Name: detail?.name || null,
                   Description: detail?.description || null

@@ -32,6 +32,7 @@ export const lightTheme = {
   title: '#000',
   logo: '#5FBDFF',
   iconColor: '#555555',
+  stroke: '#000',
   leftbarBG: '#f5f5f5'
 };
 
@@ -50,5 +51,6 @@ export const darkTheme = {
   title: 'whitesmoke',
   logo: '#5FBDFF',
   iconColor: 'white',
+  stroke: '#f5f5f5',
   leftbarBG: '#222831'
 };

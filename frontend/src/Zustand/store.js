@@ -116,23 +116,15 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'CybersecurityIcon',
     subs: [
       {
-        id: '51',
-        name: 'CyberSecurity Goals and Requirements',
-        subs: [
-          {
-            id: '511',
-            name: 'CyberSecurity Goals',
-            scenes: []
-          },
-          {
-            id: '512',
-            name: 'CyberSecurity Requirements',
-            scenes: []
-          }
-        ]
+        id: 51,
+        name: 'CyberSecurity Goals'
       },
       {
-        id: '52',
+        id: 53,
+        name: 'CyberSecurity Requirements'
+      },
+      {
+        id: 52,
         name: 'CyberSecurity Controls'
       }
     ]
@@ -628,6 +620,86 @@ const useStore = createWithEqualityFn((set, get) => ({
         id: '1',
         name: 'Item Model & Assets',
         icon: 'ItemIcon'
+      },
+      damageScenarios: {
+        id: '2',
+        name: 'Damage Scenarios Identification and Impact Ratings',
+        icon: 'DamageIcon',
+        subs: [
+          {
+            id: '21',
+            name: 'Damage Scenarios Derivations'
+          },
+          {
+            id: '22',
+            name: 'Damage Scenarios - Collection & Impact Ratings'
+          }
+        ]
+      },
+      threatScenarios: {
+        id: '3',
+        name: 'Threat Scenarios Identification',
+        icon: 'ThreatIcon',
+        subs: [
+          {
+            name: 'Threat Scenarios',
+            id: '31'
+          },
+          {
+            id: '32',
+            name: 'Derived Threat Scenarios'
+          }
+        ]
+      },
+      attackScenarios: {
+        id: '4',
+        name: 'Attack Path Analysis and Attack Feasability Rating',
+        icon: 'AttackIcon',
+        subs: [
+          {
+            id: '41',
+            name: 'Attack'
+          },
+          {
+            id: '42',
+            name: 'Attack Trees'
+          },
+          {
+            id: '43',
+            name: 'Vulnerability Analysis'
+          }
+        ]
+      },
+      riskTreatment: {
+        id: '8',
+        name: 'Risk Determination and Risk Treatment Decision',
+        icon: 'RiskIcon',
+        subs: [
+          {
+            id: '81',
+            name: 'Threat Assessment & Risk Treatment',
+            Details: []
+          }
+        ]
+      },
+      cybersecurity: {
+        id: '5',
+        name: 'CyberSecurity Goals, Claims and Requirements',
+        icon: 'CybersecurityIcon',
+        subs: [
+          {
+            id: 51,
+            name: 'CyberSecurity Goals'
+          },
+          {
+            id: 53,
+            name: 'CyberSecurity Requirements'
+          },
+          {
+            id: 52,
+            name: 'CyberSecurity Controls'
+          }
+        ]
       }
     });
   },
@@ -638,7 +710,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     set({
       originalNodes: res.Details
-    })
+    });
     if (!res.error) {
       set((state) => ({
         assets: {
@@ -698,11 +770,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/threat_scenarios`;
     const res = await GET_CALL(modelId, url);
 
-    // Separate the "Derived" and "User-defined" objects
-    const derivedScenario = res?.find((item) => item.type === 'derived');
-    const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
-
     if (!res?.error) {
+      // Separate the "Derived" and "User-defined" objects
+      const derivedScenario = res?.find((item) => item.type === 'derived');
+      const userDefinedScenario = res?.find((item) => item.type === 'User-defined');
       set((state) => ({
         threatScenarios: {
           ...state.threatScenarios,
@@ -741,11 +812,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/attacks`;
     const res = await GET_CALL(modelId, url);
 
-    const attacks = res?.find((item) => item?.type === 'attack');
-    const attackTrees = res?.find((item) => item?.type === 'attack_trees');
-    const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
-
+    // console.log('res', res);
     if (!res?.error) {
+      const attacks = res?.find((item) => item?.type === 'attack');
+      const attackTrees = res?.find((item) => item?.type === 'attack_trees');
+      const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
       set((state) => ({
         attackScenarios: {
           ...state.attackScenarios,
@@ -787,6 +858,58 @@ const useStore = createWithEqualityFn((set, get) => ({
       }));
     }
   },
+
+  getCyberSecurityScenario: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get_details/cybersecurity`;
+    const res = await GET_CALL(modelId, url);
+
+    const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
+    const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
+    const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
+
+    if (!res?.error) {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              ...state.cybersecurity.subs[0],
+              ...goals
+            },
+            {
+              ...state.cybersecurity.subs[1],
+              ...requirements
+            },
+            {
+              ...state.cybersecurity.subs[2],
+              ...controls
+            }
+          ]
+        }
+      }));
+    } else {
+      set((state) => ({
+        cybersecurity: {
+          ...state.cybersecurity,
+          subs: [
+            {
+              id: 51,
+              name: 'CyberSecurity Goals'
+            },
+            {
+              id: 53,
+              name: 'CyberSecurity Requirements'
+            },
+            {
+              id: 52,
+              name: 'CyberSecurity Controls'
+            }
+          ]
+        }
+      }));
+    }
+  },
+
   getRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/get/riskDetAndTreat`;
     const res = await GET_CALL(details, url);
@@ -797,7 +920,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               ...state.riskTreatment.subs[0],
-              ...res
+              Details: [...res]
             }
           ]
         }
@@ -828,6 +951,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateDamageScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/damage_scenario`;
     const res = await UPDATE_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+
+  updateDerivedDamageScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/derived_damage_scenario`;
+    const res = await PATCH_CALL(details, url);
     // console.log('res', res);
     return res;
   },
@@ -864,6 +994,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
+    console.log('res', res);
+    return res;
+  },
+
+  updateOverallRating: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/attack_feasibility_rating`;
+    const res = await PATCH_CALL(details, url);
     console.log('res', res);
     return res;
   },
@@ -909,6 +1046,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
+  addcybersecurityScene: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/cybersecurity`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   addRiskTreatment: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/riskDetAndTreat`;
     const res = await ADD_CALL(details, url);
@@ -1067,13 +1209,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  isNodePasted: true, 
+  isNodePasted: true,
 
   // Function to toggle or set `isNodePasted`
-setIsNodePasted: (value) => 
-  set(() => {
-    return { isNodePasted: value };
-  }),
+  setIsNodePasted: (value) =>
+    set(() => {
+      return { isNodePasted: value };
+    })
 }));
 
 export default useStore;

@@ -57,7 +57,9 @@ const AddNewNode = () => {
     bgColor: ''
   });
 
-  const { createNode, updateModel, setNodes, nodes, edges, model, update } = useStore(selector);
+  // console.log('selectedNodeGroupId', selectedNodeGroupId);
+
+  const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector);
 
   const handleChange = (event) => {
     const {
@@ -130,23 +132,26 @@ const AddNewNode = () => {
       update(details)
         .then((res) => {
           if (res.data) {
-            notify(res?.message, 'success');
+            notify(res?.message ?? 'Node added successfully', 'success');
             getSidebarNode();
           }
         })
         .catch((err) => {
+          // console.log('err', err);
           notify('Something went wrong', 'error');
         });
     } else {
       createNode(details)
         .then((res) => {
+          // console.log('res', res);
           if (res.data) {
+            notify(res?.data?.message ?? 'Node added successfully', 'success');
             getSidebarNode();
             setSelectedNodeGroupId({});
-            notify('Node created successfully', 'success');
           }
         })
         .catch((err) => {
+          // console.log('err', err);
           notify('Something went wrong', 'error');
         });
     }

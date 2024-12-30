@@ -49,15 +49,17 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  getModels: state.getModels,
-  damageScenarios: state.damageScenarios['subs'][0]
+  damageScenarios: state.damageScenarios['subs'][0],
+  update: state.updateDerivedDamageScenario,
+  modelId: state?.model?._id,
+  getDamageScenarios: state?.getDamageScenarios
 });
 
 export default function DsDerivationTable() {
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { damageScenarios } = useStore(selector, shallow);
+  const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
@@ -80,10 +82,12 @@ export default function DsDerivationTable() {
     if (damageScenarios['Derivations']) {
       const scene = damageScenarios['Derivations']?.map((dt) => {
         return {
+          id: dt?.id,
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
           Assets: dt?.asset,
-          'Damage Scenarios': dt?.damageScene
+          'Damage Scenarios': dt?.damageScene,
+          Checked: dt?.is_checked === 'true' ? true : false
         };
       });
       setRows(scene);
@@ -91,6 +95,21 @@ export default function DsDerivationTable() {
     }
   }, [damageScenarios]);
 
+  const handleChange = (value, rowId) => {
+    const details = {
+      id: damageScenarios?._id,
+      isChecked: !value,
+      'detail-id': rowId
+    };
+    // console.log('details', details);
+    update(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(modelId);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
   const handleSearch = (e) => {
     const { value } = e.target;
     // console.log('value', value);
@@ -173,7 +192,7 @@ export default function DsDerivationTable() {
             case item.name === 'Checked':
               cellContent = (
                 <StyledTableCell component="th" scope="row">
-                  <Checkbox {...label} />
+                  <Checkbox {...label} checked={row[item.name]} onChange={() => handleChange(row[item.name], row?.id)} />
                 </StyledTableCell>
               );
               break;
