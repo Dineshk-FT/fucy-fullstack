@@ -157,7 +157,10 @@ export default function Tstable() {
                 Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node}`,
                 Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node}`,
                 losses: [],
-                'Damage Scenarios': prop?.damage_scenes ?? [],
+                'Damage Scenarios':
+                  `[DS${detail?.damage_key ? detail?.damage_key.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
+                    detail?.damage_name
+                  }` ?? '-',
                 'Losses of Cybersecurity Properties': prop?.name
               };
             });
@@ -289,19 +292,22 @@ export default function Tstable() {
               break;
             case item.name === 'Damage Scenarios':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
-                  {row[item.name] && row[item.name].length ? (
-                    row[item.name].map((damage, i) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                          [{damage?.key}]{damage?.Name}
-                        </span>
+                <StyledTableCell component="th" scope="row">
+                  {
+                    // row[item.name] && row[item.name].length ? (
+                    // row[item.name].map((damage, i) => (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                        {/* [{damage_key.toString().padStart(3,"0")}]{damage_name} */}
+                        {row[item?.name]}
                       </span>
-                    ))
-                  ) : (
-                    <InputLabel>Select Damage Scenario</InputLabel>
-                  )}
+                    </span>
+                    // ))
+                    // ) : (
+                    //   <InputLabel>Select Damage Scenario</InputLabel>
+                    // )
+                  }
                 </StyledTableCell>
               );
               break;

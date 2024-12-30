@@ -7,31 +7,17 @@ import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import {
-  Paper,
-  FormControl,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-  styled,
-  Tooltip,
-  TablePagination,
-  ClickAwayListener,
-  InputLabel
-} from '@mui/material';
+import { Paper, FormControl, MenuItem, Select, TextField, Typography, styled, Tooltip, TablePagination, InputLabel } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { makeStyles } from '@mui/styles';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, RatingColor, threatType } from './constraints';
-import CircleIcon from '@mui/icons-material/Circle';
+import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../store/constant';
 import { AttackTableoptions as options } from './constraints';
 
@@ -56,7 +42,7 @@ const Head = [
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
-  { id: 5, name: 'Approach' },
+  // { id: 5, name: 'Approach' },
   { id: 6, name: 'Elapsed Time' },
   { id: 7, name: 'Expertise' },
   { id: 8, name: 'Knowledge of the Item' },
@@ -179,7 +165,6 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
 export default function AttackTreeTable() {
   const color = ColorTheme();
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
@@ -198,7 +183,7 @@ export default function AttackTreeTable() {
           ID: dt.id || dt?.ID,
           Name: dt.name || dt?.Name,
           Description: `This is the description for ${dt.Name || dt?.name}`,
-          Approach: dt?.Approach ?? '',
+          // Approach: dt?.Approach ?? '',
           'Elapsed Time': dt['Elapsed Time'] ?? '',
           Expertise: dt?.Expertise ?? '',
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
@@ -212,18 +197,6 @@ export default function AttackTreeTable() {
       setFiltered(mod1);
     }
   }, [attacks]);
-
-  const getRating = (value) => {
-    if (value >= 0 && value <= 13) {
-      return 'High';
-    } else if (value >= 14 && value <= 19) {
-      return 'Medium';
-    } else if (value >= 20 && value <= 24) {
-      return 'Low';
-    } else {
-      return 'Very low';
-    }
-  };
 
   // console.log('rows', rows);
   const handleChange = (e, row) => {
@@ -244,17 +217,15 @@ export default function AttackTreeTable() {
     const calculateAverageRating = (row) => {
       const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
-      let count = 0;
 
       categories.forEach((category) => {
         const selectedOption = options[category].find((option) => option.value === row[category]);
         if (selectedOption) {
           totalRating += selectedOption.rating;
-          count++;
         }
       });
 
-      return count > 0 ? (totalRating / count).toFixed(2) : 'N/A';
+      return totalRating;
     };
 
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
@@ -318,8 +289,8 @@ export default function AttackTreeTable() {
       item.name === 'Elapsed Time' ||
       item.name === 'Knowledge of the Item' ||
       item.name === 'Window of Opportunity' ||
-      item.name === 'Equipment' ||
-      item.name === 'Approach'
+      item.name === 'Equipment'
+      // item.name === 'Approach'
     ) {
       return true;
     }

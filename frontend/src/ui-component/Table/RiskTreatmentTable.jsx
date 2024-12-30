@@ -138,7 +138,11 @@ export default function RiskTreatmentTable() {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
-        'Damage Scenarios': item?.damage_scenarios,
+        // 'Damage Scenarios': item?.damage_scenarios,
+        'Damage Scenarios':
+          `[DS${item?.threat_scene?.damage_key ? item?.threat_scene?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
+            item?.threat_scene?.damage_name
+          }` ?? '-',
         'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
         'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
         'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
@@ -285,16 +289,18 @@ export default function RiskTreatmentTable() {
             case item.name === 'Damage Scenarios':
               cellContent = (
                 <StyledTableCell component="th" scope="row">
-                  {row[item.name] && row[item.name].length ? (
-                    row[item.name].map((damage, i) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{damage?.Name}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <InputLabel>N/A</InputLabel>
-                  )}
+                  {
+                    // row[item.name] && row[item.name].length ? (
+                    // row[item.name].map((damage, i) => (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item?.name]}</span>
+                    </span>
+                    // ))
+                    // ) : (
+                    //   <InputLabel>N/A</InputLabel>
+                    //   )
+                  }
                 </StyledTableCell>
               );
               break;
