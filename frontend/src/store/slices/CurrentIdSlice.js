@@ -156,7 +156,7 @@ const CurrentIdSlice = createSlice({
         isDerivationTableOpen: false
       };
     },
-    drawerOpen: (state) => {
+    draweropen: (state) => {
       return {
         ...state,
         isRightDrawerOpen: true
@@ -223,7 +223,7 @@ export const {
   cyberBlockOpen,
   closeAll,
   cyberTableOpen,
-  drawerOpen,
+  draweropen,
   drawerClose,
   leftDrawerOpen,
   leftDrawerClose,

@@ -42,7 +42,7 @@ import CyberSecurityTable from '../../ui-component/Table/CybersecurityTable';
 import ELK from 'elkjs/lib/elk.bundled';
 import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import { drawerClose, drawerOpen, leftDrawerClose, leftDrawerOpen } from '../../store/slices/CurrentIdSlice';
+import { drawerClose, draweropen, leftDrawerClose, leftDrawerOpen } from '../../store/slices/CurrentIdSlice';
 import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
@@ -575,7 +575,7 @@ export default function MainCanvas() {
       });
   };
 
-  // const toggleDrawerOpen = (tab) => dispatch(drawerOpen(tab));
+  // const toggleDrawerOpen = (tab) => dispatch(draweropen(tab));
   // const toggleDrawerClose = () => dispatch(drawerClose());
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
@@ -795,7 +795,7 @@ export default function MainCanvas() {
             <Controls />
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
-            {/* <LeftDrawer state={isLeftDrawerOpen} drawerOpen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
+            {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
             {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>

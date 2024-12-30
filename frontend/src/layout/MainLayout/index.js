@@ -62,14 +62,14 @@ const selector = (state) => ({
 
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(({ theme, open, isclose, color, drawerOpen }) => {
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(({ theme, open, isclose, color, draweropen }) => {
   // console.log('color', color)
   // console.log('isclose', isclose)
   return {
     ...theme.typography.mainContent,
     background: color?.canvaSurroundsBG,
     marginTop: navbarHeight,
-    paddingLeft: !drawerOpen ? '2rem' : 'auto',
+    paddingLeft: !draweropen ? '2rem' : 'auto',
     // border: '1px solid gray',
     maxWidth: 'auto', // minHeight:'inherit',
     minHeight: isclose ? `100svh` : `93svh`,
@@ -90,13 +90,13 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && pr
       [theme.breakpoints.down('md')]: {
         // marginLeft: '20px',
         width: `calc(100% - ${drawerWidth}px)`,
-        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
+        paddingLeft: !draweropen ? '1.5rem' : 'auto',
         padding: '16px 16px 16px auto'
       },
       [theme.breakpoints.down('sm')]: {
         marginLeft: '10px',
         width: `calc(100% - ${drawerWidth}px)`,
-        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
+        paddingLeft: !draweropen ? '1.5rem' : 'auto',
         padding: '16px 16px 16px auto',
         marginRight: '10px'
       }
@@ -275,11 +275,11 @@ const MainLayout = ({ children }) => {
         </AppBar>
 
         {/*-------------------- drawer/sidebar ---------------------*/}
-        {/* <Sidebar drawerOpen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} /> */}
-        <Sidebar1 drawerOpen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
+        {/* <Sidebar draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} /> */}
+        <Sidebar1 draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         {/* -------------------- main content -------------------------*/}
-        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} drawerOpen={leftDrawerOpened}>
+        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropen={leftDrawerOpened}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
           <Outlet />
