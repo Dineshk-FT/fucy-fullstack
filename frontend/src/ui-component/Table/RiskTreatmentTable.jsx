@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
@@ -26,10 +25,11 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, colorPickerTab, threatType } from './constraints';
+import { colorPicker, colorPickerTab, OverallImpact, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
-import { ThreatIcon } from '../../assets/icons';
+import { AttackIcon, DamageIcon } from '../../assets/icons';
+import toast, { Toaster } from 'react-hot-toast';
 
 const selector = (state) => ({
   model: state.model,
@@ -37,11 +37,12 @@ const selector = (state) => ({
   riskTreatment: state.riskTreatment['subs'][0],
   getRiskTreatment: state.getRiskTreatment,
   addRiskTreatment: state.addRiskTreatment,
-  attackScenarios: state.attackScenarios['subs']
+  attackScenarios: state.attackScenarios['subs'],
+  updateRiskTreatment: state.updateRiskTreatment
 });
 
 const column = [
-  { id: 1, name: 'ID' },
+  { id: 1, name: 'SNo' },
   { id: 2, name: 'Threat Scenario' },
   { id: 3, name: 'Assets' },
   { id: 4, name: 'Damage Scenarios' },
@@ -99,8 +100,8 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function RiskTreatmentTable() {
   const color = ColorTheme();
+  const notify = (message, status) => toast[status](message);
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = useState(false);
   const [openSelect, setOpenSelect] = useState(false);
@@ -108,7 +109,7 @@ export default function RiskTreatmentTable() {
   const [details, setDetails] = useState({});
   const [selectedScene, setSelectedScene] = useState(null);
 
-  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, attackScenarios } = useStore(selector, shallow);
+  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, attackScenarios, updateRiskTreatment } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -122,6 +123,7 @@ export default function RiskTreatmentTable() {
   const handleCloseSelect = () => {
     setOpenSelect(false);
     setSelectedRow({});
+    setSelectedScene(null);
   };
   // console.log('riskTreatment', riskTreatment);
 
@@ -130,22 +132,27 @@ export default function RiskTreatmentTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
-    const data = riskTreatment?.Details.map((item) => ({
-      ID: item?.threat_id,
-      'Threat Scenario': item?.label,
-      'Damage Scenarios': `${item?.row_id?.slice(0, 6)} ${item?.damage_scene?.Name}`,
-      'Safety Impact': item?.damage_scene?.impacts['Safety Impact'],
-      'Financial Impact': item?.damage_scene?.impacts['Financial Impact'],
-      'Operational Impact': item?.damage_scene?.impacts['Operational Impact'],
-      'Privacy Impact': item?.damage_scene?.impacts['Privacy Impact'],
-      'Attack Feasibility Rating': ''
-    }));
+    const data = riskTreatment?.Details.map((item, i) => {
+      // console.log('item', item);
+      return {
+        SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
+        ID: item?.threat_id,
+        'Threat Scenario': item?.label,
+        'Damage Scenarios': item?.damage_scenarios,
+        'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
+        'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
+        'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
+        'Privacy Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Privacy Impact']) ?? '',
+        'Attack Tree or Attack Path(s)': item?.attack_scene,
+        'Attack Feasibility Rating': ''
+      };
+    });
     setRows(data);
     setFiltered(data);
     const attacktrees = attackScenarios.find((item) => item.type == 'attack_trees');
     setDetails(attacktrees);
     // console.log('attacktrees', attacktrees);
-  }, [riskTreatment?.Details.length, attackScenarios]);
+  }, [riskTreatment?.Details.length, riskTreatment.Details, attackScenarios]);
 
   // console.log('rows', rows);
   const Head = useMemo(() => {
@@ -185,9 +192,22 @@ export default function RiskTreatmentTable() {
       nodeId: parsedData.nodeId,
       threatId: parsedData.threatId,
       modelId: model?._id,
-      label: parsedData?.label
+      label: parsedData?.label,
+      damageId: parsedData?.damageId
     };
-    addRiskTreatment(details);
+    addRiskTreatment(details)
+      .then((res) => {
+        if (!res.error) {
+          console.log('res', res);
+          notify(res.message ?? 'Threat scene added', 'success');
+          getRiskTreatment(model?._id);
+        } else {
+          notify(res.error, 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
   };
 
   const handleSearch = (e) => {
@@ -215,7 +235,7 @@ export default function RiskTreatmentTable() {
     setPage(0);
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+  const RenderTableRow = React.memo(({ row, Head, color, handleOpenSelect }) => {
     return (
       <StyledTableRow
         key={row.name}
@@ -224,8 +244,7 @@ export default function RiskTreatmentTable() {
           '&:last-child td, &:last-child th': { border: 0 },
           '&:nth-of-type(even)': {
             backgroundColor: '#F4F8FE'
-          },
-          backgroundColor: isChild ? '#F4F8FE' : ''
+          }
         }}
       >
         {Head?.map((item, index) => {
@@ -247,10 +266,12 @@ export default function RiskTreatmentTable() {
             case item.name === 'Attack Tree or Attack Path(s)':
               cellContent = (
                 <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
-                  {row[item.name] && row[item.name].length ? (
+                  {row[item.name] !== null ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <img src={ThreatIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item.name]}</span>
+                      <img src={AttackIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                        {row[item.name]?.Name}
+                      </span>
                     </span>
                   ) : (
                     <InputLabel>Select attack path</InputLabel>
@@ -258,13 +279,31 @@ export default function RiskTreatmentTable() {
                 </StyledTableCell>
               );
               break;
-            case item.name.includes('Impact'):
-              return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(row[item.name]), color: '#000' }}>
-                  {row[item.name] ? row[item.name] : '-'}
+
+            case item.name === 'Damage Scenarios':
+              cellContent = (
+                <StyledTableCell component="th" scope="row">
+                  {row[item.name] && row[item.name].length ? (
+                    row[item.name].map((damage, i) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
+                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{damage?.Name}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <InputLabel>N/A</InputLabel>
+                  )}
                 </StyledTableCell>
               );
               break;
+
+            case item.name.includes('Impact'):
+              const impact = OverallImpact(row[item?.name]);
+              return (
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(impact), color: '#000' }}>
+                  {impact}
+                </StyledTableCell>
+              );
 
             case typeof row[item.name] !== 'object':
               cellContent = (
@@ -273,6 +312,7 @@ export default function RiskTreatmentTable() {
                 </StyledTableCell>
               );
               break;
+
             default:
               cellContent = null;
               break;
@@ -281,7 +321,7 @@ export default function RiskTreatmentTable() {
         })}
       </StyledTableRow>
     );
-  };
+  });
 
   return (
     <Box sx={{ overflow: 'auto', height: '-webkit-fill-available', minHeight: 'moz-available' }}>
@@ -319,8 +359,8 @@ export default function RiskTreatmentTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} />
+            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowKey) => (
+              <RenderTableRow key={rowKey} row={row} Head={Head} color={color} handleOpenSelect={handleOpenSelect} />
             ))}
           </TableBody>
         </Table>
@@ -334,7 +374,7 @@ export default function RiskTreatmentTable() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} model={model} id={id} />
+      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model?._id} />
       {openSelect && (
         <SelectAttacks
           open={openSelect}
@@ -342,8 +382,13 @@ export default function RiskTreatmentTable() {
           details={details}
           selectedScene={selectedScene}
           setSelectedScene={setSelectedScene}
+          updateRiskTreatment={updateRiskTreatment}
+          getRiskTreatment={getRiskTreatment}
+          selectedRow={selectedRow}
+          model={model}
         />
       )}
+      <Toaster position="top-right" reverseOrder={false} />
     </Box>
   );
 }

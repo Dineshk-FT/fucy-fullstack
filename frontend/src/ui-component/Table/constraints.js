@@ -303,3 +303,25 @@ export const AttackTableoptions = {
     }
   ]
 };
+
+export const OverallImpact = (impact) => {
+  const impactMap = {
+    Negligible: 1,
+    Minor: 2,
+    Moderate: 3,
+    Major: 4,
+    Severe: 5
+  };
+
+  const impactLabel = {
+    1: 'Negligible',
+    2: 'Minor',
+    3: 'Moderate',
+    4: 'Major',
+    5: 'Severe'
+  };
+
+  const maxImpactValue = Math.max(...impact.map((it) => impactMap[it] || 0));
+
+  return impactLabel[maxImpactValue] || '';
+};

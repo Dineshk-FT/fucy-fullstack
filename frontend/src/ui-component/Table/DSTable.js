@@ -243,6 +243,7 @@ export default function DsTable() {
   const handleCloseCl = () => {
     setOpenCl(false);
     setSelectedRow({});
+    setDetails(Details);
   };
 
   const handleSearch = (e) => {
