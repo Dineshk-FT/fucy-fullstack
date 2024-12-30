@@ -41,7 +41,7 @@ const selector = (state) => ({
   fetchModels: state.getModels
 });
 
-const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
+const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
@@ -51,7 +51,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
-  const [sidebarWidth, setSidebarWidth] = useState(drawerOpen ? 370 : 0);
+  const [sidebarWidth, setSidebarWidth] = useState(draweropen ? 370 : 0);
 
   useEffect(() => {
     fetchModels();
@@ -63,7 +63,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
   };
 
   const handleDrawerToggle = () => {
-    setSidebarWidth(drawerOpen ? 0 : 370);
+    setSidebarWidth(draweropen ? 0 : 370);
     drawerToggle();
   };
 
@@ -90,7 +90,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             transition: 'transform 0.2s ease'
           }}
         >
-          {drawerOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </BrowserView>
       <MobileView>
@@ -135,11 +135,11 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             flexShrink: { md: 0 },
             width: sidebarWidth,
             background: color?.sidebarBG,
-            mt: !drawerOpen ? navbarHeight : '0px'
+            mt: !draweropen ? navbarHeight : '0px'
           }}
           aria-label="mailbox folders"
         >
-          {!drawerOpen && (
+          {!draweropen && (
             <IconButton
               onClick={handleDrawerToggle}
               sx={{
@@ -157,7 +157,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
                 transition: 'transform 0.2s ease'
               }}
             >
-              {drawerOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+              {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
             </IconButton>
           )}
 
@@ -165,7 +165,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
             container={container}
             variant={matchUpMd ? 'persistent' : 'temporary'}
             anchor="left"
-            open={drawerOpen}
+            open={draweropen}
             onClose={handleDrawerToggle} // Use handleDrawerToggle here
             sx={{
               '& .MuiDrawer-paper': {
@@ -194,7 +194,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
 };
 
 Sidebar.propTypes = {
-  drawerOpen: PropTypes.bool,
+  draweropen: PropTypes.bool,
   drawerToggle: PropTypes.func,
   window: PropTypes.object
 };

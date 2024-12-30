@@ -42,7 +42,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export default function LeftDrawer({ state, drawerOpen, drawerClose }) {
+export default function LeftDrawer({ state, draweropen, drawerClose }) {
   const classes = useStyles();
   const color = ColorTheme();
   const [expanded, setExpanded] = React.useState(false);
@@ -75,7 +75,7 @@ export default function LeftDrawer({ state, drawerOpen, drawerClose }) {
         }}
       >
         {!state ? (
-          <Box onClick={drawerOpen} className={classes.arrow}>
+          <Box onClick={draweropen} className={classes.arrow}>
             <ArrowSquareRight size="20px" color={color?.iconColor} />
           </Box>
         ) : (

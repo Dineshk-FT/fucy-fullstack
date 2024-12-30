@@ -1,8 +1,40 @@
-import React from 'react';
+/* eslint-disable */
+import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, FormControlLabel, Checkbox, Divider } from '@mui/material';
+import useStore from '../../Zustand/store';
+import { useSelector } from 'react-redux';
 
 const DocumentDialog = ({ open, onClose }) => {
-  // Define the items and their subs
+  const { generateDocument } = useStore(); // Access the store method
+  const [selectedItems, setSelectedItems] = useState([]);
+  const { modelId } = useSelector((state) => state?.pageName);
+
+  // Function to handle checkbox state changes
+  const handleCheckboxChange = (id) => {
+    setSelectedItems(
+      (prevSelectedItems) =>
+        prevSelectedItems.includes(id)
+          ? prevSelectedItems.filter((item) => item !== id) // Remove item if already selected
+          : [...prevSelectedItems, id] // Add item if not already selected
+    );
+  };
+
+  const handleDownload = async () => {
+    const formData = new FormData();
+    formData.append('model-id', modelId); 
+    formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
+    formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
+    formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
+    try {
+      const response = await generateDocument(formData);
+      console.log('Document generation response:', response);
+
+      // Handle file download or success message
+    } catch (error) {
+      console.error('Error during document generation:', error);
+    }
+  };
+
   const items = [
     {
       id: 1,
@@ -14,7 +46,7 @@ const DocumentDialog = ({ open, onClose }) => {
       name: 'Damage Scenarios Identification and Impact Ratings',
       icon: 'DamageIcon',
       subs: [
-        { id: 21, name: 'Damage Scenarios Derivations' },
+        // { id: 21, name: 'Damage Scenarios Derivations' },
         { id: 22, name: 'Damage Scenarios - Collection & Impact Ratings' }
       ]
     },
@@ -23,7 +55,7 @@ const DocumentDialog = ({ open, onClose }) => {
       name: 'Threat Scenarios Identification',
       icon: 'ThreatIcon',
       subs: [
-        { id: 31, name: 'Threat Scenarios' },
+        // { id: 31, name: 'Threat Scenarios' },
         { id: 32, name: 'Derived Threat Scenarios' }
       ]
     },
@@ -32,11 +64,11 @@ const DocumentDialog = ({ open, onClose }) => {
       name: 'Attack Path Analysis and Attack Feasibility Rating',
       icon: 'AttackIcon',
       subs: [
-        { id: 41, name: 'Attack' },
-        { id: 42, name: 'Attack Trees' }
+        { id: 41, name: 'Attack' }
+        // { id: 42, name: 'Attack Trees' }
         // { id: 43, name: 'Vulnerability Analysis' }
       ]
-    },
+    }
     // {
     //   id: 5,
     //   name: 'CyberSecurity Goals, Claims and Requirements',
@@ -68,12 +100,12 @@ const DocumentDialog = ({ open, onClose }) => {
     //   icon: 'CatalogIcon',
     //   subs: [{ id: 71, name: 'UNICE R.155 Annex 5(WP.29)' }]
     // },
-    {
-      id: 8,
-      name: 'Risk Determination and Risk Treatment Decision',
-      icon: 'RiskIcon',
-      subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }]
-    }
+    // {
+    //   id: 8,
+    //   name: 'Risk Determination and Risk Treatment Decision',
+    //   icon: 'RiskIcon',
+    //   subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }]
+    // }
   ];
 
   return (
@@ -83,9 +115,7 @@ const DocumentDialog = ({ open, onClose }) => {
         <Typography variant="subtitle1" gutterBottom>
           Select items to add in the report and click on download:
         </Typography>
-
         <Divider sx={{ my: 1 }} />
-
         {items.map((item) => (
           <div key={item.id}>
             {item.subs ? (
@@ -113,11 +143,11 @@ const DocumentDialog = ({ open, onClose }) => {
                   control={
                     <Checkbox
                       // Add state logic for managing sub-selection if needed
+                      checked={selectedItems.includes(sub.id)}
                       onChange={() => handleCheckboxChange(sub.id)}
-                      name={sub.name}
                     />
                   }
-                  label={`  ${sub.name}`}
+                  label={sub.name}
                 />
               ))}
             <Divider sx={{ my: 1 }} />
@@ -147,6 +177,7 @@ const DocumentDialog = ({ open, onClose }) => {
             color: '#fff',
             cursor: 'pointer'
           }}
+          onClick={handleDownload}
         >
           Download
         </Button>
