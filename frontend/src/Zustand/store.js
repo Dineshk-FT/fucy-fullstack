@@ -190,6 +190,35 @@ const useStore = createWithEqualityFn((set, get) => ({
   component: [],
   originalNodes: [],
 
+  generateDocument: async (payload) => {
+    try {
+      const url = `${configuration.apiBaseUrl}v1/generate/doc`;
+      const options = {
+        method: 'POST',
+        url,
+        headers: {
+          ...createHeadersForJson()
+        },
+        data: payload
+      };
+
+      const response = await axios(options);
+      console.log('Document generated successfully:', response.data);
+
+      // Extract the download URL
+      const downloadUrl = response.data.download_url;
+
+      // Open the URL in a new tab
+      window.open(downloadUrl, '_blank');
+
+      // You can handle additional logic here, like setting a state or triggering a file download
+      return response.data;
+    } catch (error) {
+      console.error('Error generating document:', error);
+      throw error; // Throw error to handle it in the component
+    }
+  },
+
   setClickedItem: (item) =>
     set((state) => {
       if (state.clickedItem.includes(item)) {
