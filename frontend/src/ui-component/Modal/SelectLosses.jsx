@@ -1,5 +1,6 @@
-/* eslint-disable */
+/*eslint-disable*/
 import * as React from 'react';
+import { useEffect } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -24,6 +25,30 @@ export default function SelectLosses({
   update,
   getThreatScenario
 }) {
+  useEffect(() => {
+    const updateDetailsWithCyberLosses = (details, cyberLosses) => {
+      const updatedDetails = details.map((item) => {
+        const updatedProps = item.props.map((prop) => {
+          const match = cyberLosses.find((loss) => loss.id === prop.id && loss.isSelected);
+          return {
+            ...prop,
+            isSelected: match ? true : prop.isSelected || false
+          };
+        });
+        return {
+          ...item,
+          props: updatedProps
+        };
+      });
+      return updatedDetails;
+    };
+
+    // Example usage:
+    const updatedDetails = updateDetailsWithCyberLosses(details, selectedRow.cyberLosses);
+    // console.log('updatedDetails', updatedDetails);
+    setDetails(updatedDetails);
+  }, [selectedRow]);
+
   const handleParentChange = (e, item) => {
     e.stopPropagation();
     if (!item.props || item.props.length === 0) return; // Skip if no props
@@ -62,6 +87,7 @@ export default function SelectLosses({
     const someSelected = item.props.some((prop) => prop.isSelected);
     return { allSelected, someSelected };
   };
+
   const handleClick = () => {
     const losses = details?.flatMap(
       (dtl) =>
@@ -73,8 +99,6 @@ export default function SelectLosses({
             nodeId: dtl?.nodeId
           })) || []
     );
-
-    let key = 0;
 
     const filteredDetails = {
       rowId: selectedRow?.id,
@@ -88,7 +112,7 @@ export default function SelectLosses({
             .filter((prop) => prop.isSelected)
             .map((prop, index) => ({
               ...prop,
-              key: index + 1 // Add an incrementing key starting from 1
+              key: index + 1
             })),
           name: selectedRow?.Name,
           description: selectedRow['Description/ Scalability']
@@ -113,28 +137,8 @@ export default function SelectLosses({
 
   return (
     <React.Fragment>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-        sx={{
-          '& .MuiPaper-root': {
-            width: '-webkit-fill-available',
-            height: 400
-          }
-        }}
-      >
-        <DialogTitle
-          id="alert-dialog-title"
-          sx={{
-            fontSize: 20,
-            fontFamily: 'Inter',
-            fontWeight: 600
-          }}
-        >
-          {'Select the Losses'}
-        </DialogTitle>
+      <Dialog open={open} onClose={handleClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+        <DialogTitle id="alert-dialog-title">{'Select the Losses'}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
@@ -145,23 +149,17 @@ export default function SelectLosses({
                     key={`a${i}`}
                     nodeId={`a${i}`}
                     label={
-                      <div onClick={(e) => e.stopPropagation()} /* Prevent TreeItem toggle */>
+                      <div onClick={(e) => e.stopPropagation()}>
                         <FormGroup>
                           <FormControlLabel
-                            sx={{
-                              '& .MuiTypography-root': {
-                                fontSize: '14px',
-                                fontWeight: 600
-                              }
-                            }}
                             control={
                               <Checkbox
                                 size="small"
-                                checked={allSelected}
-                                indeterminate={!allSelected && someSelected}
-                                disabled={!item.props || item.props.length === 0} // Disable if no props
+                                checked={allSelected} // All children selected
+                                indeterminate={!allSelected && someSelected} // Some children selected
+                                disabled={!item.props || item.props.length === 0} // Disable if no children
                                 onChange={(e) => handleParentChange(e, item)}
-                                onClick={(e) => e.stopPropagation()} // Prevents TreeItem toggle
+                                onClick={(e) => e.stopPropagation()}
                               />
                             }
                             label={item?.name}
@@ -177,14 +175,13 @@ export default function SelectLosses({
                         label={
                           <FormGroup>
                             <FormControlLabel
-                              sx={{
-                                margin: '-6px',
-                                '& .MuiTypography-root': {
-                                  fontSize: '13px',
-                                  color: '#000'
-                                }
-                              }}
-                              control={<Checkbox size="small" checked={pr?.isSelected} onChange={(e) => handleChildChange(e, pr, item)} />}
+                              control={
+                                <Checkbox
+                                  size="small"
+                                  checked={pr?.isSelected} // Set based on isSelected
+                                  onChange={(e) => handleChildChange(e, pr, item)}
+                                />
+                              }
                               label={`Loss of ${pr.name}`}
                             />
                           </FormGroup>
@@ -198,10 +195,10 @@ export default function SelectLosses({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
-            close
+          <Button variant="outlined" onClick={handleClose}>
+            Close
           </Button>
-          <Button variant="contained" onClick={handleClick} autoFocus>
+          <Button variant="contained" onClick={handleClick}>
             Okay
           </Button>
         </DialogActions>

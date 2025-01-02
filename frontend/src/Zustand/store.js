@@ -975,6 +975,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     return await PATCH_CALL(details, url);
   },
 
+  updateName$Description: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/damage_scenerio_name&desc`;
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+
   updateAttackScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/attacks`;
     const res = await UPDATE_CALL(details, url);

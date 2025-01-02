@@ -337,8 +337,8 @@ export default function AttackTreeTable() {
               color: `${color?.sidebarContent} !important`
             },
             '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
+              backgroundColor: color?.sidebarBG
+              // color: `${color?.sidebarContent} !important`
             },
             backgroundColor: isChild ? '#F4F8FE' : '',
             color: `${color?.sidebarContent} !important`
@@ -346,30 +346,44 @@ export default function AttackTreeTable() {
         >
           {Head?.map((item, index) => {
             const bgColor = RatingColor(row['Attack Feasibilities Rating']);
-            return (
-              <React.Fragment key={index}>
-                {checkforLabel(item) ? (
-                  <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
-                ) : item.name === 'Attack Feasibilities Rating' ? (
+            // console.log('bgColor', bgColor);
+            const color = !bgColor.includes('yellow') ? 'white' : 'black';
+            // console.log('color', color);
+
+            let cellContent;
+            switch (true) {
+              case checkforLabel(item):
+                cellContent = <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />;
+                break;
+              case item.name === 'Attack Feasibilities Rating':
+                cellContent = (
                   <StyledTableCell
                     key={index}
                     align={'left'}
-                    sx={{ backgroundColor: bgColor, color: bgColor !== 'yellow' ? 'white' : 'black' }}
+                    sx={{
+                      backgroundColor: `${bgColor} !important`,
+                      color: `${color} !important`
+                    }}
                   >
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                ) : (
+                );
+                break;
+              default:
+                cellContent = (
                   <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                )}
-              </React.Fragment>
-            );
+                );
+                break;
+            }
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
         </StyledTableRow>
       </>
     );
   };
+
   // console.log('selectedRow', selectedRow)
   return (
     <Box>

@@ -49,7 +49,7 @@ export const threatType = (value) => {
     case 'Confidentiality':
       return 'Information Disclosure';
     case 'Availability':
-      return 'Denial';
+      return 'Denial of service';
     case 'Authenticity':
       return 'Spoofing';
     case 'Authorization':

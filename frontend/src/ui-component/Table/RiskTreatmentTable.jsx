@@ -140,9 +140,9 @@ export default function RiskTreatmentTable() {
         'Threat Scenario': item?.label,
         // 'Damage Scenarios': item?.damage_scenarios,
         'Damage Scenarios':
-          `[DS${item?.threat_scene?.damage_key ? item?.threat_scene?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
-            item?.threat_scene?.damage_name
-          }` ?? '-',
+          `[DS${
+            item?.threat_scene?.damage_key ? item?.threat_scene?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
+          }] ${item?.threat_scene?.damage_name}` ?? '-',
         'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
         'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
         'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
