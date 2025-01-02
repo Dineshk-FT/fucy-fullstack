@@ -41,7 +41,7 @@ import {
   AttackTreePageOpen,
   closeAll,
   DerivationTableOpen,
-  drawerOpen,
+  draweropen,
   DsTableOpen,
   setAttackScene,
   TsTableOpen,

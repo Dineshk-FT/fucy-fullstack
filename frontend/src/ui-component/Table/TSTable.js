@@ -184,10 +184,10 @@ export default function Tstable() {
       const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
-      const data = {
-        name: damageScenarios?.name,
-        scenes: damageScenarios?.Details
-      };
+      // const data = {
+      //   name: damageScenarios?.name,
+      //   scenes: damageScenarios?.Details
+      // };
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);
@@ -279,7 +279,7 @@ export default function Tstable() {
           let cellContent;
           switch (true) {
             case item.name === 'Losses of Cybersecurity Properties':
-              cellContent = (
+              cellContent = row[item?.name] && (
                 <StyledTableCell component="th" scope="row">
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />

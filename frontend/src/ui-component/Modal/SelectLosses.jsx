@@ -137,7 +137,18 @@ export default function SelectLosses({
 
   return (
     <React.Fragment>
-      <Dialog open={open} onClose={handleClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        sx={{
+          '& .MuiPaper-root': {
+            minWidth: 350,
+            width: 'fit-content'
+          }
+        }}
+      >
         <DialogTitle id="alert-dialog-title">{'Select the Losses'}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
