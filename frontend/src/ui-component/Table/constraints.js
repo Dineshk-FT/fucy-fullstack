@@ -317,6 +317,7 @@ export const AttackTableoptions = {
 };
 
 export const OverallImpact = (impact) => {
+  console.log('impact', impact);
   const impactMap = {
     Negligible: 1,
     Minor: 2,

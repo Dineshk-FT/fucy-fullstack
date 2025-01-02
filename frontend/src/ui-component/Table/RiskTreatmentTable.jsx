@@ -141,12 +141,12 @@ export default function RiskTreatmentTable() {
         // 'Damage Scenarios': item?.damage_scenarios,
         'Damage Scenarios':
           `[DS${
-            item?.threat_scene?.damage_key ? item?.threat_scene?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
-          }] ${item?.threat_scene?.damage_name}` ?? '-',
-        'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
-        'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
-        'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
-        'Privacy Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Privacy Impact']) ?? '',
+            item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
+          }] ${item?.threat_scene[0]?.damage_name}` ?? '-',
+        'Safety Impact': item?.impacts['Safety Impact'] ?? '',
+        'Financial Impact': item?.impacts['Financial Impact'] ?? '',
+        'Operational Impact': item?.impacts['Operational Impact'] ?? '',
+        'Privacy Impact': item?.impacts['Privacy Impact'] ?? '',
         'Attack Tree or Attack Path(s)': item?.attack_scene,
         'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? ''
       };
@@ -306,10 +306,12 @@ export default function RiskTreatmentTable() {
               break;
 
             case item.name.includes('Impact'):
-              const impact = OverallImpact(row[item?.name]);
+              // const impact = OverallImpact(row[item?.name]);
+              const impact = colorPickerTab(row[item?.name]);
+
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(impact), color: '#000' }}>
-                  {impact}
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: impact, color: '#000' }}>
+                  {row[item?.name]}
                 </StyledTableCell>
               );
             case item.name === 'Attack Feasibility Rating':

@@ -20,7 +20,14 @@ const selector = (state) => ({
 export default function Event(props) {
   const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
-  const [inputValue, setInputValue] = useState(props.data.label);
+  const inputValueFromProps = useMemo(() => {
+    const matchingAttack = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+    // console.log('matchingAttack', matchingAttack);
+    return matchingAttack?.Name || props.data.label;
+  }, [attacks, props?.id, props?.data]);
+
+  const [inputValue, setInputValue] = useState(inputValueFromProps);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
   const [isHovered, setIsHovered] = useState(false);
