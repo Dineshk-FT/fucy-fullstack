@@ -476,26 +476,32 @@ export default function DsTable() {
       setAnchorEl(event.currentTarget);
     };
 
-    const handleSaveEdit = () => {
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
       if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
         const details = {
           id: damageID,
           detailId: row?.id,
           [editingField === 'Name' ? 'Name' : 'Description']: editValue
         };
-        // console.log('details', details);
+
         updateName(details)
           .then((res) => {
             console.log('res', res);
             if (!res.error) {
               notify(res.message ?? 'Deleted successfully', 'success');
               getDamageScenarios(model?._id);
+              handleClosePopper();
             } else {
               notify(res.error ?? 'Something went wrong', 'error');
             }
           })
           .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
-        handleClosePopper();
       }
     };
 
@@ -665,7 +671,25 @@ export default function DsTable() {
             return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
           {anchorEl && (
-            <Popper open={Boolean(anchorEl)} anchorEl={anchorEl} placement="bottom-start">
+            <Popper
+              open={Boolean(anchorEl)}
+              anchorEl={anchorEl}
+              placement="bottom-start"
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [-80, 20] // Adjusts the offset [skidding, distance]
+                  }
+                },
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    boundary: 'viewport' // Ensures Popper stays within the viewport
+                  }
+                }
+              ]}
+            >
               <ClickAwayListener onClickAway={handleClosePopper}>
                 <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                   <TextField
