@@ -23,6 +23,11 @@ import {
   TableRow,
   TablePagination,
   Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
   InputLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
@@ -201,6 +206,25 @@ export default function DsTable() {
   const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const [columnVisibility, setColumnVisibility] = useState(
+    DSTableHeader.reduce((acc, header) => {
+      acc[header.id] = true; // Default all columns visible
+      return acc;
+    }, {})
+  ); // Initial state for column visibility
+
+  // Toggle column visibility based on checkbox
+  const handleColumnToggle = (columnId) => {
+    setColumnVisibility((prevState) => ({
+      ...prevState,
+      [columnId]: !prevState[columnId] // Toggle visibility
+    }));
+  };
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
 
   const handleChecked = (value, item, rowId) => {
     const details = {
@@ -261,9 +285,9 @@ export default function DsTable() {
     if (stakeHolder) {
       return stakeHeader;
     } else {
-      return DSTableHeader;
+      return DSTableHeader.filter((header) => columnVisibility[header.id]); // Only show columns that are visible
     }
-  }, []);
+  }, [columnVisibility]);
 
   const handleOpenCl = (row) => {
     setSelectedRow(row);
@@ -380,14 +404,14 @@ export default function DsTable() {
       return value === 1
         ? 'Negligible'
         : value === 2
-        ? 'Minor'
-        : value === 3
-        ? 'Moderate'
-        : value === 4
-        ? 'Major'
-        : value === 5
-        ? 'Severe'
-        : '';
+          ? 'Minor'
+          : value === 3
+            ? 'Moderate'
+            : value === 4
+              ? 'Major'
+              : value === 5
+                ? 'Severe'
+                : '';
     };
 
     const val = Object.values(impact)?.map((it) => pattern(it));
@@ -610,6 +634,9 @@ export default function DsTable() {
           <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
+          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenFilter}>
+            Filter Columns
+          </Button>
           <Button
             sx={{ float: 'right', mb: 2 }}
             variant="outlined"
@@ -622,6 +649,30 @@ export default function DsTable() {
           </Button>
         </Box>
       </Box>
+
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {DSTableHeader.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={
+                <Checkbox
+                  checked={columnVisibility[column.id]}
+                  onChange={() => handleColumnToggle(column.id)} // Handle checkbox toggle
+                />
+              }
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <TableContainer
         component={Paper}
@@ -673,6 +724,11 @@ export default function DsTable() {
           <TableBody>
             <StyledTableCell></StyledTableCell>
             {filtered?.map((row, rowkey) => (
+              // <StyledTableRow key={row.id}>
+              //   {Head.map((item) => (
+              //     <StyledTableCell key={item.id}>{row[item.name]}</StyledTableCell>
+              //   ))}
+              // </StyledTableRow>
               <>
                 <RenderTableRow row={row} rowKey={rowkey} />
               </>
