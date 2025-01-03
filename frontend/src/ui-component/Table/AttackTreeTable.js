@@ -1,13 +1,32 @@
 /*eslint-disable*/
 import * as React from 'react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { Paper, FormControl, MenuItem, Select, TextField, Typography, styled, Tooltip, TablePagination, InputLabel } from '@mui/material';
+import {
+  Paper,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+  styled,
+  Tooltip,
+  TablePagination,
+  ClickAwayListener,
+  InputLabel,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+} from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
@@ -19,7 +38,8 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../store/constant';
-import { AttackTableoptions as options } from './constraints';
+import { AttackTableoptions as options, AttackTableHeader } from './constraints';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
@@ -37,26 +57,8 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
     border: '1px solid #dadde9'
   }
 }));
-const Head = [
-  { id: 1, name: 'SNO' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Category' },
-  { id: 4, name: 'Description' },
-  // { id: 5, name: 'Approach' },
-  { id: 6, name: 'Elapsed Time' },
-  { id: 7, name: 'Expertise' },
-  { id: 8, name: 'Knowledge of the Item' },
-  { id: 9, name: 'Window of Opportunity' },
-  { id: 10, name: 'Equipment' },
-  { id: 11, name: 'Attack Vector' },
-  { id: 12, name: 'Attack Complexity' },
-  { id: 13, name: 'Privileges Required' },
-  { id: 14, name: 'User Interaction' },
-  { id: 15, name: 'Scope' },
-  { id: 16, name: 'Determination Criteria' },
-  { id: 17, name: 'Attack Feasibilities Rating' },
-  { id: 18, name: 'Attack Feasability Rating Justification' }
-];
+
+const column = AttackTableHeader;
 
 const useStyles = makeStyles({
   div: {
@@ -173,6 +175,17 @@ export default function AttackTreeTable() {
   const [page, setPage] = React.useState(0); // Pagination state
   const [rowsPerPage, setRowsPerPage] = React.useState(10); // Rows per page state
   const [columnWidths, setColumnWidths] = React.useState({});
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns3);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
+
+  const Head = useMemo(() => {
+    return column.filter((header) => visibleColumns.includes(header.name));
+  }, [ visibleColumns]);
 
   React.useEffect(() => {
     if (attacks['scenes']) {
@@ -400,7 +413,41 @@ export default function AttackTreeTable() {
           onChange={handleSearch}
           sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
         />
+        <Button
+            sx={{
+              float: 'right',
+              mb: 2,
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon />
+            Filter Columns
+          </Button>
       </Box>
+
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {AttackTableHeader.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns3',column.name)} />}
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <TableContainer
         component={Paper}
