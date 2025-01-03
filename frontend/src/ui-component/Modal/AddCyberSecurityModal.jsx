@@ -1,4 +1,5 @@
-import * as React from 'react';
+/*eslint-disable*/
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -13,65 +14,57 @@ import {
 } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { v4 as uid } from 'uuid';
-import { useParams } from 'react-router';
+// import { v4 as uid } from 'uuid';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const selector = (state) => ({
-  update: state.updateModel,
-  getModels: state.getModels,
-  getModel: state.getModelById,
-  model: state.model
+  addScene: state.addcybersecurityScene,
+  model: state.model,
+  getCyberSecurityScenario: state.getCyberSecurityScenario
 });
 
-export default function CyberSecurityModal({ open, handleClose, name }) {
-  const { update, getModel, model } = useStore(selector, shallow);
-  const [templateDetails, setTemplateDetails] = React.useState({
-    name: '',
+const notify = (message, status) => toast[status](message);
+export default function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
+  const { addScene, model, getCyberSecurityScenario } = useStore(selector, shallow);
+  const [templateDetails, setTemplateDetails] = useState({
+    Name: '',
     Description: ''
   });
 
-  const { id } = useParams();
-
-  React.useEffect(() => {
-    getModel(id);
-  }, [id]);
-
   // console.log('name', name);
   const handleCreate = () => {
-    const mod = { ...model };
-    let cyber = mod.scenarios[4].subs[0];
-    if (name === 'Goals') {
-      cyber?.subs[0]?.scenes.push({
-        id: uid(),
-        ...templateDetails
-      });
-    } else {
-      cyber?.subs[1]?.scenes.push({
-        id: uid(),
-        ...templateDetails
-      });
-    }
+    const details = {
+      modelId: model?._id,
+      type: type,
+      name: templateDetails?.Name,
+      description: templateDetails?.Description,
+      ...(id && { id }) // Only include `id` if it has a truthy value
+    };
     // console.log('cyber', cyber)
-    update(mod)
+    // console.log('details', details);
+    addScene(details)
       .then((res) => {
-        if (res) {
-          setTimeout(() => {
-            alert('Added successfully');
-            // window.location.reload();
-            handleClose();
-            setTemplateDetails({
-              name: '',
-              Description: ''
-            });
-            getModels();
-          }, 500);
+        if (!res.error) {
+          // setTimeout(() => {
+          getCyberSecurityScenario(model?._id);
+          notify(res.message ?? 'Deleted successfully', 'success');
+          handleClose();
+          setTemplateDetails({
+            name: '',
+            Description: ''
+          });
+          // }, 500);
+        } else {
+          notify('Something went wrong', 'error');
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
   };
   return (
     <React.Fragment>
@@ -84,24 +77,26 @@ export default function CyberSecurityModal({ open, handleClose, name }) {
         sx={{
           '& .MuiPaper-root': {
             // background:'#999999',
-            width: '-webkit-fill-available'
+            width: 475
           }
         }}
       >
-        <DialogTitle>Add {name}</DialogTitle>
+        <DialogTitle variant="h4" color="primary">
+          Add {name}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel>Name :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
-                value={templateDetails?.name}
+                value={templateDetails?.Name}
                 variant="outlined"
                 placeholder="Name"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
+                onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel>Description :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"
@@ -117,7 +112,7 @@ export default function CyberSecurityModal({ open, handleClose, name }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+          <Button variant="outlined" color="error" onClick={handleClose}>
             cancel
           </Button>
           <Button variant="contained" color="primary" onClick={handleCreate}>
@@ -125,6 +120,7 @@ export default function CyberSecurityModal({ open, handleClose, name }) {
           </Button>
         </DialogActions>
       </Dialog>
+      <Toaster position="top-right" reverseOrder={false} />
     </React.Fragment>
   );
 }

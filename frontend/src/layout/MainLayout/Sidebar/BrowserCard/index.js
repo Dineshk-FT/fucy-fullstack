@@ -36,18 +36,7 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
-import {
-  attackTableOpen,
-  AttackTreePageOpen,
-  closeAll,
-  DerivationTableOpen,
-  draweropen,
-  DsTableOpen,
-  setAttackScene,
-  TsTableOpen,
-  cyberTableOpen,
-  riskTreatmentTableOpen
-} from '../../../../store/slices/CurrentIdSlice';
+import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
@@ -191,6 +180,7 @@ const BrowserCard = () => {
     setNodes
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
+  const { tableOpen } = useSelector((state) => state?.currentId);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
@@ -293,29 +283,9 @@ const BrowserCard = () => {
     // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    switch (true) {
-      case name.includes('Derivations'):
-        dispatch(DerivationTableOpen());
-        break;
-      case name.includes('Collection & Impact Ratings'):
-        dispatch(DsTableOpen());
-        break;
-      case name.includes('Threat Scenarios'):
-        dispatch(TsTableOpen());
-        dispatch(setTitle(name));
-        break;
-      case name === 'Attack':
-        dispatch(attackTableOpen());
-        break;
-      case name.includes('Threat Assessment'):
-        dispatch(riskTreatmentTableOpen());
-        dispatch(setTitle(name));
-        break;
-      case name === 'CyberSecurity Requirements':
-        dispatch(cyberTableOpen());
-        dispatch(setTitle(name));
-      default:
-        break;
+    if (name !== 'Attack Trees') {
+      dispatch(setTableOpen(name));
+      dispatch(setTitle(name));
     }
   };
 
@@ -323,7 +293,7 @@ const BrowserCard = () => {
     setNodes([]);
     e.stopPropagation();
     if (name === 'Attack Trees') {
-      dispatch(AttackTreePageOpen());
+      dispatch(setTableOpen('Attack Trees Canvas'));
       dispatch(setAttackScene(scene));
     }
   };
@@ -507,9 +477,9 @@ const BrowserCard = () => {
                   return detail.Details?.flatMap((nodeDetail) =>
                     nodeDetail.props?.map((prop, i) => {
                       key++;
-                      const label = `[TS${key.toString().padStart(3, '0')}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
-                        nodeDetail.node
-                      } for Damage Scene ${detail?.id}`;
+                      const label = `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to  ${
+                        detail?.damage_name
+                      } [${detail?.id}]`;
 
                       const Details = {
                         label,

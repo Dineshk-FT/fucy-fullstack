@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -10,12 +10,14 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
+import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { tableHeight } from '../../store/constant';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -53,34 +55,36 @@ const selector = (state) => ({
 });
 
 export default function CyberRequirementTable() {
+  const { title } = useSelector((state) => state?.pageName);
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
   const { cybersecurity } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [columnWidths, setColumnWidths] = useState({});
 
-  const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
-
-  const Head = React.useMemo(() => {
+  const Head = useMemo(() => {
     return [
       { id: 1, name: 'SNo' },
       { id: 2, name: 'Name' },
-      { id: 3, name: 'Description' }
+      { id: 3, name: 'Description' },
+      { id: 4, name: 'Related Cybersecurity Goals' },
+      { id: 5, name: 'Related Cybersecurity Controls' }
     ];
   }, []);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (cybersecurity['scenes']) {
       const scene = cybersecurity['scenes']?.map((dt, i) => {
         return {
-          SNo: `${(i + 1).toString().padStart(3, '0')}`,
+          SNo: `CR${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
-          Description: `description for ${dt?.Name}`
+          Description: dt?.Description ?? `description for ${dt?.Name}`
         };
       });
       setRows(scene);
@@ -144,7 +148,7 @@ export default function CyberRequirementTable() {
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
       <StyledTableRow
-        key={row.name}
+        key={rowKey}
         data={row}
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
@@ -216,9 +220,17 @@ export default function CyberRequirementTable() {
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
-          <Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Button
+              variant="outlined"
+              sx={{ borderRadius: 1.5 }}
+              onClick={() => setOpen(true)}
+              startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
+            >
+              Add new
+            </Button>
             <TextField
               id="outlined-size-small"
               placeholder="Search"
@@ -269,12 +281,22 @@ export default function CyberRequirementTable() {
         <TablePagination
           component="div"
           count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      {open && (
+        <AddCyberSecurityModal
+          open={open}
+          handleClose={() => setOpen(false)}
+          name={title}
+          id={cybersecurity?._id}
+          type={cybersecurity?.type ?? 'cybersecurity_requirements'}
+        />
+      )}
     </>
   );
 }

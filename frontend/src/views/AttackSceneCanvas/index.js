@@ -217,7 +217,6 @@ export default function AttackBlock({ attackScene, color }) {
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const { isAttackTreeOpen } = useSelector((state) => state?.currentId);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
@@ -230,7 +229,7 @@ export default function AttackBlock({ attackScene, color }) {
         setEdges(attackScene?.templates?.edges ?? []);
       }, 300);
     }
-  }, [attackScene, isAttackTreeOpen]);
+  }, [attackScene]);
 
   useEffect(() => {
     if (reactFlowInstance) {

@@ -44,8 +44,9 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
-import { tableHeight } from '../../store/constant';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { tableHeight } from '../../store/constant';
+import FormPopper from '../Poppers/FormPopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -58,7 +59,7 @@ const selector = (state) => ({
   Details: state.damageScenarios['subs'][0]['Details'],
   damageID: state.damageScenarios['subs'][1]['_id'],
   deleteDamageScenario: state.deleteDamageScenario,
-  updateName: state.updateName$Description
+  updateName: state.updateName$DescriptionforDamage
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -671,49 +672,15 @@ export default function DsTable() {
             return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
           {anchorEl && (
-            <Popper
-              open={Boolean(anchorEl)}
+            <FormPopper
               anchorEl={anchorEl}
-              placement="bottom-start"
-              modifiers={[
-                {
-                  name: 'offset',
-                  options: {
-                    offset: [-80, 20] // Adjusts the offset [skidding, distance]
-                  }
-                },
-                {
-                  name: 'preventOverflow',
-                  options: {
-                    boundary: 'viewport' // Ensures Popper stays within the viewport
-                  }
-                }
-              ]}
-            >
-              <ClickAwayListener onClickAway={handleClosePopper}>
-                <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <TextField
-                    fullWidth
-                    value={editValue}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setEditValue(e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={() => setIsPopperFocused(true)}
-                    onBlur={() => setIsPopperFocused(false)}
-                    label={`Edit ${editingField}`}
-                    size="small"
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button onClick={handleClosePopper}>Cancel</Button>
-                    <Button onClick={handleSaveEdit} color="primary" variant="contained">
-                      Update
-                    </Button>
-                  </div>
-                </Paper>
-              </ClickAwayListener>
-            </Popper>
+              handleSaveEdit={handleSaveEdit}
+              handleClosePopper={handleClosePopper}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              editingField={editingField}
+              setIsPopperFocused={setIsPopperFocused}
+            />
           )}
         </StyledTableRow>
       </>
@@ -871,6 +838,7 @@ export default function DsTable() {
       <TablePagination
         component="div"
         count={filtered.length}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
@@ -894,7 +862,6 @@ export default function DsTable() {
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />
-      {/* <UpdateField /> */}
     </Box>
   );
 }

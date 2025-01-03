@@ -460,7 +460,7 @@ export default function AttackTreeTable() {
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
         count={filtered.length}
         rowsPerPage={rowsPerPage}

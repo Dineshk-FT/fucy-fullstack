@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -10,12 +10,14 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
+import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { tableHeight } from '../../store/constant';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -49,73 +51,55 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  damageScenarios: state.damageScenarios['subs'][0],
-  update: state.updateDerivedDamageScenario,
-  modelId: state?.model?._id,
-  getDamageScenarios: state?.getDamageScenarios
+  cybersecurity: state.cybersecurity['subs'][3]
 });
 
-export default function DsDerivationTable() {
+export default function CyberClaimsTable() {
+  const { title } = useSelector((state) => state?.pageName);
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
+  const { cybersecurity } = useStore(selector, shallow);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [columnWidths, setColumnWidths] = useState({});
+  // console.log('cybersecurity', cybersecurity);
 
-  const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
-
-  const Head = React.useMemo(() => {
+  const Head = useMemo(() => {
     return [
-      { id: 1, name: 'Task/Requirement' },
-      { id: 2, name: 'Checked' },
-      { id: 3, name: 'Losses of Cybersecurity Properties' },
-      { id: 4, name: 'Assets' },
-      { id: 5, name: 'Damage Scenarios' }
+      { id: 1, name: 'SNo' },
+      { id: 2, name: 'Name' },
+      { id: 3, name: 'Description' },
+      { id: 4, name: 'Condition for Re-Evaluation' },
+      { id: 5, name: 'Related Threat Scenario' }
     ];
   }, []);
 
-  React.useEffect(() => {
-    if (damageScenarios['Derivations']) {
-      const scene = damageScenarios['Derivations']?.map((dt) => {
+  useEffect(() => {
+    if (cybersecurity['scenes']) {
+      const scene = cybersecurity['scenes']?.map((dt, i) => {
         return {
-          id: dt?.id,
-          'Task/Requirement': dt?.task,
-          'Losses of Cybersecurity Properties': dt?.loss,
-          Assets: dt?.asset,
-          'Damage Scenarios': dt?.damageScene,
-          Checked: dt?.is_checked === 'true' ? true : false
+          SNo: `CL${(i + 1).toString().padStart(3, '0')}`,
+          ID: dt?.ID,
+          Name: dt?.Name,
+          Description: dt?.Description ?? `description for ${dt?.Name}`
         };
       });
       setRows(scene);
       setFiltered(scene);
     }
-  }, [damageScenarios]);
+  }, [cybersecurity]);
 
-  const handleChange = (value, rowId) => {
-    const details = {
-      id: damageScenarios?._id,
-      isChecked: !value,
-      'detail-id': rowId
-    };
-    // console.log('details', details);
-    update(details)
-      .then((res) => {
-        if (res) {
-          getDamageScenarios(modelId);
-        }
-      })
-      .catch((err) => console.log('err', err));
-  };
   const handleSearch = (e) => {
     const { value } = e.target;
     // console.log('value', value);
 
     if (value.length > 0) {
-      const filterValue = rows.filter((rw) => rw['Task/Requirement'].toLowerCase().includes(value.toLowerCase()));
+      const filterValue = rows.filter((rw) => rw['Name'].toLowerCase().includes(value.toLowerCase()));
       // console.log('filterValue', filterValue);
       setFiltered(filterValue);
     } else {
@@ -189,21 +173,6 @@ export default function DsDerivationTable() {
         {Head?.map((item, index) => {
           let cellContent;
           switch (true) {
-            case item.name === 'Checked':
-              cellContent = (
-                <StyledTableCell component="th" scope="row">
-                  <Checkbox {...label} checked={row[item.name]} onChange={() => handleChange(row[item.name], row?.id)} />
-                </StyledTableCell>
-              );
-              break;
-            case typeof row[item.name] === 'boolean':
-              cellContent = (
-                <StyledTableCell key={index} align={'left'}>
-                  {row[item.name] === true ? 'Yes' : row[item.name] === false ? 'No' : '-'}
-                </StyledTableCell>
-              );
-              break;
-
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -253,9 +222,17 @@ export default function DsDerivationTable() {
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
-          <Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Button
+              variant="outlined"
+              sx={{ borderRadius: 1.5 }}
+              onClick={() => setOpen(true)}
+              startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
+            >
+              Add new
+            </Button>
             <TextField
               id="outlined-size-small"
               placeholder="Search"
@@ -313,6 +290,15 @@ export default function DsDerivationTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      {open && (
+        <AddCyberSecurityModal
+          open={open}
+          handleClose={() => setOpen(false)}
+          name={title}
+          id={cybersecurity?._id}
+          type={cybersecurity?.type ?? 'cybersecurity_claims'}
+        />
+      )}
     </>
   );
 }

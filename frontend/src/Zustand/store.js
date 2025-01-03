@@ -112,20 +112,24 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   cybersecurity: {
     id: '5',
-    name: 'CyberSecurity Goals, Claims and Requirements',
+    name: 'Cybersecurity Goals, Claims and Requirements',
     icon: 'CybersecurityIcon',
     subs: [
       {
         id: 51,
-        name: 'CyberSecurity Goals'
+        name: 'Cybersecurity Goals'
       },
       {
         id: 53,
-        name: 'CyberSecurity Requirements'
+        name: 'Cybersecurity Requirements'
       },
       {
         id: 52,
-        name: 'CyberSecurity Controls'
+        name: 'Cybersecurity Controls'
+      },
+      {
+        id: 54,
+        name: 'Cybersecurity Claims'
       }
     ]
   },
@@ -713,20 +717,24 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       cybersecurity: {
         id: '5',
-        name: 'CyberSecurity Goals, Claims and Requirements',
+        name: 'Cybersecurity Goals, Claims and Requirements',
         icon: 'CybersecurityIcon',
         subs: [
           {
             id: 51,
-            name: 'CyberSecurity Goals'
+            name: 'Cybersecurity Goals'
           },
           {
             id: 53,
-            name: 'CyberSecurity Requirements'
+            name: 'Cybersecurity Requirements'
           },
           {
             id: 52,
-            name: 'CyberSecurity Controls'
+            name: 'Cybersecurity Controls'
+          },
+          {
+            id: 54,
+            name: 'Cybersecurity Claims'
           }
         ]
       }
@@ -892,11 +900,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/cybersecurity`;
     const res = await GET_CALL(modelId, url);
 
-    const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
-    const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
-    const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
-
     if (!res?.error) {
+      const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
+      const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
+      const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
+      const claims = res?.find((item) => item?.type === 'cybersecurity_claims');
+
       set((state) => ({
         cybersecurity: {
           ...state.cybersecurity,
@@ -912,6 +921,10 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               ...state.cybersecurity.subs[2],
               ...controls
+            },
+            {
+              ...state.cybersecurity.subs[3],
+              ...claims
             }
           ]
         }
@@ -923,15 +936,19 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               id: 51,
-              name: 'CyberSecurity Goals'
+              name: 'Cybersecurity Goals'
             },
             {
               id: 53,
-              name: 'CyberSecurity Requirements'
+              name: 'Cybersecurity Requirements'
             },
             {
               id: 52,
-              name: 'CyberSecurity Controls'
+              name: 'Cybersecurity Controls'
+            },
+            {
+              id: 54,
+              name: 'Cybersecurity Claims'
             }
           ]
         }
@@ -1004,8 +1021,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     return await PATCH_CALL(details, url);
   },
 
-  updateName$Description: async (details) => {
+  updateName$DescriptionforDamage: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/damage_scenerio_name&desc`;
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+  updateName$DescriptionforThreat: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/threat_scenerio_name&desc`;
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },

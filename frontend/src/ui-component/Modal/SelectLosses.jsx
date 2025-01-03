@@ -114,8 +114,7 @@ export default function SelectLosses({
               ...prop,
               key: index + 1
             })),
-          name: selectedRow?.Name,
-          description: selectedRow['Description/ Scalability']
+          name: selectedRow?.Name
         }))
     };
 
