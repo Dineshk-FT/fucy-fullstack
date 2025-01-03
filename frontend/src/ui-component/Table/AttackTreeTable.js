@@ -25,7 +25,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
+  FormControlLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
@@ -79,7 +79,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#000'
   }
 }));
 
@@ -185,7 +186,7 @@ export default function AttackTreeTable() {
 
   const Head = useMemo(() => {
     return column.filter((header) => visibleColumns.includes(header.name));
-  }, [ visibleColumns]);
+  }, [visibleColumns]);
 
   React.useEffect(() => {
     if (attacks['scenes']) {
@@ -414,20 +415,20 @@ export default function AttackTreeTable() {
           sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
         />
         <Button
-            sx={{
-              float: 'right',
-              mb: 2,
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
-            variant="contained"
-            onClick={handleOpenFilter}
-          >
-            <FilterAltIcon />
-            Filter Columns
-          </Button>
+          sx={{
+            float: 'right',
+            mb: 2,
+            backgroundColor: '#4caf50',
+            ':hover': {
+              backgroundColor: '#388e3c'
+            }
+          }}
+          variant="contained"
+          onClick={handleOpenFilter}
+        >
+          <FilterAltIcon />
+          Filter Columns
+        </Button>
       </Box>
 
       {/* Column Filter Dialog */}
@@ -437,7 +438,12 @@ export default function AttackTreeTable() {
           {AttackTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
-              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns3',column.name)} />}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns3', column.name)}
+                />
+              }
               label={column.name} // Display column name as label
             />
           ))}

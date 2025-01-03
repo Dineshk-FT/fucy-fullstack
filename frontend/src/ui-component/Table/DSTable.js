@@ -83,7 +83,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#000'
   }
 }));
 
