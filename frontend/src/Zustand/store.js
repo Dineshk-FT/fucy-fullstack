@@ -5,6 +5,7 @@ import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../API/api';
+import { DSTableHeader, DsDerivationHeader, TsTableHeader, AttackTableHeader } from '../ui-component/Table/constraints';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -193,6 +194,29 @@ const useStore = createWithEqualityFn((set, get) => ({
   scenerio: {},
   component: [],
   originalNodes: [],
+  visibleColumns: DSTableHeader.map((column) => column.name), // Initialize with all columns visible
+  visibleColumns1: DsDerivationHeader.map((column) => column.name), 
+  visibleColumns2: TsTableHeader.map((column) => column.name), 
+  visibleColumns3: AttackTableHeader.map((column) => column.name), 
+
+  setVisibleColumns: (table, columns) => {
+    set((state) => ({
+      [table]: columns
+    }));
+  },
+
+  toggleColumnVisibility: (table, columnName) => {
+    const { visibleColumns, visibleColumns1, visibleColumns2, visibleColumns3 } = get();
+    const tableColumns = table === 'visibleColumns' ? visibleColumns : table === 'visibleColumns1' ? visibleColumns1 : table === 'visibleColumns2' ? visibleColumns2 : visibleColumns3;
+    const isCurrentlyVisible = tableColumns.includes(columnName);
+    const updatedColumns = isCurrentlyVisible
+      ? tableColumns.filter((col) => col !== columnName)
+      : [...tableColumns, columnName];
+    
+    set({
+      [table]: updatedColumns
+    });
+  },
 
   generateDocument: async (payload) => {
     try {

@@ -186,6 +186,51 @@ export const DSTableHeader = [
   { id: 22, name: 'Unevaluated Cybersecurity Properties' }
 ];
 
+export const DsDerivationHeader = [
+  { id: 1, name: 'Task/Requirement' },
+  { id: 2, name: 'Checked' },
+  { id: 3, name: 'Losses of Cybersecurity Properties' },
+  { id: 4, name: 'Assets' },
+  { id: 5, name: 'Damage Scenarios' }
+];
+
+export const TsTableHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Category' },
+  { id: 4, name: 'Description' },
+  { id: 5, name: 'Damage Scenarios' },
+  { id: 6, name: 'Related Threats from Catalog' },
+  { id: 7, name: 'Losses of Cybersecurity Properties' },
+  { id: 8, name: 'Assets' },
+  { id: 9, name: 'Related Attack Trees' },
+  { id: 10, name: 'Related Attack Path Models' },
+  { id: 11, name: 'Assessment References' },
+  { id: 12, name: 'To be Assessed' },
+  { id: 13, name: 'Assessment Jurification' }
+];
+
+export const AttackTableHeader = [
+  { id: 1, name: 'SNO' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Category' },
+  { id: 4, name: 'Description' },
+  { id: 5, name: 'Approach' },
+  { id: 6, name: 'Elapsed Time' },
+  { id: 7, name: 'Expertise' },
+  { id: 8, name: 'Knowledge of the Item' },
+  { id: 9, name: 'Window of Opportunity' },
+  { id: 10, name: 'Equipment' },
+  { id: 11, name: 'Attack Vector' },
+  { id: 12, name: 'Attack Complexity' },
+  { id: 13, name: 'Privileges Required' },
+  { id: 14, name: 'User Interaction' },
+  { id: 15, name: 'Scope' },
+  { id: 16, name: 'Determination Criteria' },
+  { id: 17, name: 'Attack Feasibilities Rating' },
+  { id: 18, name: 'Attack Feasability Rating Justification' }
+];
+
 export const AttackTableoptions = {
   Approach: [
     { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },
