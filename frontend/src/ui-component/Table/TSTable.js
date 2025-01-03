@@ -17,7 +17,13 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  InputLabel
+  InputLabel,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,11 +31,12 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, threatType } from './constraints';
+import { colorPicker, threatType, TsTableHeader } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableHeight } from '../../store/constant';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
 import { DamageIcon } from '../../assets/icons';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
@@ -41,21 +48,7 @@ const selector = (state) => ({
   updateThreatScenario: state.updateThreatScenario
 });
 
-const column = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Category' },
-  { id: 4, name: 'Description' },
-  { id: 5, name: 'Damage Scenarios' },
-  { id: 6, name: 'Related Threats from Catalog' },
-  { id: 7, name: 'Losses of Cybersecurity Properties' },
-  { id: 8, name: 'Assets' },
-  { id: 9, name: 'Related Attack Trees' },
-  { id: 10, name: 'Related Attack Path Models' },
-  { id: 11, name: 'Assessment References' },
-  { id: 12, name: 'To be Assessed' },
-  { id: 13, name: 'Assessment Jurification' }
-];
+const column = TsTableHeader;
 
 const useStyles = makeStyles({
   div: {
@@ -111,6 +104,13 @@ export default function Tstable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [columnWidths, setColumnWidths] = useState({});
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns2);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
 
   const handleOpenSelect = (row) => {
     setSelectedRow(row);
@@ -130,11 +130,11 @@ export default function Tstable() {
     if (title.includes('Derived')) {
       const col = [...column];
       col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col;
+      return col.filter((header) => visibleColumns.includes(header.name));
     } else {
-      return column;
+      return column.filter((header) => visibleColumns.includes(header.name));
     }
-  }, [title]);
+  }, [title, visibleColumns]);
 
   useEffect(() => {
     getDamageScenarios(model?._id);
@@ -365,8 +365,43 @@ export default function Tstable() {
           <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button>
+          <Button
+            sx={{
+              float: 'right',
+              mb: 2,
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon />
+            Filter Columns
+          </Button>
         </Box>
       </Box>
+
+       {/* Column Filter Dialog */}
+       <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {TsTableHeader.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns2',column.name)} />}
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>

@@ -42,6 +42,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
 import { tableHeight } from '../../store/constant';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
@@ -207,20 +208,8 @@ export default function DsTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const [columnVisibility, setColumnVisibility] = useState(
-    DSTableHeader.reduce((acc, header) => {
-      acc[header.id] = true; // Default all columns visible
-      return acc;
-    }, {})
-  ); // Initial state for column visibility
-
-  // Toggle column visibility based on checkbox
-  const handleColumnToggle = (columnId) => {
-    setColumnVisibility((prevState) => ({
-      ...prevState,
-      [columnId]: !prevState[columnId] // Toggle visibility
-    }));
-  };
+  const visibleColumns = useStore((state) => state.visibleColumns);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -285,9 +274,9 @@ export default function DsTable() {
     if (stakeHolder) {
       return stakeHeader;
     } else {
-      return DSTableHeader.filter((header) => columnVisibility[header.id]); // Only show columns that are visible
+      return DSTableHeader.filter((header) => visibleColumns.includes(header.name)); // Only show columns that are visible
     }
-  }, [columnVisibility]);
+  }, [visibleColumns]);
 
   const handleOpenCl = (row) => {
     setSelectedRow(row);
@@ -634,7 +623,19 @@ export default function DsTable() {
           <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
-          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenFilter}>
+          <Button
+            sx={{
+              float: 'right',
+              mb: 2,
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon />
             Filter Columns
           </Button>
           <Button
@@ -657,12 +658,7 @@ export default function DsTable() {
           {DSTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
-              control={
-                <Checkbox
-                  checked={columnVisibility[column.id]}
-                  onChange={() => handleColumnToggle(column.id)} // Handle checkbox toggle
-                />
-              }
+              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns', column.name)} />}
               label={column.name} // Display column name as label
             />
           ))}
