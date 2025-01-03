@@ -29,6 +29,18 @@ export const RatingColor = (value) => {
   return mapped[value];
 };
 
+export const getRating = (value) => {
+  if (value >= 0 && value <= 13) {
+    return 'High';
+  } else if (value >= 14 && value <= 19) {
+    return 'Medium';
+  } else if (value >= 20 && value <= 24) {
+    return 'Low';
+  } else {
+    return 'Very low';
+  }
+};
+
 export const threatType = (value) => {
   // console.log('value', value)
   switch (value) {
@@ -37,7 +49,7 @@ export const threatType = (value) => {
     case 'Confidentiality':
       return 'Information Disclosure';
     case 'Availability':
-      return 'Denial';
+      return 'Denial of service';
     case 'Authenticity':
       return 'Spoofing';
     case 'Authorization':
@@ -350,6 +362,7 @@ export const AttackTableoptions = {
 };
 
 export const OverallImpact = (impact) => {
+  console.log('impact', impact);
   const impactMap = {
     Negligible: 1,
     Minor: 2,

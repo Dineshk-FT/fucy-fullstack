@@ -23,13 +23,17 @@ import {
   TableRow,
   TablePagination,
   Tooltip,
+  InputLabel,
+  IconButton,
+  Popper,
+  ClickAwayListener,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
-  InputLabel
+  FormControlLabel
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
@@ -54,7 +58,8 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
   damageID: state.damageScenarios['subs'][1]['_id'],
-  deleteDamageScenario: state.deleteDamageScenario
+  deleteDamageScenario: state.deleteDamageScenario,
+  updateName: state.updateName$Description
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -190,7 +195,8 @@ export default function DsTable() {
     getThreatScenario,
     updateImpact,
     deleteDamageScenario,
-    updateDerived
+    updateDerived,
+    updateName
   } = useStore(selector, shallow);
 
   const [stakeHolder] = useState(false);
@@ -393,14 +399,14 @@ export default function DsTable() {
       return value === 1
         ? 'Negligible'
         : value === 2
-          ? 'Minor'
-          : value === 3
-            ? 'Moderate'
-            : value === 4
-              ? 'Major'
-              : value === 5
-                ? 'Severe'
-                : '';
+        ? 'Minor'
+        : value === 3
+        ? 'Moderate'
+        : value === 4
+        ? 'Major'
+        : value === 5
+        ? 'Severe'
+        : '';
     };
 
     const val = Object.values(impact)?.map((it) => pattern(it));
@@ -422,7 +428,7 @@ export default function DsTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    console.log('e', e);
+    // console.log('e', e);
     const startX = e.clientX;
 
     // Use the actual width of the column if no width is set in state
@@ -446,7 +452,56 @@ export default function DsTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
     const isSelected = selectedRows.includes(row.id);
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: damageID,
+          detailId: row?.id,
+          [editingField === 'Name' ? 'Name' : 'Description']: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            console.log('res', res);
+            if (!res.error) {
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getDamageScenarios(model?._id);
+              handleClosePopper();
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+
+    const handleClosePopper = () => {
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
+
     return (
       <>
         <StyledTableRow
@@ -474,8 +529,39 @@ export default function DsTable() {
           }}
         >
           {Head?.map((item, index) => {
+            const isEditableField = item.name === 'Name' || item.name === 'Description/ Scalability';
             let cellContent;
             switch (true) {
+              case isEditableField:
+                {
+                  cellContent = (
+                    <StyledTableCell
+                      key={index}
+                      onMouseEnter={() => setHoveredField(item.name)}
+                      onMouseLeave={() => {
+                        if (!anchorEl) setHoveredField(null);
+                      }}
+                      style={{ position: 'relative', cursor: 'pointer' }}
+                    >
+                      {row[item.name] || '-'}
+                      {(hoveredField === item.name || editingField === item.name) && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                          sx={{
+                            position: 'absolute',
+                            top: '15%',
+                            right: '-2px',
+                            transform: 'translateY(-50%)'
+                          }}
+                        >
+                          <EditIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      )}
+                    </StyledTableCell>
+                  );
+                }
+                break;
               case checkforLabel(item):
                 cellContent = (
                   <SelectableCell
@@ -573,6 +659,51 @@ export default function DsTable() {
 
             return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
+          {anchorEl && (
+            <Popper
+              open={Boolean(anchorEl)}
+              anchorEl={anchorEl}
+              placement="bottom-start"
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [-80, 20] // Adjusts the offset [skidding, distance]
+                  }
+                },
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    boundary: 'viewport' // Ensures Popper stays within the viewport
+                  }
+                }
+              ]}
+            >
+              <ClickAwayListener onClickAway={handleClosePopper}>
+                <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    value={editValue}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setEditValue(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={() => setIsPopperFocused(true)}
+                    onBlur={() => setIsPopperFocused(false)}
+                    label={`Edit ${editingField}`}
+                    size="small"
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button onClick={handleClosePopper}>Cancel</Button>
+                    <Button onClick={handleSaveEdit} color="primary" variant="contained">
+                      Update
+                    </Button>
+                  </div>
+                </Paper>
+              </ClickAwayListener>
+            </Popper>
+          )}
         </StyledTableRow>
       </>
     );
@@ -759,6 +890,7 @@ export default function DsTable() {
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />
+      {/* <UpdateField /> */}
     </Box>
   );
 }

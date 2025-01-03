@@ -308,6 +308,7 @@ export default function AttackBlock({ attackScene, color }) {
           name: selectedNode?.data?.label
         };
         addAttackScene(details).then((res) => {
+          // console.log('res', res);
           if (!res.error) {
             getAttackScenario(model?._id);
             notify(res.message ?? 'converted to Attack', 'success');
