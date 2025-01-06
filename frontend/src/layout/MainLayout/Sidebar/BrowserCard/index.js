@@ -571,7 +571,7 @@ const BrowserCard = () => {
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
             return sub.subs_scenes?.map((scene) => (
-              <TreeItem onClick={(e) => e.stopPropagation()} key={scene.id} nodeId={scene.id} label={getLabel('TopicIcon', scene.name)} />
+              <TreeItem onClick={(e) => handleOpenTable(e, scene.id, scene.name)} key={scene.id} nodeId={scene.id} label={getLabel('TopicIcon', scene.name)} />
             ));
           })
         );

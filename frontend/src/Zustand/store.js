@@ -161,8 +161,12 @@ const useStore = createWithEqualityFn((set, get) => ({
         subs_scenes: [
           {
             id: '72',
-            name: 'Threats regarding back-end servers related to vehicles in the field',
-          }
+            name: 'Threats - Back-end servers related to vehicles in the field',
+          },
+          {
+            id: '73',
+            name: 'Threats - Vehicles regarding their communication channels',
+          },
         ]
       }
     ]
