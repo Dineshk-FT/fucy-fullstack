@@ -61,6 +61,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import CybersecurityTable from '../../ui-component/Table/CyberSecurityTable';
+import BackendServerTable from '../../ui-component/Table/BackendServerTable';
+import VehiclesCommunicationTable from '../../ui-component/Table/VehiclesCommunicationTable';
 
 const elk = new ELK();
 
@@ -711,7 +713,9 @@ export default function MainCanvas() {
     'Cybersecurity Controls': <CybersecurityTable />,
     'Cybersecurity Goals': <CybersecurityTable />,
     'Cybersecurity Claims': <CybersecurityTable />,
-    'Attack Trees Canvas': <AttackTree />
+    'Attack Trees Canvas': <AttackTree />,
+    'Threats - Back-end servers related to vehicles in the field': <BackendServerTable/ >,
+    'Threats - Vehicles regarding their communication channels' : <VehiclesCommunicationTable />
   };
 
   return (
