@@ -171,7 +171,7 @@ export default function Tstable() {
                 rowId: detail?.rowId,
                 nodeId: nodedetail?.nodeId,
                 Name: `${threatType(prop?.name)} of ${nodedetail?.node} leads to  ${detail?.damage_name}`,
-                Description: nodedetail?.description ?? `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} `,
+                Description: prop?.description ?? `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} `,
                 losses: [],
                 'Damage Scenarios':
                   `[DS${detail?.damage_key ? detail?.damage_key.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
@@ -293,6 +293,7 @@ export default function Tstable() {
 
         const details = {
           id: threatID,
+          propId: row?.ID,
           nodeId: row?.nodeId,
           rowId: row?.rowId,
           field: editingField,

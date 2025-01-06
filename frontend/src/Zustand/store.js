@@ -1060,7 +1060,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },
-  updateName$DescriptionforCyberscurity: async (details) => {
+  updateName$DescriptionforCybersecurity: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/cybersecurity_name&desc`;
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);

@@ -58,7 +58,7 @@ const selector = (state) => ({
   model: state.model,
   cybersecuritySubs: state.cybersecurity['subs'],
   getCyberSecurityScenario: state.getCyberSecurityScenario,
-  updateName: state.updateName$DescriptionforCyberscurity
+  updateName: state.updateName$DescriptionforCybersecurity
 });
 
 const notify = (message, status) => toast[status](message);
@@ -101,11 +101,22 @@ export default function CybersecurityTable() {
     ];
   }, []);
 
+  const getIdName = () => {
+    const getName = {
+      'Cybersecurity Goals': 'CG',
+      'Cybersecurity Requirements': 'CR',
+      'Cybersecurity Controls': 'CL',
+      'Cybersecurity Claims': 'CC'
+    };
+    return getName[title];
+  };
+
   useEffect(() => {
+    const getId = getIdName();
     if (cybersecurity['scenes']) {
-      const scene = cybersecurity['scenes']?.map((dt, i) => {
+      const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
-          SNo: `CL${(i + 1).toString().padStart(3, '0')}`,
+          SNo: `${getId}${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
           Description: dt?.Description ?? `description for ${dt?.Name}`
@@ -199,7 +210,7 @@ export default function CybersecurityTable() {
 
         updateName(details)
           .then((res) => {
-            console.log('res', res);
+            // console.log('res', res);
             if (!res.error) {
               notify(res.message ?? 'Deleted successfully', 'success');
               getCyberSecurityScenario(model?._id);

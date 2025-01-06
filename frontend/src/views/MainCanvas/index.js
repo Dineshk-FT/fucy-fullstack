@@ -707,10 +707,10 @@ export default function MainCanvas() {
     'Derived Threat Scenarios': <Tstable />,
     Attack: <AttackTreeTable />,
     'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
-    'Cybersecurity Requirements': <CybersecurityTable tableType="requirements" />,
-    'Cybersecurity Controls': <CybersecurityTable tableType="controls" />,
-    'Cybersecurity Goals': <CybersecurityTable tableType="goals" />,
-    'Cybersecurity Claims': <CybersecurityTable tableType="claims" />,
+    'Cybersecurity Requirements': <CybersecurityTable />,
+    'Cybersecurity Controls': <CybersecurityTable />,
+    'Cybersecurity Goals': <CybersecurityTable />,
+    'Cybersecurity Claims': <CybersecurityTable />,
     'Attack Trees Canvas': <AttackTree />
   };
 
