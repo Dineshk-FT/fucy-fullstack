@@ -38,7 +38,6 @@ import DsTable from '../../ui-component/Table/DSTable';
 import Tstable from '../../ui-component/Table/TSTable';
 import AttackTree from '../AttackTree';
 import CyberSecurityBlock from '../CyberSecurityBlock';
-import CyberSecurityTable from '../../ui-component/Table/CybersecurityTable';
 import ELK from 'elkjs/lib/elk.bundled';
 import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
@@ -61,7 +60,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
-import CyberRequirementTable from '../../ui-component/Table/CyberRequirementTable';
+import CybersecurityTable from '../../ui-component/Table/CyberSecurityTable';
 
 const elk = new ELK();
 
@@ -113,7 +112,6 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   model: state.model,
-
   update: state.updateAssets,
   getAssets: state.getAssets,
   getGroupedNodes: state.getGroupedNodes,
@@ -224,18 +222,7 @@ export default function MainCanvas() {
   const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
-  const {
-    isDsTableOpen,
-    isTsTableOpen,
-    isAttackTreeOpen,
-    isCyberBlockOpen,
-    isCyberTableOpen,
-    isRightDrawerOpen,
-    isLeftDrawerOpen,
-    isDerivationTableOpen,
-    isAttackTableOpen,
-    isRiskTableOpen
-  } = useSelector((state) => state?.currentId);
+  const { tableOpen } = useSelector((state) => state?.currentId);
 
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
@@ -251,12 +238,10 @@ export default function MainCanvas() {
   }, []);
 
   useEffect(() => {
-    if (!isAttackTreeOpen) {
-      const template = assets?.template;
-      setSavedTemplate(template);
-      onSaveInitial(template);
-      onRestore(template);
-    }
+    const template = assets?.template;
+    setSavedTemplate(template);
+    onSaveInitial(template);
+    onRestore(template);
   }, [assets]);
 
   useEffect(() => {
@@ -638,7 +623,6 @@ export default function MainCanvas() {
     };
     dragAdd(newNode);
   };
-  // console.log('isRightDrawerOpen', isRightDrawerOpen);
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
@@ -716,133 +700,145 @@ export default function MainCanvas() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // console.log('nodes', nodes);
-  if (isDsTableOpen) return <DsTable />;
-  if (isDerivationTableOpen) return <DsDerivationTable />;
-  if (isTsTableOpen) return <Tstable />;
-  if (isAttackTreeOpen) return <AttackTree model={model} />;
-  if (isCyberBlockOpen) return <CyberSecurityBlock />;
-  if (isCyberTableOpen) return <CyberRequirementTable />;
-  if (isAttackTableOpen) return <AttackTreeTable />;
-  if (isRiskTableOpen) return <RiskTreatmentTable />;
+  const componentMap = {
+    'Damage Scenarios Derivations': <DsDerivationTable />,
+    'Damage Scenarios - Collection & Impact Ratings': <DsTable />,
+    'Threat Scenarios': <Tstable />,
+    'Derived Threat Scenarios': <Tstable />,
+    Attack: <AttackTreeTable />,
+    'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
+    'Cybersecurity Requirements': <CybersecurityTable />,
+    'Cybersecurity Controls': <CybersecurityTable />,
+    'Cybersecurity Goals': <CybersecurityTable />,
+    'Cybersecurity Claims': <CybersecurityTable />,
+    'Attack Trees Canvas': <AttackTree />
+  };
 
   return (
-    <>
-      <div
-        style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
-        ref={reactFlowWrapper}
-        onContextMenu={handleCanvasContextMenu}
-      >
-        {propertiesTabOpen && (
-          <Header
-            selectedElement={selectedElement}
-            nodes={nodes}
-            setNodes={setNodes}
-            setSelectedElement={setSelectedElement}
-            horizontal={() => onLayout({ direction: 'RIGHT' })}
-            vertical={() => onLayout({ direction: 'DOWN' })}
-            handleClear={handleClear}
-            handleSave={handleSaveToModel}
-            download={handleDownload}
-            createGroup={createGroup}
-          />
-        )}
-        <ReactFlowProvider fitView>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodetypes}
-            edgeTypes={edgeTypes}
-            onInit={onInit}
-            onLoad={onLoad}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDragStop={onNodeDragStop}
-            connectionLineStyle={connectionLineStyle}
-            defaultEdgeOptions={edgeOptions}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            fitView
-            connectionMode="loose"
-            onNodeDoubleClick={handleSidebarOpen}
-            onNodeClick={handleSelectNode}
-            defaultposition={[0, 0]}
-            defaultzoom={1}
-            onNodeContextMenu={handleNodeContextMenu}
-            // onContextMenu={createGroup}
-            // onNodeContextMenu={handleSidebarOpen}
-            // onEdgeContextMenu={handleSidebarOpen}
-          >
-            <Panel position="left" style={{ display: 'flex', gap: 10 }}>
-              <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
-                Restore
-              </Button>
-              <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
-                Save
-              </Button>
-              {/* <button onClick={undo} disabled={undoStack.length === 0}>
+    componentMap[tableOpen] || (
+      <>
+        <div
+          style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
+          ref={reactFlowWrapper}
+          onContextMenu={handleCanvasContextMenu}
+        >
+          {propertiesTabOpen && (
+            <Header
+              selectedElement={selectedElement}
+              nodes={nodes}
+              setNodes={setNodes}
+              setSelectedElement={setSelectedElement}
+              horizontal={() => onLayout({ direction: 'RIGHT' })}
+              vertical={() => onLayout({ direction: 'DOWN' })}
+              handleClear={handleClear}
+              handleSave={handleSaveToModel}
+              download={handleDownload}
+              createGroup={createGroup}
+            />
+          )}
+          <ReactFlowProvider fitView>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodetypes}
+              edgeTypes={edgeTypes}
+              onInit={onInit}
+              onLoad={onLoad}
+              onNodeDrag={onNodeDrag}
+              onNodeDragStart={onNodeDragStart}
+              onNodeDragStop={onNodeDragStop}
+              connectionLineStyle={connectionLineStyle}
+              defaultEdgeOptions={edgeOptions}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              fitView
+              connectionMode="loose"
+              onNodeDoubleClick={handleSidebarOpen}
+              onNodeClick={handleSelectNode}
+              defaultposition={[0, 0]}
+              defaultzoom={1}
+              onNodeContextMenu={handleNodeContextMenu}
+              // onContextMenu={createGroup}
+              // onNodeContextMenu={handleSidebarOpen}
+              // onEdgeContextMenu={handleSidebarOpen}
+            >
+              <Panel position="left" style={{ display: 'flex', gap: 10 }}>
+                <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
+                  Restore
+                </Button>
+                <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
+                  Save
+                </Button>
+                {/* <button onClick={undo} disabled={undoStack.length === 0}>
                 Undo
               </button>
               <button onClick={redo} disabled={redoStack.length === 0}>
                 Redo
               </button> */}
-            </Panel>
-            <Controls />
-            <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
-            <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
-            {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
-            {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
-          </ReactFlow>
-        </ReactFlowProvider>
-        {contextMenu.visible && (
-          <div
-            style={{
-              position: 'absolute',
-              top: contextMenu.y,
-              left: contextMenu.x,
-              background: 'white',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
-              zIndex: 1000,
-              width: '90px', // Defined width for consistency
-              padding: '8px 0',
-              fontFamily: 'Arial, sans-serif',
-              fontSize: '12px'
-            }}
-          >
-            {contextMenu.options.map((option) => (
-              <div
-                key={option}
-                style={{
-                  padding: '4px 8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
-                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
-                }}
-                onClick={() => handleMenuOptionClick(option)}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
-                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
-              >
-                <span style={{ marginRight: '8px' }}>
-                  {option === 'Copy' && <ContentCopyIcon />}
-                  {option === 'Paste' && <ContentPasteIcon />}
-                </span>
-                {option}
-              </div>
-            ))}
-          </div>
-        )}
-        {openTemplate && (
-          <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
-        )}
-        <AlertMessage open={open} message={message} setOpen={setOpen} success={success} />
-      </div>
-    </>
+              </Panel>
+              <Controls />
+              <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
+              <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
+              {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
+              {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
+            </ReactFlow>
+          </ReactFlowProvider>
+          {contextMenu.visible && (
+            <div
+              style={{
+                position: 'absolute',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                background: 'white',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
+                zIndex: 1000,
+                width: '90px', // Defined width for consistency
+                padding: '8px 0',
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '12px'
+              }}
+            >
+              {contextMenu.options.map((option) => (
+                <div
+                  key={option}
+                  style={{
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
+                    transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+                  }}
+                  onClick={() => handleMenuOptionClick(option)}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+                >
+                  <span style={{ marginRight: '8px' }}>
+                    {option === 'Copy' && <ContentCopyIcon />}
+                    {option === 'Paste' && <ContentPasteIcon />}
+                  </span>
+                  {option}
+                </div>
+              ))}
+            </div>
+          )}
+          {openTemplate && (
+            <AddLibrary
+              open={openTemplate}
+              handleClose={handleClose}
+              savedTemplate={savedTemplate}
+              setNodes={setNodes}
+              setEdges={setEdges}
+            />
+          )}
+          <AlertMessage open={open} message={message} setOpen={setOpen} success={success} />
+        </div>
+      </>
+    )
   );
 }

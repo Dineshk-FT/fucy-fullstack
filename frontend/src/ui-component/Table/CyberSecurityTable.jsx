@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -10,12 +10,18 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
+import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button, IconButton } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { tableHeight } from '../../store/constant';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
+import EditIcon from '@mui/icons-material/Edit';
+import FormPopper from '../Poppers/FormPopper';
+import toast, { Toaster } from 'react-hot-toast';
+import { getCybersecurityType } from './constraints';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -49,44 +55,77 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  cybersecurity: state.cybersecurity['subs'][1]
+  model: state.model,
+  cybersecuritySubs: state.cybersecurity['subs'],
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  updateName: state.updateName$DescriptionforCybersecurity
 });
 
-export default function CyberRequirementTable() {
+const notify = (message, status) => toast[status](message);
+export default function CybersecurityTable() {
+  const { title } = useSelector((state) => state?.pageName);
+  const { cybersecuritySubs, getCyberSecurityScenario, model, updateName } = useStore(selector, shallow);
+  const getCybersecurityScene = useCallback(() => {
+    const scene = {
+      'Cybersecurity Goals': cybersecuritySubs[0],
+      'Cybersecurity Requirements': cybersecuritySubs[1],
+      'Cybersecurity Controls': cybersecuritySubs[2],
+      'Cybersecurity Claims': cybersecuritySubs[3]
+    };
+    return scene[title];
+  }, [title, cybersecuritySubs]);
+
+  const cybersecurity = getCybersecurityScene();
+  const cybersecurityType = getCybersecurityType(title);
+  //   console.log('cybersecurity', cybersecurity);
+  //   console.log('cybersecurityType', cybersecurityType);
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { cybersecurity } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(0); // Add state for page
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [columnWidths, setColumnWidths] = useState({});
+  // console.log('cybersecurity', cybersecurity);
 
-  const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
-
-  const Head = React.useMemo(() => {
+  const Head = useMemo(() => {
     return [
       { id: 1, name: 'SNo' },
       { id: 2, name: 'Name' },
-      { id: 3, name: 'Description' }
+      { id: 3, name: 'Description' },
+      { id: 4, name: 'Condition for Re-Evaluation' },
+      { id: 5, name: 'Related Threat Scenario' }
     ];
   }, []);
 
-  React.useEffect(() => {
+  const getIdName = () => {
+    const getName = {
+      'Cybersecurity Goals': 'CG',
+      'Cybersecurity Requirements': 'CR',
+      'Cybersecurity Controls': 'CL',
+      'Cybersecurity Claims': 'CC'
+    };
+    return getName[title];
+  };
+
+  useEffect(() => {
+    const getId = getIdName();
     if (cybersecurity['scenes']) {
-      const scene = cybersecurity['scenes']?.map((dt, i) => {
+      const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
-          SNo: `${(i + 1).toString().padStart(3, '0')}`,
+          SNo: `${getId}${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
-          Description: `description for ${dt?.Name}`
+          Description: dt?.Description ?? `description for ${dt?.Name}`
         };
       });
       setRows(scene);
       setFiltered(scene);
     }
-  }, [cybersecurity]);
+  }, [cybersecurity, title]);
 
   const handleSearch = (e) => {
     const { value } = e.target;
@@ -142,6 +181,55 @@ export default function CyberRequirementTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
+
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: cybersecurity?._id,
+          sceneId: row?.ID,
+          [editingField]: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            // console.log('res', res);
+            if (!res.error) {
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getCyberSecurityScenario(model?._id);
+              handleClosePopper();
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+
+    const handleClosePopper = () => {
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
     return (
       <StyledTableRow
         key={row.name}
@@ -165,8 +253,39 @@ export default function CyberRequirementTable() {
         }}
       >
         {Head?.map((item, index) => {
+          const isEditableField = item.name === 'Name' || item.name === 'Description';
           let cellContent;
           switch (true) {
+            case isEditableField:
+              {
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    onMouseEnter={() => setHoveredField(item.name)}
+                    onMouseLeave={() => {
+                      if (!anchorEl) setHoveredField(null);
+                    }}
+                    style={{ position: 'relative', cursor: 'pointer' }}
+                  >
+                    {row[item.name] || '-'}
+                    {(hoveredField === item.name || editingField === item.name) && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                        sx={{
+                          position: 'absolute',
+                          top: '15%',
+                          right: '-2px',
+                          transform: 'translateY(-50%)'
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    )}
+                  </StyledTableCell>
+                );
+              }
+              break;
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -190,6 +309,17 @@ export default function CyberRequirementTable() {
 
           return <React.Fragment key={index}>{cellContent}</React.Fragment>;
         })}
+        {anchorEl && (
+          <FormPopper
+            anchorEl={anchorEl}
+            handleSaveEdit={handleSaveEdit}
+            handleClosePopper={handleClosePopper}
+            editValue={editValue}
+            setEditValue={setEditValue}
+            editingField={editingField}
+            setIsPopperFocused={setIsPopperFocused}
+          />
+        )}
       </StyledTableRow>
     );
   };
@@ -216,9 +346,17 @@ export default function CyberRequirementTable() {
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
-          <Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Button
+              variant="outlined"
+              sx={{ borderRadius: 1.5 }}
+              onClick={() => setOpen(true)}
+              startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
+            >
+              Add new
+            </Button>
             <TextField
               id="outlined-size-small"
               placeholder="Search"
@@ -269,12 +407,23 @@ export default function CyberRequirementTable() {
         <TablePagination
           component="div"
           count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      {open && (
+        <AddCyberSecurityModal
+          open={open}
+          handleClose={() => setOpen(false)}
+          name={title}
+          id={cybersecurity?._id}
+          type={cybersecurity?.type ?? cybersecurityType}
+        />
+      )}
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 }

@@ -20,7 +20,14 @@ const selector = (state) => ({
 export default function Event(props) {
   const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
-  const [inputValue, setInputValue] = useState(props.data.label);
+  const inputValueFromProps = useMemo(() => {
+    const matchingAttack = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+    // console.log('matchingAttack', matchingAttack);
+    return matchingAttack?.Name || props.data.label;
+  }, [attacks, props?.id, props?.data]);
+
+  const [inputValue, setInputValue] = useState(inputValueFromProps);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
   const [isHovered, setIsHovered] = useState(false);
@@ -164,17 +171,20 @@ export default function Event(props) {
           {isRequirement && <img src={CybersecurityIcon} alt="attack" height="20px" width="20px" />}
         </Box>
 
-        <input
-          type="text"
+        <textarea
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
             update(props?.id, e.target.value);
+
+            // Dynamically adjust the height
+            const target = e.target;
+            target.style.height = 'auto'; // Reset height to calculate new height
+            target.style.height = `${target.scrollHeight}px`; // Set height based on content
           }}
           style={{
             marginRight: '10px',
             width: `${nodeDimensions.width - 20}px`, // Adjust width relative to node size
-            height: `${fontSize * 2}px`, // Height proportional to font size
             backgroundColor: 'inherit',
             borderRadius: '4px',
             textAlign: 'center',
@@ -182,9 +192,16 @@ export default function Event(props) {
             fontSize: `${fontSize}px`, // Dynamically adjust font size
             color: 'inherit',
             padding: `${inputPadding}px`, // Consistent padding
-            border: 'none'
+            border: 'none',
+            resize: 'none', // Prevent manual resizing by user
+            overflowWrap: 'break-word', // Enable word wrapping
+            whiteSpace: 'pre-wrap', // Preserve whitespace and enable wrapping
+            overflow: 'hidden', // Prevent scrollbars
+            fontFamily: 'inherit'
           }}
+          rows={1} // Start with a single row
         />
+
         <div
           className="delete-icon"
           role="button"

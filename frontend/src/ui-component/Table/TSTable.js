@@ -18,12 +18,13 @@ import {
   TableRow,
   TablePagination,
   InputLabel,
+  IconButton,
   Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
+  FormControlLabel
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,17 +37,24 @@ import CircleIcon from '@mui/icons-material/Circle';
 import { tableHeight } from '../../store/constant';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
 import { DamageIcon } from '../../assets/icons';
+import FormPopper from '../Poppers/FormPopper';
+import EditIcon from '@mui/icons-material/Edit';
+import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
   derived: state.threatScenarios.subs[0],
   userDefined: state.threatScenarios.subs[1],
+  threatID: state.threatScenarios['subs'][0]['_id'],
   getDamageScenarios: state.getDamageScenarios,
   getThreatScenario: state.getThreatScenario,
   damageScenarios: state.damageScenarios['subs'][1],
-  updateThreatScenario: state.updateThreatScenario
+  updateThreatScenario: state.updateThreatScenario,
+  updateName: state.updateName$DescriptionforThreat
 });
+
+const notify = (message, status) => toast[status](message);
 
 const column = TsTableHeader;
 
@@ -69,7 +77,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#000'
   }
 }));
 
@@ -88,17 +97,24 @@ export default function Tstable() {
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
 
-  const { model, derived, userDefined, getThreatScenario, damageScenarios, getDamageScenarios, updateThreatScenario } = useStore(
-    selector,
-    shallow
-  );
+  const {
+    model,
+    derived,
+    userDefined,
+    getThreatScenario,
+    damageScenarios,
+    getDamageScenarios,
+    updateThreatScenario,
+    updateName,
+    threatID
+  } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
 
   // console.log('damageScenarios', damageScenarios);
-  // console.log('derived', derived);
+  // console.log('threatID', threatID);
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -154,10 +170,13 @@ export default function Tstable() {
                 ID: prop?.id,
                 rowId: detail?.rowId,
                 nodeId: nodedetail?.nodeId,
-                Name: `${threatType(prop?.name)}  ${prop?.name} of ${nodedetail?.node}`,
-                Description: `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node}`,
+                Name: `${threatType(prop?.name)} of ${nodedetail?.node} leads to  ${detail?.damage_name}`,
+                Description: prop?.description ?? `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} `,
                 losses: [],
-                'Damage Scenarios': prop?.damage_scenes ?? [],
+                'Damage Scenarios':
+                  `[DS${detail?.damage_key ? detail?.damage_key.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
+                    detail?.damage_name
+                  }` ?? '-',
                 'Losses of Cybersecurity Properties': prop?.name
               };
             });
@@ -181,10 +200,10 @@ export default function Tstable() {
       const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
-      const data = {
-        name: damageScenarios?.name,
-        scenes: damageScenarios?.Details
-      };
+      // const data = {
+      //   name: damageScenarios?.name,
+      //   scenes: damageScenarios?.Details
+      // };
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);
@@ -250,6 +269,62 @@ export default function Tstable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    // console.log('row', row);
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
+
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: threatID,
+          propId: row?.ID,
+          nodeId: row?.nodeId,
+          rowId: row?.rowId,
+          field: editingField,
+          value: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            // console.log('res', res);
+            if (!res.error) {
+              handleClosePopper();
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getThreatScenario(model?._id);
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+    // console.log('isPopperFocused', isPopperFocused);
+
+    const handleClosePopper = () => {
+      // console.log('closed');
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
+
     return (
       <StyledTableRow
         key={row.name}
@@ -273,10 +348,41 @@ export default function Tstable() {
         }}
       >
         {Head?.map((item, index) => {
+          const isEditableField = item.name === 'Description';
           let cellContent;
           switch (true) {
+            case isEditableField:
+              {
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    onMouseEnter={() => setHoveredField(item.name)}
+                    onMouseLeave={() => {
+                      if (!anchorEl) setHoveredField(null);
+                    }}
+                    style={{ position: 'relative', cursor: 'pointer' }}
+                  >
+                    {row[item.name] || '-'}
+                    {(hoveredField === item.name || editingField === item.name) && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                        sx={{
+                          position: 'absolute',
+                          top: '15%',
+                          right: '-2px',
+                          transform: 'translateY(-50%)'
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    )}
+                  </StyledTableCell>
+                );
+              }
+              break;
             case item.name === 'Losses of Cybersecurity Properties':
-              cellContent = (
+              cellContent = row[item?.name] && (
                 <StyledTableCell component="th" scope="row">
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
@@ -289,19 +395,22 @@ export default function Tstable() {
               break;
             case item.name === 'Damage Scenarios':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
-                  {row[item.name] && row[item.name].length ? (
-                    row[item.name].map((damage, i) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                          [{damage?.key}]{damage?.Name}
-                        </span>
+                <StyledTableCell component="th" scope="row">
+                  {
+                    // row[item.name] && row[item.name].length ? (
+                    // row[item.name].map((damage, i) => (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                        {/* [{damage_key.toString().padStart(3,"0")}]{damage_name} */}
+                        {row[item?.name]}
                       </span>
-                    ))
-                  ) : (
-                    <InputLabel>Select Damage Scenario</InputLabel>
-                  )}
+                    </span>
+                    // ))
+                    // ) : (
+                    //   <InputLabel>Select Damage Scenario</InputLabel>
+                    // )
+                  }
                 </StyledTableCell>
               );
               break;
@@ -325,6 +434,17 @@ export default function Tstable() {
           }
           return <React.Fragment key={index}>{cellContent}</React.Fragment>;
         })}
+        {anchorEl && (
+          <FormPopper
+            anchorEl={anchorEl}
+            handleSaveEdit={handleSaveEdit}
+            handleClosePopper={handleClosePopper}
+            editValue={editValue}
+            setEditValue={setEditValue}
+            editingField={editingField}
+            setIsPopperFocused={setIsPopperFocused}
+          />
+        )}
       </StyledTableRow>
     );
   };
@@ -383,14 +503,19 @@ export default function Tstable() {
         </Box>
       </Box>
 
-       {/* Column Filter Dialog */}
-       <Dialog open={openFilter} onClose={handleCloseFilter}>
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
         <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
         <DialogContent>
           {TsTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
-              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns2',column.name)} />}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns2', column.name)}
+                />
+              }
               label={column.name} // Display column name as label
             />
           ))}
@@ -439,6 +564,7 @@ export default function Tstable() {
       <TablePagination
         component="div"
         count={filtered.length}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
@@ -456,6 +582,7 @@ export default function Tstable() {
           refreshAPI={refreshAPI}
         />
       )}
+      <Toaster position="top-right" reverseOrder={false} />
     </Box>
   );
 }

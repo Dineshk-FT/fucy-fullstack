@@ -23,13 +23,17 @@ import {
   TableRow,
   TablePagination,
   Tooltip,
+  InputLabel,
+  IconButton,
+  Popper,
+  ClickAwayListener,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
-  InputLabel
+  FormControlLabel
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
@@ -40,8 +44,9 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
-import { tableHeight } from '../../store/constant';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { tableHeight } from '../../store/constant';
+import FormPopper from '../Poppers/FormPopper';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
@@ -54,7 +59,8 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
   damageID: state.damageScenarios['subs'][1]['_id'],
-  deleteDamageScenario: state.deleteDamageScenario
+  deleteDamageScenario: state.deleteDamageScenario,
+  updateName: state.updateName$DescriptionforDamage
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -77,7 +83,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#000'
   }
 }));
 
@@ -178,6 +185,7 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
   );
 };
 
+const notify = (message, status) => toast[status](message);
 export default function DsTable() {
   const color = ColorTheme();
   const {
@@ -190,7 +198,8 @@ export default function DsTable() {
     getThreatScenario,
     updateImpact,
     deleteDamageScenario,
-    updateDerived
+    updateDerived,
+    updateName
   } = useStore(selector, shallow);
 
   const [stakeHolder] = useState(false);
@@ -266,8 +275,6 @@ export default function DsTable() {
           : [...prevSelectedRows, rowId] // Select if not selected
     );
   };
-
-  const notify = (message, status) => toast[status](message);
 
   // console.log('damageID', damageID);
   const Head = useMemo(() => {
@@ -393,14 +400,14 @@ export default function DsTable() {
       return value === 1
         ? 'Negligible'
         : value === 2
-          ? 'Minor'
-          : value === 3
-            ? 'Moderate'
-            : value === 4
-              ? 'Major'
-              : value === 5
-                ? 'Severe'
-                : '';
+        ? 'Minor'
+        : value === 3
+        ? 'Moderate'
+        : value === 4
+        ? 'Major'
+        : value === 5
+        ? 'Severe'
+        : '';
     };
 
     const val = Object.values(impact)?.map((it) => pattern(it));
@@ -422,7 +429,7 @@ export default function DsTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    console.log('e', e);
+    // console.log('e', e);
     const startX = e.clientX;
 
     // Use the actual width of the column if no width is set in state
@@ -446,7 +453,56 @@ export default function DsTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
     const isSelected = selectedRows.includes(row.id);
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: damageID,
+          detailId: row?.id,
+          [editingField === 'Name' ? 'Name' : 'Description']: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            console.log('res', res);
+            if (!res.error) {
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getDamageScenarios(model?._id);
+              handleClosePopper();
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+
+    const handleClosePopper = () => {
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
+
     return (
       <>
         <StyledTableRow
@@ -474,8 +530,39 @@ export default function DsTable() {
           }}
         >
           {Head?.map((item, index) => {
+            const isEditableField = item.name === 'Name' || item.name === 'Description/ Scalability';
             let cellContent;
             switch (true) {
+              case isEditableField:
+                {
+                  cellContent = (
+                    <StyledTableCell
+                      key={index}
+                      onMouseEnter={() => setHoveredField(item.name)}
+                      onMouseLeave={() => {
+                        if (!anchorEl) setHoveredField(null);
+                      }}
+                      style={{ position: 'relative', cursor: 'pointer' }}
+                    >
+                      {row[item.name] || '-'}
+                      {(hoveredField === item.name || editingField === item.name) && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                          sx={{
+                            position: 'absolute',
+                            top: '15%',
+                            right: '-2px',
+                            transform: 'translateY(-50%)'
+                          }}
+                        >
+                          <EditIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      )}
+                    </StyledTableCell>
+                  );
+                }
+                break;
               case checkforLabel(item):
                 cellContent = (
                   <SelectableCell
@@ -573,6 +660,17 @@ export default function DsTable() {
 
             return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
+          {anchorEl && (
+            <FormPopper
+              anchorEl={anchorEl}
+              handleSaveEdit={handleSaveEdit}
+              handleClosePopper={handleClosePopper}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              editingField={editingField}
+              setIsPopperFocused={setIsPopperFocused}
+            />
+          )}
         </StyledTableRow>
       </>
     );
@@ -658,7 +756,12 @@ export default function DsTable() {
           {DSTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
-              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns', column.name)} />}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns', column.name)}
+                />
+              }
               label={column.name} // Display column name as label
             />
           ))}
@@ -736,6 +839,7 @@ export default function DsTable() {
       <TablePagination
         component="div"
         count={filtered.length}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}

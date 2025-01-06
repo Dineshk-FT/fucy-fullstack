@@ -25,20 +25,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
+  FormControlLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { makeStyles } from '@mui/styles';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, RatingColor, threatType } from './constraints';
-import CircleIcon from '@mui/icons-material/Circle';
+import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../store/constant';
 import { AttackTableoptions as options, AttackTableHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -81,7 +79,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#000'
   }
 }));
 
@@ -169,7 +168,6 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
 export default function AttackTreeTable() {
   const color = ColorTheme();
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
@@ -188,7 +186,7 @@ export default function AttackTreeTable() {
 
   const Head = useMemo(() => {
     return column.filter((header) => visibleColumns.includes(header.name));
-  }, [ visibleColumns]);
+  }, [visibleColumns]);
 
   React.useEffect(() => {
     if (attacks['scenes']) {
@@ -199,7 +197,7 @@ export default function AttackTreeTable() {
           ID: dt.id || dt?.ID,
           Name: dt.name || dt?.Name,
           Description: `This is the description for ${dt.Name || dt?.name}`,
-          Approach: dt?.Approach ?? '',
+          // Approach: dt?.Approach ?? '',
           'Elapsed Time': dt['Elapsed Time'] ?? '',
           Expertise: dt?.Expertise ?? '',
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
@@ -213,18 +211,6 @@ export default function AttackTreeTable() {
       setFiltered(mod1);
     }
   }, [attacks]);
-
-  const getRating = (value) => {
-    if (value >= 0 && value <= 13) {
-      return 'High';
-    } else if (value >= 14 && value <= 19) {
-      return 'Medium';
-    } else if (value >= 20 && value <= 24) {
-      return 'Low';
-    } else {
-      return 'Very low';
-    }
-  };
 
   // console.log('rows', rows);
   const handleChange = (e, row) => {
@@ -245,17 +231,15 @@ export default function AttackTreeTable() {
     const calculateAverageRating = (row) => {
       const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
-      let count = 0;
 
       categories.forEach((category) => {
         const selectedOption = options[category].find((option) => option.value === row[category]);
         if (selectedOption) {
           totalRating += selectedOption.rating;
-          count++;
         }
       });
 
-      return count > 0 ? (totalRating / count).toFixed(2) : 'N/A';
+      return totalRating;
     };
 
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
@@ -319,8 +303,8 @@ export default function AttackTreeTable() {
       item.name === 'Elapsed Time' ||
       item.name === 'Knowledge of the Item' ||
       item.name === 'Window of Opportunity' ||
-      item.name === 'Equipment' ||
-      item.name === 'Approach'
+      item.name === 'Equipment'
+      // item.name === 'Approach'
     ) {
       return true;
     }
@@ -367,8 +351,8 @@ export default function AttackTreeTable() {
               color: `${color?.sidebarContent} !important`
             },
             '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
+              backgroundColor: color?.sidebarBG
+              // color: `${color?.sidebarContent} !important`
             },
             backgroundColor: isChild ? '#F4F8FE' : '',
             color: `${color?.sidebarContent} !important`
@@ -376,30 +360,44 @@ export default function AttackTreeTable() {
         >
           {Head?.map((item, index) => {
             const bgColor = RatingColor(row['Attack Feasibilities Rating']);
-            return (
-              <React.Fragment key={index}>
-                {checkforLabel(item) ? (
-                  <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
-                ) : item.name === 'Attack Feasibilities Rating' ? (
+            // console.log('bgColor', bgColor);
+            const color = !bgColor.includes('yellow') ? 'white' : 'black';
+            // console.log('color', color);
+
+            let cellContent;
+            switch (true) {
+              case checkforLabel(item):
+                cellContent = <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />;
+                break;
+              case item.name === 'Attack Feasibilities Rating':
+                cellContent = (
                   <StyledTableCell
                     key={index}
                     align={'left'}
-                    sx={{ backgroundColor: bgColor, color: bgColor !== 'yellow' ? 'white' : 'black' }}
+                    sx={{
+                      backgroundColor: `${bgColor} !important`,
+                      color: `${color} !important`
+                    }}
                   >
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                ) : (
+                );
+                break;
+              default:
+                cellContent = (
                   <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                )}
-              </React.Fragment>
-            );
+                );
+                break;
+            }
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
         </StyledTableRow>
       </>
     );
   };
+
   // console.log('selectedRow', selectedRow)
   return (
     <Box>
@@ -417,20 +415,20 @@ export default function AttackTreeTable() {
           sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
         />
         <Button
-            sx={{
-              float: 'right',
-              mb: 2,
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
-            variant="contained"
-            onClick={handleOpenFilter}
-          >
-            <FilterAltIcon />
-            Filter Columns
-          </Button>
+          sx={{
+            float: 'right',
+            mb: 2,
+            backgroundColor: '#4caf50',
+            ':hover': {
+              backgroundColor: '#388e3c'
+            }
+          }}
+          variant="contained"
+          onClick={handleOpenFilter}
+        >
+          <FilterAltIcon />
+          Filter Columns
+        </Button>
       </Box>
 
       {/* Column Filter Dialog */}
@@ -440,7 +438,12 @@ export default function AttackTreeTable() {
           {AttackTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
-              control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns3',column.name)} />}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns3', column.name)}
+                />
+              }
               label={column.name} // Display column name as label
             />
           ))}
@@ -510,7 +513,7 @@ export default function AttackTreeTable() {
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
         count={filtered.length}
         rowsPerPage={rowsPerPage}

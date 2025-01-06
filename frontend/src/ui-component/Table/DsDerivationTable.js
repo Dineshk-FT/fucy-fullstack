@@ -357,6 +357,7 @@ export default function DsDerivationTable() {
         <TablePagination
           component="div"
           count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}

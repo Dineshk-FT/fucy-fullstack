@@ -88,7 +88,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    color: '#000',
+    padding: '10px 8px',
+    textAlign: 'center'
   }
 }));
 
@@ -138,11 +141,15 @@ export default function RiskTreatmentTable() {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
-        'Damage Scenarios': item?.damage_scenarios,
-        'Safety Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Safety Impact']) ?? '',
-        'Financial Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Financial Impact']) ?? '',
-        'Operational Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Operational Impact']) ?? '',
-        'Privacy Impact': item?.damage_scenarios.map((scene) => scene?.impacts['Privacy Impact']) ?? '',
+        // 'Damage Scenarios': item?.damage_scenarios,
+        'Damage Scenarios':
+          `[DS${
+            item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
+          }] ${item?.threat_scene[0]?.damage_name}` ?? '-',
+        'Safety Impact': item?.impacts['Safety Impact'] ?? '',
+        'Financial Impact': item?.impacts['Financial Impact'] ?? '',
+        'Operational Impact': item?.impacts['Operational Impact'] ?? '',
+        'Privacy Impact': item?.impacts['Privacy Impact'] ?? '',
         'Attack Tree or Attack Path(s)': item?.attack_scene,
         'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? ''
       };
@@ -285,25 +292,29 @@ export default function RiskTreatmentTable() {
             case item.name === 'Damage Scenarios':
               cellContent = (
                 <StyledTableCell component="th" scope="row">
-                  {row[item.name] && row[item.name].length ? (
-                    row[item.name].map((damage, i) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{damage?.Name}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <InputLabel>N/A</InputLabel>
-                  )}
+                  {
+                    // row[item.name] && row[item.name].length ? (
+                    // row[item.name].map((damage, i) => (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item?.name]}</span>
+                    </span>
+                    // ))
+                    // ) : (
+                    //   <InputLabel>N/A</InputLabel>
+                    //   )
+                  }
                 </StyledTableCell>
               );
               break;
 
             case item.name.includes('Impact'):
-              const impact = OverallImpact(row[item?.name]);
+              // const impact = OverallImpact(row[item?.name]);
+              const impact = colorPickerTab(row[item?.name]);
+
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: colorPickerTab(impact), color: '#000' }}>
-                  {impact}
+                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: impact, color: '#000' }}>
+                  {row[item?.name]}
                 </StyledTableCell>
               );
             case item.name === 'Attack Feasibility Rating':
@@ -378,6 +389,7 @@ export default function RiskTreatmentTable() {
       <TablePagination
         component="div"
         count={filtered.length}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}

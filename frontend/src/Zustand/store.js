@@ -113,20 +113,24 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   cybersecurity: {
     id: '5',
-    name: 'CyberSecurity Goals, Claims and Requirements',
+    name: 'Cybersecurity Goals, Claims and Requirements',
     icon: 'CybersecurityIcon',
     subs: [
       {
         id: 51,
-        name: 'CyberSecurity Goals'
+        name: 'Cybersecurity Goals'
       },
       {
         id: 53,
-        name: 'CyberSecurity Requirements'
+        name: 'Cybersecurity Requirements'
       },
       {
         id: 52,
-        name: 'CyberSecurity Controls'
+        name: 'Cybersecurity Controls'
+      },
+      {
+        id: 54,
+        name: 'Cybersecurity Claims'
       }
     ]
   },
@@ -196,9 +200,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   component: [],
   originalNodes: [],
   visibleColumns: DSTableHeader.map((column) => column.name), // Initialize with all columns visible
-  visibleColumns1: DsDerivationHeader.map((column) => column.name), 
-  visibleColumns2: TsTableHeader.map((column) => column.name), 
-  visibleColumns3: AttackTableHeader.map((column) => column.name), 
+  visibleColumns1: DsDerivationHeader.map((column) => column.name),
+  visibleColumns2: TsTableHeader.map((column) => column.name),
+  visibleColumns3: AttackTableHeader.map((column) => column.name),
 
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -208,12 +212,17 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   toggleColumnVisibility: (table, columnName) => {
     const { visibleColumns, visibleColumns1, visibleColumns2, visibleColumns3 } = get();
-    const tableColumns = table === 'visibleColumns' ? visibleColumns : table === 'visibleColumns1' ? visibleColumns1 : table === 'visibleColumns2' ? visibleColumns2 : visibleColumns3;
+    const tableColumns =
+      table === 'visibleColumns'
+        ? visibleColumns
+        : table === 'visibleColumns1'
+        ? visibleColumns1
+        : table === 'visibleColumns2'
+        ? visibleColumns2
+        : visibleColumns3;
     const isCurrentlyVisible = tableColumns.includes(columnName);
-    const updatedColumns = isCurrentlyVisible
-      ? tableColumns.filter((col) => col !== columnName)
-      : [...tableColumns, columnName];
-    
+    const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
+
     set({
       [table]: updatedColumns
     });
@@ -742,20 +751,24 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       cybersecurity: {
         id: '5',
-        name: 'CyberSecurity Goals, Claims and Requirements',
+        name: 'Cybersecurity Goals, Claims and Requirements',
         icon: 'CybersecurityIcon',
         subs: [
           {
             id: 51,
-            name: 'CyberSecurity Goals'
+            name: 'Cybersecurity Goals'
           },
           {
             id: 53,
-            name: 'CyberSecurity Requirements'
+            name: 'Cybersecurity Requirements'
           },
           {
             id: 52,
-            name: 'CyberSecurity Controls'
+            name: 'Cybersecurity Controls'
+          },
+          {
+            id: 54,
+            name: 'Cybersecurity Claims'
           }
         ]
       }
@@ -921,11 +934,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/get_details/cybersecurity`;
     const res = await GET_CALL(modelId, url);
 
-    const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
-    const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
-    const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
-
     if (!res?.error) {
+      const goals = res?.find((item) => item?.type === 'cybersecurity_goals');
+      const requirements = res?.find((item) => item?.type === 'cybersecurity_requirements');
+      const controls = res?.find((item) => item?.type === 'cybersecurity_controls');
+      const claims = res?.find((item) => item?.type === 'cybersecurity_claims');
+
       set((state) => ({
         cybersecurity: {
           ...state.cybersecurity,
@@ -941,6 +955,10 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               ...state.cybersecurity.subs[2],
               ...controls
+            },
+            {
+              ...state.cybersecurity.subs[3],
+              ...claims
             }
           ]
         }
@@ -952,15 +970,19 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               id: 51,
-              name: 'CyberSecurity Goals'
+              name: 'Cybersecurity Goals'
             },
             {
               id: 53,
-              name: 'CyberSecurity Requirements'
+              name: 'Cybersecurity Requirements'
             },
             {
               id: 52,
-              name: 'CyberSecurity Controls'
+              name: 'Cybersecurity Controls'
+            },
+            {
+              id: 54,
+              name: 'Cybersecurity Claims'
             }
           ]
         }
@@ -1029,6 +1051,22 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateImpact: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update-impacts/damage_scenerio`;
 
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+
+  updateName$DescriptionforDamage: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/damage_scenerio_name&desc`;
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+  updateName$DescriptionforThreat: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/threat_scenerio_name&desc`;
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+  updateName$DescriptionforCybersecurity: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/cybersecurity_name&desc`;
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },
