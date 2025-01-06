@@ -185,6 +185,7 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
   );
 };
 
+const notify = (message, status) => toast[status](message);
 export default function DsTable() {
   const color = ColorTheme();
   const {
@@ -274,8 +275,6 @@ export default function DsTable() {
           : [...prevSelectedRows, rowId] // Select if not selected
     );
   };
-
-  const notify = (message, status) => toast[status](message);
 
   // console.log('damageID', damageID);
   const Head = useMemo(() => {

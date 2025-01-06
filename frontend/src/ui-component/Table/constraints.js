@@ -383,3 +383,13 @@ export const OverallImpact = (impact) => {
 
   return impactLabel[maxImpactValue] || '';
 };
+
+export const getCybersecurityType = (type) => {
+  const getType = {
+    'Cybersecurity Goals': 'cybersecurity_goals',
+    'Cybersecurity Requirements': 'cybersecurity_requirements',
+    'Cybersecurity Controls': 'cybersecurity_controls',
+    'Cybersecurity Claims': 'cybersecurity_claims'
+  };
+  return getType[type];
+};

@@ -60,10 +60,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
-import CyberRequirementTable from '../../ui-component/Table/CyberRequirementTable';
-import CyberControlsTable from '../../ui-component/Table/CyberControlsTable';
-import CyberGoalsTable from '../../ui-component/Table/CyberGoalsTable';
-import CyberClaimsTable from '../../ui-component/Table/CyberClaimsTable';
+import CybersecurityTable from '../../ui-component/Table/CyberSecurityTable';
 
 const elk = new ELK();
 
@@ -710,10 +707,10 @@ export default function MainCanvas() {
     'Derived Threat Scenarios': <Tstable />,
     Attack: <AttackTreeTable />,
     'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
-    'Cybersecurity Requirements': <CyberRequirementTable />,
-    'Cybersecurity Controls': <CyberControlsTable />,
-    'Cybersecurity Goals': <CyberGoalsTable />,
-    'Cybersecurity Claims': <CyberClaimsTable />,
+    'Cybersecurity Requirements': <CybersecurityTable tableType="requirements" />,
+    'Cybersecurity Controls': <CybersecurityTable tableType="controls" />,
+    'Cybersecurity Goals': <CybersecurityTable tableType="goals" />,
+    'Cybersecurity Claims': <CybersecurityTable tableType="claims" />,
     'Attack Trees Canvas': <AttackTree />
   };
 

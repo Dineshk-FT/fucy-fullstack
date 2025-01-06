@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -10,7 +10,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button } from '@mui/material';
+import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button, IconButton } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -18,6 +18,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { tableHeight } from '../../store/constant';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
+import EditIcon from '@mui/icons-material/Edit';
+import FormPopper from '../Poppers/FormPopper';
+import toast, { Toaster } from 'react-hot-toast';
+import { getCybersecurityType } from './constraints';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -51,15 +55,33 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  cybersecurity: state.cybersecurity['subs'][0]
+  model: state.model,
+  cybersecuritySubs: state.cybersecurity['subs'],
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  updateName: state.updateName$DescriptionforCyberscurity
 });
 
-export default function CyberGoalsTable() {
+const notify = (message, status) => toast[status](message);
+export default function CybersecurityTable() {
   const { title } = useSelector((state) => state?.pageName);
+  const { cybersecuritySubs, getCyberSecurityScenario, model, updateName } = useStore(selector, shallow);
+  const getCybersecurityScene = useCallback(() => {
+    const scene = {
+      'Cybersecurity Goals': cybersecuritySubs[0],
+      'Cybersecurity Requirements': cybersecuritySubs[1],
+      'Cybersecurity Controls': cybersecuritySubs[2],
+      'Cybersecurity Claims': cybersecuritySubs[3]
+    };
+    return scene[title];
+  }, [title, cybersecuritySubs]);
+
+  const cybersecurity = getCybersecurityScene();
+  const cybersecurityType = getCybersecurityType(title);
+  //   console.log('cybersecurity', cybersecurity);
+  //   console.log('cybersecurityType', cybersecurityType);
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { cybersecurity } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -67,16 +89,15 @@ export default function CyberGoalsTable() {
   const [page, setPage] = useState(0); // Add state for page
   const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
+  // console.log('cybersecurity', cybersecurity);
 
   const Head = useMemo(() => {
     return [
       { id: 1, name: 'SNo' },
       { id: 2, name: 'Name' },
       { id: 3, name: 'Description' },
-      { id: 4, name: 'CAL' },
-      { id: 5, name: 'Related Threat Scenario' },
-      { id: 6, name: 'Related Cybersecurity Requirements' },
-      { id: 7, name: 'Related Cybersecurity Controls' }
+      { id: 4, name: 'Condition for Re-Evaluation' },
+      { id: 5, name: 'Related Threat Scenario' }
     ];
   }, []);
 
@@ -84,7 +105,7 @@ export default function CyberGoalsTable() {
     if (cybersecurity['scenes']) {
       const scene = cybersecurity['scenes']?.map((dt, i) => {
         return {
-          SNo: `CG${(i + 1).toString().padStart(3, '0')}`,
+          SNo: `CL${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
           Description: dt?.Description ?? `description for ${dt?.Name}`
@@ -93,7 +114,7 @@ export default function CyberGoalsTable() {
       setRows(scene);
       setFiltered(scene);
     }
-  }, [cybersecurity]);
+  }, [cybersecurity, title]);
 
   const handleSearch = (e) => {
     const { value } = e.target;
@@ -149,6 +170,55 @@ export default function CyberGoalsTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
+
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: cybersecurity?._id,
+          sceneId: row?.ID,
+          [editingField]: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            console.log('res', res);
+            if (!res.error) {
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getCyberSecurityScenario(model?._id);
+              handleClosePopper();
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+
+    const handleClosePopper = () => {
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
     return (
       <StyledTableRow
         key={row.name}
@@ -172,8 +242,39 @@ export default function CyberGoalsTable() {
         }}
       >
         {Head?.map((item, index) => {
+          const isEditableField = item.name === 'Name' || item.name === 'Description';
           let cellContent;
           switch (true) {
+            case isEditableField:
+              {
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    onMouseEnter={() => setHoveredField(item.name)}
+                    onMouseLeave={() => {
+                      if (!anchorEl) setHoveredField(null);
+                    }}
+                    style={{ position: 'relative', cursor: 'pointer' }}
+                  >
+                    {row[item.name] || '-'}
+                    {(hoveredField === item.name || editingField === item.name) && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                        sx={{
+                          position: 'absolute',
+                          top: '15%',
+                          right: '-2px',
+                          transform: 'translateY(-50%)'
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    )}
+                  </StyledTableCell>
+                );
+              }
+              break;
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -197,6 +298,17 @@ export default function CyberGoalsTable() {
 
           return <React.Fragment key={index}>{cellContent}</React.Fragment>;
         })}
+        {anchorEl && (
+          <FormPopper
+            anchorEl={anchorEl}
+            handleSaveEdit={handleSaveEdit}
+            handleClosePopper={handleClosePopper}
+            editValue={editValue}
+            setEditValue={setEditValue}
+            editingField={editingField}
+            setIsPopperFocused={setIsPopperFocused}
+          />
+        )}
       </StyledTableRow>
     );
   };
@@ -297,9 +409,10 @@ export default function CyberGoalsTable() {
           handleClose={() => setOpen(false)}
           name={title}
           id={cybersecurity?._id}
-          type={cybersecurity?.type ?? 'cybersecurity_goals'}
+          type={cybersecurity?.type ?? cybersecurityType}
         />
       )}
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 }

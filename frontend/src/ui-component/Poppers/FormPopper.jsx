@@ -43,7 +43,11 @@ const FormPopper = ({ anchorEl, handleClosePopper, editValue, setEditValue, hand
               onBlur={() => setIsPopperFocused(false)}
               label={`Edit ${editingField}`}
               size="small"
+              multiline
+              minRows={2} // Minimum number of rows
+              maxRows={8} // Maximum number of rows (optional, adjust as needed)
             />
+
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Button onClick={handleClosePopper}>Cancel</Button>
               <Button onClick={handleSaveEdit} color="primary" variant="contained">

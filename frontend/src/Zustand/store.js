@@ -195,9 +195,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   component: [],
   originalNodes: [],
   visibleColumns: DSTableHeader.map((column) => column.name), // Initialize with all columns visible
-  visibleColumns1: DsDerivationHeader.map((column) => column.name), 
-  visibleColumns2: TsTableHeader.map((column) => column.name), 
-  visibleColumns3: AttackTableHeader.map((column) => column.name), 
+  visibleColumns1: DsDerivationHeader.map((column) => column.name),
+  visibleColumns2: TsTableHeader.map((column) => column.name),
+  visibleColumns3: AttackTableHeader.map((column) => column.name),
 
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -207,12 +207,17 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   toggleColumnVisibility: (table, columnName) => {
     const { visibleColumns, visibleColumns1, visibleColumns2, visibleColumns3 } = get();
-    const tableColumns = table === 'visibleColumns' ? visibleColumns : table === 'visibleColumns1' ? visibleColumns1 : table === 'visibleColumns2' ? visibleColumns2 : visibleColumns3;
+    const tableColumns =
+      table === 'visibleColumns'
+        ? visibleColumns
+        : table === 'visibleColumns1'
+        ? visibleColumns1
+        : table === 'visibleColumns2'
+        ? visibleColumns2
+        : visibleColumns3;
     const isCurrentlyVisible = tableColumns.includes(columnName);
-    const updatedColumns = isCurrentlyVisible
-      ? tableColumns.filter((col) => col !== columnName)
-      : [...tableColumns, columnName];
-    
+    const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
+
     set({
       [table]: updatedColumns
     });
@@ -1052,6 +1057,11 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   updateName$DescriptionforThreat: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/threat_scenerio_name&desc`;
+    // Directly pass details to PATCH_CALL
+    return await PATCH_CALL(details, url);
+  },
+  updateName$DescriptionforCyberscurity: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/cybersecurity_name&desc`;
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },
