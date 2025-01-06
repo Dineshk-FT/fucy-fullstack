@@ -594,6 +594,18 @@ const BrowserCard = () => {
           })
         );
 
+      case 'catalog':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'catalog', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.subs_scenes?.map((scene) => (
+              <TreeItem onClick={(e) => e.stopPropagation()} key={scene.id} nodeId={scene.id} label={getLabel('TopicIcon', scene.name)} />
+            ));
+          })
+        );
+
       case 'documents':
         return renderTreeItem(
           data,
