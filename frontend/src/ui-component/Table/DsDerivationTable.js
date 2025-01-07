@@ -22,7 +22,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
+  FormControlLabel
 } from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
@@ -310,7 +310,12 @@ export default function DsDerivationTable() {
             {DsDerivationHeader.map((column) => (
               <FormControlLabel
                 key={column.id}
-                control={<Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility('visibleColumns1', column.name)} />}
+                control={
+                  <Checkbox
+                    checked={visibleColumns.includes(column.name)}
+                    onChange={() => toggleColumnVisibility('visibleColumns1', column.name)}
+                  />
+                }
                 label={column.name} // Display column name as label
               />
             ))}
@@ -322,8 +327,17 @@ export default function DsDerivationTable() {
           </DialogActions>
         </Dialog>
 
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <TableContainer
+          component={Paper}
+          sx={{
+            '& .MuiPaper-root': { maxHeight: '100vh' },
+            borderRadius: '0px',
+            padding: 1,
+            maxHeight: '70svh',
+            scrollbarWidth: 'thin'
+          }}
+        >
+          <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
                 {Head?.map((hd) => (

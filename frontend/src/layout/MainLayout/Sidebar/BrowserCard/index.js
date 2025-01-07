@@ -487,7 +487,8 @@ const BrowserCard = () => {
                         dragged: true,
                         nodeId: nodeDetail.nodeId,
                         threatId: prop.id,
-                        damageId: detail?.rowId
+                        damageId: detail?.rowId,
+                        key: `TS${key.toString().padStart(3, '0')}`
                       };
 
                       return (

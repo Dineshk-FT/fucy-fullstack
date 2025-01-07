@@ -1096,6 +1096,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   },
 
+  updateRiskTable: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/riskDetAndTreat`;
+    const res = await PATCH_CALL(details, url);
+    console.log('res', res);
+    return res;
+  },
+
   // updateModel: async (newModel) => {
   //   const res = await axios.put(`${configuration.backendUrl}update_model/${newModel?._id}`, newModel);
 
