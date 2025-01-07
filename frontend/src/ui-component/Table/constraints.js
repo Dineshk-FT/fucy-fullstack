@@ -231,6 +231,39 @@ export const AttackTableHeader = [
   { id: 18, name: 'Attack Feasability Rating Justification' }
 ];
 
+export const RiskTreatmentHeaderTable = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Threat Scenario' },
+  { id: 3, name: 'Assets' },
+  { id: 4, name: 'Damage Scenarios' },
+  { id: 5, name: 'Related UNECE Threats or Vulns' },
+  { id: 6, name: 'Safety Impact' },
+  { id: 7, name: 'Financial Impact' },
+  { id: 8, name: 'Operational Impact' },
+  { id: 9, name: 'Privacy Impact' },
+  { id: 10, name: 'Attack Tree or Attack Path(s)' },
+  { id: 11, name: 'Attack Path Name' },
+  { id: 12, name: 'Attack Path Details' },
+  { id: 13, name: 'Attack Feasibility Rating' },
+  { id: 14, name: 'Mitigated Attack Feasibility' },
+  { id: 15, name: 'Acceptence Level' },
+  { id: 16, name: 'Safety Risk' },
+  { id: 17, name: 'Financial Risk' },
+  { id: 18, name: 'Operational Risk' },
+  { id: 19, name: 'Privacy Risk' },
+  { id: 20, name: 'Residual Safety Risk' },
+  { id: 21, name: 'Residual Financial Risk' },
+  { id: 22, name: 'Residual Operational Risk' },
+  { id: 23, name: 'Residual Privacy Risk' },
+  { id: 24, name: 'Risk Treatment Options' },
+  { id: 25, name: 'Risk Treatment Justification' },
+  { id: 26, name: 'Applied Measures' },
+  { id: 27, name: 'Detailed / Combained Threat Scenarios' },
+  { id: 28, name: 'Cybersecurity Goals' },
+  { id: 29, name: 'Contributing Requirements' },
+  { id: 30, name: 'CyberSecurity Claims' }
+];
+
 export const AttackTableoptions = {
   Approach: [
     { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },

@@ -113,6 +113,7 @@ export default function CybersecurityTable() {
 
   useEffect(() => {
     const getId = getIdName();
+    // console.log('cybersecurity', cybersecurity);
     if (cybersecurity['scenes']) {
       const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
@@ -124,6 +125,9 @@ export default function CybersecurityTable() {
       });
       setRows(scene);
       setFiltered(scene);
+    } else {
+      setRows([]);
+      setFiltered([]);
     }
   }, [cybersecurity, title]);
 
