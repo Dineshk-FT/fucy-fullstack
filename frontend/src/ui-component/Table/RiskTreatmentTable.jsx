@@ -17,7 +17,13 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  InputLabel
+  InputLabel,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,6 +36,9 @@ import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
 import { AttackIcon, DamageIcon } from '../../assets/icons';
 import toast, { Toaster } from 'react-hot-toast';
+import { RiskTreatmentHeaderTable } from './constraints';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { tableHeight } from '../../store/constant';
 
 const selector = (state) => ({
   model: state.model,
@@ -41,38 +50,7 @@ const selector = (state) => ({
   updateRiskTreatment: state.updateRiskTreatment
 });
 
-const column = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Threat Scenario' },
-  { id: 3, name: 'Assets' },
-  { id: 4, name: 'Damage Scenarios' },
-  { id: 5, name: 'Related UNECE Threats or Vulns' },
-  { id: 6, name: 'Safety Impact' },
-  { id: 7, name: 'Financial Impact' },
-  { id: 8, name: 'Operational Impact' },
-  { id: 9, name: 'Privacy Impact' },
-  { id: 10, name: 'Attack Tree or Attack Path(s)' },
-  { id: 11, name: 'Attack Path Name' },
-  { id: 12, name: 'Attack Path Details' },
-  { id: 13, name: 'Attack Feasibility Rating' },
-  { id: 14, name: 'Mitigated Attack Feasibility' },
-  { id: 15, name: 'Acceptence Level' },
-  { id: 16, name: 'Safety Risk' },
-  { id: 17, name: 'Financial Risk' },
-  { id: 18, name: 'Operational Risk' },
-  { id: 19, name: 'Privacy Risk' },
-  { id: 20, name: 'Residual Safety Risk' },
-  { id: 21, name: 'Residual Financial Risk' },
-  { id: 22, name: 'Residual Operational Risk' },
-  { id: 23, name: 'Residual Privacy Risk' },
-  { id: 24, name: 'Risk Treatment Options' },
-  { id: 25, name: 'Risk Treatment Justification' },
-  { id: 26, name: 'Applied Measures' },
-  { id: 27, name: 'Detailed / Combained Threat Scenarios' },
-  { id: 28, name: 'Cybersecurity Goals' },
-  { id: 29, name: 'Contributing Requirements' },
-  { id: 30, name: 'CyberSecurity Claims' }
-];
+const column = RiskTreatmentHeaderTable;
 
 const useStyles = makeStyles({
   div: {
@@ -117,6 +95,13 @@ export default function RiskTreatmentTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns4);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
 
   const handleOpenSelect = (row) => {
     setSelectedRow(row);
@@ -166,11 +151,11 @@ export default function RiskTreatmentTable() {
     if (title.includes('Derived')) {
       const col = [...column];
       col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col;
+      return col.filter((header) => visibleColumns.includes(header.name));
     } else {
-      return column;
+      return column.filter((header) => visibleColumns.includes(header.name));
     }
-  }, [title]);
+  }, [title, visibleColumns]);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -344,13 +329,30 @@ export default function RiskTreatmentTable() {
   });
 
   return (
-    <Box sx={{ overflow: 'auto', height: '-webkit-fill-available', minHeight: 'moz-available' }}>
+    <Box
+      sx={{
+        overflow: 'auto',
+        height: '-webkit-fill-available',
+        minHeight: 'moz-available',
+        padding: 1,
+        '&::-webkit-scrollbar': {
+          width: '4px'
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          borderRadius: '10px'
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'rgba(0, 0, 0, 0.1)'
+        }
+      }}
+    >
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '18px' }}>{title} Table</Typography>
+          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
-        <Box display="flex" gap={3} my={1.5}>
+        <Box display="flex" gap={3}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -362,14 +364,49 @@ export default function RiskTreatmentTable() {
           {/* <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button> */}
+          <Button
+            sx={{
+              float: 'right',
+              mb: 2,
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon />
+            Filter Columns
+          </Button>
         </Box>
       </Box>
 
-      <TableContainer
-        component={Paper}
-        onDrop={onDrop}
-        onDragOver={(e) => e.preventDefault()} // Allow drop by preventing the default behavior
-      >
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {RiskTreatmentHeaderTable.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns4', column.name)}
+                />
+              }
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>

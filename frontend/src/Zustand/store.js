@@ -5,7 +5,7 @@ import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../API/api';
-import { DSTableHeader, DsDerivationHeader, TsTableHeader, AttackTableHeader } from '../ui-component/Table/constraints';
+import { DSTableHeader, DsDerivationHeader, TsTableHeader, AttackTableHeader, RiskTreatmentHeaderTable } from '../ui-component/Table/constraints';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -227,6 +227,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   visibleColumns1: DsDerivationHeader.map((column) => column.name),
   visibleColumns2: TsTableHeader.map((column) => column.name),
   visibleColumns3: AttackTableHeader.map((column) => column.name),
+  visibleColumns4: RiskTreatmentHeaderTable.map((column) => column.name),
 
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -235,7 +236,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   toggleColumnVisibility: (table, columnName) => {
-    const { visibleColumns, visibleColumns1, visibleColumns2, visibleColumns3 } = get();
+    const { visibleColumns, visibleColumns1, visibleColumns2, visibleColumns3, visibleColumns4 } = get();
     const tableColumns =
       table === 'visibleColumns'
         ? visibleColumns
@@ -243,7 +244,9 @@ const useStore = createWithEqualityFn((set, get) => ({
         ? visibleColumns1
         : table === 'visibleColumns2'
         ? visibleColumns2
-        : visibleColumns3;
+        : table === 'visibleColumns3'
+        ? visibleColumns3
+        : visibleColumns4
     const isCurrentlyVisible = tableColumns.includes(columnName);
     const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
 
