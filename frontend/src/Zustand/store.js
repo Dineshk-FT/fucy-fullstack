@@ -161,13 +161,33 @@ const useStore = createWithEqualityFn((set, get) => ({
         subs_scenes: [
           {
             id: '72',
-            name: 'Threats - Back-end servers related to vehicles in the field',
+            name: 'Threats - Back-end servers associated with vehicle field operations',
           },
           {
             id: '73',
-            name: 'Threats - Vehicles regarding their communication channels',
+            name: 'Threats - Vehicle communication channel vulnerabilities',
           },
-        ]
+          {
+            id: '74',
+            name: 'Threats - Vehicle update procedures and their risks',
+          },
+          {
+            id: '75',
+            name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles',
+          },
+          {
+            id: '76',
+            name: 'Threats - Vehicles from external connectivity and network connections',
+          },
+          {
+            id: '77',
+            name: 'Threats - Vehicle data and software integrity',
+          },
+          {
+            id: '78',
+            name: 'Potential vulnerabilities in vehicles if not properly secured or hardened',
+          }
+        ]        
       }
     ]
   },
