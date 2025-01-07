@@ -38,7 +38,7 @@ const StyledTableRow = styled(TableRow)(() => ({
   },
 }));
 
-export default function ThreatsTable() {
+export default function BackendServerTable() {
   const color = ColorTheme();
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,9 +55,10 @@ export default function ThreatsTable() {
         const threatDescription = threatValue.description;
         Object.entries(threatValue.sub_threats).forEach(([subThreatKey, subThreatValue], idx) => {
           rows.push({
+            id: data.ID,
             name: idx === 0 ? data.description : '',
             category: idx === 0 ? threatDescription : '',
-            example: subThreatValue,
+            example: `${subThreatKey}. ${subThreatValue}`,
           });
         });
       });
@@ -76,6 +77,7 @@ export default function ThreatsTable() {
     if (value.trim()) {
       const filterValue = rows.filter(
         (row) =>
+          row.id.toLowerCase().includes(value.toLowerCase()) ||
           row.name.toLowerCase().includes(value.toLowerCase()) ||
           row.category.toLowerCase().includes(value.toLowerCase()) ||
           row.example.toLowerCase().includes(value.toLowerCase())
@@ -122,7 +124,7 @@ export default function ThreatsTable() {
               onClick={handleBack}
             />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
-              Back-end servers related to vehicles Table
+              Back-end servers associated with vehicle field operations Table
             </Typography>
           </Box>
           <Box>
@@ -146,6 +148,7 @@ export default function ThreatsTable() {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
+                <StyledTableCell>ID</StyledTableCell>
                 <StyledTableCell>Name</StyledTableCell>
                 <StyledTableCell>Category</StyledTableCell>
                 <StyledTableCell>Example</StyledTableCell>
@@ -154,6 +157,7 @@ export default function ThreatsTable() {
             <TableBody>
               {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                 <StyledTableRow key={index}>
+                  <StyledTableCell>{row.name ? row.id : ''}</StyledTableCell>
                   <StyledTableCell>{row.name}</StyledTableCell>
                   <StyledTableCell>{row.category}</StyledTableCell>
                   <StyledTableCell style={{ textAlign: 'left' }}>{row.example}</StyledTableCell>

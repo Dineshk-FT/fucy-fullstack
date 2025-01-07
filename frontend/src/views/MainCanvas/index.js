@@ -63,6 +63,11 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import CybersecurityTable from '../../ui-component/Table/CyberSecurityTable';
 import BackendServerTable from '../../ui-component/Table/BackendServerTable';
 import VehiclesCommunicationTable from '../../ui-component/Table/VehiclesCommunicationTable';
+import UpdateProcedureTable from '../../ui-component/Table/UpdateProcedureTable';
+import HumanActionTable from '../../ui-component/Table/HumanActionTable';
+import ExternalConnectivityTable from '../../ui-component/Table/ExternalConnectivityTable';
+import SoftwareIntegrityTable from '../../ui-component/Table/SoftwareIntegrityTable';
+import PotentialVulnerbilityTable from '../../ui-component/Table/PotentialVulnerabilityTable';
 
 const elk = new ELK();
 
@@ -714,8 +719,13 @@ export default function MainCanvas() {
     'Cybersecurity Goals': <CybersecurityTable />,
     'Cybersecurity Claims': <CybersecurityTable />,
     'Attack Trees Canvas': <AttackTree />,
-    'Threats - Back-end servers related to vehicles in the field': <BackendServerTable/ >,
-    'Threats - Vehicles regarding their communication channels' : <VehiclesCommunicationTable />
+    'Threats - Back-end servers associated with vehicle field operations': <BackendServerTable/ >,
+    'Threats - Vehicle communication channel vulnerabilities' : <VehiclesCommunicationTable />,
+    'Threats - Vehicle update procedures and their risks': <UpdateProcedureTable/>,
+    'Threats - Human actions unintentionally enabling cyber attacks on vehicles': <HumanActionTable/>,
+    'Threats - Vehicles from external connectivity and network connections': <ExternalConnectivityTable/>,
+    'Threats - Vehicle data and software integrity': <SoftwareIntegrityTable/>,
+    'Potential vulnerabilities in vehicles if not properly secured or hardened': <PotentialVulnerbilityTable/>
   };
 
   return (

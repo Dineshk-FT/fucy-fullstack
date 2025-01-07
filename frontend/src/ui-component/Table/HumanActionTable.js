@@ -8,7 +8,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import ColorTheme from '../../store/ColorTheme';
 import { styled, Paper, Box, Dialog, TablePagination, Typography, TextField, Button } from '@mui/material';
-import { vehicleCommunicationThreats } from './catalogData';
+import { unintendedHumanActionsThreats } from './catalogData';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableHeight } from '../../store/constant';
 
@@ -38,7 +38,7 @@ const StyledTableRow = styled(TableRow)(() => ({
   },
 }));
 
-export default function VehiclesCommunicationTable() {
+export default function HumanActionTable() {
   const color = ColorTheme();
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +65,7 @@ export default function VehiclesCommunicationTable() {
       return rows;
     };
 
-    const data = extractThreats(vehicleCommunicationThreats);
+    const data = extractThreats(unintendedHumanActionsThreats);
     setRows(data);
     setFilteredRows(data);
   }, []);
@@ -124,7 +124,7 @@ export default function VehiclesCommunicationTable() {
               onClick={handleBack}
             />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
-                Vehicle communication channel vulnerabilities Table
+                Human actions unintentionally enabling cyber attacks on vehicles Table
             </Typography>
           </Box>
           <Box>
