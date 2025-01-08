@@ -283,7 +283,7 @@ const BrowserCard = () => {
     // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    if (name !== 'Attack Trees') {
+    if (name !== 'Attack Trees' && !name.includes('UNICE')) {
       dispatch(setTableOpen(name));
       dispatch(setTitle(name));
     }
@@ -572,7 +572,12 @@ const BrowserCard = () => {
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
             return sub.subs_scenes?.map((scene) => (
-              <TreeItem onClick={(e) => handleOpenTable(e, scene.id, scene.name)} key={scene.id} nodeId={scene.id} label={getLabel('TopicIcon', scene.name)} />
+              <TreeItem
+                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+                key={scene.id}
+                nodeId={scene.id}
+                label={getLabel('TopicIcon', scene.name)}
+              />
             ));
           })
         );

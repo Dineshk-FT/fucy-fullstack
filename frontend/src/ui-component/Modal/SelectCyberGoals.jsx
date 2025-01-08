@@ -9,6 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 
 export default function SelectCyberGoals({
+  riskTreatment,
   details,
   open,
   handleClose,
@@ -26,7 +27,17 @@ export default function SelectCyberGoals({
     );
   };
 
-  // console.log('selectedRow', selectedRow);
+  React.useEffect(() => {
+    function getCybersecurityGoals(riskTreatment, selectedRow) {
+      // Find the object in Details where threat_key matches
+      const matchingDetail = riskTreatment['Details'].find((detail) => detail.threat_key === selectedRow.threat_key);
+
+      // Return cybersecurity goals if found, otherwise return null
+      return matchingDetail?.cybersecurity?.cybersecurity_goals || null;
+    }
+    const Goals = getCybersecurityGoals(riskTreatment, selectedRow);
+    setSelectedScenes(Goals);
+  }, [selectedRow, riskTreatment]);
 
   const handleClick = () => {
     const details = {
@@ -86,11 +97,7 @@ export default function SelectCyberGoals({
                     }
                   }}
                   control={
-                    <Checkbox
-                      size="small"
-                      // checked={selectedScenes.some((s) => s.ID === scene.ID)}
-                      onChange={() => handleChange(detail)}
-                    />
+                    <Checkbox size="small" checked={selectedScenes.some((s) => s.ID === detail.ID)} onChange={() => handleChange(detail)} />
                   }
                   label={detail?.Name}
                 />

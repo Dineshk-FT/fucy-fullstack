@@ -34,7 +34,7 @@ import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
-import { AttackIcon, DamageIcon, CybersecurityIcon } from '../../assets/icons';
+import { AttackIcon, DamageIcon, CyberGoalIcon, CyberRequireIcon } from '../../assets/icons';
 import toast, { Toaster } from 'react-hot-toast';
 import SelectCyberGoals from '../Modal/SelectCyberGoals';
 import { RiskTreatmentHeaderTable } from './constraints';
@@ -48,7 +48,8 @@ const selector = (state) => ({
   getRiskTreatment: state.getRiskTreatment,
   addRiskTreatment: state.addRiskTreatment,
   cyber_Goals: state.cybersecurity['subs'][0],
-  updateRiskTable: state.updateRiskTable
+  updateRiskTable: state.updateRiskTable,
+  getCyberSecurityScenario: state.getCyberSecurityScenario
 });
 
 const column = RiskTreatmentHeaderTable;
@@ -90,7 +91,10 @@ export default function RiskTreatmentTable() {
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
   const [selectedScenes, setSelectedScenes] = useState([]);
-  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, cyber_Goals, updateRiskTable } = useStore(selector, shallow);
+  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, cyber_Goals, updateRiskTable, getCyberSecurityScenario } = useStore(
+    selector,
+    shallow
+  );
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -120,6 +124,10 @@ export default function RiskTreatmentTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
+    getCyberSecurityScenario(model?._id);
+  }, [model]);
+
+  useEffect(() => {
     const data = riskTreatment?.Details.map((item, i) => {
       // console.log('item', item);
       return {
@@ -139,13 +147,13 @@ export default function RiskTreatmentTable() {
         'Attack Tree or Attack Path(s)': item?.attack_scene,
         'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? '',
         'Contributing Requirements': item?.cybersecurity?.cybersecurity_requirements ?? [],
+        'Cybersecurity Goals': item?.cybersecurity?.cybersecurity_goals ?? [],
         threat_key: item?.threat_key
       };
     });
     setRows(data);
     setFiltered(data);
     setDetails(cyber_Goals['scenes']);
-    // console.log('attacktrees', attacktrees);
   }, [riskTreatment?.Details.length, riskTreatment.Details, cyber_Goals]);
 
   // console.log('details', details);
@@ -284,12 +292,12 @@ export default function RiskTreatmentTable() {
               cellContent = (
                 <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
                   {row[item.name] ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <img src={AttackIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                        {row[item.name]?.Name}
+                    row[item?.name]?.map((goal) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={goal?.ID}>
+                        <img src={CyberGoalIcon} alt="damage" height="10px" width="10px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{goal?.Name}</span>
                       </span>
-                    </span>
+                    ))
                   ) : (
                     <InputLabel>Select Goals</InputLabel>
                   )}
@@ -320,7 +328,7 @@ export default function RiskTreatmentTable() {
                 <StyledTableCell component="th" scope="row">
                   {row[item.name]?.map((require, i) => (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={require?.ID}>
-                      <img src={CybersecurityIcon} alt="damage" height="10px" width="10px" />
+                      <img src={CyberRequireIcon} alt="damage" height="10px" width="10px" />
                       <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{require?.Name}</span>
                     </span>
                   ))}
@@ -483,6 +491,7 @@ export default function RiskTreatmentTable() {
       )} */}
       {openSelect && (
         <SelectCyberGoals
+          riskTreatment={riskTreatment}
           open={openSelect}
           handleClose={handleCloseSelect}
           details={details}
