@@ -182,7 +182,7 @@ export default function RiskTreatmentTable() {
 
   // console.log('details', details);
   const onDrop = (event) => {
-    // console.log('event', event);
+    console.log('event', event);
     event.preventDefault();
     const cyber = event.dataTransfer.getData('application/cyber');
     let parsedData;
@@ -200,6 +200,7 @@ export default function RiskTreatmentTable() {
         damageId: parsedData?.damageId,
         key: parsedData?.key
       };
+      console.log('details', details);
       addRiskTreatment(details)
         .then((res) => {
           if (!res.error) {
