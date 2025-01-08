@@ -8,7 +8,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import ColorTheme from '../../store/ColorTheme';
 import { styled, Paper, Box, Dialog, TablePagination, Typography, TextField, Button } from '@mui/material';
-import { vehicleDataThreats } from './catalogData';
+import useStore from '../../Zustand/store';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableHeight } from '../../store/constant';
 
@@ -39,6 +39,7 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 export default function SoftwareIntegrityTable() {
+  const { getCatalog } = useStore();
   const color = ColorTheme();
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,6 +49,17 @@ export default function SoftwareIntegrityTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
+    const fetchCatalogData = async () => {
+      try {
+        const catalogData = await getCatalog(); 
+        const extractedRows = extractThreats(catalogData.vehicleDataThreats);
+        setRows(extractedRows);
+        setFilteredRows(extractedRows);
+      } catch (error) {
+        console.error('Error fetching catalog data:', error);
+      }
+    };
+
     const extractThreats = (data) => {
       const rows = [];
       // Iterate through threats data
@@ -65,10 +77,8 @@ export default function SoftwareIntegrityTable() {
       return rows;
     };
 
-    const data = extractThreats(vehicleDataThreats);
-    setRows(data);
-    setFilteredRows(data);
-  }, []);
+    fetchCatalogData();
+  }, [getCatalog]);
 
   const handleSearch = (e) => {
     const { value } = e.target;

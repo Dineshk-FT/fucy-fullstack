@@ -255,6 +255,26 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  getCatalog: async () => {
+    try {
+      const url = `${configuration.apiBaseUrl}v1/get/catalog`;
+      const options = {
+        method: 'POST',
+        url,
+        headers: {
+          ...createHeadersForJson()
+        },
+      };
+
+      const response = await axios(options);
+      // You can handle additional logic here, like setting a state or triggering a file download
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching catalog:', error);
+      throw error; // Throw error to handle it in the component
+    }
+  },
+
   generateDocument: async (payload) => {
     try {
       const url = `${configuration.apiBaseUrl}v1/generate/doc`;
@@ -268,8 +288,6 @@ const useStore = createWithEqualityFn((set, get) => ({
       };
 
       const response = await axios(options);
-      console.log('Document generated successfully:', response.data);
-
       // Extract the download URL
       const downloadUrl = response.data.download_url;
 

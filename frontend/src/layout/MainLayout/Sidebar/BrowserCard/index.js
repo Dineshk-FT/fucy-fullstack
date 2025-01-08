@@ -143,7 +143,8 @@ const selector = (state) => ({
   clickedItem: state.clickedItem,
   setClickedItem: state.setClickedItem,
   updateModelName: state.updateModelName,
-  setNodes: state.setNodes
+  setNodes: state.setNodes,
+  getCatalog: state.getCatalog
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -177,7 +178,8 @@ const BrowserCard = () => {
     clickedItem,
     setClickedItem,
     updateModelName,
-    setNodes
+    setNodes,
+    getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { tableOpen } = useSelector((state) => state?.currentId);
@@ -274,7 +276,8 @@ const BrowserCard = () => {
       threat: getThreatScenario,
       attack: getAttackScenario,
       risks: getRiskTreatment,
-      cybersecurity: getCyberSecurityScenario
+      cybersecurity: getCyberSecurityScenario,
+      catalog: getCatalog
     };
     await get_api[name](ModelId);
   };
