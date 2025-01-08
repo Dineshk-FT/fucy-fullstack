@@ -182,7 +182,7 @@ export default function RiskTreatmentTable() {
 
   // console.log('details', details);
   const onDrop = (event) => {
-    console.log('event', event);
+    // console.log('event', event);
     event.preventDefault();
     const cyber = event.dataTransfer.getData('application/cyber');
     let parsedData;
@@ -200,7 +200,7 @@ export default function RiskTreatmentTable() {
         damageId: parsedData?.damageId,
         key: parsedData?.key
       };
-      console.log('details', details);
+      // console.log('details', details);
       addRiskTreatment(details)
         .then((res) => {
           if (!res.error) {
@@ -292,7 +292,7 @@ export default function RiskTreatmentTable() {
             case item.name === 'Cybersecurity Goals':
               cellContent = (
                 <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
-                  {row[item.name] ? (
+                  {row[item.name] && row[item.name].length ? (
                     row[item?.name]?.map((goal) => (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={goal?.ID}>
                         <img src={CyberGoalIcon} alt="damage" height="10px" width="10px" />
@@ -450,7 +450,12 @@ export default function RiskTreatmentTable() {
         </DialogActions>
       </Dialog>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+      <TableContainer
+        component={Paper}
+        sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}
+        onDrop={onDrop}
+        onDragOver={(e) => e.preventDefault()}
+      >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
