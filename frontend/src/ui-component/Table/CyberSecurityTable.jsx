@@ -21,7 +21,14 @@ import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 import EditIcon from '@mui/icons-material/Edit';
 import FormPopper from '../Poppers/FormPopper';
 import toast, { Toaster } from 'react-hot-toast';
-import { getCybersecurityType } from './constraints';
+import {
+  getCybersecurityType,
+  CybersecurityClaimsHeader,
+  CybersecurityControlsHeader,
+  CybersecurityGoalsHeader,
+  CybersecurityRequirementsHeader
+} from './constraints';
+import { ThreatIcon } from '../../assets/icons';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -87,19 +94,19 @@ export default function CybersecurityTable() {
   const [filtered, setFiltered] = useState([]);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   // console.log('cybersecurity', cybersecurity);
 
   const Head = useMemo(() => {
-    return [
-      { id: 1, name: 'SNo' },
-      { id: 2, name: 'Name' },
-      { id: 3, name: 'Description' },
-      { id: 4, name: 'Condition for Re-Evaluation' },
-      { id: 5, name: 'Related Threat Scenario' }
-    ];
-  }, []);
+    const getHeader = {
+      'Cybersecurity Goals': CybersecurityGoalsHeader,
+      'Cybersecurity Requirements': CybersecurityRequirementsHeader,
+      'Cybersecurity Controls': CybersecurityControlsHeader,
+      'Cybersecurity Claims': CybersecurityClaimsHeader
+    };
+    return getHeader[title];
+  }, [title]);
 
   const getIdName = () => {
     const getName = {
@@ -113,17 +120,22 @@ export default function CybersecurityTable() {
 
   useEffect(() => {
     const getId = getIdName();
+    // console.log('cybersecurity', cybersecurity);
     if (cybersecurity['scenes']) {
       const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
           SNo: `${getId}${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
-          Description: dt?.Description ?? `description for ${dt?.Name}`
+          Description: dt?.Description ?? `description for ${dt?.Name}`,
+          'Related Threat Scenario': dt?.threat_key ?? []
         };
       });
       setRows(scene);
       setFiltered(scene);
+    } else {
+      setRows([]);
+      setFiltered([]);
     }
   }, [cybersecurity, title]);
 
@@ -286,6 +298,21 @@ export default function CybersecurityTable() {
                 );
               }
               break;
+
+            case item.name === 'Related Threat Scenario':
+              cellContent = (
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                  {row[item.name] && row[item.name].length
+                    ? row[item.name]?.map((key) => (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <img src={ThreatIcon} alt="threat" height="10px" width="10px" key={key} />
+                          <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{key}</span>
+                        </span>
+                      ))
+                    : '-'}
+                </StyledTableCell>
+              );
+              break;
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -372,7 +399,7 @@ export default function CybersecurityTable() {
             />
           </Box>
         </Box>
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+        <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

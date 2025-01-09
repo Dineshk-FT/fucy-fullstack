@@ -169,7 +169,7 @@ export const stakeHeader = [
 export const DSTableHeader = [
   { id: 1, name: 'ID' },
   { id: 2, name: 'Name' },
-  { id: 3, name: 'Damage Scenario' },
+  // { id: 3, name: 'Damage Scenario' },
   { id: 4, name: 'Description/ Scalability' },
   { id: 5, name: 'Losses of Cybersecurity Properties' },
   { id: 6, name: 'Assets' },
@@ -264,6 +264,38 @@ export const RiskTreatmentHeaderTable = [
   { id: 30, name: 'CyberSecurity Claims' }
 ];
 
+//Cybersecurity Table Headers
+export const CybersecurityGoalsHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Description' },
+  { id: 4, name: 'CAL' },
+  { id: 5, name: 'Related Threat Scenario' },
+  { id: 6, name: 'Related Cybersecurity Requirements' },
+  { id: 7, name: 'Related Cybersecurity Controls' }
+];
+
+export const CybersecurityClaimsHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Description' },
+  { id: 4, name: 'Condition for Re-Evaluation' },
+  { id: 5, name: 'Related Threat Scenario' }
+];
+export const CybersecurityRequirementsHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Description' },
+  { id: 4, name: 'Related Cybersecurity Goals' },
+  { id: 5, name: 'Related Cybersecurity Controls' }
+];
+export const CybersecurityControlsHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Description' },
+  { id: 4, name: 'Related Cybersecurity Goals' },
+  { id: 5, name: 'Related Cybersecurity Requirements' }
+];
 export const AttackTableoptions = {
   Approach: [
     { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },

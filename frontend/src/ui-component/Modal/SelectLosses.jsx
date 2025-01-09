@@ -148,7 +148,9 @@ export default function SelectLosses({
           }
         }}
       >
-        <DialogTitle id="alert-dialog-title">{'Select the Losses'}</DialogTitle>
+        <DialogTitle variant="h4" color="primary" id="alert-dialog-title">
+          {'Select the Losses'}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>

@@ -213,7 +213,7 @@ export default function DsTable() {
   const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
@@ -794,7 +794,7 @@ export default function DsTable() {
           scrollbarWidth: 'thin'
         }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (

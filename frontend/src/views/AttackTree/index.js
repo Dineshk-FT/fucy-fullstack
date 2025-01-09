@@ -40,7 +40,7 @@ const AttackTree = () => {
   // console.log('attackScene', attackScene);
   return (
     <>
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '76svh', maxHeight: '80svh' }}>
         {!isLevelOpen && (
           // <Box display="flex" alignItems="center" gap={1} my={1}>
           //   <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1 }} onClick={handleBack} />
@@ -51,7 +51,7 @@ const AttackTree = () => {
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{attackScene?.Name}</Typography>
           </Box>
         )}
-        <Paper elevation={3} sx={{ height: '83svh' }}>
+        <Paper elevation={3} sx={{ height: 'inherit' }}>
           <Grid container sx={{ height: 'inherit' }}>
             {/* <ResizableBox
               width={sidebarWidth}
@@ -76,7 +76,7 @@ const AttackTree = () => {
               }
               handleSize={[10, Infinity]}
             > */}
-            <Grid item sx={{ flexGrow: 1 }}>
+            <Grid item sx={{ flexGrow: 1, height: 'inherit' }}>
               {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} color={color} /> : <Levels />}
             </Grid>
             {/* </ResizableBox> */}

@@ -71,8 +71,8 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && pr
       marginTop: navbarHeight,
       paddingLeft: !draweropen ? '2rem' : 'auto',
       // border: '1px solid gray',
-      maxWidth: 'auto', // minHeight:'inherit',
-      minHeight: isclose ? `100svh` : `93svh`,
+      maxWidth: 'auto',
+      // minHeight: isclose ? `100svh` : `93svh`,
       // height:!isNavbarClose ? `80svh`:`auto`,
       marginRight: 0,
       ...(!open && {
@@ -193,7 +193,7 @@ const MainLayout = ({ children }) => {
 
   return (
     <>
-      <Box sx={{ display: 'flex', height: '80svh' }}>
+      <Box sx={{ display: 'flex', height: '100vh' }}>
         <CssBaseline />
         {/* header */}
         <AppBar
