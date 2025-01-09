@@ -121,7 +121,7 @@ export default function RiskTreatmentTable() {
 
   // Pagination state
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   useEffect(() => {
     getCyberSecurityScenario(model?._id);
@@ -451,12 +451,13 @@ export default function RiskTreatmentTable() {
       </Dialog>
 
       <TableContainer
+        stickyHeader
         component={Paper}
-        sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}
+        sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (

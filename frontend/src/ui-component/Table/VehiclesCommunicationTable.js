@@ -19,23 +19,23 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '0px 8px',
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
   '&:nth-of-type(even)': {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9f9f9'
   },
   '&:nth-of-type(odd)': {
-    backgroundColor: '#ffffff',
-  },
+    backgroundColor: '#ffffff'
+  }
 }));
 
 export default function VehiclesCommunicationTable() {
@@ -46,12 +46,12 @@ export default function VehiclesCommunicationTable() {
   const [filteredRows, setFilteredRows] = useState([]);
   const [filtered, setFiltered] = React.useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   useEffect(() => {
     const fetchCatalogData = async () => {
       try {
-        const catalogData = await getCatalog(); 
+        const catalogData = await getCatalog();
         const extractedRows = extractThreats(catalogData.vehicleCommunicationThreats);
         setRows(extractedRows);
         setFilteredRows(extractedRows);
@@ -70,7 +70,7 @@ export default function VehiclesCommunicationTable() {
             id: data.ID,
             name: idx === 0 ? data.description : '',
             category: idx === 0 ? threatDescription : '',
-            example: `${subThreatKey}. ${subThreatValue}`,
+            example: `${subThreatKey}. ${subThreatValue}`
           });
         });
       });
@@ -116,25 +116,22 @@ export default function VehiclesCommunicationTable() {
           height: '-webkit-fill-available',
           minHeight: 'moz-available',
           '&::-webkit-scrollbar': {
-            width: '4px',
+            width: '4px'
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px',
+            borderRadius: '10px'
           },
           '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)',
-          },
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
         }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon
-              sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }}
-              onClick={handleBack}
-            />
+            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
-                Vehicle communication channel vulnerabilities Table
+              Vehicle communication channel vulnerabilities Table
             </Typography>
           </Box>
           <Box>
@@ -147,14 +144,14 @@ export default function VehiclesCommunicationTable() {
               sx={{
                 padding: 1,
                 '& .MuiInputBase-input': {
-                  border: '1px solid black',
-                },
+                  border: '1px solid black'
+                }
               }}
             />
           </Box>
         </Box>
 
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+        <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

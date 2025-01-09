@@ -94,7 +94,7 @@ export default function CybersecurityTable() {
   const [filtered, setFiltered] = useState([]);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   // console.log('cybersecurity', cybersecurity);
 
@@ -399,7 +399,7 @@ export default function CybersecurityTable() {
             />
           </Box>
         </Box>
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+        <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

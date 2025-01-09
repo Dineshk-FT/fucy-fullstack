@@ -80,7 +80,7 @@ export default function DsDerivationTable() {
   const [filtered, setFiltered] = React.useState([]);
 
   const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = React.useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = React.useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns1);
@@ -337,7 +337,7 @@ export default function DsDerivationTable() {
             scrollbarWidth: 'thin'
           }}
         >
-          <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
+          <Table stickyHeader sx={{ minWidth: 650, height: tableHeight }} aria-label="simple table">
             <TableHead>
               <TableRow>
                 {Head?.map((hd) => (
