@@ -34,18 +34,20 @@ import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import SelectAttacks from '../Modal/SelectAttacks';
-import { AttackIcon, DamageIcon, CyberGoalIcon, CyberRequireIcon } from '../../assets/icons';
+import { AttackIcon, DamageIcon, CyberGoalIcon, CyberRequireIcon, CatalogIcon } from '../../assets/icons';
 import toast, { Toaster } from 'react-hot-toast';
 import SelectCyberGoals from '../Modal/SelectCyberGoals';
 import { RiskTreatmentHeaderTable } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { tableHeight } from '../../store/constant';
+import SelectCatalog from '../Modal/SelectCatalog';
 
 const selector = (state) => ({
   model: state.model,
   getModel: state.getModelById,
   riskTreatment: state.riskTreatment['subs'][0],
   getRiskTreatment: state.getRiskTreatment,
+  catalog: state.catalog['subs'][0]['subs_scenes'],
   addRiskTreatment: state.addRiskTreatment,
   cyber_Goals: state.cybersecurity['subs'][0],
   updateRiskTable: state.updateRiskTable,
@@ -87,14 +89,16 @@ export default function RiskTreatmentTable() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [openTs, setOpenTs] = useState(false);
-  const [openSelect, setOpenSelect] = useState(false);
+  const [openSelect, setOpenSelect] = useState({
+    GoalsModal: false,
+    catalogModal: false
+  });
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
+  const [catalogDetails, setCatalogDetails] = useState([]);
   const [selectedScenes, setSelectedScenes] = useState([]);
-  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, cyber_Goals, updateRiskTable, getCyberSecurityScenario } = useStore(
-    selector,
-    shallow
-  );
+  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, cyber_Goals, updateRiskTable, getCyberSecurityScenario, catalog } =
+    useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -109,11 +113,22 @@ export default function RiskTreatmentTable() {
 
   const handleOpenSelect = (row) => {
     setSelectedRow(row);
-    setOpenSelect(true);
+    setOpenSelect((state) => ({ ...state, GoalsModal: true }));
   };
 
   const handleCloseSelect = () => {
-    setOpenSelect(false);
+    setOpenSelect((state) => ({ ...state, GoalsModal: false }));
+    setSelectedRow({});
+    setSelectedScenes([]);
+  };
+
+  const handleOpenCatalog = (row) => {
+    setSelectedRow(row);
+    setOpenSelect((state) => ({ ...state, catalogModal: true }));
+  };
+
+  const handleCloseCatalog = () => {
+    setOpenSelect((state) => ({ ...state, catalogModal: false }));
     setSelectedRow({});
     setSelectedScenes([]);
   };
@@ -134,6 +149,7 @@ export default function RiskTreatmentTable() {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
+        detailId: item?.id,
         Assets: item?.threat_scene[0]?.detail?.node,
         // 'Damage Scenarios': item?.damage_scenarios,
         'Damage Scenarios':
@@ -148,12 +164,14 @@ export default function RiskTreatmentTable() {
         'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? '',
         'Contributing Requirements': item?.cybersecurity?.cybersecurity_requirements ?? [],
         'Cybersecurity Goals': item?.cybersecurity?.cybersecurity_goals ?? [],
-        threat_key: item?.threat_key
+        threat_key: item?.threat_key,
+        'Related UNECE Threats or Vulns': item?.catalogs
       };
     });
     setRows(data);
     setFiltered(data);
     setDetails(cyber_Goals['scenes']);
+    setCatalogDetails(catalog);
   }, [riskTreatment?.Details.length, riskTreatment.Details, cyber_Goals]);
 
   // console.log('details', details);
@@ -190,31 +208,30 @@ export default function RiskTreatmentTable() {
     if (cyber) {
       parsedData = JSON.parse(cyber);
     }
-    if (cyber.type === 'cybersecurity_goals') {
-    } else {
-      const details = {
-        nodeId: parsedData.nodeId,
-        threatId: parsedData.threatId,
-        modelId: model?._id,
-        label: parsedData?.label,
-        damageId: parsedData?.damageId,
-        key: parsedData?.key
-      };
-      // console.log('details', details);
-      addRiskTreatment(details)
-        .then((res) => {
-          if (!res.error) {
-            console.log('res', res);
-            notify(res.message ?? 'Threat scene added', 'success');
-            getRiskTreatment(model?._id);
-          } else {
-            notify(res.error, 'error');
-          }
-        })
-        .catch((err) => {
-          notify('Something went wrong', 'error');
-        });
-    }
+    console.log('parsedData', parsedData);
+    const details = {
+      nodeId: parsedData.nodeId,
+      threatId: parsedData.threatId,
+      modelId: model?._id,
+      label: parsedData?.label,
+      damageId: parsedData?.damageId,
+      key: parsedData?.key
+    };
+    // console.log('details', details);
+    addRiskTreatment(details)
+      .then((res) => {
+        if (!res.error) {
+          console.log('res', res);
+          notify(res.message ?? 'Threat scene added', 'success');
+          getRiskTreatment(model?._id);
+        } else {
+          notify(res.error, 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
+
     // console.log('parsedData', parsedData);
   };
 
@@ -222,7 +239,7 @@ export default function RiskTreatmentTable() {
     const { value } = e.target;
     if (value.length > 0) {
       const filterValue = rows.filter((rw) => {
-        if (rw.name.toLowerCase().includes(value) || rw.Description.toLowerCase().includes(value)) {
+        if (rw['Threat Scenario']?.toLowerCase().includes(value) || rw.Assets.toLowerCase().includes(value)) {
           return rw;
         }
       });
@@ -243,7 +260,7 @@ export default function RiskTreatmentTable() {
     setPage(0);
   };
 
-  const RenderTableRow = React.memo(({ row, Head, color, handleOpenSelect }) => {
+  const RenderTableRow = React.memo(({ row, Head, color }) => {
     return (
       <StyledTableRow
         key={row.name}
@@ -301,6 +318,22 @@ export default function RiskTreatmentTable() {
                     ))
                   ) : (
                     <InputLabel>Select Goals</InputLabel>
+                  )}
+                </StyledTableCell>
+              );
+              break;
+            case item.name === 'Related UNECE Threats or Vulns':
+              cellContent = (
+                <StyledTableCell component="th" scope="row" onClick={() => handleOpenCatalog(row)} sx={{ cursor: 'pointer' }}>
+                  {row[item.name] && row[item.name].length ? (
+                    row[item?.name]?.map((catalog) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={catalog}>
+                        <img src={CatalogIcon} alt="damage" height="15px" width="15px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{catalog}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <InputLabel>Select Catalogs</InputLabel>
                   )}
                 </StyledTableCell>
               );
@@ -467,7 +500,7 @@ export default function RiskTreatmentTable() {
           </TableHead>
           <TableBody>
             {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowKey) => (
-              <RenderTableRow key={rowKey} row={row} Head={Head} color={color} handleOpenSelect={handleOpenSelect} />
+              <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
             ))}
           </TableBody>
         </Table>
@@ -496,11 +529,26 @@ export default function RiskTreatmentTable() {
           model={model}
         />
       )} */}
-      {openSelect && (
+      {openSelect.GoalsModal && (
         <SelectCyberGoals
           riskTreatment={riskTreatment}
-          open={openSelect}
+          open={openSelect.GoalsModal}
           handleClose={handleCloseSelect}
+          details={details}
+          selectedScenes={selectedScenes}
+          setSelectedScenes={setSelectedScenes}
+          updateRiskTreatment={updateRiskTable}
+          getRiskTreatment={getRiskTreatment}
+          selectedRow={selectedRow}
+          model={model}
+        />
+      )}
+      {openSelect.catalogModal && (
+        <SelectCatalog
+          catalog={catalog}
+          catalogDetails={catalogDetails}
+          open={openSelect.catalogModal}
+          handleClose={handleCloseCatalog}
           details={details}
           selectedScenes={selectedScenes}
           setSelectedScenes={setSelectedScenes}

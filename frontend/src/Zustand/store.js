@@ -167,31 +167,165 @@ const useStore = createWithEqualityFn((set, get) => ({
         subs_scenes: [
           {
             id: '72',
-            name: 'Threats - Back-end servers associated with vehicle field operations'
+            name: 'Threats - Back-end servers associated with vehicle field operations',
+            item_name: [
+              {
+                id: '431.1',
+                name: '4.3.1.1 - Vehicle related data held on back-end servers being lost or compromised'
+              },
+              {
+                id: '431.2',
+                name: '4.3.1.2	- Back-end servers used as a means to attack a vehicle or extract data'
+              },
+              {
+                id: '431.3',
+                name: '4.3.1.3	- Services from back-end server being disrupted, affecting the operation of a vehicle'
+              }
+            ]
           },
           {
             id: '73',
-            name: 'Threats - Vehicle communication channel vulnerabilities'
+            name: 'Threats - Vehicle communication channel vulnerabilities',
+            item_name: [
+              {
+                id: '432.1',
+                name: '4.3.2.1 - Spoofing of messages or data received by the vehicle'
+              },
+              {
+                id: '432.2',
+                name: '4.3.2.2	- Communication channels used to conduct unauthorized manipulation, deletion or other amendments to vehicle held code/data'
+              },
+              {
+                id: '432.3',
+                name: '4.3.2.3	- Communication channels permit untrusted/unreliable messages to be accepted or are vulnerable to session hijacking/replay attacks'
+              },
+              {
+                id: '432.4',
+                name: '4.3.2.4 - Information can be readily disclosed. For example, through eavesdropping on communications or through allowing unauthorized access to sensitive files or folders'
+              },
+              {
+                id: '432.5',
+                name: '4.3.2.5	- Denial of service attacks via communication channels to disrupt vehicle functions'
+              },
+              {
+                id: '432.6',
+                name: '4.3.2.6	- An unprivileged user is able to gain privileged access to vehicle systems'
+              },
+              {
+                id: '432.7',
+                name: '4.3.2.7	- Viruses embedded in communication media are able to infect vehicle systems'
+              },
+              {
+                id: '432.8',
+                name: '4.3.2.8	- Messages received by the vehicle (for example X2V or diagnostic messages), or transmitted within it, contain malicious content'
+              }
+            ]
           },
           {
             id: '74',
-            name: 'Threats - Vehicle update procedures and their risks'
+            name: 'Threats - Vehicle update procedures and their risks',
+            item_name: [
+              {
+                id: '433.1',
+                name: '4.3.3.1 - Misuse or compromise of update procedures'
+              },
+              {
+                id: '433.2',
+                name: '4.3.3.2	- It is possible to deny legitimate updates'
+              }
+            ]
           },
           {
             id: '75',
-            name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles'
+            name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles',
+            item_name: [
+              {
+                id: '434.1',
+                name: '4.3.4.1 - Legitimate actors are able to take actions that would unwittingly facilitate a cyberattack'
+              }
+            ]
           },
           {
             id: '76',
-            name: 'Threats - Vehicles from external connectivity and network connections'
+            name: 'Threats - Vehicles from external connectivity and network connections',
+            item_name: [
+              {
+                id: '435.1',
+                name: '4.3.5.1 - Devices connected to external interfaces used as a means to attack vehicle systems'
+              },
+              {
+                id: '435.2',
+                name: '4.3.5.2	- Manipulation of the connectivity of vehicle functions enables a cyberattack'
+              },
+              {
+                id: '435.3',
+                name: '4.3.5.3	- Manipulation of the connectivity of vehicle functions enables a cyberattack'
+              }
+            ]
           },
           {
             id: '77',
-            name: 'Threats - Vehicle data and software integrity'
+            name: 'Threats - Vehicle data and software integrity',
+            item_name: [
+              {
+                id: '436.1',
+                name: '4.3.6.1 - Extraction of vehicle data/code'
+              },
+              {
+                id: '436.2',
+                name: '4.3.6.2	- Manipulation of vehicle data/code'
+              },
+              {
+                id: '436.3',
+                name: '4.3.6.3	- Erasure of data/code '
+              },
+              {
+                id: '436.4',
+                name: '4.3.6.4 - Introduction of malware '
+              },
+              {
+                id: '436.5',
+                name: '4.3.6.5	- Introduction of new software or overwrite existing software'
+              },
+              {
+                id: '436.6',
+                name: '4.3.6.6	- Disruption of systems or operations'
+              },
+              {
+                id: '436.7',
+                name: '4.3.6.7	- Manipulation of vehicle parameters'
+              }
+            ]
           },
           {
             id: '78',
-            name: 'Potential vulnerabilities in vehicles if not properly secured or hardened'
+            name: 'Potential vulnerabilities in vehicles if not properly secured or hardened',
+            item_name: [
+              {
+                id: '437.1',
+                name: '4.3.7.1 - Parts or supplies could be compromised to permit vehicles to be attacked'
+              },
+              {
+                id: '437.2',
+                name: '4.3.7.2	- Cryptographic technologies can be compromised or insufficiently applied'
+              },
+              {
+                id: '437.3',
+                name: '4.3.7.3	- Software or hardware development permits vulnerabilities'
+              },
+              {
+                id: '437.4',
+                name: '4.3.7.4 - Network design introduces vulnerabilities'
+              },
+              {
+                id: '437.5',
+                name: '4.3.7.5	- Physical manipulation of systems can enable an attack'
+              },
+              {
+                id: '437.6',
+                name: '4.3.7.6	- Unintended transfer of data can occur'
+              }
+            ]
           }
         ]
       }

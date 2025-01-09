@@ -33,13 +33,12 @@ const elkOptions = {
 };
 
 const getLayoutedElements = async (nodes, edges, options = {}) => {
-  // Create the graph structure with children nodes and edges
   const graph = {
     id: 'root',
     layoutOptions: {
-      'elk.algorithm': 'layered', // Base layout algorithm
-      'elk.spacing.nodeNode': 50, // Space between nodes
-      ...options // Allow additional options
+      'elk.algorithm': 'layered',
+      'elk.spacing.nodeNode': 50,
+      ...options
     },
     children: nodes.map((node) => ({
       id: node.id,
@@ -57,69 +56,55 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
     // Perform the layout using ELK
     const layoutedGraph = await elk.layout(graph);
 
-    // Helper function to check overlap between two nodes
-    const isOverlapping = (node1, node2) => {
-      const buffer = 10; // Small buffer
-      return (
-        Math.abs(node1.position.x - node2.position.x) < (node1.width || 150) / 2 + (node2.width || 150) / 2 + buffer &&
-        Math.abs(node1.position.y - node2.position.y) < (node1.height || 50) / 2 + (node2.height || 50) / 2 + buffer
-      );
-    };
+    // Align nodes if their positions are close enough in the x or y axis
+    const alignNodes = (nodes) => {
+      const threshold = 100; // Distance threshold for alignment
+      const minSpacing = 50; // Minimum spacing to avoid overlap
 
-    // Adjust overlapping nodes iteratively
-    const resolveOverlaps = (nodes) => {
-      let adjusted = true;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const node1 = nodes[i];
+          const node2 = nodes[j];
 
-      while (adjusted) {
-        adjusted = false;
+          // Align on the x-axis if positions are close in x
+          if (Math.abs(node1.position.x - node2.position.x) <= threshold) {
+            const averageX = (node1.position.x + node2.position.x) / 2;
+            node1.position.x = averageX - minSpacing / 2;
+            node2.position.x = averageX + minSpacing / 2;
+          }
 
-        for (let i = 0; i < nodes.length; i++) {
-          for (let j = i + 1; j < nodes.length; j++) {
-            const node1 = nodes[i];
-            const node2 = nodes[j];
-
-            // Check if nodes are within 100 in the y-axis
-            if (Math.abs(node1.position.y - node2.position.y) <= 100) {
-              // Align them in the same line
-              node2.position.y = node1.position.y;
-
-              // Prevent overlap
-              if (isOverlapping(node1, node2)) {
-                const dx = node2.position.x - node1.position.x || 1; // Avoid zero division
-                const shiftAmount = (node1.width || 150) / 2 + (node2.width || 150) / 2 + 10; // Add spacing
-
-                // Adjust x positions to separate nodes
-                node2.position.x = node1.position.x + Math.sign(dx) * shiftAmount;
-                adjusted = true;
-              }
-            }
+          // Align on the y-axis if positions are close in y
+          if (Math.abs(node1.position.y - node2.position.y) <= threshold) {
+            const averageY = (node1.position.y + node2.position.y) / 2;
+            node1.position.y = averageY - minSpacing / 2;
+            node2.position.y = averageY + minSpacing / 2;
           }
         }
       }
     };
 
-    // Map the layouted nodes with minimal adjustments
+    // Map the layouted nodes with their updated positions
     const layoutedNodes = layoutedGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
 
       return {
         ...originalNode,
         position: {
-          x: originalNode.position.x + (node.x - originalNode.position.x) * 0.2,
-          y: originalNode.position.y + (node.y - originalNode.position.y) * 0.2
+          x: originalNode.position.x,
+          y: originalNode.position.y
         }
       };
     });
 
-    // Resolve any remaining overlaps
-    resolveOverlaps(layoutedNodes);
+    // Align nodes based on proximity and avoid overlap
+    alignNodes(layoutedNodes);
 
-    // Map the layouted edges with minimal changes
+    // Map the layouted edges
     const layoutedEdges = layoutedGraph.edges.map((edge) => {
       const originalEdge = edges.find((e) => e.id === edge.id);
       return {
         ...originalEdge,
-        points: edge.sections[0]?.bendPoints || [] // Include bend points for clarity
+        points: edge.sections?.[0]?.bendPoints || []
       };
     });
 
