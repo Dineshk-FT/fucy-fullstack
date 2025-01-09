@@ -162,30 +162,165 @@ const useStore = createWithEqualityFn((set, get) => ({
           {
             id: '72',
             name: 'Threats - Back-end servers associated with vehicle field operations',
+            item_name: [
+              {
+                id: '431',
+                name: '4.3.1. - Vehicle related data held on back-end servers being lost or compromised'
+              },
+              {
+                id: '431',
+                name: '4.3.1.	- Back-end servers used as a means to attack a vehicle or extract data'
+              },
+              {
+                id: '431',
+                name: '4.3.1.	- Services from back-end server being disrupted, affecting the operation of a vehicle'
+              }
+            ]
           },
           {
             id: '73',
             name: 'Threats - Vehicle communication channel vulnerabilities',
+            item_name: [
+              {
+                id: '432',
+                name: '4.3.2. - Spoofing of messages or data received by the vehicle'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- Communication channels used to conduct unauthorized manipulation, deletion or other amendments to vehicle held code/data'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- Communication channels permit untrusted/unreliable messages to be accepted or are vulnerable to session hijacking/replay attacks'
+              },
+              {
+                id: '432',
+                name: '4.3.2. - Information can be readily disclosed. For example, through eavesdropping on communications or through allowing unauthorized access to sensitive files or folders'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- Denial of service attacks via communication channels to disrupt vehicle functions'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- An unprivileged user is able to gain privileged access to vehicle systems'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- Viruses embedded in communication media are able to infect vehicle systems'
+              },
+              {
+                id: '432',
+                name: '4.3.2.	- Messages received by the vehicle (for example X2V or diagnostic messages), or transmitted within it, contain malicious content'
+              }
+            ]
           },
           {
             id: '74',
             name: 'Threats - Vehicle update procedures and their risks',
+            item_name: [
+              {
+                id: '433',
+                name: '4.3.3. - Misuse or compromise of update procedures'
+              },
+              {
+                id: '433',
+                name: '4.3.3.	- It is possible to deny legitimate updates'
+              },
+            ]
           },
           {
             id: '75',
             name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles',
+            item_name: [
+              {
+                id: '434',
+                name: '4.3.4. - Legitimate actors are able to take actions that would unwittingly facilitate a cyberattack'
+              },
+            ]
+            
           },
           {
             id: '76',
             name: 'Threats - Vehicles from external connectivity and network connections',
+            item_name: [
+              {
+                id: '435',
+                name: '4.3.5. - Devices connected to external interfaces used as a means to attack vehicle systems'
+              },
+              {
+                id: '435',
+                name: '4.3.5.	- Manipulation of the connectivity of vehicle functions enables a cyberattack'
+              },
+              {
+                id: '435',
+                name: '4.3.5.	- Manipulation of the connectivity of vehicle functions enables a cyberattack'
+              }
+            ]
           },
           {
             id: '77',
             name: 'Threats - Vehicle data and software integrity',
+            item_name: [
+              {
+                id: '436',
+                name: '4.3.6. - Extraction of vehicle data/code'
+              },
+              {
+                id: '436',
+                name: '4.3.6.	- Manipulation of vehicle data/code'
+              },
+              {
+                id: '436',
+                name: '4.3.6.	- Erasure of data/code '
+              },
+              {
+                id: '436',
+                name: '4.3.6. - Introduction of malware '
+              },
+              {
+                id: '436',
+                name: '4.3.6.	- Introduction of new software or overwrite existing software'
+              },
+              {
+                id: '436',
+                name: '4.3.6.	- Disruption of systems or operations'
+              },
+              {
+                id: '436',
+                name: '4.3.6.	- Manipulation of vehicle parameters'
+              }
+            ]
           },
           {
             id: '78',
             name: 'Potential vulnerabilities in vehicles if not properly secured or hardened',
+            item_name: [
+              {
+                id: '437',
+                name: '4.3.7. - Parts or supplies could be compromised to permit vehicles to be attacked'
+              },
+              {
+                id: '437',
+                name: '4.3.7.	- Cryptographic technologies can be compromised or insufficiently applied'
+              },
+              {
+                id: '437',
+                name: '4.3.7.	- Software or hardware development permits vulnerabilities'
+              },
+              {
+                id: '437',
+                name: '4.3.7. - Network design introduces vulnerabilities'
+              },
+              {
+                id: '437',
+                name: '4.3.7.	- Physical manipulation of systems can enable an attack'
+              },
+              {
+                id: '437',
+                name: '4.3.7.	- Unintended transfer of data can occur'
+              },
+            ]
           }
         ]        
       }
