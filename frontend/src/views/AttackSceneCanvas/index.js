@@ -569,6 +569,7 @@ export default function AttackBlock({ attackScene, color }) {
           setTimeout(() => {
             notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
+            getCyberSecurityScenario(model?._id);
           }, 500);
         }
       })

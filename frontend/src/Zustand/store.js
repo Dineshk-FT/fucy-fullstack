@@ -5,7 +5,13 @@ import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../services/baseApiService';
 import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../API/api';
-import { DSTableHeader, DsDerivationHeader, TsTableHeader, AttackTableHeader, RiskTreatmentHeaderTable } from '../ui-component/Table/constraints';
+import {
+  DSTableHeader,
+  DsDerivationHeader,
+  TsTableHeader,
+  AttackTableHeader,
+  RiskTreatmentHeaderTable
+} from '../ui-component/Table/constraints';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -161,33 +167,33 @@ const useStore = createWithEqualityFn((set, get) => ({
         subs_scenes: [
           {
             id: '72',
-            name: 'Threats - Back-end servers associated with vehicle field operations',
+            name: 'Threats - Back-end servers associated with vehicle field operations'
           },
           {
             id: '73',
-            name: 'Threats - Vehicle communication channel vulnerabilities',
+            name: 'Threats - Vehicle communication channel vulnerabilities'
           },
           {
             id: '74',
-            name: 'Threats - Vehicle update procedures and their risks',
+            name: 'Threats - Vehicle update procedures and their risks'
           },
           {
             id: '75',
-            name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles',
+            name: 'Threats - Human actions unintentionally enabling cyber attacks on vehicles'
           },
           {
             id: '76',
-            name: 'Threats - Vehicles from external connectivity and network connections',
+            name: 'Threats - Vehicles from external connectivity and network connections'
           },
           {
             id: '77',
-            name: 'Threats - Vehicle data and software integrity',
+            name: 'Threats - Vehicle data and software integrity'
           },
           {
             id: '78',
-            name: 'Potential vulnerabilities in vehicles if not properly secured or hardened',
+            name: 'Potential vulnerabilities in vehicles if not properly secured or hardened'
           }
-        ]        
+        ]
       }
     ]
   },
@@ -246,7 +252,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         ? visibleColumns2
         : table === 'visibleColumns3'
         ? visibleColumns3
-        : visibleColumns4
+        : visibleColumns4;
     const isCurrentlyVisible = tableColumns.includes(columnName);
     const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
 
@@ -263,7 +269,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         url,
         headers: {
           ...createHeadersForJson()
-        },
+        }
       };
 
       const response = await axios(options);
@@ -412,8 +418,14 @@ const useStore = createWithEqualityFn((set, get) => ({
       return;
     }
 
+    const condition =
+      (sourceNode.type === 'default' && targetNode.type.includes('Gate')) ||
+      (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) ||
+      (sourceNode.type === 'Event' && targetNode.type.includes('Gate')) ||
+      (sourceNode.type.includes('Gate') && targetNode.type === 'Event');
+
     // Allow unrestricted connection if both nodes are of type "Gate"
-    if (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) {
+    if (condition) {
       const newConnection = { ...connection, data: { label: '' } };
 
       // Update Zustand edges state

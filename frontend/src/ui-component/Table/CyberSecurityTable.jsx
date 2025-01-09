@@ -302,7 +302,7 @@ export default function CybersecurityTable() {
             case item.name === 'Related Threat Scenario':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
-                  {row[item.name] && row[item.name].length
+                  {row[item.name] && row[item.name] != null && row[item.name].length
                     ? row[item.name]?.map((key) => (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                           <img src={ThreatIcon} alt="threat" height="10px" width="10px" key={key} />
