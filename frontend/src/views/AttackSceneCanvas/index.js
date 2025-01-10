@@ -212,7 +212,7 @@ export default function AttackBlock({ attackScene, color }) {
       setTimeout(() => {
         setNodes(attackScene?.templates?.nodes ?? []);
         setEdges(attackScene?.templates?.edges ?? []);
-      }, 300);
+      }, 400);
     }
   }, [attackScene]);
 

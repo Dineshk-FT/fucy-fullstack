@@ -32,7 +32,6 @@ import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
 // import { Button } from '@mui/material';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
-import { useParams } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import DsTable from '../../ui-component/Table/DSTable';
 import Tstable from '../../ui-component/Table/TSTable';
@@ -41,13 +40,11 @@ import CyberSecurityBlock from '../CyberSecurityBlock';
 import ELK from 'elkjs/lib/elk.bundled';
 import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import { drawerClose, draweropen, leftDrawerClose, leftDrawerOpen } from '../../store/slices/CurrentIdSlice';
 import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
-import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
 import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 import { style, updatedModelState } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
@@ -214,7 +211,6 @@ export default function MainCanvas() {
     isNodePasted,
     setIsNodePasted
   } = useStore(selector, shallow);
-  const { id } = useParams();
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();
   const Color = ColorTheme();

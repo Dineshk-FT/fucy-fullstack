@@ -41,13 +41,13 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
       modelId: model?._id,
       type: type,
       name: templateDetails?.Name,
-      description: templateDetails?.Description,
-      ...(id && { id }) // Only include `id` if it has a truthy value
+      description: templateDetails?.Description
     };
     // console.log('cyber', cyber)
     // console.log('details', details);
     addScene(details)
       .then((res) => {
+        // console.log('res', res);
         if (!res.error) {
           // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
@@ -59,7 +59,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
           });
           // }, 500);
         } else {
-          notify('Something went wrong', 'error');
+          notify(res?.error ?? 'Something went wrong', 'error');
         }
       })
       .catch((err) => {
