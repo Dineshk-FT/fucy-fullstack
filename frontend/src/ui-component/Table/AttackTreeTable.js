@@ -174,7 +174,7 @@ export default function AttackTreeTable() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
   const [page, setPage] = React.useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = React.useState(25); // Rows per page state
+  const [rowsPerPage, setRowsPerPage] = React.useState(20); // Rows per page state
   const [columnWidths, setColumnWidths] = React.useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns3);
