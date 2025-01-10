@@ -286,7 +286,7 @@ const BrowserCard = () => {
     // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    if (name !== 'Attack Trees') {
+    if (name !== 'Attack Trees' && !name.includes('UNICE')) {
       dispatch(setTableOpen(name));
       dispatch(setTitle(name));
     }
@@ -490,7 +490,8 @@ const BrowserCard = () => {
                         dragged: true,
                         nodeId: nodeDetail.nodeId,
                         threatId: prop.id,
-                        damageId: detail?.rowId
+                        damageId: detail?.rowId,
+                        key: `TS${key.toString().padStart(3, '0')}`
                       };
 
                       return (

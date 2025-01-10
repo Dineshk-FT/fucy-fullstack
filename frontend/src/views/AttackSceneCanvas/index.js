@@ -270,7 +270,8 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   const handleMenuOptionClick = (option) => {
-    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
+    const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
+    const { threatId, key } = threatNode;
     switch (option) {
       case 'Copy':
         if (copiedNode) {
@@ -320,6 +321,7 @@ export default function AttackBlock({ attackScene, color }) {
         const detail = {
           modelId: model?._id,
           threatId: threatId,
+          threatKey: key,
           type: 'cybersecurity_requirements',
           id: selectedNode?.id,
           name: selectedNode?.data?.label
@@ -548,13 +550,17 @@ export default function AttackBlock({ attackScene, color }) {
     };
 
     // Extract threatId from nodes with type: "default"
-    const threatId = nodes.find((node) => node.type === 'default' && node.threatId).threatId;
+    const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
+    const { threatId, damageId, key } = threatNode;
+
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
       id: attackScene?.ID,
       templates: JSON.stringify(template),
-      threatId: threatId
+      threatId: threatId,
+      damageId: damageId,
+      key: key
     };
 
     update(details)

@@ -527,7 +527,7 @@ export default function Tstable() {
         </DialogActions>
       </Dialog>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+      <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>

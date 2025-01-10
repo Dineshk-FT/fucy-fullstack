@@ -472,7 +472,7 @@ export default function AttackTreeTable() {
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
           },
-          maxHeight: tableHeight,
+          // maxHeight: tableHeight,
           scrollbarWidth: 'thin'
         }}
       >

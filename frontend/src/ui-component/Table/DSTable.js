@@ -794,7 +794,7 @@ export default function DsTable() {
           scrollbarWidth: 'thin'
         }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (

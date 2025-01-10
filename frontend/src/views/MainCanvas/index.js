@@ -709,6 +709,7 @@ export default function MainCanvas() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  const commonTables = ['Cybersecurity Requirements', 'Cybersecurity Controls', 'Cybersecurity Goals', 'Cybersecurity Claims'];
   const componentMap = {
     'Damage Scenarios Derivations': <DsDerivationTable />,
     'Damage Scenarios - Collection & Impact Ratings': <DsTable />,
@@ -716,10 +717,6 @@ export default function MainCanvas() {
     'Derived Threat Scenarios': <Tstable />,
     Attack: <AttackTreeTable />,
     'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
-    'Cybersecurity Requirements': <CybersecurityTable />,
-    'Cybersecurity Controls': <CybersecurityTable />,
-    'Cybersecurity Goals': <CybersecurityTable />,
-    'Cybersecurity Claims': <CybersecurityTable />,
     'Attack Trees Canvas': <AttackTree />,
     'Threats - Back-end servers associated with vehicle field operations': <BackendServerTable/ >,
     'Threats - Vehicle communication channel vulnerabilities' : <VehiclesCommunicationTable />,

@@ -129,17 +129,22 @@ export default function CybersecurityTable() {
 
   useEffect(() => {
     const getId = getIdName();
+    // console.log('cybersecurity', cybersecurity);
     if (cybersecurity['scenes']) {
       const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
           SNo: `${getId}${(i + 1).toString().padStart(3, '0')}`,
           ID: dt?.ID,
           Name: dt?.Name,
-          Description: dt?.Description ?? `description for ${dt?.Name}`
+          Description: dt?.Description ?? `description for ${dt?.Name}`,
+          'Related Threat Scenario': dt?.threat_key ?? []
         };
       });
       setRows(scene);
       setFiltered(scene);
+    } else {
+      setRows([]);
+      setFiltered([]);
     }
   }, [cybersecurity, title]);
 
@@ -301,6 +306,21 @@ export default function CybersecurityTable() {
                   </StyledTableCell>
                 );
               }
+              break;
+
+            case item.name === 'Related Threat Scenario':
+              cellContent = (
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                  {row[item.name] && row[item.name].length
+                    ? row[item.name]?.map((key) => (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <img src={ThreatIcon} alt="threat" height="10px" width="10px" key={key} />
+                          <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{key}</span>
+                        </span>
+                      ))
+                    : '-'}
+                </StyledTableCell>
+              );
               break;
             case typeof row[item.name] !== 'object':
               cellContent = (

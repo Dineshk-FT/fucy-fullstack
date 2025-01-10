@@ -169,7 +169,7 @@ export const stakeHeader = [
 export const DSTableHeader = [
   { id: 1, name: 'ID' },
   { id: 2, name: 'Name' },
-  { id: 3, name: 'Damage Scenario' },
+  // { id: 3, name: 'Damage Scenario' },
   { id: 4, name: 'Description/ Scalability' },
   { id: 5, name: 'Losses of Cybersecurity Properties' },
   { id: 6, name: 'Assets' },

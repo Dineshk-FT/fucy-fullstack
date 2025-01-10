@@ -10,3 +10,7 @@ export { default as DocumentIcon } from './document.png';
 export { default as ReportIcon } from './report.png';
 export { default as LayoutIcon } from './layout.png';
 export { default as ModelIcon } from './model.png';
+export { default as CyberClaimsIcon } from './cyber_claims.png';
+export { default as CyberRequireIcon } from './cyber_requirement.png';
+export { default as CyberControlsIcon } from './cyber_controls.png';
+export { default as CyberGoalIcon } from './cyber_goal_icon.png';
