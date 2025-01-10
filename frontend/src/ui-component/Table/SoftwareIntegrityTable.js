@@ -23,6 +23,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
+    color: 'black',
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '0px 8px',
     textAlign: 'center'
@@ -46,7 +47,7 @@ export default function SoftwareIntegrityTable() {
   const [filteredRows, setFilteredRows] = useState([]);
   const [filtered, setFiltered] = React.useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   useEffect(() => {
     const fetchCatalogData = async () => {

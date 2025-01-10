@@ -68,6 +68,8 @@ import HumanActionTable from '../../ui-component/Table/HumanActionTable';
 import ExternalConnectivityTable from '../../ui-component/Table/ExternalConnectivityTable';
 import SoftwareIntegrityTable from '../../ui-component/Table/SoftwareIntegrityTable';
 import PotentialVulnerbilityTable from '../../ui-component/Table/PotentialVulnerabilityTable';
+import VulnerabilityTable from '../../ui-component/Table/VulnerabilityTable'
+import MitigationsTable from '../../ui-component/Table/MitigationsTable';
 
 const elk = new ELK();
 
@@ -716,15 +718,15 @@ export default function MainCanvas() {
     Attack: <AttackTreeTable />,
     'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
     'Attack Trees Canvas': <AttackTree />,
-    'Attack Trees Canvas': <AttackTree />,
-    'Threats - Back-end servers associated with vehicle field operations': <BackendServerTable />,
-    'Threats - Vehicle communication channel vulnerabilities': <VehiclesCommunicationTable />,
-    'Threats - Vehicle update procedures and their risks': <UpdateProcedureTable />,
-    'Threats - Human actions unintentionally enabling cyber attacks on vehicles': <HumanActionTable />,
-    'Threats - Vehicles from external connectivity and network connections': <ExternalConnectivityTable />,
-    'Threats - Vehicle data and software integrity': <SoftwareIntegrityTable />,
-    'Potential vulnerabilities in vehicles if not properly secured or hardened': <PotentialVulnerbilityTable />,
-    ...commonTables.reduce((acc, key) => ({ ...acc, [key]: <CybersecurityTable /> }), {})
+    'Threats - Back-end servers associated with vehicle field operations': <BackendServerTable/ >,
+    'Threats - Vehicle communication channel vulnerabilities' : <VehiclesCommunicationTable />,
+    'Threats - Vehicle update procedures and their risks': <UpdateProcedureTable/>,
+    'Threats - Human actions unintentionally enabling cyber attacks on vehicles': <HumanActionTable/>,
+    'Threats - Vehicles from external connectivity and network connections': <ExternalConnectivityTable/>,
+    'Threats - Vehicle data and software integrity': <SoftwareIntegrityTable/>,
+    'Potential vulnerabilities in vehicles if not properly secured or hardened': <PotentialVulnerbilityTable/>,
+    'Vulnerablity': <VulnerabilityTable/>,
+    'Mitigations': <MitigationsTable/>
   };
 
   return (

@@ -264,38 +264,236 @@ export const RiskTreatmentHeaderTable = [
   { id: 30, name: 'CyberSecurity Claims' }
 ];
 
-//Cybersecurity Table Headers
-export const CybersecurityGoalsHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Description' },
-  { id: 4, name: 'CAL' },
-  { id: 5, name: 'Related Threat Scenario' },
-  { id: 6, name: 'Related Cybersecurity Requirements' },
-  { id: 7, name: 'Related Cybersecurity Controls' }
-];
-
-export const CybersecurityClaimsHeader = [
+export const CyberGoalsHeader = [
   { id: 1, name: 'SNo' },
   { id: 2, name: 'Name' },
   { id: 3, name: 'Description' },
   { id: 4, name: 'Condition for Re-Evaluation' },
   { id: 5, name: 'Related Threat Scenario' }
 ];
-export const CybersecurityRequirementsHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Description' },
-  { id: 4, name: 'Related Cybersecurity Goals' },
-  { id: 5, name: 'Related Cybersecurity Controls' }
-];
-export const CybersecurityControlsHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Description' },
-  { id: 4, name: 'Related Cybersecurity Goals' },
-  { id: 5, name: 'Related Cybersecurity Requirements' }
-];
+
+export const VulnerbilityHeader = [
+  {
+    "id": "[1.1]",
+    "name": "[1.1] - Vehicle related data held on back-end servers being lost or compromised"
+  },
+  {
+    "id": "[1.2]",
+    "name": "[1.2] - Back-end servers used as a means to attack a vehicle or extract data"
+  },
+  {
+    "id": "[1.3]",
+    "name": "[1.3] - Services from back-end server being disrupted, affecting the operation of a vehicle"
+  },
+  {
+    "id": "[2.1]",
+    "name": "[2.1] - Spoofing of messages or data received by the vehicle"
+  },
+  {
+    "id": "[2.2]",
+    "name": "[2.2] - Communication channels used to conduct unauthorized manipulation, deletion or other amendments to vehicle held code/data"
+  },
+  {
+    "id": "[2.3]",
+    "name": "[2.3] - Communication channels permit untrusted/unreliable messages to be accepted or are vulnerable to session hijacking/replay attacks"
+  },
+  {
+    "id": "[2.4]",
+    "name": "[2.4] - Information can be readily disclosed. For example, through eavesdropping on communications or through allowing unauthorized access to sensitive files or folders"
+  },
+  {
+    "id": "[2.5]",
+    "name": "[2.5] - Denial of service attacks via communication channels to disrupt vehicle functions"
+  },
+  {
+    "id": "[2.6]",
+    "name": "[2.6] - An unprivileged user is able to gain privileged access to vehicle systems"
+  },
+  {
+    "id": "[2.7]",
+    "name": "[2.7] - Viruses embedded in communication media are able to infect vehicle systems"
+  },
+  {
+    "id": "[2.8]",
+    "name": "[2.8] - Messages received by the vehicle (for example X2V or diagnostic messages), or transmitted within it, contain malicious content"
+  },
+  {
+    "id": "[3.1]",
+    "name": "[3.1] - Misuse or compromise of update procedures"
+  },
+  {
+    "id": "[3.2]",
+    "name": "[3.2] - It is possible to deny legitimate updates"
+  },
+  {
+    "id": "[4.1]",
+    "name": "[4.1] - Legitimate actors are able to take actions that would unwittingly facilitate a cyberattack"
+  },
+  {
+    "id": "[5.1]",
+    "name": "[5.1] - Devices connected to external interfaces used as a means to attack vehicle systems"
+  },
+  {
+    "id": "[5.2]",
+    "name": "[5.2] - Manipulation of the connectivity of vehicle functions enables a cyberattack"
+  },
+  {
+    "id": "[5.3]",
+    "name": "[5.3] - Manipulation of the connectivity of vehicle functions enables a cyberattack"
+  },
+  {
+    "id": "[6.1]",
+    "name": "[6.1] - Extraction of vehicle data/code"
+  },
+  {
+    "id": "[6.2]",
+    "name": "[6.2] - Manipulation of vehicle data/code"
+  },
+  {
+    "id": "[6.3]",
+    "name": "[6.3] - Erasure of data/code"
+  },
+  {
+    "id": "[6.4]",
+    "name": "[6.4] - Introduction of malware"
+  },
+  {
+    "id": "[6.5]",
+    "name": "[6.5] - Introduction of new software or overwrite existing software"
+  },
+  {
+    "id": "[6.6]",
+    "name": "[6.6] - Disruption of systems or operations"
+  },
+  {
+    "id": "[6.7]",
+    "name": "[6.7] - Manipulation of vehicle parameters"
+  },
+  {
+    "id": "[7.1]",
+    "name": "[7.1] - Parts or supplies could be compromised to permit vehicles to be attacked"
+  },
+  {
+    "id": "[7.2]",
+    "name": "[7.2] - Cryptographic technologies can be compromised or insufficiently applied"
+  },
+  {
+    "id": "[7.3]",
+    "name": "[7.3] - Software or hardware development permits vulnerabilities"
+  },
+  {
+    "id": "[7.4]",
+    "name": "[7.4] - Network design introduces vulnerabilities"
+  },
+  {
+    "id": "[7.5]",
+    "name": "[7.5] - Physical manipulation of systems can enable an attack"
+  },
+  {
+    "id": "[7.6]",
+    "name": "[7.6] - Unintended transfer of data can occur"
+  }
+]
+
+export const MitigationsHeader = [
+  {
+    "id": "M1",
+    "name": "[M1] - Security Controls are applied to back-end systems to minimise the risk of insider attack"
+  },
+  {
+    "id": "M2",
+    "name": "[M2] - Security Controls are applied to back-end systems to minimise unauthorised access. Example Security Controls can be found in OWASP"
+  },
+  {
+    "id": "M3",
+    "name": "[M3] - Security Controls are applied to back-end systems. Where back-end servers are critical to the provision of services, there are recovery measures in case of system outage. Example Security Controls can be found in OWASP"
+  },
+  {
+    "id": "M4",
+    "name": "[M4] - Security Controls are applied to minimise risks associated with cloud computing. Example Security Controls can be found in OWASP and NCSC cloud computing guidance"
+  },
+  {
+    "id": "M5",
+    "name": "[M5] - Security Controls are applied to back-end systems to prevent data breaches. Example Security Controls can be found in OWASP"
+  },
+  {
+    "id": "M6",
+    "name": "[M6] - Systems shall implement security by design to minimize risks"
+  },
+  {
+    "id": "M7",
+    "name": "[M7] - Access control techniques and designs shall be applied to protect system data/code"
+  },
+  {
+    "id": "M8",
+    "name": "[M8] - Through system design and access control, it should not be possible for unauthorized personnel to access personal or system-critical data. Examples of Security Controls can be found in OWASP"
+  },
+  {
+    "id": "M9",
+    "name": "[M9] - Measures to prevent and detect unauthorized access shall be employed"
+  },
+  {
+    "id": "M10",
+    "name": "[M10] - The vehicle shall verify the authenticity and integrity of messages it receives"
+  },
+  {
+    "id": "M11",
+    "name": "[M11] - Security controls shall be implemented for storing cryptographic keys (e.g., use of Hardware Security Modules)"
+  },
+  {
+    "id": "M12",
+    "name": "[M12] - Confidential data transmitted to or from the vehicle shall be protected"
+  },
+  {
+    "id": "M13",
+    "name": "[M13] - Measures to detect and recover from a denial of service attack shall be employed"
+  },
+  {
+    "id": "M14",
+    "name": "[M14] - Measures to protect systems against embedded viruses/malware should be considered"
+  },
+  {
+    "id": "M15",
+    "name": "[M15] - Measures to detect malicious internal messages or activity should be considered"
+  },
+  {
+    "id": "M16",
+    "name": "[M16] - Secure software update procedures shall be employed"
+  },
+  {
+    "id": "M17",
+    "name": "[M17] - Not provided"
+  },
+  {
+    "id": "M18",
+    "name": "[M18] - Measures shall be implemented for defining and controlling user roles and access privileges, based on the principle of least access privilege"
+  },
+  {
+    "id": "M19",
+    "name": "[M19] - Organizations shall ensure security procedures are defined and followed, including logging of actions and access related to the management of the security functions"
+  },
+  {
+    "id": "M20",
+    "name": "[M20] - Security controls shall be applied to systems that have remote access"
+  },
+  {
+    "id": "M21",
+    "name": "[M21] - Software shall be security assessed, authenticated, and integrity protected. Security controls shall be applied to minimize the risk from third-party software that is intended or foreseeable to be hosted on the vehicle"
+  },
+  {
+    "id": "M22",
+    "name": "[M22] - Security controls shall be applied to external interfaces"
+  },
+  {
+    "id": "M23",
+    "name": "[M23] - Cybersecurity best practices for software and hardware development shall be followed"
+  },
+  {
+    "id": "M24",
+    "name": "[M24] - Best practices for the protection of data integrity and confidentiality shall be followed for storing personal data"
+  }
+]
+
 export const AttackTableoptions = {
   Approach: [
     { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },
