@@ -10,7 +10,21 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination, Button, IconButton } from '@mui/material';
+import {
+  TextField,
+  Typography,
+  styled,
+  Paper,
+  Checkbox,
+  TablePagination,
+  Button,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel
+} from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -21,7 +35,8 @@ import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 import EditIcon from '@mui/icons-material/Edit';
 import FormPopper from '../Poppers/FormPopper';
 import toast, { Toaster } from 'react-hot-toast';
-import { getCybersecurityType } from './constraints';
+import { getCybersecurityType, CyberGoalsHeader } from './constraints';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -87,19 +102,20 @@ export default function CybersecurityTable() {
   const [filtered, setFiltered] = useState([]);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(20); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   // console.log('cybersecurity', cybersecurity);
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns5);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
 
   const Head = useMemo(() => {
-    return [
-      { id: 1, name: 'SNo' },
-      { id: 2, name: 'Name' },
-      { id: 3, name: 'Description' },
-      { id: 4, name: 'Condition for Re-Evaluation' },
-      { id: 5, name: 'Related Threat Scenario' }
-    ];
-  }, []);
+    return CyberGoalsHeader.filter((header) => visibleColumns.includes(header.name));
+  }, [visibleColumns]);
 
   const getIdName = () => {
     const getName = {
@@ -370,8 +386,47 @@ export default function CybersecurityTable() {
                 }
               }}
             />
+            <Button
+              sx={{
+                float: 'right',
+                mb: 2,
+                backgroundColor: '#4caf50',
+                ':hover': {
+                  backgroundColor: '#388e3c'
+                }
+              }}
+              variant="contained"
+              onClick={handleOpenFilter}
+            >
+              <FilterAltIcon />
+              Filter Columns
+            </Button>
           </Box>
         </Box>
+
+        {/* Column Filter Dialog */}
+        <Dialog open={openFilter} onClose={handleCloseFilter}>
+          <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+          <DialogContent>
+            {CyberGoalsHeader.map((column) => (
+              <FormControlLabel
+                key={column.id}
+                control={
+                  <Checkbox
+                    checked={visibleColumns.includes(column.name)}
+                    onChange={() => toggleColumnVisibility('visibleColumns5', column.name)}
+                  />
+                }
+                label={column.name} // Display column name as label
+              />
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseFilter} color="warning">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
         <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>

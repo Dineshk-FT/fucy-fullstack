@@ -68,6 +68,8 @@ import HumanActionTable from '../../ui-component/Table/HumanActionTable';
 import ExternalConnectivityTable from '../../ui-component/Table/ExternalConnectivityTable';
 import SoftwareIntegrityTable from '../../ui-component/Table/SoftwareIntegrityTable';
 import PotentialVulnerbilityTable from '../../ui-component/Table/PotentialVulnerabilityTable';
+import VulnerabilityTable from '../../ui-component/Table/VulnerabilityTable'
+import MitigationsTable from '../../ui-component/Table/MitigationsTable';
 
 const elk = new ELK();
 
@@ -725,7 +727,9 @@ export default function MainCanvas() {
     'Threats - Human actions unintentionally enabling cyber attacks on vehicles': <HumanActionTable/>,
     'Threats - Vehicles from external connectivity and network connections': <ExternalConnectivityTable/>,
     'Threats - Vehicle data and software integrity': <SoftwareIntegrityTable/>,
-    'Potential vulnerabilities in vehicles if not properly secured or hardened': <PotentialVulnerbilityTable/>
+    'Potential vulnerabilities in vehicles if not properly secured or hardened': <PotentialVulnerbilityTable/>,
+    'Vulnerablity': <VulnerabilityTable/>,
+    'Mitigations': <MitigationsTable/>
   };
 
   return (

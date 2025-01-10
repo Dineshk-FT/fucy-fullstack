@@ -65,6 +65,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   },
   [`&.${tableCellClasses.body}`]: {
+    color: 'black',
     fontSize: 14,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     color: '#000',

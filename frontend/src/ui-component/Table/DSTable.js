@@ -213,7 +213,7 @@ export default function DsTable() {
   const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(20); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
