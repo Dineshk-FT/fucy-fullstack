@@ -37,6 +37,7 @@ import FormPopper from '../Poppers/FormPopper';
 import toast, { Toaster } from 'react-hot-toast';
 import { getCybersecurityType, CyberGoalsHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { ThreatIcon } from '../../assets/icons';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 

@@ -567,35 +567,35 @@ const BrowserCard = () => {
             ));
           })
         );
-        
-        case 'catalog':
-          return renderTreeItem(
-            data,
-            (e) => handleClick(e, model?._id, 'catalog', data.id),
-            null,
-            renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-              return sub.subs_scenes?.map((scene) => (
-                <TreeItem
-                  key={scene.id}
-                  nodeId={scene.id}
-                  label={getLabel('TopicIcon', scene.name)}
-                  onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
-                >
-                  {/* Render nested draggable TreeItems if present */}
-                  {scene.item_name?.map((subScene) => (
-                    <DraggableTreeItem
-                      key={subScene.id}
-                      nodeId={subScene.id}
-                      label={getLabel('SubTopicIcon', subScene.name)}
-                      draggable={true}
-                      onClick={(e) => e.stopPropagation()}
-                      onDragStart={(e) => onDragStart(e, subScene)}
-                    />
-                  ))}
-                </TreeItem>
-              ));
-            })
-          );        
+
+      case 'catalog':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'catalog', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.subs_scenes?.map((scene) => (
+              <TreeItem
+                key={scene.id}
+                nodeId={scene.id}
+                label={getLabel('TopicIcon', scene.name)}
+                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+              >
+                {/* Render nested draggable TreeItems if present */}
+                {scene.item_name?.map((subScene) => (
+                  <DraggableTreeItem
+                    key={subScene.id}
+                    nodeId={subScene.id}
+                    label={getLabel('SubTopicIcon', subScene.name)}
+                    draggable={true}
+                    onClick={(e) => e.stopPropagation()}
+                    onDragStart={(e) => onDragStart(e, subScene)}
+                  />
+                ))}
+              </TreeItem>
+            ));
+          })
+        );
 
       case 'documents':
         return renderTreeItem(
