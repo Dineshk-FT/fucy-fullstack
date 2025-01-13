@@ -32,86 +32,54 @@ const elkOptions = {
   'elk.layered.mergeEdges': true // Merge edges where possible for clarity
 };
 
-const getLayoutedElements = async (nodes, edges, options = {}) => {
+const getLayoutedElements = async (nodes, edges) => {
   const graph = {
     id: 'root',
     layoutOptions: {
-      'elk.algorithm': 'layered',
-      'elk.spacing.nodeNode': 50,
-      ...options
+      'elk.algorithm': 'layered', // Automatically organizes elements in layers
+      'elk.direction': 'DOWN', // Tree flows downward
+      'elk.spacing.nodeNode': 50, // Dynamic horizontal spacing
+      'elk.spacing.nodeNodeBetweenLayers': 70, // Dynamic vertical spacing
+      'elk.edgeRouting': 'ORTHOGONAL', // Ensures clean edge routing
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', // Handles diverse tree structures
     },
     children: nodes.map((node) => ({
       id: node.id,
-      width: node.width || 150,
-      height: node.height || 50
+      width: node.width || 150, // Default node width
+      height: node.height || 50, // Default node height
     })),
     edges: edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
-      target: edge.target
-    }))
+      target: edge.target,
+    })),
   };
 
   try {
-    // Perform the layout using ELK
-    const layoutedGraph = await elk.layout(graph);
+    const elkGraph = await elk.layout(graph);
 
-    // Align nodes if their positions are close enough in the x or y axis
-    const alignNodes = (nodes) => {
-      const threshold = 100; // Distance threshold for alignment
-      const minSpacing = 50; // Minimum spacing to avoid overlap
-
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const node1 = nodes[i];
-          const node2 = nodes[j];
-
-          // Align on the x-axis if positions are close in x
-          if (Math.abs(node1.position.x - node2.position.x) <= threshold) {
-            const averageX = (node1.position.x + node2.position.x) / 2;
-            node1.position.x = averageX - minSpacing / 2;
-            node2.position.x = averageX + minSpacing / 2;
-          }
-
-          // Align on the y-axis if positions are close in y
-          if (Math.abs(node1.position.y - node2.position.y) <= threshold) {
-            const averageY = (node1.position.y + node2.position.y) / 2;
-            node1.position.y = averageY - minSpacing / 2;
-            node2.position.y = averageY + minSpacing / 2;
-          }
-        }
-      }
-    };
-
-    // Map the layouted nodes with their updated positions
-    const layoutedNodes = layoutedGraph.children.map((node) => {
+    // Update node positions based on ELK layout
+    const layoutedNodes = elkGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
-
       return {
         ...originalNode,
         position: {
-          x: originalNode.position.x,
-          y: originalNode.position.y
-        }
+          x: node.x || 0,
+          y: node.y || 0,
+        },
       };
     });
 
-    // Align nodes based on proximity and avoid overlap
-    alignNodes(layoutedNodes);
-
-    // Map the layouted edges
-    const layoutedEdges = layoutedGraph.edges.map((edge) => {
-      const originalEdge = edges.find((e) => e.id === edge.id);
-      return {
-        ...originalEdge,
-        points: edge.sections?.[0]?.bendPoints || []
-      };
-    });
+    // Update edges with bend points for smooth routing
+    const layoutedEdges = elkGraph.edges.map((edge) => ({
+      ...edges.find((e) => e.id === edge.id),
+      points: edge.sections?.[0]?.bendPoints || [], // Add bend points for orthogonal routing
+    }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
   } catch (error) {
-    console.error('Error in getLayoutedElements:', error);
-    return { nodes: [], edges: [] };
+    console.error('Error in dynamic layout:', error);
+    return { nodes, edges }; // Return original if layout fails
   }
 };
 
@@ -498,31 +466,19 @@ export default function AttackBlock({ attackScene, color }) {
   );
 
   const onLayout = useCallback(
-    async ({ direction, useInitialNodes = false }) => {
+    async ({ direction = 'DOWN' } = {}) => {
       try {
-        const opts = { 'elk.direction': direction, ...elkOptions };
-        const currentNodes = useInitialNodes ? nodes : [...nodes]; // Ensure nodes are fresh
-        const currentEdges = useInitialNodes ? edges : [...edges]; // Ensure edges are fresh
-
-        const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(currentNodes, currentEdges, opts);
-
-        if (layoutedNodes && layoutedEdges) {
-          setNodes(
-            layoutedNodes.map((node) => ({
-              ...node,
-              position: { x: node.position.x, y: node.position.y }, // Ensure position is set
-              data: { ...node.data } // Retain existing data
-            }))
-          );
-
-          setEdges(layoutedEdges);
-        }
+        const opts = { 'elk.direction': direction };
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
+  
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
       } catch (error) {
         console.error('Error during layout:', error);
       }
     },
     [nodes, edges, setNodes, setEdges]
-  );
+  );  
 
   useLayoutEffect(() => {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
