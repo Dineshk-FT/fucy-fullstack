@@ -507,7 +507,19 @@ const BrowserCard = () => {
                     })
                   );
                 })
-              : null;
+              : sub.Details?.map((detail, i) => {
+                  // console.log('detail', detail);
+                  const label = `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`;
+
+                  return (
+                    <TreeItem
+                      key={detail.id}
+                      nodeId={detail.id}
+                      label={getLabel('TopicIcon', label, i + 1)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  );
+                });
           })
         );
 

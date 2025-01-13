@@ -123,7 +123,7 @@ export default function Tstable() {
 
   // Pagination state
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns2);
@@ -468,8 +468,8 @@ export default function Tstable() {
               } else {
                 cellContent = row[item?.name] && (
                   <StyledTableCell component="th" scope="row">
-                    {row[item?.name].map((loss) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={loss?.id}>
+                    {row[item?.name].map((loss, i) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
                         <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
                         <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
                           Loss of {loss?.name}
