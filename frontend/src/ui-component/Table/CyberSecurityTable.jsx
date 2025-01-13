@@ -35,7 +35,13 @@ import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 import EditIcon from '@mui/icons-material/Edit';
 import FormPopper from '../Poppers/FormPopper';
 import toast, { Toaster } from 'react-hot-toast';
-import { getCybersecurityType, CyberGoalsHeader } from './constraints';
+import {
+  getCybersecurityType,
+  CybersecurityGoalsHeader,
+  CybersecurityRequirementsHeader,
+  CybersecurityControlsHeader,
+  CybersecurityClaimsHeader
+} from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { ThreatIcon } from '../../assets/icons';
 
@@ -114,9 +120,18 @@ export default function CybersecurityTable() {
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
 
+  const CommonHeader = useMemo(() => {
+    const getHeader = {
+      'Cybersecurity Goals': CybersecurityGoalsHeader,
+      'Cybersecurity Requirements': CybersecurityRequirementsHeader,
+      'Cybersecurity Controls': CybersecurityControlsHeader,
+      'Cybersecurity Claims': CybersecurityClaimsHeader
+    };
+    return getHeader[title];
+  }, [title]);
   const Head = useMemo(() => {
-    return CyberGoalsHeader.filter((header) => visibleColumns.includes(header.name));
-  }, [visibleColumns]);
+    return CommonHeader?.filter((header) => visibleColumns.includes(header.name));
+  }, [title, visibleColumns, CommonHeader]);
 
   const getIdName = () => {
     const getName = {
@@ -430,14 +445,11 @@ export default function CybersecurityTable() {
         <Dialog open={openFilter} onClose={handleCloseFilter}>
           <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
           <DialogContent>
-            {CyberGoalsHeader.map((column) => (
+            {CommonHeader?.map((column) => (
               <FormControlLabel
                 key={column.id}
                 control={
-                  <Checkbox
-                    checked={visibleColumns.includes(column.name)}
-                    onChange={() => toggleColumnVisibility('visibleColumns5', column.name)}
-                  />
+                  <Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility(title, column.name)} />
                 }
                 label={column.name} // Display column name as label
               />
