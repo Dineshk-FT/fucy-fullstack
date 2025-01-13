@@ -718,13 +718,12 @@ export default function DsTable() {
               }
             }}
           />
-          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalDs}>
+          <Button sx={{ float: 'right' }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
           <Button
             sx={{
               float: 'right',
-              mb: 2,
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -737,7 +736,7 @@ export default function DsTable() {
             Filter Columns
           </Button>
           <Button
-            sx={{ float: 'right', mb: 2 }}
+            sx={{ float: 'right' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}

@@ -41,6 +41,7 @@ import FormPopper from '../Poppers/FormPopper';
 import EditIcon from '@mui/icons-material/Edit';
 import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const selector = (state) => ({
   model: state.model,
@@ -52,7 +53,8 @@ const selector = (state) => ({
   getThreatScenario: state.getThreatScenario,
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
-  updateName: state.updateName$DescriptionforThreat
+  updateName: state.updateName$DescriptionforThreat,
+  deleteThreatScenario: state.deleteThreatScenario
 });
 
 const notify = (message, status) => toast[status](message);
@@ -108,7 +110,8 @@ export default function Tstable() {
     updateThreatScenario,
     updateName,
     derivedId,
-    UserDefinedId
+    UserDefinedId,
+    deleteThreatScenario
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,6 +128,7 @@ export default function Tstable() {
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns2);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -275,6 +279,50 @@ export default function Tstable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleDeleteSelected = () => {
+    const details = {
+      'model-id': model?._id,
+      rowDetails: JSON.stringify(selectedRows)
+    };
+    deleteThreatScenario(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res.message ?? 'Deleted successfully', 'success');
+          getDamageScenarios(model?._id);
+          getThreatScenario(model?._id);
+          setSelectedRows([]);
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const toggleRowSelection = (row) => {
+    const shorted = {
+      propId: row?.ID,
+      SNo: row?.SNo,
+      nodeId: row?.nodeId,
+      rowId: row?.rowId,
+      type: row?.type
+    };
+    setSelectedRows((prevSelectedRows) => {
+      const isSelected = prevSelectedRows.some((selectedRow) => selectedRow.SNo === shorted.SNo);
+
+      if (isSelected) {
+        // Unselect if already selected
+        return prevSelectedRows.filter((selectedRow) => selectedRow.SNo !== shorted.SNo);
+      } else {
+        // Select if not selected
+        return [...prevSelectedRows, shorted];
+      }
+    });
+  };
+
+  // console.log('selectedRows', selectedRows);
+
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     // console.log('row', row);
     const [hoveredField, setHoveredField] = useState(null);
@@ -282,6 +330,7 @@ export default function Tstable() {
     const [editValue, setEditValue] = useState('');
     const [anchorEl, setAnchorEl] = useState(null);
     const [isPopperFocused, setIsPopperFocused] = useState(false);
+    const isSelected = selectedRows.some((selectedRow) => selectedRow.SNo === row.SNo);
 
     const handleEditClick = (event, fieldName, currentValue) => {
       event.stopPropagation();
@@ -338,21 +387,23 @@ export default function Tstable() {
         key={row.name}
         data={row}
         sx={{
-          '&:last-child td, &:last-child th': { border: 0 },
-          '&:nth-of-type(even)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '&:nth-of-type(odd)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '& .MuiTableCell-root.MuiTableCell-body': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          backgroundColor: isChild ? '#F4F8FE' : '',
-          color: `${color?.sidebarContent} !important`
+          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          color: `${color?.sidebarContent} !important`,
+          '&:last-child td, &:last-child th': { border: 0 }
+          // '&:nth-of-type(even)': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // '&:nth-of-type(odd)': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // '& .MuiTableCell-root.MuiTableCell-body': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // backgroundColor: isChild ? '#F4F8FE' : '',
+          // color: `${color?.sidebarContent} !important`
         }}
       >
         {Head?.map((item, index) => {
@@ -389,6 +440,19 @@ export default function Tstable() {
                 );
               }
               break;
+            case item.name === 'SNo':
+              cellContent = (
+                <StyledTableCell
+                  key={index}
+                  sx={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
+                  align="left"
+                  onClick={() => toggleRowSelection(row)}
+                >
+                  {row[item.name] ? row[item.name] : '-'}
+                </StyledTableCell>
+              );
+              break;
+
             case item.name === 'Losses of Cybersecurity Properties':
               if (row.type === 'derived') {
                 cellContent = row[item?.name] && (
@@ -535,6 +599,16 @@ export default function Tstable() {
           >
             <FilterAltIcon />
             Filter Columns
+          </Button>
+          <Button
+            sx={{ float: 'right' }}
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0}
+          >
+            Delete
           </Button>
         </Box>
       </Box>
