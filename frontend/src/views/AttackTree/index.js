@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
@@ -15,11 +15,12 @@ import useStore from '../../Zustand/store';
 const selector = (state) => ({
   getAssets: state.getAssets,
   model: state.model,
-  setNodes: state.setNodes
+  setNodes: state.setNodes,
+  getCyberSecurityScenario: state.getCyberSecurityScenario
 });
 const AttackTree = () => {
   const color = ColorTheme();
-  const { getAssets, model, setNodes } = useStore(selector);
+  const { getAssets, model, setNodes, getCyberSecurityScenario } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -32,6 +33,9 @@ const AttackTree = () => {
     getAssets(model?._id);
   };
 
+  useEffect(() => {
+    getCyberSecurityScenario(model?._id);
+  }, []);
   // Update the width when resizing
   const handleResize = (event, { size }) => {
     setSidebarWidth(size.width);

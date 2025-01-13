@@ -188,9 +188,9 @@ export default function AttackTreeTable() {
     return column.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
-  useEffect(() => {
-    getCyberSecurityScenario(model?._id);
-  }, []);
+  // useEffect(() => {
+  //   getCyberSecurityScenario(model?._id);
+  // }, []);
   useEffect(() => {
     if (attacks['scenes']) {
       const mod1 = attacks['scenes']?.map((dt, i) => {
