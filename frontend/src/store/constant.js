@@ -33,6 +33,7 @@ export const lightTheme = {
   logo: '#5FBDFF',
   iconColor: '#555555',
   stroke: '#000',
+  line: '#f5f5f5',
   leftbarBG: '#f5f5f5'
 };
 
@@ -45,12 +46,13 @@ export const darkTheme = {
   sidebarBG: '#36454F',
   sidebarInnerBG: '#36454F',
   canvaSurroundsBG: '#36454F',
-  canvasBG: '#708090',
+  canvasBG: '#36454F',
   sidebarContent: '#D1D9E0',
   tabContentClr: '#D1D9E0',
   title: '#D1D9E0',
   logo: '#5FBDFF',
   iconColor: '#D1D9E0',
   stroke: '#f5f5f5',
+  line: '#000',
   leftbarBG: '#222831'
 };

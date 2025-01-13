@@ -1,6 +1,5 @@
 /*eslint-disable*/
-import * as React from 'react';
-import { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -45,7 +44,8 @@ const selector = (state) => ({
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
-  attacks: state.attackScenarios['subs'][0]
+  attacks: state.attackScenarios['subs'][0],
+  getCyberSecurityScenario: state.getCyberSecurityScenario
 });
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -169,13 +169,13 @@ export default function AttackTreeTable() {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
-  const [page, setPage] = React.useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = React.useState(20); // Rows per page state
-  const [columnWidths, setColumnWidths] = React.useState({});
+  const { model, update, attacks, getAttackScenario, getCyberSecurityScenario } = useStore(selector, shallow);
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [page, setPage] = useState(0); // Pagination state
+  const [rowsPerPage, setRowsPerPage] = useState(20); // Rows per page state
+  const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns3);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -188,7 +188,10 @@ export default function AttackTreeTable() {
     return column.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    getCyberSecurityScenario(model?._id);
+  }, []);
+  useEffect(() => {
     if (attacks['scenes']) {
       const mod1 = attacks['scenes']?.map((dt, i) => {
         // console.log('prp', prp);
@@ -203,7 +206,7 @@ export default function AttackTreeTable() {
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
           'Window of Opportunity': dt['Window of Opportunity'] ?? '',
           Equipment: dt?.Equipment ?? '',
-          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'].length ? dt['Attack Feasibilities Rating'] : 'Low'
+          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'].length ? dt['Attack Feasibilities Rating'] : ''
         };
       });
 
@@ -361,7 +364,7 @@ export default function AttackTreeTable() {
           {Head?.map((item, index) => {
             const bgColor = RatingColor(row['Attack Feasibilities Rating']);
             // console.log('bgColor', bgColor);
-            const color = !bgColor.includes('yellow') ? 'white' : 'black';
+            const color = !bgColor?.includes('yellow') ? 'white' : 'black';
             // console.log('color', color);
 
             let cellContent;

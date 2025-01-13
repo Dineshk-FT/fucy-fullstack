@@ -33,10 +33,8 @@ export default function SelectDamageScenes({ details, open, handleClose, selecte
   const handleClick = () => {
     const details = {
       id: id,
-      rowId: selectedRow?.rowId,
-      nodeId: selectedRow?.nodeId,
-      propId: selectedRow?.ID,
-      damageScene: JSON.stringify(damageScene)
+      detailId: selectedRow?.ID,
+      damageIds: JSON.stringify(damageScene.map((damage) => damage._id))
     };
     updateThreatScenario(details)
       .then((res) => {
