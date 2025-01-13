@@ -264,14 +264,6 @@ export const RiskTreatmentHeaderTable = [
   { id: 30, name: 'CyberSecurity Claims' }
 ];
 
-export const CyberGoalsHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Description' },
-  { id: 4, name: 'Condition for Re-Evaluation' },
-  { id: 5, name: 'Related Threat Scenario' }
-];
-
 export const VulnerbilityHeader = [
   {
     id: '[1.1]',
