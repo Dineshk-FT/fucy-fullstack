@@ -44,6 +44,7 @@ import {
 } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { ThreatIcon } from '../../assets/icons';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -80,13 +81,14 @@ const selector = (state) => ({
   model: state.model,
   cybersecuritySubs: state.cybersecurity['subs'],
   getCyberSecurityScenario: state.getCyberSecurityScenario,
-  updateName: state.updateName$DescriptionforCybersecurity
+  updateName: state.updateName$DescriptionforCybersecurity,
+  deleteCybersecurity: state.deleteCybersecurity
 });
 
 const notify = (message, status) => toast[status](message);
 export default function CybersecurityTable() {
   const { title } = useSelector((state) => state?.pageName);
-  const { cybersecuritySubs, getCyberSecurityScenario, model, updateName } = useStore(selector, shallow);
+  const { cybersecuritySubs, getCyberSecurityScenario, model, updateName, deleteCybersecurity } = useStore(selector, shallow);
   const getCybersecurityScene = useCallback(() => {
     const scene = {
       'Cybersecurity Goals': cybersecuritySubs[0],
@@ -111,6 +113,7 @@ export default function CybersecurityTable() {
   const [page, setPage] = useState(0); // Add state for page
   const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
+  const [selectedRows, setSelectedRows] = useState([]);
   // console.log('cybersecurity', cybersecurity);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns1 = useStore((state) => state.visibleColumns5);
@@ -172,6 +175,36 @@ export default function CybersecurityTable() {
     }
   }, [cybersecurity, title]);
 
+  const toggleRowSelection = (rowId) => {
+    setSelectedRows(
+      (prevSelectedRows) =>
+        prevSelectedRows.includes(rowId)
+          ? prevSelectedRows.filter((id) => id !== rowId) // Unselect if already selected
+          : [...prevSelectedRows, rowId] // Select if not selected
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    const details = {
+      id: cybersecurity?._id,
+      rowId: selectedRows
+    };
+    // console.log('details', details);
+    deleteCybersecurity(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res.message ?? 'Deleted successfully', 'success');
+          getCyberSecurityScenario(model?._id);
+          setSelectedRows([]);
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
   const handleSearch = (e) => {
     const { value } = e.target;
     // console.log('value', value);
@@ -225,12 +258,14 @@ export default function CybersecurityTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  // console.log('selectedRows', selectedRows);
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [anchorEl, setAnchorEl] = useState(null);
     const [isPopperFocused, setIsPopperFocused] = useState(false);
+    const isSelected = selectedRows.includes(row.ID);
 
     const handleEditClick = (event, fieldName, currentValue) => {
       event.stopPropagation();
@@ -280,21 +315,24 @@ export default function CybersecurityTable() {
         key={row.name}
         data={row}
         sx={{
-          '&:last-child td, &:last-child th': { border: 0 },
-          '&:nth-of-type(even)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '&:nth-of-type(odd)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '& .MuiTableCell-root.MuiTableCell-body': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          backgroundColor: isChild ? '#F4F8FE' : '',
-          color: `${color?.sidebarContent} !important`
+          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+
+          color: `${color?.sidebarContent} !important`,
+          '&:last-child td, &:last-child th': { border: 0 }
+          // '&:nth-of-type(even)': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // '&:nth-of-type(odd)': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // '& .MuiTableCell-root.MuiTableCell-body': {
+          //   backgroundColor: color?.sidebarBG,
+          //   color: `${color?.sidebarContent} !important`
+          // },
+          // backgroundColor: isChild ? '#F4F8FE' : '',
+          // color: `${color?.sidebarContent} !important`
         }}
       >
         {Head?.map((item, index) => {
@@ -331,6 +369,18 @@ export default function CybersecurityTable() {
                 );
               }
               break;
+            case item.name === 'SNo':
+              cellContent = (
+                <StyledTableCell
+                  key={index}
+                  sx={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
+                  align="left"
+                  onClick={() => toggleRowSelection(row.ID)}
+                >
+                  {row[item.name] ? row[item.name] : '-'}
+                </StyledTableCell>
+              );
+              break;
 
             case item.name === 'Related Threat Scenario':
               // console.log('row[item.name] ', row[item.name]);
@@ -347,6 +397,7 @@ export default function CybersecurityTable() {
                 </StyledTableCell>
               );
               break;
+
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -434,7 +485,6 @@ export default function CybersecurityTable() {
             <Button
               sx={{
                 float: 'right',
-                mb: 2,
                 backgroundColor: '#4caf50',
                 ':hover': {
                   backgroundColor: '#388e3c'
@@ -445,6 +495,16 @@ export default function CybersecurityTable() {
             >
               <FilterAltIcon />
               Filter Columns
+            </Button>
+            <Button
+              sx={{ float: 'right' }}
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+              disabled={selectedRows.length === 0}
+            >
+              Delete
             </Button>
           </Box>
         </Box>

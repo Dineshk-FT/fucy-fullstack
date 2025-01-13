@@ -44,8 +44,7 @@ const selector = (state) => ({
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
-  attacks: state.attackScenarios['subs'][0],
-  getCyberSecurityScenario: state.getCyberSecurityScenario
+  attacks: state.attackScenarios['subs'][0]
 });
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -169,7 +168,7 @@ export default function AttackTreeTable() {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { model, update, attacks, getAttackScenario, getCyberSecurityScenario } = useStore(selector, shallow);
+  const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -188,9 +187,6 @@ export default function AttackTreeTable() {
     return column.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
-  // useEffect(() => {
-  //   getCyberSecurityScenario(model?._id);
-  // }, []);
   useEffect(() => {
     if (attacks['scenes']) {
       const mod1 = attacks['scenes']?.map((dt, i) => {
