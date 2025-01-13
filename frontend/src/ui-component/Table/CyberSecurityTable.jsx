@@ -113,7 +113,10 @@ export default function CybersecurityTable() {
   const [columnWidths, setColumnWidths] = useState({});
   // console.log('cybersecurity', cybersecurity);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns5);
+  const visibleColumns1 = useStore((state) => state.visibleColumns5);
+  const visibleColumns2 = useStore((state) => state.visibleColumns6);
+  const visibleColumns3 = useStore((state) => state.visibleColumns7);
+  const visibleColumns4 = useStore((state) => state.visibleColumns8);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -129,9 +132,14 @@ export default function CybersecurityTable() {
     };
     return getHeader[title];
   }, [title]);
+
   const Head = useMemo(() => {
-    return CommonHeader?.filter((header) => visibleColumns.includes(header.name));
-  }, [title, visibleColumns, CommonHeader]);
+    if (title == 'Cybersecurity Goals') return CommonHeader?.filter((header) => visibleColumns1.includes(header.name));
+    if (title == 'Cybersecurity Requirements') return CommonHeader?.filter((header) => visibleColumns2.includes(header.name));
+    if (title == 'Cybersecurity Controls') return CommonHeader?.filter((header) => visibleColumns3.includes(header.name));
+    if (title == 'Cybersecurity Claims') return CommonHeader?.filter((header) => visibleColumns4.includes(header.name));
+  }, [title, visibleColumns1, visibleColumns2, visibleColumns3, visibleColumns4, CommonHeader]);
+  console.log('CommonHeader', CommonHeader);
 
   const getIdName = () => {
     const getName = {
@@ -449,7 +457,29 @@ export default function CybersecurityTable() {
               <FormControlLabel
                 key={column.id}
                 control={
-                  <Checkbox checked={visibleColumns.includes(column.name)} onChange={() => toggleColumnVisibility(title, column.name)} />
+                  <Checkbox
+                    checked={(() => {
+                      const visibilityMap = {
+                        'Cybersecurity Goals': visibleColumns1,
+                        'Cybersecurity Requirements': visibleColumns2,
+                        'Cybersecurity Controls': visibleColumns3,
+                        'Cybersecurity Claims': visibleColumns4
+                      };
+                      return visibilityMap[title]?.includes(column.name) || false;
+                    })()}
+                    onChange={() => {
+                      const visibilityMap = {
+                        'Cybersecurity Goals': 'visibleColumns5',
+                        'Cybersecurity Requirements': 'visibleColumns6',
+                        'Cybersecurity Controls': 'visibleColumns7',
+                        'Cybersecurity Claims': 'visibleColumns8'
+                      };
+                      const visibilityKey = visibilityMap[title];
+                      if (visibilityKey) {
+                        toggleColumnVisibility(visibilityKey, column.name);
+                      }
+                    }}
+                  />
                 }
                 label={column.name} // Display column name as label
               />

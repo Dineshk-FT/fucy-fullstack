@@ -11,7 +11,10 @@ import {
   TsTableHeader,
   AttackTableHeader,
   RiskTreatmentHeaderTable,
-  CyberGoalsHeader
+  CybersecurityGoalsHeader,
+  CybersecurityClaimsHeader,
+  CybersecurityRequirementsHeader,
+  CybersecurityControlsHeader
 } from '../ui-component/Table/constraints';
 
 export const createHeaders = () => {
@@ -597,7 +600,10 @@ const useStore = createWithEqualityFn((set, get) => ({
   visibleColumns2: TsTableHeader.map((column) => column.name),
   visibleColumns3: AttackTableHeader.map((column) => column.name),
   visibleColumns4: RiskTreatmentHeaderTable.map((column) => column.name),
-  visibleColumns5: CyberGoalsHeader.map((column) => column.name),
+  visibleColumns5: CybersecurityGoalsHeader.map((column) => column.name),
+  visibleColumns6: CybersecurityRequirementsHeader.map((column) => column.name),
+  visibleColumns7: CybersecurityControlsHeader.map((column) => column.name),
+  visibleColumns8: CybersecurityClaimsHeader.map((column) => column.name),
 
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -613,6 +619,9 @@ const useStore = createWithEqualityFn((set, get) => ({
       visibleColumns3,
       visibleColumns4,
       visibleColumns5,
+      visibleColumns6,
+      visibleColumns7,
+      visibleColumns8
     } = get();
     const tableColumns =
       table === 'visibleColumns'
@@ -625,7 +634,13 @@ const useStore = createWithEqualityFn((set, get) => ({
               ? visibleColumns3
               : table === 'visibleColumns4'
                 ? visibleColumns4
-                  : visibleColumns5;
+                : table === 'visibleColumns5'
+                  ? visibleColumns5
+                  : table === 'visibleColumns6'
+                    ? visibleColumns6
+                    : table === 'visibleColumns7'
+                      ? visibleColumns7
+                      : visibleColumns8;
     const isCurrentlyVisible = tableColumns.includes(columnName);
     const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
 
