@@ -109,7 +109,7 @@ export default function CybersecurityTable() {
   const [filtered, setFiltered] = useState([]);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(20); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   // console.log('cybersecurity', cybersecurity);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
@@ -139,7 +139,7 @@ export default function CybersecurityTable() {
     if (title == 'Cybersecurity Controls') return CommonHeader?.filter((header) => visibleColumns3.includes(header.name));
     if (title == 'Cybersecurity Claims') return CommonHeader?.filter((header) => visibleColumns4.includes(header.name));
   }, [title, visibleColumns1, visibleColumns2, visibleColumns3, visibleColumns4, CommonHeader]);
-  console.log('CommonHeader', CommonHeader);
+  // console.log('CommonHeader', CommonHeader);
 
   const getIdName = () => {
     const getName = {
