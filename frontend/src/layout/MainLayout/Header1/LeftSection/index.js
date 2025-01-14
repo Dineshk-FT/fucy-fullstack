@@ -126,7 +126,7 @@ const LeftSection = () => {
             onClick={() => setActiveTab(tab.name)}
             sx={{
               cursor: 'pointer',
-              fontSize: '12px',
+              fontSize: '14px',
               color: activeTab === tab.name ? 'blue' : color.title,
               fontWeight: activeTab === tab.name ? 'bold' : 'normal',
               margin: '0 8px',
@@ -146,10 +146,14 @@ const LeftSection = () => {
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
-          padding: '8px',
+          padding: '6px',
           borderRadius: '10px',
           backgroundColor: color.canvasBG,
-          border: '1px solid #ddd'
+          border: '1px solid #ddd',
+          gap: '5px',
+          width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
+          height: { xs: '50px', sm: '50px', md: '60px', lg: 'auto' },
+          overflow: 'auto'
         }}
       >
         {tabs
@@ -187,7 +191,7 @@ const LeftSection = () => {
                     <Typography
                       sx={{
                         marginTop: '4px',
-                        fontSize: '8px',
+                        fontSize: '10px',
                         textAlign: 'center',
                         color: color.title
                       }}

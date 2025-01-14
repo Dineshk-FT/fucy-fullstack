@@ -26,9 +26,7 @@ const AttackTree = () => {
 
   // State to track the sidebar width
   const [sidebarWidth, setSidebarWidth] = useState(750); // Initial width of the sidebar
-
   const handleBack = () => {
-    setNodes([]);
     dispatch(closeAll());
     getAssets(model?._id);
   };

@@ -41,18 +41,18 @@ const getLayoutedElements = async (nodes, edges) => {
       'elk.spacing.nodeNode': 50, // Dynamic horizontal spacing
       'elk.spacing.nodeNodeBetweenLayers': 70, // Dynamic vertical spacing
       'elk.edgeRouting': 'ORTHOGONAL', // Ensures clean edge routing
-      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', // Handles diverse tree structures
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX' // Handles diverse tree structures
     },
     children: nodes.map((node) => ({
       id: node.id,
       width: node.width || 150, // Default node width
-      height: node.height || 50, // Default node height
+      height: node.height || 50 // Default node height
     })),
     edges: edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
-      target: edge.target,
-    })),
+      target: edge.target
+    }))
   };
 
   try {
@@ -65,15 +65,15 @@ const getLayoutedElements = async (nodes, edges) => {
         ...originalNode,
         position: {
           x: node.x || 0,
-          y: node.y || 0,
-        },
+          y: node.y || 0
+        }
       };
     });
 
     // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id),
-      points: edge.sections?.[0]?.bendPoints || [], // Add bend points for orthogonal routing
+      points: edge.sections?.[0]?.bendPoints || [] // Add bend points for orthogonal routing
     }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
@@ -174,7 +174,6 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
-
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
@@ -470,7 +469,7 @@ export default function AttackBlock({ attackScene, color }) {
       try {
         const opts = { 'elk.direction': direction };
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
-  
+
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
       } catch (error) {
@@ -478,7 +477,7 @@ export default function AttackBlock({ attackScene, color }) {
       }
     },
     [nodes, edges, setNodes, setEdges]
-  );  
+  );
 
   useLayoutEffect(() => {
     onLayout({ direction: 'DOWN', useInitialNodes: true });

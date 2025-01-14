@@ -293,7 +293,6 @@ const BrowserCard = () => {
   };
 
   const handleOpenAttackTree = (e, scene, name) => {
-    setNodes([]);
     e.stopPropagation();
     if (name === 'Attack Trees') {
       dispatch(setTableOpen('Attack Trees Canvas'));
