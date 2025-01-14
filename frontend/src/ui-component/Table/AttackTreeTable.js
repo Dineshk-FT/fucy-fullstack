@@ -78,8 +78,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
-    color: '#000'
+    textAlign: 'center'
   }
 }));
 
@@ -115,7 +114,7 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
         sx={{
           width: 130,
           background: 'transparent',
-          '& .MuiInputBase-root': { backgroundColor: 'transparent' },
+          '& .MuiInputBase-root': { backgroundColor: 'transparent', color: 'inherit' },
           '& .MuiSelect-select': { backgroundColor: 'transparent' },
           '& .MuiSvgIcon-root': { display: 'none' },
           '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
@@ -133,6 +132,7 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
           value={row[item.name]}
           placeholder="Select value"
           onChange={(e) => handleChange(e, row)}
+          sx={{ '& .MuiSelect-select': { color: 'inherit' } }}
           name={name}
           open={open}
           onClose={() => setOpen(false)} // Close dropdown when focus is lost
@@ -147,14 +147,17 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
                       fontSize: '14px',
                       fontWeight: 600,
                       padding: '8px',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      color: 'inherit'
                     }}
                   >
                     {option?.description}
                   </Typography>
                 }
               >
-                <Typography variant="h5">{option?.label}</Typography>
+                <Typography sx={{ color: 'inherit' }} variant="h5">
+                  {option?.label}
+                </Typography>
               </HtmlTooltip>
             </MenuItem>
           ))}
@@ -173,7 +176,7 @@ export default function AttackTreeTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const [page, setPage] = useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(20); // Rows per page state
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
   const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns3);
@@ -340,21 +343,10 @@ export default function AttackTreeTable() {
           key={row.name}
           data={row}
           sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            '&:nth-of-type(odd)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
+            backgroundColor: color?.sidebarBG,
             '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG
-              // color: `${color?.sidebarContent} !important`
-            },
-            backgroundColor: isChild ? '#F4F8FE' : '',
-            color: `${color?.sidebarContent} !important`
+              color: `${color?.sidebarContent} !important`
+            }
           }}
         >
           {Head?.map((item, index) => {
@@ -405,29 +397,29 @@ export default function AttackTreeTable() {
           <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
-        <TextField
-          id="outlined-size-small"
-          placeholder="Search"
-          size="small"
-          value={searchTerm}
-          onChange={handleSearch}
-          sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
-        />
-        <Button
-          sx={{
-            float: 'right',
-            mb: 2,
-            backgroundColor: '#4caf50',
-            ':hover': {
-              backgroundColor: '#388e3c'
-            }
-          }}
-          variant="contained"
-          onClick={handleOpenFilter}
-        >
-          <FilterAltIcon />
-          Filter Columns
-        </Button>
+        <Box display="flex" alignItems="center" mr={4}>
+          <TextField
+            id="outlined-size-small"
+            placeholder="Search"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearch}
+            sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
+          />
+          <Button
+            sx={{
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon />
+            Filter Columns
+          </Button>
+        </Box>
       </Box>
 
       {/* Column Filter Dialog */}
@@ -512,6 +504,11 @@ export default function AttackTreeTable() {
       </TableContainer>
 
       <TablePagination
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
         count={filtered.length}

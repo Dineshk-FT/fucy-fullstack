@@ -69,10 +69,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important'
   },
   [`&.${tableCellClasses.body}`]: {
-    color: 'black',
     fontSize: 14,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    color: '#000',
     padding: '10px 8px',
     textAlign: 'center'
   }
@@ -268,8 +266,9 @@ export default function RiskTreatmentTable() {
         data={row}
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
-          '&:nth-of-type(even)': {
-            backgroundColor: '#F4F8FE'
+          backgroundColor: color?.sidebarBG,
+          '& .MuiTableCell-root.MuiTableCell-body': {
+            color: `${color?.sidebarContent} !important`
           }
         }}
       >
@@ -425,12 +424,12 @@ export default function RiskTreatmentTable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={3} mr={4}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -444,8 +443,6 @@ export default function RiskTreatmentTable() {
           </Button> */}
           <Button
             sx={{
-              float: 'right',
-              mb: 2,
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -508,6 +505,11 @@ export default function RiskTreatmentTable() {
       </TableContainer>
 
       <TablePagination
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
         component="div"
         count={filtered.length}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}

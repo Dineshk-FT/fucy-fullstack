@@ -174,6 +174,7 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   // console.log('attackScene', attackScene);
+
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
@@ -491,6 +492,10 @@ export default function AttackBlock({ attackScene, color }) {
 
     // Extract threatId from nodes with type: "default"
     const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
+    if (!threatNode) {
+      notify('Threat scenario is missing', 'error');
+      return;
+    }
     const { threatId, damageId, key } = threatNode;
 
     const details = {

@@ -80,8 +80,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
-    color: '#000'
+    textAlign: 'center'
   }
 }));
 
@@ -388,22 +387,9 @@ export default function Tstable() {
         data={row}
         sx={{
           backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
-          color: `${color?.sidebarContent} !important`,
-          '&:last-child td, &:last-child th': { border: 0 }
-          // '&:nth-of-type(even)': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // '&:nth-of-type(odd)': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // '& .MuiTableCell-root.MuiTableCell-body': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // backgroundColor: isChild ? '#F4F8FE' : '',
-          // color: `${color?.sidebarContent} !important`
+          '& .MuiTableCell-root.MuiTableCell-body': {
+            color: `${color?.sidebarContent} !important`
+          }
         }}
       >
         {Head?.map((item, index) => {
@@ -568,12 +554,12 @@ export default function Tstable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={3} mr={4}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -582,13 +568,11 @@ export default function Tstable() {
             onChange={handleSearch}
             sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
           />
-          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
+          <Button variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button>
           <Button
             sx={{
-              float: 'right',
-              mb: 2,
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -601,7 +585,6 @@ export default function Tstable() {
             Filter Columns
           </Button>
           <Button
-            sx={{ float: 'right' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
@@ -672,6 +655,11 @@ export default function Tstable() {
         </Table>
       </TableContainer>
       <TablePagination
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
         component="div"
         count={filtered.length}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}

@@ -80,7 +80,7 @@ export default function DsDerivationTable() {
   const [filtered, setFiltered] = React.useState([]);
 
   const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(20); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = React.useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = React.useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.visibleColumns1);
@@ -266,12 +266,12 @@ export default function DsDerivationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" my={1} mr={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
-          <Box>
+          <Box display="flex" justifyContent="center" gap={1}>
             <TextField
               id="outlined-size-small"
               placeholder="Search"
@@ -285,22 +285,21 @@ export default function DsDerivationTable() {
                 }
               }}
             />
+            <Button
+              sx={{
+                alignSelf: 'center',
+                backgroundColor: '#4caf50',
+                ':hover': {
+                  backgroundColor: '#388e3c'
+                }
+              }}
+              variant="contained"
+              onClick={handleOpenFilter}
+            >
+              <FilterAltIcon />
+              Filter Columns
+            </Button>
           </Box>
-          <Button
-            sx={{
-              float: 'right',
-              mb: 2,
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
-            variant="contained"
-            onClick={handleOpenFilter}
-          >
-            <FilterAltIcon />
-            Filter Columns
-          </Button>
         </Box>
 
         {/* Column Filter Dialog */}
@@ -369,6 +368,11 @@ export default function DsDerivationTable() {
           {/* Pagination controls */}
         </TableContainer>
         <TablePagination
+          sx={{
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
           component="div"
           count={filtered.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}

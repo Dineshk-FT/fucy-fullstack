@@ -83,8 +83,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
-    color: '#000'
+    textAlign: 'center'
+    // color: '#000'
   }
 }));
 
@@ -213,7 +213,7 @@ export default function DsTable() {
   const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(20); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
@@ -510,23 +510,9 @@ export default function DsTable() {
           data={row}
           sx={{
             backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
-
-            color: `${color?.sidebarContent} !important`,
-            '&:last-child td, &:last-child th': { border: 0 }
-            // '&:nth-of-type(even)': {
-            //   backgroundColor: color?.sidebarBG,
-            //   color: `${color?.sidebarContent} !important`
-            // },
-            // '&:nth-of-type(odd)': {
-            //   backgroundColor: color?.sidebarBG,
-            //   color: `${color?.sidebarContent} !important`
-            // },
-            // '& .MuiTableCell-root.MuiTableCell-body': {
-            //   backgroundColor: color?.sidebarBG,
-            //   color: `${color?.sidebarContent} !important`
-            // }
-            // backgroundColor: isChild ? '#F4F8FE' : '',
-            // color: `${color?.sidebarContent} !important`
+            '& .MuiTableCell-root.MuiTableCell-body': {
+              color: `${color?.sidebarContent} !important`
+            }
           }}
         >
           {Head?.map((item, index) => {
@@ -688,7 +674,6 @@ export default function DsTable() {
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon
             sx={{
-              float: 'left',
               cursor: 'pointer',
               ml: 1,
               color: color?.title
@@ -705,7 +690,7 @@ export default function DsTable() {
             Damage Scenario Table
           </Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={2} mr={4}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -713,17 +698,18 @@ export default function DsTable() {
             value={searchTerm}
             onChange={handleSearch}
             sx={{
+              justifyContent: 'center',
               '& .MuiInputBase-input': {
                 border: '1px solid black'
               }
             }}
           />
-          <Button sx={{ float: 'right' }} variant="contained" onClick={handleOpenModalDs}>
+          <Button sx={{ alignSelf: 'center' }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
           <Button
             sx={{
-              float: 'right',
+              alignSelf: 'center',
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -736,7 +722,6 @@ export default function DsTable() {
             Filter Columns
           </Button>
           <Button
-            sx={{ float: 'right' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
@@ -790,7 +775,8 @@ export default function DsTable() {
             background: 'rgba(0, 0, 0, 0.1)'
           },
           maxHeight: tableHeight,
-          scrollbarWidth: 'thin'
+          scrollbarWidth: 'thin',
+          color: 'blue'
         }}
       >
         <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
@@ -820,13 +806,7 @@ export default function DsTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            <StyledTableCell></StyledTableCell>
             {filtered?.map((row, rowkey) => (
-              // <StyledTableRow key={row.id}>
-              //   {Head.map((item) => (
-              //     <StyledTableCell key={item.id}>{row[item.name]}</StyledTableCell>
-              //   ))}
-              // </StyledTableRow>
               <>
                 <RenderTableRow row={row} rowKey={rowkey} />
               </>
@@ -836,6 +816,11 @@ export default function DsTable() {
       </TableContainer>
 
       <TablePagination
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
         component="div"
         count={filtered.length}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}

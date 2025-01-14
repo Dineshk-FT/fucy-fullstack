@@ -318,21 +318,9 @@ export default function CybersecurityTable() {
           backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
 
           color: `${color?.sidebarContent} !important`,
-          '&:last-child td, &:last-child th': { border: 0 }
-          // '&:nth-of-type(even)': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // '&:nth-of-type(odd)': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // '& .MuiTableCell-root.MuiTableCell-body': {
-          //   backgroundColor: color?.sidebarBG,
-          //   color: `${color?.sidebarContent} !important`
-          // },
-          // backgroundColor: isChild ? '#F4F8FE' : '',
-          // color: `${color?.sidebarContent} !important`
+          '& .MuiTableCell-root.MuiTableCell-body': {
+            color: `${color?.sidebarContent} !important`
+          }
         }}
       >
         {Head?.map((item, index) => {
@@ -455,7 +443,7 @@ export default function CybersecurityTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
@@ -484,7 +472,6 @@ export default function CybersecurityTable() {
             />
             <Button
               sx={{
-                float: 'right',
                 backgroundColor: '#4caf50',
                 ':hover': {
                   backgroundColor: '#388e3c'
@@ -497,7 +484,6 @@ export default function CybersecurityTable() {
               Filter Columns
             </Button>
             <Button
-              sx={{ float: 'right' }}
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
@@ -584,6 +570,11 @@ export default function CybersecurityTable() {
           {/* Pagination controls */}
         </TableContainer>
         <TablePagination
+          sx={{
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
           component="div"
           count={filtered.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}

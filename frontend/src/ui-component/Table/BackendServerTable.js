@@ -22,21 +22,16 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
-    color: 'black',
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '0px 8px',
+    color: 'inherit',
     textAlign: 'center'
   }
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  '&:nth-of-type(even)': {
-    backgroundColor: '#f9f9f9'
-  },
-  '&:nth-of-type(odd)': {
-    backgroundColor: '#ffffff'
-  }
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 export default function BackendServerTable() {
@@ -45,9 +40,8 @@ export default function BackendServerTable() {
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRows, setFilteredRows] = useState([]);
-  const [filtered, setFiltered] = React.useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   useEffect(() => {
     const fetchCatalogData = async () => {
@@ -163,7 +157,13 @@ export default function BackendServerTable() {
             </TableHead>
             <TableBody>
               {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
-                <StyledTableRow key={index}>
+                <StyledTableRow
+                  key={index}
+                  sx={{
+                    backgroundColor: color?.sidebarBG,
+                    color: color?.sidebarContent
+                  }}
+                >
                   <StyledTableCell>{row.name ? row.id : ''}</StyledTableCell>
                   <StyledTableCell>{row.name}</StyledTableCell>
                   <StyledTableCell>{row.category}</StyledTableCell>
@@ -174,8 +174,13 @@ export default function BackendServerTable() {
           </Table>
         </TableContainer>
         <TablePagination
+          sx={{
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
           component="div"
-          count={filtered.length}
+          count={filteredRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}

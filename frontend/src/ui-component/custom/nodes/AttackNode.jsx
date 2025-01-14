@@ -21,7 +21,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   // Calculate font size dynamically based on node dimensions
   // console.log('nodes', nodes);
   const handleDeleteFromCanvas = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
+    setNodes((nodes) => nodes.filter((node) => node.id !== id));
   };
 
   const handleupdate = useCallback((rating) => {
@@ -30,7 +30,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
       'scene-id': attackScene?.ID,
       rating: rating
     };
-    console.log('details', details);
+    // console.log('details', details);
     // updateOverallRating(details)
   }, []);
   const getHighestRating = (nodes) => {
