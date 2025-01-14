@@ -1,41 +1,38 @@
+/*eslint-disable*/
 import React from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import EventIcon from '@mui/icons-material/Event';
-import OrIcon from '@mui/icons-material/HelpOutline';
-import AndIcon from '@mui/icons-material/Equalizer';
-import VoteIcon from '@mui/icons-material/HowToVote';
-import TransferIcon from '@mui/icons-material/TransferWithinAStation';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import DraggableTreeItem from '../../layout/MainLayout/Sidebar/BrowserCard/DraggableItem';
+import { ANDGateIcon, EventIcon, ORGateIcon, TransferGateIcon, VotingGateIcon } from '../../assets/icons';
 
 const Properties = () => {
   const gates = [
     {
       label: 'Event',
       nodeId: 'Event',
-      icon: <EventIcon />
+      icon: EventIcon
     },
     {
       label: 'OR Gate',
       nodeId: 'OR Gate',
-      icon: <OrIcon />
+      icon: ORGateIcon
     },
     {
       label: 'AND Gate',
       nodeId: 'AND Gate',
-      icon: <AndIcon />
+      icon: ANDGateIcon
     },
     {
       label: 'Voting Gate',
       nodeId: 'Voting Gate',
-      icon: <VoteIcon />
+      icon: VotingGateIcon
     },
     {
       label: 'Transfer Gate',
       nodeId: 'Transfer Gate',
-      icon: <TransferIcon />
+      icon: TransferGateIcon
     }
   ];
 
@@ -65,7 +62,7 @@ const Properties = () => {
               key={item.nodeId}
               nodeId={item.nodeId}
               label={item.label}
-              icon={item.icon}
+              icon={<img src={item.icon} alt={item.label} height={20} width={20} />}
               onDragStart={(e) => onDragStart(e, { label: item.label })}
             />
           ))}

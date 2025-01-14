@@ -14,3 +14,8 @@ export { default as CyberClaimsIcon } from './cyber_claims.png';
 export { default as CyberRequireIcon } from './cyber_requirement.png';
 export { default as CyberControlsIcon } from './cyber_controls.png';
 export { default as CyberGoalIcon } from './cyber_goal_icon.png';
+export { default as ORGateIcon } from './ORGateIcon.png';
+export { default as ANDGateIcon } from './ANDGateIcon.png';
+export { default as VotingGateIcon } from './VotingGateIcon.png';
+export { default as TransferGateIcon } from './TransferGateIcon.png';
+export { default as EventIcon } from './EventIcon.png';
