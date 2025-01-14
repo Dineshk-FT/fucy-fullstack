@@ -580,18 +580,18 @@ const useStore = createWithEqualityFn((set, get) => ({
     name: 'Documents',
     icon: 'DocumentIcon'
   },
-  reports: {
-    id: '10',
-    name: 'Reporting',
-    icon: 'ReportIcon',
-    scenes: []
-  },
-  layouts: {
-    id: '11',
-    name: 'Layouts',
-    icon: 'LayoutIcon',
-    scenes: []
-  },
+  // reports: {
+  //   id: '10',
+  //   name: 'Reporting',
+  //   icon: 'ReportIcon',
+  //   scenes: []
+  // },
+  // layouts: {
+  //   id: '11',
+  //   name: 'Layouts',
+  //   icon: 'LayoutIcon',
+  //   scenes: []
+  // },
   scenerio: {},
   component: [],
   originalNodes: [],

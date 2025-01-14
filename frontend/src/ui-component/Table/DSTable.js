@@ -713,8 +713,13 @@ export default function DsTable() {
             value={searchTerm}
             onChange={handleSearch}
             sx={{
+              padding: 0.5,  // Reduce padding
               '& .MuiInputBase-input': {
-                border: '1px solid black'
+                fontSize: '0.75rem',  // Smaller font size
+                padding: '0.5rem',    // Adjust padding inside input
+              },
+              '& .MuiOutlinedInput-root': {
+                height: '30px',  // Reduce overall height
               }
             }}
           />
