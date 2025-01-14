@@ -31,7 +31,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     color: 'inherit',
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '0px 8px',
-    textAlign: 'center'
+    textAlign: 'left'
   }
 }));
 
@@ -71,14 +71,20 @@ const MitigationsTable = () => {
           value={searchTerm}
           onChange={handleSearch}
           sx={{
+            padding: 0.5, // Reduce padding
             '& .MuiInputBase-input': {
-              border: '1px solid black'
+              border: '1px solid black',
+              fontSize: '0.75rem', // Smaller font size
+              padding: '0.5rem' // Adjust padding inside input
+            },
+            '& .MuiOutlinedInput-root': {
+              height: '30px' // Reduce overall height
             }
           }}
         />
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1 }}>
+      <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 0.25 }}>
         <Table sx={{ minWidth: 650 }} aria-label="vulnerability table">
           <TableHead>
             <TableRow>

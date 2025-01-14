@@ -443,9 +443,9 @@ export default function CybersecurityTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
@@ -464,14 +464,19 @@ export default function CybersecurityTable() {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
-                padding: 1,
+                padding: 0.5, // Reduce padding
                 '& .MuiInputBase-input': {
-                  border: '1px solid black'
+                  fontSize: '0.75rem', // Smaller font size
+                  padding: '0.5rem' // Adjust padding inside input
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px' // Reduce overall height
                 }
               }}
             />
             <Button
               sx={{
+                fontSize: '0.85rem',
                 backgroundColor: '#4caf50',
                 ':hover': {
                   backgroundColor: '#388e3c'
@@ -480,7 +485,7 @@ export default function CybersecurityTable() {
               variant="contained"
               onClick={handleOpenFilter}
             >
-              <FilterAltIcon />
+              <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
               Filter Columns
             </Button>
             <Button
@@ -537,7 +542,7 @@ export default function CybersecurityTable() {
             </Button>
           </DialogActions>
         </Dialog>
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 0.25, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

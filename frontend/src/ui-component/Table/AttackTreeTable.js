@@ -392,12 +392,12 @@ export default function AttackTreeTable() {
   // console.log('selectedRow', selectedRow)
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
-        <Box display="flex" alignItems="center" mr={4}>
+        <Box display="flex" alignItems="center">
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -408,6 +408,7 @@ export default function AttackTreeTable() {
           />
           <Button
             sx={{
+              fontSize: '0.85rem',
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -416,7 +417,7 @@ export default function AttackTreeTable() {
             variant="contained"
             onClick={handleOpenFilter}
           >
-            <FilterAltIcon />
+            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
         </Box>
@@ -451,7 +452,7 @@ export default function AttackTreeTable() {
         sx={{
           maxHeight: 440,
           borderRadius: '0px',
-          padding: 1,
+          padding: 0.25,
           overflow: 'auto',
           '&::-webkit-scrollbar': {
             width: '4px'

@@ -11,6 +11,8 @@ import { styled, Paper, Box, Dialog, TablePagination, Typography, TextField, But
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableHeight } from '../../store/constant';
 import useStore from '../../Zustand/store';
+import { useDispatch } from 'react-redux';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -36,6 +38,7 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function BackendServerTable() {
   const { getCatalog } = useStore();
+  const dispatch = useDispatch();
   const color = ColorTheme();
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -121,9 +124,9 @@ export default function BackendServerTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
               Back-end servers associated with vehicle field operations Table
             </Typography>
@@ -136,16 +139,24 @@ export default function BackendServerTable() {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
-                padding: 1,
+                padding: 0.5, // Reduce padding
                 '& .MuiInputBase-input': {
-                  border: '1px solid black'
+                  fontSize: '0.75rem', // Smaller font size
+                  padding: '0.5rem' // Adjust padding inside input
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px' // Reduce overall height
                 }
               }}
             />
           </Box>
         </Box>
 
-        <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+        <TableContainer
+          stickyHeader
+          component={Paper}
+          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+        >
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>

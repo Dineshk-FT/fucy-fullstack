@@ -670,12 +670,11 @@ export default function DsTable() {
         height: 'auto' // Ensure the table takes up the full height of the parent
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon
             sx={{
               cursor: 'pointer',
-              ml: 1,
               color: color?.title
             }}
             onClick={handleBack}
@@ -690,7 +689,7 @@ export default function DsTable() {
             Damage Scenario Table
           </Typography>
         </Box>
-        <Box display="flex" gap={2} mr={4}>
+        <Box display="flex" gap={2}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -699,17 +698,24 @@ export default function DsTable() {
             onChange={handleSearch}
             sx={{
               justifyContent: 'center',
+              padding: 0.5, // Reduce padding
               '& .MuiInputBase-input': {
-                border: '1px solid black'
+                fontSize: '0.75rem', // Smaller font size
+                padding: '0.5rem' // Adjust padding inside input
+              },
+              '& .MuiOutlinedInput-root': {
+                height: '30px' // Reduce overall height
               }
             }}
           />
-          <Button sx={{ alignSelf: 'center' }} variant="contained" onClick={handleOpenModalDs}>
+          <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
           </Button>
           <Button
             sx={{
               alignSelf: 'center',
+              // padding: '0px 8px',
+              fontSize: '0.85rem',
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -718,10 +724,11 @@ export default function DsTable() {
             variant="contained"
             onClick={handleOpenFilter}
           >
-            <FilterAltIcon />
+            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
           <Button
+            sx={{ fontSize: '0.85rem' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
@@ -763,7 +770,7 @@ export default function DsTable() {
           flexGrow: 1, // Let the container grow to fill available space
           overflowY: 'auto', // Enable vertical scrolling
           borderRadius: '0px',
-          padding: 1,
+          padding: 0.25,
           '&::-webkit-scrollbar': {
             width: '4px'
           },
@@ -775,8 +782,7 @@ export default function DsTable() {
             background: 'rgba(0, 0, 0, 0.1)'
           },
           maxHeight: tableHeight,
-          scrollbarWidth: 'thin',
-          color: 'blue'
+          scrollbarWidth: 'thin'
         }}
       >
         <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">

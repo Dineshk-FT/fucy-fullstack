@@ -559,20 +559,22 @@ export default function Tstable() {
           <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
-        <Box display="flex" gap={3} mr={4}>
+        <Box display="flex" gap={3}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
+            sx={{ '& .MuiInputBase-input': { border: '1px solid black' }, justifyContent: 'center' }}
           />
-          <Button variant="contained" onClick={handleOpenModalTs}>
+          <Button sx={{ padding: '0px 8px', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button>
           <Button
             sx={{
+              padding: '0px 8px',
+              fontSize: '0.85rem',
               backgroundColor: '#4caf50',
               ':hover': {
                 backgroundColor: '#388e3c'
@@ -581,10 +583,11 @@ export default function Tstable() {
             variant="contained"
             onClick={handleOpenFilter}
           >
-            <FilterAltIcon />
+            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
           <Button
+            sx={{ fontSize: '0.85rem' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
@@ -620,7 +623,11 @@ export default function Tstable() {
         </DialogActions>
       </Dialog>
 
-      <TableContainer stickyHeader component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
+      <TableContainer
+        stickyHeader
+        component={Paper}
+        sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+      >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>

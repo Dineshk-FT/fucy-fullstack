@@ -266,7 +266,7 @@ export default function DsDerivationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1} mr={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mr={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
@@ -279,15 +279,21 @@ export default function DsDerivationTable() {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
-                padding: 1,
+                padding: 0.5, // Reduce padding
                 '& .MuiInputBase-input': {
-                  border: '1px solid black'
+                  fontSize: '0.75rem', // Smaller font size
+                  padding: '0.5rem' // Adjust padding inside input
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px' // Reduce overall height
                 }
               }}
             />
             <Button
               sx={{
-                alignSelf: 'center',
+                padding: '0px 8px',
+                fontSize: '0.85rem',
+                // alignSelf: 'center',
                 backgroundColor: '#4caf50',
                 ':hover': {
                   backgroundColor: '#388e3c'
@@ -296,7 +302,7 @@ export default function DsDerivationTable() {
               variant="contained"
               onClick={handleOpenFilter}
             >
-              <FilterAltIcon />
+              <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
               Filter Columns
             </Button>
           </Box>
@@ -331,7 +337,7 @@ export default function DsDerivationTable() {
           sx={{
             '& .MuiPaper-root': { maxHeight: '100vh' },
             borderRadius: '0px',
-            padding: 1,
+            padding: 0.25,
             maxHeight: '70svh',
             scrollbarWidth: 'thin'
           }}

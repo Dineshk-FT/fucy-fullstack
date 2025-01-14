@@ -30,6 +30,7 @@ const DocumentDialog = ({ open, onClose }) => {
     formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
     formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
     formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
+    // formData.append('riskTreatmentTable', selectedItems.includes(81));
 
     if (selectedItems.includes(1)) {
       try {
@@ -206,7 +207,7 @@ const DocumentDialog = ({ open, onClose }) => {
         // { id: 42, name: 'Attack Trees' }
         // { id: 43, name: 'Vulnerability Analysis' }
       ]
-    }
+    },
     // {
     //   id: 5,
     //   name: 'CyberSecurity Goals, Claims and Requirements',
@@ -238,12 +239,12 @@ const DocumentDialog = ({ open, onClose }) => {
     //   icon: 'CatalogIcon',
     //   subs: [{ id: 71, name: 'UNICE R.155 Annex 5(WP.29)' }]
     // },
-    // {
-    //   id: 8,
-    //   name: 'Risk Determination and Risk Treatment Decision',
-    //   icon: 'RiskIcon',
-    //   subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }]
-    // }
+    {
+      id: 8,
+      name: 'Risk Determination and Risk Treatment Decision',
+      icon: 'RiskIcon',
+      subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }]
+    }
   ];
 
   return (
