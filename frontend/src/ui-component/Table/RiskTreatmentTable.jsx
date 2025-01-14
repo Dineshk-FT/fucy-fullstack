@@ -273,7 +273,8 @@ export default function RiskTreatmentTable() {
   const handleDeleteSelected = () => {
     const details = {
       'model-id': model?._id,
-      rowIds: selectedRows.map((row) => row?.id)
+      rowIds: selectedRows.map((row) => row?.id),
+      threatKeys: selectedRows.map((row) => row?.threat_key)
     };
     deleteRiskTreatment(details)
       .then((res) => {
@@ -294,7 +295,8 @@ export default function RiskTreatmentTable() {
     // console.log('row', row);
     const shorted = {
       id: row?.detailId,
-      SNo: row?.SNo
+      SNo: row?.SNo,
+      threat_key: row?.threat_key
     };
     setSelectedRows((prevSelectedRows) => {
       const isSelected = prevSelectedRows.some((selectedRow) => selectedRow.SNo === shorted.SNo);
