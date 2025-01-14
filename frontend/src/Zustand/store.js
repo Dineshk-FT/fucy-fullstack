@@ -1731,7 +1731,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
-
+  deleteRiskTreatment: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/risktreatment`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
   // deleteModels: async (ids) => {
 
   //   let data = new FormData();

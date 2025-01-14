@@ -482,7 +482,7 @@ export default function DsTable() {
 
         updateName(details)
           .then((res) => {
-            console.log('res', res);
+            // console.log('res', res);
             if (!res.error) {
               notify(res.message ?? 'Deleted successfully', 'success');
               getDamageScenarios(model?._id);

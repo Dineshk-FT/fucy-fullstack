@@ -33,7 +33,7 @@ import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
-import SelectAttacks from '../Modal/SelectAttacks';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { AttackIcon, DamageIcon, CyberGoalIcon, CyberRequireIcon, CatalogIcon } from '../../assets/icons';
 import toast, { Toaster } from 'react-hot-toast';
 import SelectCyberGoals from '../Modal/SelectCyberGoals';
@@ -51,7 +51,8 @@ const selector = (state) => ({
   addRiskTreatment: state.addRiskTreatment,
   cyber_Goals: state.cybersecurity['subs'][0],
   updateRiskTable: state.updateRiskTable,
-  getCyberSecurityScenario: state.getCyberSecurityScenario
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  deleteRiskTreatment: state.deleteRiskTreatment
 });
 
 const column = RiskTreatmentHeaderTable;
@@ -96,8 +97,18 @@ export default function RiskTreatmentTable() {
   const [details, setDetails] = useState({});
   const [catalogDetails, setCatalogDetails] = useState([]);
   const [selectedScenes, setSelectedScenes] = useState([]);
-  const { model, riskTreatment, getRiskTreatment, addRiskTreatment, cyber_Goals, updateRiskTable, getCyberSecurityScenario, catalog } =
-    useStore(selector, shallow);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const {
+    model,
+    riskTreatment,
+    getRiskTreatment,
+    addRiskTreatment,
+    cyber_Goals,
+    updateRiskTable,
+    getCyberSecurityScenario,
+    catalog,
+    deleteRiskTreatment
+  } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
@@ -259,14 +270,55 @@ export default function RiskTreatmentTable() {
     setPage(0);
   };
 
-  const RenderTableRow = React.memo(({ row, Head, color }) => {
+  const handleDeleteSelected = () => {
+    const details = {
+      'model-id': model?._id,
+      rowIds: selectedRows.map((row) => row?.id)
+    };
+    deleteRiskTreatment(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res.message ?? 'Deleted successfully', 'success');
+          getRiskTreatment(model?._id);
+          setSelectedRows([]);
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const toggleRowSelection = (row) => {
+    // console.log('row', row);
+    const shorted = {
+      id: row?.detailId,
+      SNo: row?.SNo
+    };
+    setSelectedRows((prevSelectedRows) => {
+      const isSelected = prevSelectedRows.some((selectedRow) => selectedRow.SNo === shorted.SNo);
+
+      if (isSelected) {
+        // Unselect if already selected
+        return prevSelectedRows.filter((selectedRow) => selectedRow.SNo !== shorted.SNo);
+      } else {
+        // Select if not selected
+        return [...prevSelectedRows, shorted];
+      }
+    });
+  };
+
+  const RenderTableRow = React.memo(({ row, Head, color, isChild = false }) => {
+    const isSelected = selectedRows.some((selectedRow) => selectedRow.SNo === row.SNo);
+
     return (
       <StyledTableRow
         key={row.name}
         data={row}
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
-          backgroundColor: color?.sidebarBG,
+          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }
@@ -284,6 +336,18 @@ export default function RiskTreatmentTable() {
                       Loss of {row[item.name]}
                     </span>
                   </span>
+                </StyledTableCell>
+              );
+              break;
+            case item.name === 'SNo':
+              cellContent = (
+                <StyledTableCell
+                  key={index}
+                  style={{ width: 'auto', cursor: 'pointer' }}
+                  align="left"
+                  onClick={() => toggleRowSelection(row)}
+                >
+                  {row[item.name] ? row[item.name] : '-'}
                 </StyledTableCell>
               );
               break;
@@ -454,6 +518,15 @@ export default function RiskTreatmentTable() {
             <FilterAltIcon />
             Filter Columns
           </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0}
+          >
+            Delete
+          </Button>
         </Box>
       </Box>
 
@@ -519,19 +592,6 @@ export default function RiskTreatmentTable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model?._id} />
-      {/* {openSelect && (
-        <SelectAttacks
-          open={openSelect}
-          handleClose={handleCloseSelect}
-          details={details}
-          selectedScene={selectedScene}
-          setSelectedScene={setSelectedScene}
-          // updateRiskTreatment={updateRiskTreatment}
-          getRiskTreatment={getRiskTreatment}
-          selectedRow={selectedRow}
-          model={model}
-        />
-      )} */}
       {openSelect.GoalsModal && (
         <SelectCyberGoals
           riskTreatment={riskTreatment}
