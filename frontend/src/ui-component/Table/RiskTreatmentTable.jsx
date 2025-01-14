@@ -437,7 +437,16 @@ export default function RiskTreatmentTable() {
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
+            sx={{
+              padding: 0.5,  // Reduce padding
+              '& .MuiInputBase-input': {
+                fontSize: '0.75rem',  // Smaller font size
+                padding: '0.5rem',    // Adjust padding inside input
+              },
+              '& .MuiOutlinedInput-root': {
+                height: '30px',  // Reduce overall height
+              }
+            }}
           />
           {/* <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario

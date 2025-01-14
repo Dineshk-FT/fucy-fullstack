@@ -580,9 +580,18 @@ export default function Tstable() {
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
+            sx={{
+              padding: 0.5,  // Reduce padding
+              '& .MuiInputBase-input': {
+                fontSize: '0.75rem',  // Smaller font size
+                padding: '0.5rem',    // Adjust padding inside input
+              },
+              '& .MuiOutlinedInput-root': {
+                height: '30px',  // Reduce overall height
+              }
+            }}
           />
-          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
+          <Button sx={{ float: 'right', mb: 2, padding: '4px 12px', fontSize: '0.75rem' }} variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button>
           <Button
@@ -590,6 +599,8 @@ export default function Tstable() {
               float: 'right',
               mb: 2,
               backgroundColor: '#4caf50',
+              padding: '4px 12px', 
+              fontSize: '0.75rem',
               ':hover': {
                 backgroundColor: '#388e3c'
               }
@@ -601,7 +612,7 @@ export default function Tstable() {
             Filter Columns
           </Button>
           <Button
-            sx={{ float: 'right' }}
+            sx={{ float: 'right', mb: 2, padding: '4px 12px', fontSize: '0.75rem' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}

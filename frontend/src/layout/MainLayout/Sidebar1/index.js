@@ -51,7 +51,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
-  const [sidebarWidth, setSidebarWidth] = useState(draweropen ? 450 : 0);
+  const [sidebarWidth, setSidebarWidth] = useState(draweropen ? 400 : 0);
 
   useEffect(() => {
     fetchModels();
