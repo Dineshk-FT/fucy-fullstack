@@ -12,7 +12,7 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  originalNodes: state.originalNodes, 
+  originalNodes: state.originalNodes
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
@@ -62,14 +62,14 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     handleDelete(); // Proceed with deletion
   };
 
-  const copiedNodes = nodes.filter(node => node.isCopied === true);
+  const copiedNodes = nodes.filter((node) => node.isCopied === true);
 
   // Check if the current node is a copied node
-  const isCopiedNode = copiedNodes.some(node => node.id === id);
+  const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
-      <NodeResizer />
+      <NodeResizer minWidth={150} minHeight={40} />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"
@@ -78,7 +78,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           style={{
             ...data?.style,
             position: 'relative',
-            overflow: 'visible',
+            overflow: 'visible'
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -108,7 +108,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               alignItems: 'center',
               cursor: 'pointer',
               opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out',
+              transition: 'opacity 0.2s ease-in-out'
             }}
           >
             i
@@ -132,7 +132,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               color: 'white',
               cursor: 'pointer',
               opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out',
+              transition: 'opacity 0.2s ease-in-out'
             }}
           >
             x
@@ -153,7 +153,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               border: '1px solid #007bff',
               background: '#007bff',
               color: '#fff',
-              cursor: 'pointer',
+              cursor: 'pointer'
             }}
           >
             Delete from Canvas
@@ -167,7 +167,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
                 border: '1px solid #dc3545',
                 background: '#dc3545',
                 color: '#fff',
-                cursor: 'pointer',
+                cursor: 'pointer'
               }}
             >
               Delete Permanently
@@ -189,7 +189,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               border: '1px solid #007bff',
               background: '#007bff',
               color: '#fff',
-              cursor: 'pointer',
+              cursor: 'pointer'
             }}
           >
             Cancel
@@ -202,7 +202,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               border: '1px solid #dc3545',
               background: '#dc3545',
               color: '#fff',
-              cursor: 'pointer',
+              cursor: 'pointer'
             }}
           >
             Continue

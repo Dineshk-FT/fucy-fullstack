@@ -261,7 +261,7 @@ export const RiskTreatmentHeaderTable = [
   { id: 27, name: 'Detailed / Combained Threat Scenarios' },
   { id: 28, name: 'Cybersecurity Goals' },
   { id: 29, name: 'Contributing Requirements' },
-  { id: 30, name: 'CyberSecurity Claims' }
+  { id: 30, name: 'Cybersecurity Claims' }
 ];
 
 export const VulnerbilityHeader = [

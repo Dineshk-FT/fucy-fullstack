@@ -43,14 +43,14 @@ const OutputNode = ({ id, data, isConnectable, type }) => {
       });
   };
 
-  const copiedNodes = nodes.filter(node => node.isCopied === true);
+  const copiedNodes = nodes.filter((node) => node.isCopied === true);
 
   // Check if the current node is a copied node
-  const isCopiedNode = copiedNodes.some(node => node.id === id);
+  const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
-      <NodeResizer />
+      <NodeResizer minWidth={150} minHeight={40} />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"
@@ -140,21 +140,21 @@ const OutputNode = ({ id, data, isConnectable, type }) => {
           >
             Delete from Canvas
           </button>
-          {!isCopiedNode && ( 
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '6px',
-              fontSize: '0.8rem',
-              border: '1px solid #dc3545',
-              background: '#dc3545',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
-          >
-            Delete Permanently
-          </button>
-        )}
+          {!isCopiedNode && (
+            <button
+              onClick={handleDelete}
+              style={{
+                padding: '6px',
+                fontSize: '0.8rem',
+                border: '1px solid #dc3545',
+                background: '#dc3545',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Delete Permanently
+            </button>
+          )}
         </DialogActions>
       </Dialog>
     </>

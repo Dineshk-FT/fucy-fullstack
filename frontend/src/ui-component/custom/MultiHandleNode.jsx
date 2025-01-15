@@ -51,7 +51,7 @@ const MultiHandleNode = ({ id, data, isConnectable, type }) => {
   };
   return (
     <>
-      <NodeResizer />
+      <NodeResizer minWidth={150} minHeight={40} />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"

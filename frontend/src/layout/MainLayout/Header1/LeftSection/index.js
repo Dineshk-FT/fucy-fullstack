@@ -123,7 +123,7 @@ const LeftSection = () => {
         {tabs.map((tab) => (
           <Typography
             key={tab.name}
-            onClick={() => setActiveTab(tab.name)}
+            // onClick={() => setActiveTab(tab.name)}
             sx={{
               cursor: 'pointer',
               fontSize: '14px',

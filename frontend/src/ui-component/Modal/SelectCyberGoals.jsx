@@ -10,6 +10,7 @@ import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 
 export default function SelectCyberGoals({
   riskTreatment,
+  type,
   details,
   open,
   handleClose,
@@ -17,7 +18,7 @@ export default function SelectCyberGoals({
   setSelectedScenes,
   updateRiskTreatment,
   selectedRow,
-  getRiskTreatment,
+  refreshAPI,
   model
 }) {
   const handleChange = (scene) => {
@@ -28,22 +29,24 @@ export default function SelectCyberGoals({
   };
 
   React.useEffect(() => {
-    function getCybersecurityGoals(riskTreatment, selectedRow) {
+    function getCybersecurity(riskTreatment, selectedRow) {
       // Find the object in Details where threat_key matches
       const matchingDetail = riskTreatment['Details'].find((detail) => detail.threat_key === selectedRow.threat_key);
 
       // Return cybersecurity goals if found, otherwise return null
-      return matchingDetail?.cybersecurity?.cybersecurity_goals || null;
+      return type.includes('Goals')
+        ? matchingDetail?.cybersecurity?.cybersecurity_goals
+        : matchingDetail?.cybersecurity?.cybersecurity_claims || null;
     }
-    const Goals = getCybersecurityGoals(riskTreatment, selectedRow);
-    setSelectedScenes(Goals);
+    const cybersecurity = getCybersecurity(riskTreatment, selectedRow);
+    setSelectedScenes(cybersecurity);
   }, [selectedRow, riskTreatment]);
 
   const handleClick = () => {
     const details = {
       cyberDetails: selectedScenes.map((scene) => scene.ID),
       threatId: selectedRow.ID,
-      type: 'cybersecurity_goals',
+      type: type.includes('Goals') ? 'cybersecurity_goals' : 'cybersecurity_claims',
       threatKey: selectedRow?.threat_key,
       'model-id': model?._id
     };
@@ -53,7 +56,7 @@ export default function SelectCyberGoals({
       .then((res) => {
         if (res) {
           handleClose();
-          getRiskTreatment(model?._id);
+          refreshAPI();
         }
       })
       .catch((err) => console.log('err', err));
@@ -82,7 +85,7 @@ export default function SelectCyberGoals({
             fontWeight: 600
           }}
         >
-          {'Select the CyberSecurity Goals'}
+          {type.includes('Goals') ? 'Select the CyberSecurity Goals' : 'Select the CyberSecurity Claims'}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">

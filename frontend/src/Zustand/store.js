@@ -1529,21 +1529,21 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   },
 
   updateOverallRating: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/attack_feasibility_rating`;
     const res = await PATCH_CALL(details, url);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   },
 
   updateRiskTable: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/riskDetAndTreat`;
     const res = await PATCH_CALL(details, url);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   },
 

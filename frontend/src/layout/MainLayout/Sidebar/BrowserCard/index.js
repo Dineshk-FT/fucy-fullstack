@@ -226,6 +226,12 @@ const BrowserCard = () => {
   useEffect(() => {
     getModelById(modelId);
     getAssets(modelId);
+    getAttackScenario(modelId);
+    getDamageScenarios(modelId);
+    getRiskTreatment(modelId);
+    getThreatScenario(modelId);
+    getCyberSecurityScenario(modelId);
+    getCatalog(modelId);
     setClickedItem(modelId);
   }, [modelId]);
 
@@ -709,7 +715,7 @@ const BrowserCard = () => {
                   }}
                 >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
-                  <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
+                  {/* <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem> */}
                 </Paper>
               </ClickAwayListener>
             </Popper>
