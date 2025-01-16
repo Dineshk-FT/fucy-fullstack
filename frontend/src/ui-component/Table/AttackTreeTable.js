@@ -179,7 +179,7 @@ export default function AttackTreeTable() {
   const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
   const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns3);
+  const visibleColumns = useStore((state) => state.attackTreeTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -433,7 +433,7 @@ export default function AttackTreeTable() {
               control={
                 <Checkbox
                   checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('visibleColumns3', column.name)}
+                  onChange={() => toggleColumnVisibility('attackTreeTblClms', column.name)}
                 />
               }
               label={column.name} // Display column name as label

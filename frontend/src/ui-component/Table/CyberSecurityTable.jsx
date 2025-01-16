@@ -116,10 +116,10 @@ export default function CybersecurityTable() {
   const [selectedRows, setSelectedRows] = useState([]);
   // console.log('cybersecurity', cybersecurity);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns1 = useStore((state) => state.visibleColumns5);
-  const visibleColumns2 = useStore((state) => state.visibleColumns6);
-  const visibleColumns3 = useStore((state) => state.visibleColumns7);
-  const visibleColumns4 = useStore((state) => state.visibleColumns8);
+  const visibleColumns1 = useStore((state) => state.CybersecurityGoalsTable);
+  const visibleColumns2 = useStore((state) => state.CybersecurityRequirementsTable);
+  const visibleColumns3 = useStore((state) => state.CybersecurityControlsTable);
+  const visibleColumns4 = useStore((state) => state.CybersecurityClaimsTable);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -520,10 +520,10 @@ export default function CybersecurityTable() {
                     })()}
                     onChange={() => {
                       const visibilityMap = {
-                        'Cybersecurity Goals': 'visibleColumns5',
-                        'Cybersecurity Requirements': 'visibleColumns6',
-                        'Cybersecurity Controls': 'visibleColumns7',
-                        'Cybersecurity Claims': 'visibleColumns8'
+                        'Cybersecurity Goals': 'CybersecurityGoalsTable',
+                        'Cybersecurity Requirements': 'CybersecurityRequirementsTable',
+                        'Cybersecurity Controls': 'CybersecurityControlsTable',
+                        'Cybersecurity Claims': 'CybersecurityClaimsTable'
                       };
                       const visibilityKey = visibilityMap[title];
                       if (visibilityKey) {
