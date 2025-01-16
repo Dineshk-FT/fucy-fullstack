@@ -53,12 +53,12 @@ export default function CommonModal({ open, handleClose, name }) {
     addAttackScene(newScene)
       .then((res) => {
         // console.log('res', res);
-        if (res.response) {
-          notify(res?.response?.data?.error, 'error');
-        } else {
+        if (!res.error) {
           notify('Added Successfully', 'success');
           getAttackScenario(model?._id);
           onClose();
+        } else {
+          notify(res?.error ?? 'something went wrong', 'error');
         }
       })
       .catch((err) => {

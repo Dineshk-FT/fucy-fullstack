@@ -8,7 +8,6 @@ import { AppBar, Box, CssBaseline, Toolbar, useMediaQuery, Typography, Tooltip }
 // project imports
 import Breadcrumbs from '../../ui-component/extended/Breadcrumbs';
 import Header from './Header';
-import Sidebar from './Sidebar';
 import Sidebar1 from './Sidebar1';
 
 import navigation from '../../menu-items';
@@ -29,102 +28,104 @@ import useStore from '../../Zustand/store';
 
 // import Customization from '../Customization';
 
-const items = [
-  {
-    name: 'ItemIcon',
-    id: 1
-  },
-  {
-    name: 'DamageIcon',
-    id: 2
-  },
-  {
-    name: 'ThreatIcon',
-    id: 3
-  },
-  {
-    name: 'AttackIcon',
-    id: 4
-  },
-  {
-    name: 'RiskIcon',
-    id: 8
-  },
-  {
-    name: 'CybersecurityIcon',
-    id: 5
-  },
-]
+// const items = [
+//   {
+//     name: 'ItemIcon',
+//     id: 1
+//   },
+//   {
+//     name: 'DamageIcon',
+//     id: 2
+//   },
+//   {
+//     name: 'ThreatIcon',
+//     id: 3
+//   },
+//   {
+//     name: 'AttackIcon',
+//     id: 4
+//   },
+//   {
+//     name: 'RiskIcon',
+//     id: 8
+//   },
+//   {
+//     name: 'CybersecurityIcon',
+//     id: 5
+//   },
+// ]
 
 const selector = (state) => ({
   setClickedItem: state.setClickedItem
-})
+});
 
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open, isclose, color, drawerOpen }) => {
-  // console.log('color', color)
-  // console.log('isclose', isclose)
-  return {
-    ...theme.typography.mainContent,
-    background: color?.canvaSurroundsBG,
-    marginTop: navbarHeight,
-    paddingLeft: !drawerOpen ? '2rem' : 'auto',
-    // border: '1px solid gray',
-    maxWidth: 'auto', // minHeight:'inherit',
-    minHeight: isclose == true ? `100svh` : `93svh`,
-    // height:!isNavbarClose ? `80svh`:`auto`,
-    marginRight: 0,
-    ...(!open && {
-      borderRadius: 0,
-      // borderBottomRightRadius: 0,
-      transition: theme.transitions.create('margin', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(
+  ({ theme, open, isclose, color, draweropen }) => {
+    // console.log('color', color)
+    // console.log('isclose', isclose)
+    return {
+      ...theme.typography.mainContent,
+      background: color?.canvaSurroundsBG,
+      marginTop: navbarHeight,
+      paddingLeft: !draweropen ? '2rem' : 'auto',
+      // border: '1px solid gray',
+      maxWidth: 'auto',
+      // minHeight: isclose ? `100svh` : `93svh`,
+      // height:!isNavbarClose ? `80svh`:`auto`,
+      marginRight: 0,
+      ...(!open && {
+        borderRadius: 0,
+        // borderBottomRightRadius: 0,
+        transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen
+        }),
+        [theme.breakpoints.up('md')]: {
+          // marginLeft: -drawerWidth,
+          width: `calc(100% - ${drawerWidth}px)`,
+          marginTop: isclose ? `0` : navbarHeight
+        },
+        [theme.breakpoints.down('md')]: {
+          // marginLeft: '20px',
+          width: `calc(100% - ${drawerWidth}px)`,
+          paddingLeft: !draweropen ? '1.5rem' : 'auto',
+          padding: '16px 16px 16px auto'
+        },
+        [theme.breakpoints.down('sm')]: {
+          marginLeft: '10px',
+          width: `calc(100% - ${drawerWidth}px)`,
+          paddingLeft: !draweropen ? '1.5rem' : 'auto',
+          padding: '16px 16px 16px auto',
+          marginRight: '10px'
+        }
       }),
-      [theme.breakpoints.up('md')]: {
-        // marginLeft: -drawerWidth,
+      ...(open && {
+        transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen
+        }),
+        marginLeft: 0,
+        // borderBottomLeftRadius: 0,
+        // borderBottomRightRadius: 0,
+        borderRadius: 0,
         width: `calc(100% - ${drawerWidth}px)`,
-        marginTop: isclose == true ? `0` : navbarHeight
-      },
-      [theme.breakpoints.down('md')]: {
-        // marginLeft: '20px',
-        width: `calc(100% - ${drawerWidth}px)`,
-        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
-        padding: '16px 16px 16px auto'
-      },
-      [theme.breakpoints.down('sm')]: {
-        marginLeft: '10px',
-        width: `calc(100% - ${drawerWidth}px)`,
-        paddingLeft: !drawerOpen ? '1.5rem' : 'auto',
-        padding: '16px 16px 16px auto',
-        marginRight: '10px'
-      }
-    }),
-    ...(open && {
-      transition: theme.transitions.create('margin', {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen
-      }),
-      marginLeft: 0,
-      // borderBottomLeftRadius: 0,
-      // borderBottomRightRadius: 0,
-      borderRadius: 0,
-      width: `calc(100% - ${drawerWidth}px)`,
-      [theme.breakpoints.down('md')]: {
-        marginLeft: '20px'
-      },
-      [theme.breakpoints.down('sm')]: {
-        marginLeft: '10px'
-      }
-    })
-  };
-});
+        [theme.breakpoints.down('md')]: {
+          marginLeft: '20px'
+        },
+        [theme.breakpoints.down('sm')]: {
+          marginLeft: '10px'
+        }
+      })
+    };
+  }
+);
 
 // ==============================|| MAIN LAYOUT ||============================== //
 
 const MainLayout = ({ children }) => {
-  const {setClickedItem} = useStore(selector)
+  const { setClickedItem } = useStore(selector);
   const color = ColorTheme();
   // console.log('color main', color)
   const theme = useTheme();
@@ -173,26 +174,26 @@ const MainLayout = ({ children }) => {
     RiskIcon
   };
 
-  const getImageLabel = (item) => {
-    const Image = imageComponents[item?.name];
-    const isLongLabel = item?.label.length > 40;
-    const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
+  // const getImageLabel = (item) => {
+  //   const Image = imageComponents[item?.name];
+  //   const isLongLabel = item?.label.length > 40;
+  //   const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
 
-    return (
-      <Box display="flex" alignItems="center" gap={2}>
-        {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
-        <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-          <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
-            {displayLabel}
-          </Typography>
-        </Tooltip>
-      </Box>
-    );
-  };
+  //   return (
+  //     <Box display="flex" alignItems="center" gap={2}>
+  //       {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
+  //       <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
+  //         <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
+  //           {displayLabel}
+  //         </Typography>
+  //       </Tooltip>
+  //     </Box>
+  //   );
+  // };
 
   return (
     <>
-      <Box sx={{ display: 'flex', height: '80svh' }}>
+      <Box sx={{ display: 'flex', height: '100vh' }}>
         <CssBaseline />
         {/* header */}
         <AppBar
@@ -213,7 +214,7 @@ const MainLayout = ({ children }) => {
               display: isNavbarClose ? 'none' : 'flex',
               transition: 'display 0.8s',
               justifyContent: 'space-between',
-              py: 0,
+              py: 0
               // borderBottom: `0.2px solid ${color?.title}`
             }}
           >
@@ -275,11 +276,10 @@ const MainLayout = ({ children }) => {
         </AppBar>
 
         {/*-------------------- drawer/sidebar ---------------------*/}
-        {/* <Sidebar drawerOpen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} /> */}
-        <Sidebar1 drawerOpen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
+        <Sidebar1 draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         {/* -------------------- main content -------------------------*/}
-        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} drawerOpen={leftDrawerOpened}>
+        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropen={leftDrawerOpened}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
           <Outlet />

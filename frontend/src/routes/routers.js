@@ -4,7 +4,7 @@ import MainLayout from '../layout/MainLayout';
 import RequireAuth from './Protected';
 
 const Home = Loadable(lazy(() => import('../views/HomePage')));
-const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
+const MainPage = Loadable(lazy(() => import('../views/MainPage')));
 const Career = Loadable(lazy(() => import('../views/CareerPage')));
 const Contact = Loadable(lazy(() => import('../views/ContactPage')));
 const Work = Loadable(lazy(() => import('../views/YourWorkSection')));
@@ -32,7 +32,7 @@ const commonRoutes = [
   },
   {
     path: '/Models',
-    element: <MainCanvas />
+    element: <MainPage />
   },
   {
     path: '/dashboard',
@@ -40,7 +40,7 @@ const commonRoutes = [
   },
   {
     path: '/Models/:id',
-    element: <MainCanvas />
+    element: <MainPage />
   },
   {
     path: '/work',

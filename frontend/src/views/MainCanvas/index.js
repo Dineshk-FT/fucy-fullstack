@@ -32,32 +32,24 @@ import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
 // import { Button } from '@mui/material';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
-import { useParams } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import DsTable from '../../ui-component/Table/DSTable';
-import Tstable from '../../ui-component/Table/TSTable';
-import AttackTree from '../AttackTree';
-import CyberSecurityBlock from '../CyberSecurityBlock';
-import CyberSecurityTable from '../../ui-component/Table/CybersecurityTable';
 import ELK from 'elkjs/lib/elk.bundled';
 import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import { drawerClose, drawerOpen, leftDrawerClose, leftDrawerOpen } from '../../store/slices/CurrentIdSlice';
 import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
-import DsDerivationTable from '../../ui-component/Table/DsDerivationTable';
-import LeftDrawer from '../../layout/MainLayout/LeftDrawer';
-import AttackTreeTable from '../../ui-component/Table/AttackTreeTable';
 import { style } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 import { Button } from '@mui/material';
-import RiskTreatmentTable from '../../ui-component/Table/RiskTreatmentTable';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
+import toast, { Toaster } from 'react-hot-toast';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 
 const elk = new ELK();
 
@@ -109,8 +101,6 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   model: state.model,
-  getModels: state.getModels,
-  getModelById: state.getModelById,
   update: state.updateAssets,
   getAssets: state.getAssets,
   getGroupedNodes: state.getGroupedNodes,
@@ -122,7 +112,8 @@ const selector = (state) => ({
   undoStack: state.undoStack,
   redoStack: state.redoStack,
   assets: state.assets,
-  attackScenarios: state.attackScenarios
+  isNodePasted: state.isNodePasted,
+  setIsNodePasted: state.setIsNodePasted
 });
 
 //Edge line styling
@@ -190,9 +181,7 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
-    getModelById,
     model,
-    getModels,
     getGroupedNodes,
     reactFlowInstance,
     setReactFlowInstance,
@@ -204,9 +193,9 @@ export default function MainCanvas() {
     assets,
     update,
     getAssets,
-    attackScenarios
+    isNodePasted,
+    setIsNodePasted
   } = useStore(selector, shallow);
-  const { id } = useParams();
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();
   const Color = ColorTheme();
@@ -221,54 +210,26 @@ export default function MainCanvas() {
   const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
-  const {
-    isDsTableOpen,
-    isTsTableOpen,
-    isAttackTreeOpen,
-    isCyberBlockOpen,
-    isCyberTableOpen,
-    isRightDrawerOpen,
-    isLeftDrawerOpen,
-    isDerivationTableOpen,
-    isAttackTableOpen,
-    isRiskTableOpen
-  } = useSelector((state) => state?.currentId);
+  const [copiedNode, setCopiedNode] = useState([]);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
+  const notify = (message, status) => toast[status](message);
 
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
   };
 
-  useEffect(() => {
-    handleClear();
-  }, []);
-
-  // console.log('redoStack', redoStack);
-  // console.log('undoStack', undoStack);
-  // console.log('assets', assets);
-  const onRestore = useCallback(
-    (temp) => {
-      // console.log('temp', temp);
-      if (temp) {
-        setNodes(temp.nodes);
-        setEdges(temp.edges);
-      } else {
-        handleClear();
-      }
-    },
-    [reactFlowInstance]
-  );
+  // useEffect(() => {
+  //   handleClear();
+  // }, []);
 
   useEffect(() => {
-    if (!isAttackTreeOpen) {
-      const template = assets?.template;
-      setSavedTemplate(template);
-      onSaveInitial(template);
-      onRestore(template);
-    }
+    const template = assets?.template;
+    setSavedTemplate(template);
+    onSaveInitial(template);
+    onRestore(template);
   }, [assets]);
 
-  // console.log('nodes', nodes);
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
@@ -298,13 +259,11 @@ export default function MainCanvas() {
     };
   }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
-  // console.log('reactFlowInstance', reactFlowInstance);
   const onLayout = useCallback(
     ({ direction, useInitialNodes = false }) => {
       const opts = { 'elk.direction': direction, ...elkOptions };
       const ns = useInitialNodes ? nodes : nodes;
       const es = useInitialNodes ? nodes : edges;
-      //  console.log('nodes layout', nodes)
       getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
@@ -318,8 +277,6 @@ export default function MainCanvas() {
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
-    // console.log('nodes in', nodes);
-
     let updated = nodes.map((item1) => {
       const match = values.find((item2) => item2.id === item1.id);
       return match ? match : item1;
@@ -520,14 +477,10 @@ export default function MainCanvas() {
     },
     [reactFlowInstance]
   );
-  // console.log('nodes', nodes);
-  // console.log('edges', edges);
 
   const RefreshAPI = () => {
     getAssets(model?._id);
   };
-
-  // console.log('model?._id', model?._id);
 
   const handleClose = () => {
     setOpenTemplate(false);
@@ -540,6 +493,18 @@ export default function MainCanvas() {
     }
   }, []);
 
+  const onRestore = useCallback(
+    (temp) => {
+      if (temp) {
+        setNodes(temp.nodes);
+        setEdges(temp.edges);
+      } else {
+        handleClear();
+      }
+    },
+    [reactFlowInstance]
+  );
+
   const handleSaveToModel = () => {
     // model - id,
     //   template
@@ -547,6 +512,12 @@ export default function MainCanvas() {
       nodes: nodes,
       edges: edges
     };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
     const details = {
       'model-id': model?._id,
       template: JSON.stringify(template),
@@ -573,18 +544,15 @@ export default function MainCanvas() {
       });
   };
 
-  // const toggleDrawerOpen = (tab) => dispatch(drawerOpen(tab));
+  // const toggleDrawerOpen = (tab) => dispatch(draweropen(tab));
   // const toggleDrawerClose = () => dispatch(drawerClose());
   // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
   // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
-    // console.log('reactFlowInstance', reactFlowInstance);
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
   };
   const handleSidebarOpen = (e, node) => {
-    // console.log('e', e);
-    // console.log('node', node);
     e.preventDefault();
     if (node.type !== 'group') {
       dispatch(OpenPropertiesTab());
@@ -641,21 +609,90 @@ export default function MainCanvas() {
     };
     dragAdd(newNode);
   };
-  // console.log('isRightDrawerOpen', isRightDrawerOpen);
 
-  // console.log('nodes', nodes);
-  if (isDsTableOpen) return <DsTable />;
-  if (isDerivationTableOpen) return <DsDerivationTable />;
-  if (isTsTableOpen) return <Tstable />;
-  if (isAttackTreeOpen) return <AttackTree model={model} />;
-  if (isCyberBlockOpen) return <CyberSecurityBlock />;
-  if (isCyberTableOpen) return <CyberSecurityTable />;
-  if (isAttackTableOpen) return <AttackTreeTable />;
-  if (isRiskTableOpen) return <RiskTreatmentTable />;
+  const handleNodeContextMenu = (event, node) => {
+    event.preventDefault();
+
+    setCopiedNode(node);
+
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      options: ['Copy', 'Paste'],
+      node
+    });
+  };
+
+  const handleCanvasContextMenu = (event) => {
+    event.preventDefault();
+
+    // Check if there's a copied node
+    // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+    if (copiedNode && copiedNode.length > 0) {
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: ['Copy', 'Paste']
+      });
+    } else {
+      console.log('No copied node available');
+    }
+  };
+
+  const handleMenuOptionClick = (option) => {
+    if (option === 'Copy' && copiedNode) {
+      const nodeToCopy = [copiedNode];
+      // localStorage.removeItem('copiedNode'); // Clear any previous data
+      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
+      setCopiedNode(nodeToCopy);
+      notify('Node copied!', 'success');
+    }
+
+    if (option === 'Paste') {
+      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+
+      // Ensure copiedNodes is an array and contains data
+      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
+        copiedNode.forEach((node) => {
+          const newNode = {
+            ...node,
+            id: uid(),
+            isCopied: true,
+            position: {
+              x: contextMenu.x - 100,
+              y: contextMenu.y - 50
+            },
+            selected: false
+          };
+
+          const nodetoPaste = [...nodes, newNode];
+          setNodes(nodetoPaste);
+        });
+
+        // localStorage.removeItem('copiedNode');
+      } else {
+        console.error('No valid copied node found');
+      }
+    }
+
+    setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
     <>
-      <div style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }} ref={reactFlowWrapper}>
+      <div
+        style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
+        ref={reactFlowWrapper}
+        onContextMenu={handleCanvasContextMenu}
+      >
         {propertiesTabOpen && (
           <Header
             selectedElement={selectedElement}
@@ -692,8 +729,9 @@ export default function MainCanvas() {
             connectionMode="loose"
             onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
-            defaultPosition={[0, 0]}
-            defaultZoom={1}
+            defaultposition={[0, 0]}
+            defaultzoom={1}
+            onNodeContextMenu={handleNodeContextMenu}
             // onContextMenu={createGroup}
             // onNodeContextMenu={handleSidebarOpen}
             // onEdgeContextMenu={handleSidebarOpen}
@@ -715,10 +753,51 @@ export default function MainCanvas() {
             <Controls />
             <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
-            {/* <LeftDrawer state={isLeftDrawerOpen} drawerOpen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
+            {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
             {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
+        {contextMenu.visible && (
+          <div
+            style={{
+              position: 'absolute',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
+              zIndex: 1000,
+              width: '90px', // Defined width for consistency
+              padding: '8px 0',
+              fontFamily: 'Arial, sans-serif',
+              fontSize: '12px'
+            }}
+          >
+            {contextMenu.options.map((option) => (
+              <div
+                key={option}
+                style={{
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
+                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+                }}
+                onClick={() => handleMenuOptionClick(option)}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
+                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+              >
+                <span style={{ marginRight: '8px' }}>
+                  {option === 'Copy' && <ContentCopyIcon />}
+                  {option === 'Paste' && <ContentPasteIcon />}
+                </span>
+                {option}
+              </div>
+            ))}
+          </div>
+        )}
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}

@@ -1,25 +1,44 @@
 /*eslint-disable*/
-import * as React from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { Paper, FormControl, MenuItem, Select, TextField, Typography, styled, Tooltip, TablePagination } from '@mui/material';
+import {
+  Paper,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+  styled,
+  Tooltip,
+  TablePagination,
+  ClickAwayListener,
+  InputLabel,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel
+} from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { makeStyles } from '@mui/styles';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, RatingColor, threatType } from './constraints';
-import CircleIcon from '@mui/icons-material/Circle';
+import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../store/constant';
+import { AttackTableoptions as options, AttackTableHeader } from './constraints';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
@@ -37,26 +56,8 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
     border: '1px solid #dadde9'
   }
 }));
-const Head = [
-  { id: 1, name: 'ID' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Category' },
-  { id: 4, name: 'Description' },
-  { id: 5, name: 'Approach' },
-  { id: 6, name: 'Elapsed Time' },
-  { id: 7, name: 'Expertise' },
-  { id: 8, name: 'Knowledge of the Item' },
-  { id: 9, name: 'Window of Opportunity' },
-  { id: 10, name: 'Equipment' },
-  { id: 11, name: 'Attack Vector' },
-  { id: 12, name: 'Attack Complexity' },
-  { id: 13, name: 'Privileges Required' },
-  { id: 14, name: 'User Interaction' },
-  { id: 15, name: 'Scope' },
-  { id: 16, name: 'Determination Criteria' },
-  { id: 17, name: 'Attack Feasibilities Rating' },
-  { id: 18, name: 'Attack Feasability Rating Justification' }
-];
+
+const column = AttackTableHeader;
 
 const useStyles = makeStyles({
   div: {
@@ -71,13 +72,13 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center',
+    textAlign: 'center'
   }
 }));
 
@@ -91,190 +92,75 @@ const StyledTableRow = styled(TableRow)(() => ({
   }
 }));
 
-const options = {
-  Approach: [
-    { value: 'Attack Potential-based Approach', label: 'Attack Potential-based Approach' },
-    { value: 'CVSS-based Approach', label: 'CVSS-based Approach' },
-    { value: 'Attack Vector-based Approach', label: 'Attack Vector-based Approach' }
-  ],
-  'Elapsed Time': [
-    { value: '<= 1 day', label: '<= 1 day', rating: 0 },
-    { value: '<= 1 week', label: '<= 1 week', rating: 1 },
-    { value: '<= 1 month', label: '<= 1 month', rating: 4 },
-    { value: '<= 6 month', label: '<= 6 month', rating: 17 },
-    { value: '>6 month', label: '>6 month', rating: 19 }
-  ],
-  Expertise: [
-    {
-      value: 'Layman',
-      label: 'Layman',
-      rating: 0,
-      description: 'Unknowledgeable compared to experts or proficient persons, with no particular expertise.'
-    },
-    {
-      value: 'Proficient',
-      label: 'Proficient',
-      rating: 3,
-      description: 'Knowledgeable in that they are familiar with the security behavior of the product or system type.'
-    },
-    {
-      value: 'Expert',
-      label: 'Expert',
-      rating: 6,
-      description:
-        'Familiar with the underlying algorithms, protocols, hardware, structures, security behavior, and the complexity of scientific knowledge that leads to the definition of new attacks, cryptography, classical attacks for the product type, attack methods, etc., implemented in the product or system type. '
-    },
-    {
-      value: 'Multiple experts',
-      label: 'Multiple experts',
-      rating: 8,
-      description: 'Different fields of expertise are required at an expert level for distinct steps of an attack. '
-    }
-  ],
-  'Knowledge of the Item': [
-    {
-      value: 'Public information',
-      label: 'Public information',
-      rating: 0,
-      description: 'Public information concerning the item or component (e.g. as gained from the Internet).'
-    },
-    {
-      value: 'Restricted information',
-      label: 'Restricted information',
-      rating: 3,
-      description:
-        'Restricted information concerning the item or component (e.g. knowledge that is controlled within the developer organization and shared with other organizations under a non-disclosure agreement). '
-    },
-    {
-      value: 'Confidential information',
-      label: 'Confidential information',
-      rating: 7,
-      description:
-        'Confidential information about the item or component (e.g. knowledge that is shared between different teams within the developer organization, access to which is controlled and only to members of the design and testing teams). '
-    },
-    {
-      value: 'Strictly confidential information',
-      label: 'Strictly confidential information',
-      rating: 11,
-      description:
-        'Highly confidential information about the item or component (e.g. knowledge that is known by a handful of individuals, access to which is very tightly controlled on a strict need-to-know basis and kept secret for individual reasons). '
-    }
-  ],
-  'Window of Opportunity': [
-    {
-      value: 'Unlimited',
-      label: 'Unlimited',
-      rating: 0,
-      description:
-        'Highly availability via public/untrusted network without any time limitation (i.e. asset is always accessible). Remote access without physical presence or time limitation as well as unlimited physical access is provided to the item or component.'
-    },
-    {
-      value: 'Easy',
-      label: 'Easy',
-      rating: 1,
-      description: 'Highly available but limited access time. Remote access without physical presence to the item or component.'
-    },
-    {
-      value: 'Moderate',
-      label: 'Moderate',
-      rating: 4,
-      description:
-        'Low availability of the item or component, limited physical and/or logical access. Physical access to the vehicle interior or exterior without using any special tool. '
-    },
-    {
-      value: 'Difficult',
-      label: 'Difficult',
-      rating: 10,
-      description:
-        'Very low availability of the item or component. Impractical level of access to the item or component to perform the attack.'
-    }
-  ],
-  Equipment: [
-    {
-      value: 'Standard',
-      label: 'Standard',
-      rating: 0,
-      description:
-        'Equipment is readily available to the attacker. This equipment can be a part of the product itself (e.g. debugger on an operating system), or can be readily obtained (e.g. internet sources, product samples, or simple attack scripts). '
-    },
-    {
-      value: 'Specialized',
-      label: 'Specialized',
-      rating: 4,
-      description:
-        'Equipment is not readily available to the attacker but can be acquired without undue effort. This includes products and/or intermediate stages of equipment (e.g., power analysis tools, use of hundreds of PC hacker tools offered in the Internet) would fall into this category. Development of more extensive attack scripts or scan programs. If difficulty reflects the benchmark costs of specialized equipment are required for distinct steps of an attack, this would be rated as bespoke. '
-    },
-    {
-      value: 'Bespoke',
-      label: 'Bespoke',
-      rating: 7,
-      description:
-        'Equipment is specially produced (e.g. very sophisticated software) and not readily available on the public or black market, or the equipment is so specialized that its distribution is controlled, possibly even restricted. Alternatively, the equipment is very expensive.'
-    },
-    {
-      value: 'Multiple bespoke',
-      label: 'Multiple bespoke',
-      rating: 9,
-      description:
-        ' It is introduced to allow for a situation, where different types of bespoke equipment are required for distinct steps of an attack.'
-    }
-  ]
-};
-
 const SelectableCell = ({ item, row, handleChange, name }) => {
+  const [open, setOpen] = useState(false); // Manage open state of dropdown
+  const selectRef = useRef(null); // Reference to select element
+  const handleContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from opening
+    setOpen(true); // Open dropdown on right-click
+  };
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!open) {
+      setOpen(true); // Open dropdown on left-click only if not already open
+    }
+  };
+
   return (
-    <StyledTableCell component="th" scope="row">
+    <StyledTableCell component="th" scope="row" onClick={handleClick} onContextMenu={handleContextMenu}>
       <FormControl
         sx={{
           width: 130,
           background: 'transparent',
-          '& .MuiInputBase-root': {
-            backgroundColor: 'transparent'
-          },
-          '& .MuiSelect-select': {
-            backgroundColor: 'transparent'
-          },
-          '& .MuiSvgIcon-root': {
-            display: 'none'
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none'
-          }
+          '& .MuiInputBase-root': { backgroundColor: 'transparent', color: 'inherit' },
+          '& .MuiSelect-select': { backgroundColor: 'transparent' },
+          '& .MuiSvgIcon-root': { display: 'none' },
+          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
         }}
       >
+        {!row[item.name] && (
+          <InputLabel id="demo-simple-select-label" shrink={false}>
+            Select Value
+          </InputLabel>
+        )}
         <Select
+          ref={selectRef}
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           value={row[item.name]}
+          placeholder="Select value"
           onChange={(e) => handleChange(e, row)}
+          sx={{ '& .MuiSelect-select': { color: 'inherit' } }}
           name={name}
+          open={open}
+          onClose={() => setOpen(false)} // Close dropdown when focus is lost
         >
-          {options[item.name]?.map((item) => {
-            const isLong = item?.label.length > 18;
-            return (
-              <MenuItem key={item?.value} value={item?.value}>
-                <HtmlTooltip
-                  placement="left"
-                  title={
-                    <Typography
-                      sx={{
-                        // backgroundColor: 'black',
-                        // color: 'white',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        padding: '8px', // Optional: Adds some padding for better spacing
-                        borderRadius: '4px' // Optional: Adds rounded corners
-                      }}
-                    >
-                      {item?.description}
-                    </Typography>
-                  }
-                >
-                  {<Typography variant="h5">{item?.label}</Typography>}
-                </HtmlTooltip>
-              </MenuItem>
-            );
-          })}
+          {options[item.name]?.map((option) => (
+            <MenuItem key={option?.value} value={option?.value}>
+              <HtmlTooltip
+                placement="left"
+                title={
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      padding: '8px',
+                      borderRadius: '4px',
+                      color: 'inherit'
+                    }}
+                  >
+                    {option?.description}
+                  </Typography>
+                }
+              >
+                <Typography sx={{ color: 'inherit' }} variant="h5">
+                  {option?.label}
+                </Typography>
+              </HtmlTooltip>
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
     </StyledTableCell>
@@ -284,31 +170,42 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
 export default function AttackTreeTable() {
   const color = ColorTheme();
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
-  const [page, setPage] = React.useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = React.useState(10); // Rows per page state
-  const [columnWidths, setColumnWidths] = React.useState({});
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [page, setPage] = useState(0); // Pagination state
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
+  const [columnWidths, setColumnWidths] = useState({});
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns3);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
-  React.useEffect(() => {
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
+
+  const Head = useMemo(() => {
+    return column.filter((header) => visibleColumns.includes(header.name));
+  }, [visibleColumns]);
+
+  useEffect(() => {
     if (attacks['scenes']) {
-      const mod1 = attacks['scenes']?.map((dt) => {
+      const mod1 = attacks['scenes']?.map((dt, i) => {
         // console.log('prp', prp);
         return {
+          SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
           ID: dt.id || dt?.ID,
           Name: dt.name || dt?.Name,
           Description: `This is the description for ${dt.Name || dt?.name}`,
-          Approach: dt?.Approach ?? '',
+          // Approach: dt?.Approach ?? '',
           'Elapsed Time': dt['Elapsed Time'] ?? '',
           Expertise: dt?.Expertise ?? '',
           'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
           'Window of Opportunity': dt['Window of Opportunity'] ?? '',
           Equipment: dt?.Equipment ?? '',
-          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'] ?? ''
+          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'].length ? dt['Attack Feasibilities Rating'] : ''
         };
       });
 
@@ -317,19 +214,9 @@ export default function AttackTreeTable() {
     }
   }, [attacks]);
 
-  const getRating = (value) => {
-    if (value >= 0 && value <= 13) {
-      return 'Low';
-    } else if (value >= 14 && value <= 19) {
-      return 'Medium';
-    } else if (value >= 20 && value <= 24) {
-      return 'Low';
-    } else {
-      return 'Very low';
-    }
-  };
   // console.log('rows', rows);
   const handleChange = (e, row) => {
+    e.stopPropagation();
     const { name, value } = e.target;
 
     // Update the selected category with the new value
@@ -346,40 +233,20 @@ export default function AttackTreeTable() {
     const calculateAverageRating = (row) => {
       const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
-      let count = 0;
 
       categories.forEach((category) => {
         const selectedOption = options[category].find((option) => option.value === row[category]);
         if (selectedOption) {
           totalRating += selectedOption.rating;
-          count++;
         }
       });
 
-      return count > 0 ? (totalRating / count).toFixed(2) : 'N/A';
+      return totalRating;
     };
 
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
     const averageRating = calculateAverageRating(updatedRow);
     updatedRow['Attack Feasibilities Rating'] = getRating(averageRating);
-
-    // console.log('updatedRow', updatedRow);
-    // // Find the updated row and recalculate the rating
-    // // console.log('updatedRows', updatedRows);
-
-    // // Update the model with the new row and rating
-    // const mod = JSON.parse(JSON.stringify(model));
-    // const scenarioIndex = 3; // Update based on your actual scenario
-    // const subsIndex = 0;
-
-    // const updated = updatedRows.map((rw) => {
-    //   const { Description, ...rest } = rw;
-    //   return rest;
-    // });
-
-    // console.log('updated', updated);
-
-    // mod.scenarios[scenarioIndex].subs[subsIndex].scenes = updated;
 
     const details = {
       modelId: model?._id,
@@ -438,8 +305,8 @@ export default function AttackTreeTable() {
       item.name === 'Elapsed Time' ||
       item.name === 'Knowledge of the Item' ||
       item.name === 'Window of Opportunity' ||
-      item.name === 'Equipment' ||
-      item.name === 'Approach'
+      item.name === 'Equipment'
+      // item.name === 'Approach'
     ) {
       return true;
     }
@@ -448,23 +315,23 @@ export default function AttackTreeTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Use the actual width of the column if no width is set in state
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -476,73 +343,116 @@ export default function AttackTreeTable() {
           key={row.name}
           data={row}
           sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            '&:nth-of-type(odd)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
+            backgroundColor: color?.sidebarBG,
             '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG,
               color: `${color?.sidebarContent} !important`
-            },
-            backgroundColor: isChild ? '#F4F8FE' : '',
-            color: `${color?.sidebarContent} !important`
+            }
           }}
         >
           {Head?.map((item, index) => {
             const bgColor = RatingColor(row['Attack Feasibilities Rating']);
-            return (
-              <React.Fragment key={index}>
-                {checkforLabel(item) ? (
-                  <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
-                ) : item.name === 'Attack Feasibilities Rating' ? (
+            // console.log('bgColor', bgColor);
+            const color = !bgColor?.includes('yellow') ? 'white' : 'black';
+            // console.log('color', color);
+
+            let cellContent;
+            switch (true) {
+              case checkforLabel(item):
+                cellContent = <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />;
+                break;
+              case item.name === 'Attack Feasibilities Rating':
+                cellContent = (
                   <StyledTableCell
                     key={index}
                     align={'left'}
-                    sx={{ backgroundColor: bgColor, color: bgColor !== 'yellow' ? 'white' : 'black' }}
+                    sx={{
+                      backgroundColor: `${bgColor} !important`,
+                      color: `${color} !important`
+                    }}
                   >
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                ) : (
+                );
+                break;
+              default:
+                cellContent = (
                   <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
-                )}
-              </React.Fragment>
-            );
+                );
+                break;
+            }
+            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
         </StyledTableRow>
       </>
     );
   };
+
   // console.log('selectedRow', selectedRow)
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
-        <TextField
-          id="outlined-size-small"
-          placeholder="Search"
-          size="small"
-          value={searchTerm}
-          onChange={handleSearch}
-          sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
-        />
+        <Box display="flex" alignItems="center">
+          <TextField
+            id="outlined-size-small"
+            placeholder="Search"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearch}
+            sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
+          />
+          <Button
+            sx={{
+              fontSize: '0.85rem',
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
+            Filter Columns
+          </Button>
+        </Box>
       </Box>
+
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {AttackTableHeader.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns3', column.name)}
+                />
+              }
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <TableContainer
         component={Paper}
         sx={{
           maxHeight: 440,
           borderRadius: '0px',
-          padding: 1,
+          padding: 0.25,
           overflow: 'auto',
           '&::-webkit-scrollbar': {
             width: '4px'
@@ -554,7 +464,7 @@ export default function AttackTreeTable() {
           '&::-webkit-scrollbar-track': {
             background: 'rgba(0, 0, 0, 0.1)'
           },
-          maxHeight: tableHeight,
+          // maxHeight: tableHeight,
           scrollbarWidth: 'thin'
         }}
       >
@@ -563,24 +473,24 @@ export default function AttackTreeTable() {
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                {hd?.name}
-                <div
-                  className="resize-handle"
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent',
-                    '& .MuiTableCell-root': {
-                      transition: 'width 0.2s ease'
-                    }
-                  }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                  {hd?.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      '& .MuiTableCell-root': {
+                        transition: 'width 0.2s ease'
+                      }
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -595,7 +505,12 @@ export default function AttackTreeTable() {
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
         count={filtered.length}
         rowsPerPage={rowsPerPage}

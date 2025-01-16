@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
+  nodes: state.nodes,
   model: state.model,
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
@@ -15,7 +16,7 @@ const selector = (state) => ({
 
 const OutputNode = ({ id, data, isConnectable, type }) => {
   const dispatch = useDispatch();
-  const { model, assets, getAssets, deleteNode } = useStore(selector);
+  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -42,9 +43,14 @@ const OutputNode = ({ id, data, isConnectable, type }) => {
       });
   };
 
+  const copiedNodes = nodes.filter((node) => node.isCopied === true);
+
+  // Check if the current node is a copied node
+  const isCopiedNode = copiedNodes.some((node) => node.id === id);
+
   return (
     <>
-      <NodeResizer />
+      <NodeResizer minWidth={150} minHeight={40} />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"
@@ -134,19 +140,21 @@ const OutputNode = ({ id, data, isConnectable, type }) => {
           >
             Delete from Canvas
           </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '6px',
-              fontSize: '0.8rem',
-              border: '1px solid #dc3545',
-              background: '#dc3545',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
-          >
-            Delete Permanently
-          </button>
+          {!isCopiedNode && (
+            <button
+              onClick={handleDelete}
+              style={{
+                padding: '6px',
+                fontSize: '0.8rem',
+                border: '1px solid #dc3545',
+                background: '#dc3545',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Delete Permanently
+            </button>
+          )}
         </DialogActions>
       </Dialog>
     </>

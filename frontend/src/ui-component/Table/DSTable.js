@@ -1,8 +1,7 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import CircleIcon from '@mui/icons-material/Circle';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
@@ -24,8 +23,17 @@ import {
   TableRow,
   TablePagination,
   Tooltip,
-  InputLabel
+  InputLabel,
+  IconButton,
+  Popper,
+  ClickAwayListener,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
@@ -35,18 +43,24 @@ import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
-import { colorPicker, colorPickerTab } from './constraints';
+import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { tableHeight } from '../../store/constant';
+import FormPopper from '../Poppers/FormPopper';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
-  getModelById: state.getModelById,
-  getModels: state.getModels,
   update: state.updateDamageScenario,
+  updateDerived: state.updateDerivedDamageScenario,
+  updateImpact: state.updateImpact,
+  getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
-  damageID: state.damageScenarios['subs'][1]['_id']
+  damageID: state.damageScenarios['subs'][1]['_id'],
+  deleteDamageScenario: state.deleteDamageScenario,
+  updateName: state.updateName$DescriptionforDamage
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
@@ -70,6 +84,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
     textAlign: 'center'
+    // color: '#000'
   }
 }));
 
@@ -93,10 +108,43 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
   }
 }));
 
+const renderMenuItem = (option, name) => (
+  <MenuItem key={option?.value} value={option?.value}>
+    <HtmlTooltip
+      placement="left"
+      title={
+        <Typography
+          sx={{
+            // backgroundColor: 'black',
+            // color: 'white',
+            fontSize: '14px',
+            fontWeight: 600,
+            padding: '8px', // Optional: Adds some padding for better spacing
+            borderRadius: '4px' // Optional: Adds rounded corners
+          }}
+        >
+          {option?.description[name]}
+        </Typography>
+      }
+    >
+      {option?.label}
+    </HtmlTooltip>
+  </MenuItem>
+);
+
 const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
   // console.log('name', name);
+  const [open, setOpen] = useState(false); // Manage open state of dropdown
+  const selectRef = useRef(null);
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!open) {
+      setOpen(true); // Open dropdown on left-click only if not already open
+    }
+  };
   return (
-    <StyledTableCell component="th" scope="row" sx={{ background: colorPickerTab(impact) }}>
+    <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
           width: 130,
@@ -121,47 +169,41 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
           </InputLabel>
         )}
         <Select
+          ref={selectRef}
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           name={name}
           value={impact}
           onChange={(e) => handleChange(e, row)}
+          open={open}
+          onClose={() => setOpen(false)}
         >
-          {options?.map((item) => (
-            <MenuItem key={item?.value} value={item?.value}>
-              <HtmlTooltip
-                placement="left"
-                title={
-                  <Typography
-                    sx={{
-                      // backgroundColor: 'black',
-                      // color: 'white',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      padding: '8px', // Optional: Adds some padding for better spacing
-                      borderRadius: '4px' // Optional: Adds rounded corners
-                    }}
-                  >
-                    {item?.description[name]}
-                  </Typography>
-                }
-              >
-                {item?.label}
-              </HtmlTooltip>
-            </MenuItem>
-          ))}
+          {options?.map((option) => renderMenuItem(option, name))}
         </Select>
       </FormControl>
     </StyledTableCell>
   );
 };
 
+const notify = (message, status) => toast[status](message);
 export default function DsTable() {
   const color = ColorTheme();
-  const { model, getModels, getModelById, update, damageScenarios, Details, damageID, getDamageScenarios } = useStore(selector, shallow);
+  const {
+    model,
+    update,
+    damageScenarios,
+    Details,
+    damageID,
+    getDamageScenarios,
+    getThreatScenario,
+    updateImpact,
+    deleteDamageScenario,
+    updateDerived,
+    updateName
+  } = useStore(selector, shallow);
+
   const [stakeHolder] = useState(false);
   const classes = useStyles();
-  const { id } = useParams();
   const dispatch = useDispatch();
   const [openDs, setOpenDs] = useState(false);
   const [openCl, setOpenCl] = useState(false);
@@ -171,60 +213,77 @@ export default function DsTable() {
   const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
+  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
+  const [columnWidths, setColumnWidths] = useState({});
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
-  const notify = (message, status) => toast[status](message);
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
+
+  const handleChecked = (value, item, rowId) => {
+    const details = {
+      id: damageScenarios?._id,
+      'detail-id': rowId
+    };
+    if (item === 'Asset is Evaluated') {
+      details.isAssetEvaluated = !value;
+    } else {
+      details.isCybersecurityEvaluated = !value;
+    }
+    // console.log('details', details);
+    updateDerived(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(model?._id);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
+  // console.log('selectedRows', selectedRows);
+  // console.log('damageID', damageID);
+  const handleDeleteSelected = () => {
+    const details = {
+      'model-id': model?._id,
+      id: damageID,
+      detailId: selectedRows
+    };
+    deleteDamageScenario(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res.message ?? 'Deleted successfully', 'success');
+          getDamageScenarios(model?._id);
+          getThreatScenario(model?._id);
+          setSelectedRows([]);
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const toggleRowSelection = (rowId) => {
+    setSelectedRows(
+      (prevSelectedRows) =>
+        prevSelectedRows.includes(rowId)
+          ? prevSelectedRows.filter((id) => id !== rowId) // Unselect if already selected
+          : [...prevSelectedRows, rowId] // Select if not selected
+    );
+  };
 
   // console.log('damageID', damageID);
   const Head = useMemo(() => {
     if (stakeHolder) {
-      return [
-        { id: 1, name: 'ID' },
-        { id: 2, name: 'Name' },
-        { id: 3, name: 'Damage Scenario' },
-        { id: 4, name: 'Description/ Scalability' },
-        { id: 5, name: 'Losses of Cybersecurity Properties' },
-        { id: 6, name: 'Assets' },
-        { id: 7, name: 'Component/Message' },
-        { id: 8, name: 'Safety Impact per StakeHolder' },
-        { id: 9, name: 'Financial Impact per StakeHolder' },
-        { id: 10, name: 'Operational Impact per StakeHolder' },
-        { id: 11, name: 'Privacy Impact per StakeHolder' },
-        { id: 12, name: 'Impact Justification by Stakeholder' },
-        { id: 13, name: 'Safety Impact' },
-        { id: 14, name: 'Financial Impact' },
-        { id: 15, name: 'Operational Impact' },
-        { id: 16, name: 'Privacy Impact' },
-        { id: 17, name: 'Impact Justification' },
-        { id: 18, name: 'Associated Threat Scenarios' },
-        { id: 19, name: 'Overall Impact' },
-        { id: 20, name: 'Asset is Evaluated' },
-        { id: 21, name: 'Cybersecurity Properties are Evaluated' },
-        { id: 22, name: 'Unevaluated Cybersecurity Properties' }
-      ];
+      return stakeHeader;
     } else {
-      return [
-        { id: 1, name: 'ID' },
-        { id: 2, name: 'Name' },
-        { id: 3, name: 'Damage Scenario' },
-        { id: 4, name: 'Description/ Scalability' },
-        { id: 5, name: 'Losses of Cybersecurity Properties' },
-        { id: 6, name: 'Assets' },
-        { id: 7, name: 'Component/Message' },
-        { id: 13, name: 'Safety Impact' },
-        { id: 14, name: 'Financial Impact' },
-        { id: 15, name: 'Operational Impact' },
-        { id: 16, name: 'Privacy Impact' },
-        { id: 17, name: 'Impact Justification' },
-        { id: 18, name: 'Associated Threat Scenarios' },
-        { id: 19, name: 'Overall Impact' },
-        { id: 20, name: 'Asset is Evaluated' },
-        { id: 21, name: 'Cybersecurity Properties are Evaluated' },
-        { id: 22, name: 'Unevaluated Cybersecurity Properties' }
-      ];
+      return DSTableHeader.filter((header) => visibleColumns.includes(header.name)); // Only show columns that are visible
     }
-  }, []);
+  }, [visibleColumns]);
 
   const handleOpenCl = (row) => {
     setSelectedRow(row);
@@ -234,13 +293,17 @@ export default function DsTable() {
   const handleCloseCl = () => {
     setOpenCl(false);
     setSelectedRow({});
+    setDetails(Details);
   };
 
   const handleSearch = (e) => {
     const { value } = e.target;
     if (value.length > 0) {
       const filterValue = rows.filter((rw) => {
-        if (rw.name.toLowerCase().includes(value) || rw.Description.toLowerCase().includes(value)) {
+        if (
+          rw.Name.toLowerCase().includes(value.toLowerCase()) ||
+          rw['Description/ Scalability']?.toLowerCase().includes(value.toLowerCase())
+        ) {
           return rw;
         }
       });
@@ -252,13 +315,17 @@ export default function DsTable() {
     setSearchTerm(value);
   };
 
+  // console.log('damageScenarios', damageScenarios['Details']);
   useEffect(() => {
     if (damageScenarios['Details']) {
-      const scene = damageScenarios['Details']?.map((ls) => ({
-        ID: ls?._id,
+      const scene = damageScenarios['Details']?.map((ls, i) => ({
+        id: ls._id,
+        ID: `DS${ls?.key?.toString().padStart(3, '0') ?? (i + 1).toString().padStart(3, '0')}`,
         Name: ls?.Name,
         'Description/ Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
+        'Asset is Evaluated': ls?.is_asset_evaluated === 'true' ? true : false,
+        'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true' ? true : false,
         impacts: ls?.impacts
           ? {
               'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
@@ -289,6 +356,7 @@ export default function DsTable() {
   };
 
   const handleChange = (e, row) => {
+    e.stopPropagation();
     const { name, value } = e.target;
     const seleced = JSON.parse(JSON.stringify(row));
     seleced['impacts'][`${name}`] = value;
@@ -296,10 +364,10 @@ export default function DsTable() {
 
     const info = {
       id: damageID,
-      detailId: seleced?.ID,
+      detailId: seleced?.id,
       impacts: JSON.stringify(seleced['impacts'])
     };
-    update(info)
+    updateImpact(info)
       .then((res) => {
         // console.log('res', res);
         refreshAPI();
@@ -319,68 +387,6 @@ export default function DsTable() {
     return false;
   };
 
-  const options = [
-    {
-      value: 'Severe',
-      label: 'Severe',
-      description: {
-        'Safety Impact': 'Life-threatening or fatal injuries.',
-        'Financial Impact':
-          'The financial damage leads to significant loss for the affected road user with substantial effects on their ability to meet financial obligations.',
-        'Operational Impact':
-          'The operational damage leads to a loss of important or all vehicle functions. EXAMPLE 1: Major malfunction in the steering system leads to a loss of directional control. EXAMPLE 2: Significant loss in the braking system causes a severe reduction in braking force. EXAMPLE 3: Significant loss in other important functions of the vehicle.',
-        'Privacy Impact':
-          'The privacy damage leads to significant or very harmful impacts to the road user. The information regarding the road user’s identity is available and easy to link to PII (personally identifiable information), leading to severe harm or loss. The information belongs to third parties as well.'
-      }
-    },
-    {
-      value: 'Major',
-      label: 'Major',
-      description: {
-        'Safety Impact': 'Severe and/or irreversible injuries or significant physical harm.',
-        'Financial Impact':
-          'The financial damage leads to notable loss for the affected road user, but the financial ability of the road user to meet financial obligations is not fundamentally impacted.',
-        'Operational Impact':
-          'The operational damage leads to partial degradation of a vehicle function. EXAMPLE 4: Degradation in steering or braking capacity.',
-        'Privacy Impact':
-          'The privacy damage has a notable impact on the road user. The information may be difficult to link to PII but is of a significant nature and has risks to PII principal.'
-      }
-    },
-    {
-      value: 'Moderate',
-      label: 'Moderate',
-      description: {
-        'Safety Impact': 'Reversible physical injuries requiring treatment.',
-        'Financial Impact':
-          'The financial damage is noticeable but does not significantly affect the financial situation of the road user.',
-        'Operational Impact':
-          'The operational damage leads to noticeable degradation of a vehicle function. EXAMPLE 5: Slight degradation in steering capability.',
-        'Privacy Impact':
-          'The privacy damage leads to moderate consequences to the road user. The information regarding the road user is not sensitive.'
-      }
-    },
-    {
-      value: 'Minor',
-      label: 'Minor',
-      description: {
-        'Safety Impact': 'Light physical injuries, may require first aid.',
-        'Financial Impact': 'The financial damage is small and can be easily absorbed by the affected road user.',
-        'Operational Impact': 'The operational damage leads to an insignificant or no noticeable impact on vehicle operation.',
-        'Privacy Impact':
-          'The privacy damage has a light impact or no effect at all. The information is low-risk and difficult to link to PII.'
-      }
-    },
-    {
-      value: 'Negligible',
-      label: 'Negligible',
-      description: {
-        'Safety Impact': 'No physical injuries.',
-        'Financial Impact': 'The financial damage is so low that it has no significant effect on the road user.',
-        'Operational Impact': "The operational damage leads to an insignificant or no post-collision damage to a vehicle's functionality.",
-        'Privacy Impact': 'The privacy damage has no effect on the road user or their personal information.'
-      }
-    }
-  ];
   const handleBack = () => {
     dispatch(closeAll());
   };
@@ -423,55 +429,126 @@ export default function DsTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
+    // console.log('e', e);
     const startX = e.clientX;
-  
+
     // Use the actual width of the column if no width is set in state
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseup', handleMouseUp, { passive: true });
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const [hoveredField, setHoveredField] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isPopperFocused, setIsPopperFocused] = useState(false);
+    const isSelected = selectedRows.includes(row.id);
+    const handleEditClick = (event, fieldName, currentValue) => {
+      event.stopPropagation();
+      setEditingField(fieldName);
+      setEditValue(currentValue || '');
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handleSaveEdit = (e) => {
+      e.stopPropagation();
+      if (editingField) {
+        if (!editValue.trim()) {
+          notify('Field must not be empty', 'error');
+          return;
+        }
+
+        const details = {
+          id: damageID,
+          detailId: row?.id,
+          [editingField === 'Name' ? 'Name' : 'Description']: editValue
+        };
+
+        updateName(details)
+          .then((res) => {
+            // console.log('res', res);
+            if (!res.error) {
+              notify(res.message ?? 'Deleted successfully', 'success');
+              getDamageScenarios(model?._id);
+              handleClosePopper();
+            } else {
+              notify(res.error ?? 'Something went wrong', 'error');
+            }
+          })
+          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      }
+    };
+
+    const handleClosePopper = () => {
+      if (!isPopperFocused) {
+        setEditingField(null);
+        setEditValue('');
+        setAnchorEl(null);
+      }
+    };
+
     return (
       <>
         <StyledTableRow
           key={row.name}
           data={row}
           sx={{
-            '&:last-child td, &:last-child th': { border: 0 },
-            '&:nth-of-type(even)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
-            '&:nth-of-type(odd)': {
-              backgroundColor: color?.sidebarBG,
-              color: `${color?.sidebarContent} !important`
-            },
+            backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
             '& .MuiTableCell-root.MuiTableCell-body': {
-              backgroundColor: color?.sidebarBG,
               color: `${color?.sidebarContent} !important`
-            },
-            backgroundColor: isChild ? '#F4F8FE' : '',
-            color: `${color?.sidebarContent} !important`
+            }
           }}
         >
           {Head?.map((item, index) => {
+            const isEditableField = item.name === 'Name' || item.name === 'Description/ Scalability';
             let cellContent;
             switch (true) {
+              case isEditableField:
+                {
+                  cellContent = (
+                    <StyledTableCell
+                      key={index}
+                      onMouseEnter={() => setHoveredField(item.name)}
+                      onMouseLeave={() => {
+                        if (!anchorEl) setHoveredField(null);
+                      }}
+                      style={{ position: 'relative', cursor: 'pointer' }}
+                    >
+                      {row[item.name] || '-'}
+                      {(hoveredField === item.name || editingField === item.name) && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                          sx={{
+                            position: 'absolute',
+                            top: '15%',
+                            right: '-2px',
+                            transform: 'translateY(-50%)'
+                          }}
+                        >
+                          <EditIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      )}
+                    </StyledTableCell>
+                  );
+                }
+                break;
               case checkforLabel(item):
                 cellContent = (
                   <SelectableCell
@@ -526,7 +603,7 @@ export default function DsTable() {
                   <StyledTableCell
                     component="th"
                     scope="row"
-                    sx={{ background: colorPickerTab(OverallImpact(row?.impacts)), color: '#000' }}
+                    sx={{ backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`, color: '#000' }}
                   >
                     {OverallImpact(row?.impacts)}
                   </StyledTableCell>
@@ -536,7 +613,20 @@ export default function DsTable() {
               case item.name.includes('Evaluated'):
                 cellContent = (
                   <StyledTableCell component="th" scope="row">
-                    <Checkbox {...label} />
+                    <Checkbox {...label} checked={row[item.name]} onChange={() => handleChecked(row[item.name], item.name, row?.id)} />
+                  </StyledTableCell>
+                );
+                break;
+
+              case item.name === 'ID':
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    style={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
+                    align="left"
+                    onClick={() => toggleRowSelection(row.id)}
+                  >
+                    {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
                 );
                 break;
@@ -556,6 +646,17 @@ export default function DsTable() {
 
             return <React.Fragment key={index}>{cellContent}</React.Fragment>;
           })}
+          {anchorEl && (
+            <FormPopper
+              anchorEl={anchorEl}
+              handleSaveEdit={handleSaveEdit}
+              handleClosePopper={handleClosePopper}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              editingField={editingField}
+              setIsPopperFocused={setIsPopperFocused}
+            />
+          )}
         </StyledTableRow>
       </>
     );
@@ -569,13 +670,11 @@ export default function DsTable() {
         height: 'auto' // Ensure the table takes up the full height of the parent
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
         <Box display="flex" alignItems="center" gap={1}>
           <KeyboardBackspaceRoundedIcon
             sx={{
-              float: 'left',
               cursor: 'pointer',
-              ml: 1,
               color: color?.title
             }}
             onClick={handleBack}
@@ -590,7 +689,7 @@ export default function DsTable() {
             Damage Scenario Table
           </Typography>
         </Box>
-        <Box display="flex" gap={3}>
+        <Box display="flex" gap={2}>
           <TextField
             id="outlined-size-small"
             placeholder="Search"
@@ -598,16 +697,72 @@ export default function DsTable() {
             value={searchTerm}
             onChange={handleSearch}
             sx={{
+              justifyContent: 'center',
+              padding: 0.5, // Reduce padding
               '& .MuiInputBase-input': {
-                border: '1px solid black'
+                fontSize: '0.75rem', // Smaller font size
+                padding: '0.5rem' // Adjust padding inside input
+              },
+              '& .MuiOutlinedInput-root': {
+                height: '30px' // Reduce overall height
               }
             }}
           />
-          <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalDs}>
+          <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
+          </Button>
+          <Button
+            sx={{
+              alignSelf: 'center',
+              // padding: '0px 8px',
+              fontSize: '0.85rem',
+              backgroundColor: '#4caf50',
+              ':hover': {
+                backgroundColor: '#388e3c'
+              }
+            }}
+            variant="contained"
+            onClick={handleOpenFilter}
+          >
+            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
+            Filter Columns
+          </Button>
+          <Button
+            sx={{ fontSize: '0.85rem' }}
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0}
+          >
+            Delete
           </Button>
         </Box>
       </Box>
+
+      {/* Column Filter Dialog */}
+      <Dialog open={openFilter} onClose={handleCloseFilter}>
+        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogContent>
+          {DSTableHeader.map((column) => (
+            <FormControlLabel
+              key={column.id}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.name)}
+                  onChange={() => toggleColumnVisibility('visibleColumns', column.name)}
+                />
+              }
+              label={column.name} // Display column name as label
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <TableContainer
         component={Paper}
@@ -615,7 +770,7 @@ export default function DsTable() {
           flexGrow: 1, // Let the container grow to fill available space
           overflowY: 'auto', // Enable vertical scrolling
           borderRadius: '0px',
-          padding: 1,
+          padding: 0.25,
           '&::-webkit-scrollbar': {
             width: '4px'
           },
@@ -630,44 +785,51 @@ export default function DsTable() {
           scrollbarWidth: 'thin'
         }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                {hd?.name}
-                <div
-                  className="resize-handle"
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent',
-                    '& .MuiTableCell-root': {
-                      transition: 'width 0.2s ease'
-                    }
-                  }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                  {hd?.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      '& .MuiTableCell-root': {
+                        transition: 'width 0.2s ease'
+                      }
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {filtered?.map((row, rowkey) => (
-              <RenderTableRow key={rowkey} row={row} rowKey={rowkey} />
+              <>
+                <RenderTableRow row={row} rowKey={rowkey} />
+              </>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Pagination placed outside of the scrollable area */}
       <TablePagination
+        sx={{
+          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+          '& .MuiSelect-select': { color: color?.sidebarContent },
+          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+        }}
         component="div"
         count={filtered.length}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
@@ -675,25 +837,19 @@ export default function DsTable() {
       />
 
       {/* Modals */}
-      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} id={id} rows={rows} notify={notify} />}
+      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses
           open={openCl}
-          damageScenarios={damageScenarios}
           details={details}
           setDetails={setDetails}
           damageID={damageID}
           refreshAPI={refreshAPI}
           handleClose={handleCloseCl}
           model={model}
-          rows={rows}
-          setRows={setRows}
           selectedRow={selectedRow}
-          setSelectedRow={setSelectedRow}
           update={update}
-          getModelById={getModelById}
-          getModels={getModels}
-          id={id}
+          getThreatScenario={getThreatScenario}
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />

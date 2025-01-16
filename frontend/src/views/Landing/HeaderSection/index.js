@@ -141,7 +141,7 @@ export default function Header() {
   const [anchorElConsulting, setAnchorElConsulting] = useState(null);
   const [anchorElAcademy, setAnchorElAcademy] = useState(null);
   const [anchorElContact, setAnchorElContact] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draweropen, setDrawerOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
 
   const links = [
@@ -280,7 +280,7 @@ export default function Header() {
       </AppBar>
 
       {/* Mobile Drawer */}
-      <Drawer anchor="right" open={drawerOpen} onClose={() => toggleDrawer(false)}>
+      <Drawer anchor="right" open={draweropen} onClose={() => toggleDrawer(false)}>
         <Box className={classes.mobileMenu} role="presentation">
           <IconButton onClick={() => toggleDrawer(false)}>
             <CloseIcon style={{ color: 'black' }} />

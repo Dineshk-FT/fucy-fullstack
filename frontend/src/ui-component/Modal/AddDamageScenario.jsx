@@ -46,7 +46,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
     addDamageScene(details)
       .then((res) => {
         // console.log('res', res);
-        if (res) {
+        if (res.message) {
           // setTimeout(() => {
           notify(res?.message, 'success');
           // window.location.reload();
@@ -59,6 +59,8 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
             cyberLosses: []
           });
           // }, 500);
+        } else {
+          notify('something went wrong', 'error');
         }
       })
       .catch((err) => {
@@ -81,11 +83,13 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           }
         }}
       >
-        <DialogTitle>{'Add Damage Scenario'}</DialogTitle>
+        <DialogTitle variant="h4" color="primary">
+          {'Add Damage Scenario'}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel>Name :</InputLabel>
+              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -94,7 +98,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel>Description :</InputLabel>
+              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"

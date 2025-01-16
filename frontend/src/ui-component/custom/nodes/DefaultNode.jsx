@@ -1,23 +1,27 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
-import { Handle, NodeResizer, NodeToolbar, Position, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
+  nodes: state.nodes,
   model: state.model,
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
-  assets: state.assets
+  assets: state.assets,
+  originalNodes: state.originalNodes
 });
+
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { model, assets, getAssets, deleteNode } = useStore(selector);
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes } = useStore(selector);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
 
   const handleInfoClick = () => {
     // Open properties tab and set the selected node
@@ -33,17 +37,39 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const handleDelete = () => {
     deleteNode({ assetId: assets?._id, nodeId: id })
       .then((res) => {
-        // console.log('res', res);
         getAssets(model?._id);
       })
       .catch((err) => {
         console.log('err', err);
       });
+    setIsUnsavedDialogVisible(false); // Close unsaved dialog if open
+    setIsVisible(false);
   };
+
+  const handlePermanentDeleteClick = () => {
+    if (nodes.length > originalNodes.length) {
+      setIsUnsavedDialogVisible(true); // Show unsaved changes dialog
+    } else {
+      handleDelete(); // Perform delete directly
+    }
+  };
+
+  const handleUnsavedDialogClose = () => {
+    setIsUnsavedDialogVisible(false);
+  };
+
+  const handleUnsavedDialogContinue = () => {
+    handleDelete(); // Proceed with deletion
+  };
+
+  const copiedNodes = nodes.filter((node) => node.isCopied === true);
+
+  // Check if the current node is a copied node
+  const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
-      <NodeResizer />
+      <NodeResizer minWidth={150} minHeight={40} />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"
@@ -58,7 +84,6 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           onMouseLeave={() => setIsHovered(false)}
         >
           <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
-          {/* <Handle className="handle" type="target" id="ab" style={{ left: 10 }} position={Position.Top} isConnectable={isConnectable} /> */}
           <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
           <div>{data?.label}</div>
           <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
@@ -133,8 +158,44 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           >
             Delete from Canvas
           </button>
+          {!isCopiedNode && !isNodePasted && (
+            <button
+              onClick={handlePermanentDeleteClick}
+              style={{
+                padding: '6px',
+                fontSize: '0.8rem',
+                border: '1px solid #dc3545',
+                background: '#dc3545',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Delete Permanently
+            </button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={isUnsavedDialogVisible} onClose={handleUnsavedDialogClose}>
+        <DialogContent>
+          <p>You have unsaved changes. Are you sure you want to delete permanently?</p>
+        </DialogContent>
+        <DialogActions>
           <button
-            onClick={handleDelete}
+            onClick={handleUnsavedDialogClose}
+            style={{
+              padding: '6px',
+              fontSize: '0.8rem',
+              border: '1px solid #007bff',
+              background: '#007bff',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUnsavedDialogContinue}
             style={{
               padding: '6px',
               fontSize: '0.8rem',
@@ -144,7 +205,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               cursor: 'pointer'
             }}
           >
-            Delete Permanently
+            Continue
           </button>
         </DialogActions>
       </Dialog>

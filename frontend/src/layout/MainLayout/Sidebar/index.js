@@ -27,7 +27,7 @@ const selector = (state) => ({
   models: state.Models,
   fetchModels: state.getModels
 });
-const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
+const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const dispatch = useDispatch();
   const { template, fetchModels, models } = useStore(selector);
   const theme = useTheme();
@@ -87,7 +87,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         container={container}
         variant={matchUpMd ? 'persistent' : 'temporary'}
         anchor="left"
-        open={drawerOpen}
+        open={draweropen ? true : false}
         onClose={drawerToggle}
         sx={{
           '& .MuiDrawer-paper': {
@@ -111,7 +111,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
 };
 
 Sidebar.propTypes = {
-  drawerOpen: PropTypes.bool,
+  draweropen: PropTypes.bool,
   drawerToggle: PropTypes.func,
   window: PropTypes.object
 };

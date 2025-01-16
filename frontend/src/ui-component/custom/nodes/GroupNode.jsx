@@ -57,9 +57,7 @@ const CustomGroupNode = ({ data, id }) => {
             height: 'inherit',
             width: 'inherit'
           }}
-        >
-          {/* {data?.label} */}
-        </div>
+        ></div>
       </div>
     </div>
   );

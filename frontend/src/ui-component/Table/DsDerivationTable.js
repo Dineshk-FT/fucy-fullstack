@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React from 'react';
+import React, { useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
@@ -10,12 +10,27 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { TextField, Typography, styled, Paper, Checkbox, TablePagination } from '@mui/material';
+import {
+  TextField,
+  Typography,
+  styled,
+  Paper,
+  Checkbox,
+  TablePagination,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel
+} from '@mui/material';
 import ColorTheme from '../../store/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { useDispatch } from 'react-redux';
 import { tableHeight } from '../../store/constant';
+import { DsDerivationHeader } from './constraints';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -49,41 +64,46 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 const selector = (state) => ({
-  getModels: state.getModels,
-  damageScenarios: state.damageScenarios['subs'][0]
+  damageScenarios: state.damageScenarios['subs'][0],
+  update: state.updateDerivedDamageScenario,
+  modelId: state?.model?._id,
+  getDamageScenarios: state?.getDamageScenarios
 });
 
 export default function DsDerivationTable() {
   const color = ColorTheme();
   const dispatch = useDispatch();
   const classes = useStyles();
-  const { damageScenarios } = useStore(selector, shallow);
+  const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filtered, setFiltered] = React.useState([]);
 
   const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(5); // Add state for rows per page
+  const [rowsPerPage, setRowsPerPage] = React.useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = React.useState({});
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.visibleColumns1);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
 
   const Head = React.useMemo(() => {
-    return [
-      { id: 1, name: 'Task/Requirement' },
-      { id: 2, name: 'Checked' },
-      { id: 3, name: 'Losses of Cybersecurity Properties' },
-      { id: 4, name: 'Assets' },
-      { id: 5, name: 'Damage Scenarios' }
-    ];
-  }, []);
+    return DsDerivationHeader.filter((header) => visibleColumns.includes(header.name));
+  }, [visibleColumns]);
 
   React.useEffect(() => {
     if (damageScenarios['Derivations']) {
       const scene = damageScenarios['Derivations']?.map((dt) => {
         return {
+          id: dt?.id,
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
           Assets: dt?.asset,
-          'Damage Scenarios': dt?.damageScene
+          'Damage Scenarios': dt?.damageScene,
+          Checked: dt?.is_checked === 'true' ? true : false
         };
       });
       setRows(scene);
@@ -91,18 +111,33 @@ export default function DsDerivationTable() {
     }
   }, [damageScenarios]);
 
+  const handleChange = (value, rowId) => {
+    const details = {
+      id: damageScenarios?._id,
+      isChecked: !value,
+      'detail-id': rowId
+    };
+    // console.log('details', details);
+    update(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(modelId);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
   const handleSearch = (e) => {
     const { value } = e.target;
+    // console.log('value', value);
+
     if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw.task.toLowerCase().includes(value)) {
-          return rw;
-        }
-      });
+      const filterValue = rows.filter((rw) => rw['Task/Requirement'].toLowerCase().includes(value.toLowerCase()));
+      // console.log('filterValue', filterValue);
       setFiltered(filterValue);
     } else {
       setFiltered(rows);
     }
+
     setSearchTerm(value);
   };
 
@@ -123,26 +158,26 @@ export default function DsDerivationTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-  
+
     // Get the starting width of the column
     const headerCell = e.target.parentNode;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-  
+
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX; // Calculate movement direction
       const newWidth = Math.max(50, startWidth + delta); // Set a minimum width of 50px
-  
+
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
-  
+
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };  
+  };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     return (
@@ -173,7 +208,7 @@ export default function DsDerivationTable() {
             case item.name === 'Checked':
               cellContent = (
                 <StyledTableCell component="th" scope="row">
-                  <Checkbox {...label} />
+                  <Checkbox {...label} checked={row[item.name]} onChange={() => handleChange(row[item.name], row?.id)} />
                 </StyledTableCell>
               );
               break;
@@ -231,12 +266,12 @@ export default function DsDerivationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mr={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
-          <Box>
+          <Box display="flex" justifyContent="center" gap={1}>
             <TextField
               id="outlined-size-small"
               placeholder="Search"
@@ -244,16 +279,70 @@ export default function DsDerivationTable() {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
-                padding: 1,
+                padding: 0.5, // Reduce padding
                 '& .MuiInputBase-input': {
-                  border: '1px solid black'
+                  fontSize: '0.75rem', // Smaller font size
+                  padding: '0.5rem' // Adjust padding inside input
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px' // Reduce overall height
                 }
               }}
             />
+            <Button
+              sx={{
+                padding: '0px 8px',
+                fontSize: '0.85rem',
+                // alignSelf: 'center',
+                backgroundColor: '#4caf50',
+                ':hover': {
+                  backgroundColor: '#388e3c'
+                }
+              }}
+              variant="contained"
+              onClick={handleOpenFilter}
+            >
+              <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
+              Filter Columns
+            </Button>
           </Box>
         </Box>
-        <TableContainer component={Paper} sx={{ borderRadius: '0px', padding: 1, maxHeight: tableHeight, scrollbarWidth: 'thin' }}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+
+        {/* Column Filter Dialog */}
+        <Dialog open={openFilter} onClose={handleCloseFilter}>
+          <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+          <DialogContent>
+            {DsDerivationHeader.map((column) => (
+              <FormControlLabel
+                key={column.id}
+                control={
+                  <Checkbox
+                    checked={visibleColumns.includes(column.name)}
+                    onChange={() => toggleColumnVisibility('visibleColumns1', column.name)}
+                  />
+                }
+                label={column.name} // Display column name as label
+              />
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseFilter} color="warning">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <TableContainer
+          component={Paper}
+          sx={{
+            '& .MuiPaper-root': { maxHeight: '100vh' },
+            borderRadius: '0px',
+            padding: 0.25,
+            maxHeight: '70svh',
+            scrollbarWidth: 'thin'
+          }}
+        >
+          <Table stickyHeader sx={{ minWidth: 650, height: tableHeight }} aria-label="simple table">
             <TableHead>
               <TableRow>
                 {Head?.map((hd) => (
@@ -285,8 +374,14 @@ export default function DsDerivationTable() {
           {/* Pagination controls */}
         </TableContainer>
         <TablePagination
+          sx={{
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
           component="div"
           count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}

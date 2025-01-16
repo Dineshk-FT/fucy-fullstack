@@ -6,7 +6,7 @@ import RequireAuth from './Protected';
 
 // sample page routing
 const Home = Loadable(lazy(() => import('../views/HomePage')));
-const MainCanvas = Loadable(lazy(() => import('../views/MainCanvas')));
+const MainPage = Loadable(lazy(() => import('../views/MainPage')));
 const Career = Loadable(lazy(() => import('../views/CareerPage')));
 const Contact = Loadable(lazy(() => import('../views/ContactPage')));
 const Work = Loadable(lazy(() => import('../views/Landing/YourWorkSection')));
@@ -29,11 +29,11 @@ const MainRoutes = {
     },
     {
       path: 'Models',
-      element: <MainCanvas />
+      element: <MainPage />
     },
     {
       path: 'Models/:id',
-      element: <MainCanvas />
+      element: <MainPage />
     },
     {
       path: 'career',

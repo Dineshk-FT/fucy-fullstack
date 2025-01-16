@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useMemo } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import ColorTheme from '../../../../store/ColorTheme';
@@ -36,22 +36,13 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
-import {
-  attackTableOpen,
-  AttackTreePageOpen,
-  closeAll,
-  DerivationTableOpen,
-  drawerOpen,
-  DsTableOpen,
-  setAttackScene,
-  TsTableOpen,
-  riskTreatmentTableOpen
-} from '../../../../store/slices/CurrentIdSlice';
+import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
+import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 
 const imageComponents = {
   AttackIcon,
@@ -111,31 +102,24 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const CardStyle = styled(Card)(() =>
-  // { theme }
-  ({
-    // background: theme.palette.primary.light,
-    marginBottom: '22px',
-    overflow: 'hidden',
-    position: 'relative',
-    height: '80vh',
-    // boxShadow: 'inset 0px 0px 7px gray',
-    border: '1px solid gray',
-    borderRadius: '0px',
-    '&:after': {
-      content: '""',
-      position: 'absolute',
-      // width: '157px',
-      // height: '157px',
-      // background: theme.palette.primary[200],
-      borderRadius: '50%',
-      top: '-105px',
-      right: '-96px'
-    }
-  })
-);
+const CardStyle = styled(Card)(() => ({
+  marginBottom: '22px',
+  overflow: 'hidden',
+  position: 'relative',
+  height: '80vh',
+  border: '1px solid gray',
+  borderRadius: '0px',
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    borderRadius: '50%',
+    top: '-105px',
+    right: '-96px'
+  }
+}));
 
 const selector = (state) => ({
+  getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
   model: state.model,
@@ -148,6 +132,7 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   attackScenarios: state.attackScenarios,
   getRiskTreatment: state.getRiskTreatment,
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
   cybersecurity: state.cybersecurity,
   systemDesign: state.systemDesign,
   catalog: state.catalog,
@@ -156,7 +141,10 @@ const selector = (state) => ({
   reports: state.reports,
   layouts: state.layouts,
   clickedItem: state.clickedItem,
-  setClickedItem: state.setClickedItem
+  setClickedItem: state.setClickedItem,
+  updateModelName: state.updateModelName,
+  setNodes: state.setNodes,
+  getCatalog: state.getCatalog
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -166,6 +154,7 @@ const BrowserCard = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const {
+    getModels,
     nodes,
     model,
     getModelById,
@@ -177,6 +166,7 @@ const BrowserCard = () => {
     getThreatScenario,
     getAttackScenario,
     getRiskTreatment,
+    getCyberSecurityScenario,
     attackScenarios,
     cybersecurity,
     systemDesign,
@@ -186,20 +176,68 @@ const BrowserCard = () => {
     reports,
     layouts,
     clickedItem,
-    setClickedItem
+    setClickedItem,
+    updateModelName,
+    setNodes,
+    getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
+  const { tableOpen } = useSelector((state) => state?.currentId);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentName, setCurrentName] = useState('');
+  const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
+  const handleOpenDocumentDialog = () => {
+    setOpenDocumentDialog(true);
+  };
+
+  const handleCloseDocumentDialog = () => {
+    setOpenDocumentDialog(false);
+  };
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (e) => {
+    setCurrentName(e.target.value);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setIsEditing(false);
+      updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
+        if (res) {
+          getModels();
+        }
+      });
+    }
+  };
   useEffect(() => {
     getModelById(modelId);
+    getAssets(modelId);
+    getAttackScenario(modelId);
+    getDamageScenarios(modelId);
+    getRiskTreatment(modelId);
+    getThreatScenario(modelId);
+    getCyberSecurityScenario(modelId);
+    getCatalog(modelId);
     setClickedItem(modelId);
   }, [modelId]);
+
+  useEffect(() => {
+    setCurrentName(model?.name);
+  }, [model]);
 
   const scenarios = [
     { name: 'assets', scene: assets },
@@ -207,7 +245,7 @@ const BrowserCard = () => {
     { name: 'threatScenarios', scene: threatScenarios },
     { name: 'attackScenarios', scene: attackScenarios },
     { name: 'cybersecurity', scene: cybersecurity },
-    { name: 'systemDesign', scene: systemDesign },
+    // { name: 'systemDesign', scene: systemDesign },
     { name: 'catalog', scene: catalog },
     { name: 'riskTreatment', scene: riskTreatment },
     { name: 'documents', scene: documents },
@@ -215,64 +253,55 @@ const BrowserCard = () => {
     { name: 'layouts', scene: layouts }
   ];
 
-  // const handleNodeToggle = (event, nodeIds) => {
-  //   console.log('Expanded/collapsed:', nodeIds);
-  //   // Handle expand/collapse logic here
-  // };
-
   const handleTitleClick = (event) => {
-    event.stopPropagation(); // Prevent propagation
+    event.stopPropagation();
     setClickedItem(modelId);
   };
-  // console.log('attackScenarios', attackScenarios);
 
+  const handleAddNewNode = (e) => {
+    e.stopPropagation();
+    dispatch(openAddNodeTab());
+    setOpenItemRight(false);
+  };
+
+  const handleCloseItem = () => {
+    setOpenItemRight(false);
+    setAnchorItemEl(null);
+  };
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
       dispatch(closeAll());
+    } else {
+      handleCloseItem();
     }
     const get_api = {
       assets: getAssets,
       damage: getDamageScenarios,
       threat: getThreatScenario,
-      attack: getAttackScenario
-      // risks: getRiskTreatment
+      attack: getAttackScenario,
+      risks: getRiskTreatment,
+      cybersecurity: getCyberSecurityScenario,
+      catalog: getCatalog
     };
     await get_api[name](ModelId);
   };
 
   const handleOpenTable = (e, id, name) => {
+    // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    switch (true) {
-      case name.includes('Derivations'):
-        dispatch(DerivationTableOpen());
-        break;
-      case name.includes('Collection & Impact Ratings'):
-        dispatch(DsTableOpen());
-        break;
-      case name.includes('Threat Scenarios'):
-        dispatch(TsTableOpen());
-        dispatch(setTitle(name));
-        break;
-      case name === 'Attack':
-        dispatch(attackTableOpen());
-        break;
-      case name.includes('Threat Assessment'):
-        dispatch(riskTreatmentTableOpen());
-        dispatch(setTitle(name));
-        break;
-      default:
-        break;
+    if (name !== 'Attack Trees' && !name.includes('UNICE')) {
+      dispatch(setTableOpen(name));
+      dispatch(setTitle(name));
     }
   };
 
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
-    // console.log('scene', scene);
     if (name === 'Attack Trees') {
-      dispatch(AttackTreePageOpen());
+      dispatch(setTableOpen('Attack Trees Canvas'));
       dispatch(setAttackScene(scene));
     }
   };
@@ -283,25 +312,12 @@ const BrowserCard = () => {
     setOpenItemRight((prev) => !prev);
   };
 
-  const handleCloseItem = () => {
-    setOpenItemRight(false);
-    setAnchorItemEl(null);
-  };
-
-  const handleAddNewNode = (e) => {
-    // dispatch(drawerOpen());
-    e.stopPropagation();
-    dispatch(openAddNodeTab());
-    setOpenItemRight(false);
-  };
-
   const handleOpenSelectNode = (e) => {
     e.stopPropagation();
     setOpenNodelist(true);
     setOpenItemRight(false);
   };
-  // console.log('damageScenarios', damageScenarios);
-  // console.log('threatScenarios', threatScenarios.subs[0].Details);
+
   const handleContext = (e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -315,19 +331,16 @@ const BrowserCard = () => {
   };
 
   const onDragStart = (event, item) => {
-    // console.log('item', item);
     const parseFile = JSON.stringify(item);
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.setData('application/dragItem', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
-  function dragCheck(node) {
-    return node?.dragged;
-  }
-
-  // console.log('assets', assets);
+  // const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
+  // function dragCheck(node) {
+  //   return node?.dragged;
+  // }
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
@@ -352,19 +365,18 @@ const BrowserCard = () => {
       </div>
     );
   };
-  const getLabel = (icon, name) => {
+  const getLabel = (icon, name, index) => {
     const IconComponent = iconComponents[icon];
     return (
       <div className={classes.labelRoot}>
         {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
         <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+          {index && `${index}. `}
           {name}
         </Typography>
       </div>
     );
   };
-
-  // console.log('assets', assets);
 
   const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
     <TreeItem
@@ -436,23 +448,24 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            // console.log('sub.Derivations.length', sub?.Derivations?.length);
             if (sub.name === 'Damage Scenarios Derivations') {
-              return sub.Derivations?.map((derivation) => (
+              return sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={derivation.id}
                   nodeId={derivation.id}
-                  label={getLabel('TopicIcon', derivation.name)}
+                  label={getLabel('TopicIcon', derivation.name, i + 1)}
                 />
               ));
             }
             if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
-              return sub.Details?.map((detail) => (
+              return sub.Details?.map((detail, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={detail._id}
                   nodeId={detail._id}
-                  label={getLabel('DangerousIcon', detail.Name)}
+                  label={getLabel('DangerousIcon', detail.Name, i + 1)}
                 />
               ));
             }
@@ -464,32 +477,55 @@ const BrowserCard = () => {
           data,
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
-            sub.name === 'Threat Scenarios'
-              ? sub.Details?.flatMap((detail) =>
-                  detail.Details?.flatMap((nodeDetail) =>
-                    nodeDetail.props?.map((prop) => {
-                      const label = `[${prop.id.slice(0, 6)}] ${threatType(prop.name)} for the loss of ${prop.name} of ${
-                        nodeDetail.node
-                      } for Damage Scene ${nodeDetail.nodeId.slice(0, 6)}`;
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            let key = 0;
+            return sub.name === 'Threat Scenarios'
+              ? sub.Details?.flatMap((detail) => {
+                  // console.log('detail', detail);
+                  return detail.Details?.flatMap((nodeDetail) =>
+                    nodeDetail.props?.map((prop, i) => {
+                      key++;
+                      const label = `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to  ${
+                        detail?.damage_name
+                      } [${detail?.id}]`;
 
-                      const Details = { label, type: 'default', dragged: true, nodeId: nodeDetail.nodeId, threatId: prop.id };
+                      const Details = {
+                        label,
+                        type: 'default',
+                        dragged: true,
+                        nodeId: nodeDetail.nodeId,
+                        threatId: prop.id,
+                        damageId: detail?.rowId,
+                        key: `TS${key.toString().padStart(3, '0')}`
+                      };
 
                       return (
                         <DraggableTreeItem
-                          draggable={!isDragged}
-                          key={prop.id}
-                          nodeId={prop.id}
-                          label={getLabel('TopicIcon', label)}
+                          draggable={true}
+                          key={prop.id.concat(detail.rowId)}
+                          nodeId={prop.id.concat(detail.rowId)}
+                          label={getLabel('TopicIcon', label, key)}
                           onDragStart={(e) => onDragStart(e, Details)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       );
                     })
-                  )
-                )
-              : null
-          )
+                  );
+                })
+              : sub.Details?.map((detail, i) => {
+                  // console.log('detail', detail);
+                  const label = `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`;
+
+                  return (
+                    <TreeItem
+                      key={detail.id}
+                      nodeId={detail.id}
+                      label={getLabel('TopicIcon', label, i + 1)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  );
+                });
+          })
         );
 
       case 'attackScenarios':
@@ -498,14 +534,14 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'attack', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
-            sub.scenes?.map((at_scene) => {
+            sub.scenes?.map((at_scene, i) => {
               const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
 
               return sub.name === 'Attack' ? (
                 <DraggableTreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
                   draggable
                   onDragStart={(e) => onDragStart(e, Details)}
                   onClick={(e) => e.stopPropagation()}
@@ -514,7 +550,7 @@ const BrowserCard = () => {
                 <TreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
                   onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
                 />
               );
@@ -536,6 +572,57 @@ const BrowserCard = () => {
               />
             ));
           })
+        );
+      case 'cybersecurity':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.scenes?.map((scene) => (
+              <TreeItem onClick={(e) => e.stopPropagation()} key={scene.ID} nodeId={scene.ID} label={getLabel('TopicIcon', scene.Name)} />
+            ));
+          })
+        );
+
+      case 'catalog':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'catalog', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.subs_scenes?.map((scene) => (
+              <TreeItem
+                key={scene.id}
+                nodeId={scene.id}
+                label={getLabel('TopicIcon', scene.name)}
+                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+              >
+                {/* Render nested draggable TreeItems if present */}
+                {scene.item_name?.map((subScene) => (
+                  <DraggableTreeItem
+                    key={subScene.id}
+                    nodeId={subScene.id}
+                    label={getLabel('SubTopicIcon', subScene.name)}
+                    draggable={true}
+                    onClick={(e) => e.stopPropagation()}
+                    onDragStart={(e) => onDragStart(e, subScene)}
+                  />
+                ))}
+              </TreeItem>
+            ));
+          })
+        );
+
+      case 'documents':
+        return renderTreeItem(
+          data,
+          (e) => {
+            e.stopPropagation();
+            handleOpenDocumentDialog();
+          },
+          null,
+          null
         );
 
       default:
@@ -559,15 +646,13 @@ const BrowserCard = () => {
 
   return (
     <>
-      {/* <Typography variant="h4" sx={{ color: color?.tabContentClr }}>
-        Projects
-      </Typography> */}
+      <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
+
       <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
-            // onNodeToggle={handleNodeToggle}
             onClick={handleTitleClick}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
@@ -575,7 +660,27 @@ const BrowserCard = () => {
             <TreeItem
               key={model?._id}
               nodeId={model?._id}
-              label={getTitleLabel('ModelIcon', model?.name, model?._id)}
+              label={
+                isEditing ? (
+                  <TextField
+                    value={currentName}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      my: 0.6,
+                      '& .MuiOutlinedInput-root': { fontSize: '13px' },
+                      '& .MuiInputBase-input': { padding: '4px 14px' },
+                      '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' }
+                    }}
+                  />
+                ) : (
+                  <Box onDoubleClick={handleDoubleClick}>{getTitleLabel('ModelIcon', currentName, model?._id)}</Box>
+                )
+              }
               sx={{ '& .Mui-selected': { backgroundColor: 'none !important' } }}
             >
               {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
@@ -590,7 +695,7 @@ const BrowserCard = () => {
                 {
                   name: 'offset',
                   options: {
-                    offset: [-10, -50] // Adjust these values as needed
+                    offset: [-10, -50]
                   }
                 }
               ]}
@@ -606,11 +711,11 @@ const BrowserCard = () => {
                     border: '1px solid #ccc !important',
                     borderRadius: '8px !important',
                     padding: '8px',
-                    cursor: 'pointer',
+                    cursor: 'pointer'
                   }}
                 >
                   <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
-                  <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem>
+                  {/* <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem> */}
                 </Paper>
               </ClickAwayListener>
             </Popper>

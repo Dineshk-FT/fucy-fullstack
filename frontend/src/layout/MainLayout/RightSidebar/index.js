@@ -12,14 +12,14 @@ export default function RightDrawer() {
     position: 'sticky',
     float: 'right',
     transition: 'width 0.8s',
-    width: 350,
+    width: 250,
     height: 'fit-content',
     maxHeight: '85svh',
     overflow: 'auto',
     zIndex: 1000,
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '-1px 0px 10px gray',
+    boxShadow: '-1px 0px 10px gray'
   };
 
   return (

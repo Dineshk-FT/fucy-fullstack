@@ -7,7 +7,7 @@ export const appDrawerWidth = 320;
 export const navbarHeight = 100;
 export const height = '93svh';
 export const fontSize = 13;
-export const tableHeight = 450;
+export const tableHeight = '60vh';
 //  export const ColorTheme = {
 //     navBG:'#a2a8d3' ,
 //     tabBG:'#e7eaf6',
@@ -32,23 +32,27 @@ export const lightTheme = {
   title: '#000',
   logo: '#5FBDFF',
   iconColor: '#555555',
+  stroke: '#000',
+  line: '#f5f5f5',
   leftbarBG: '#f5f5f5'
 };
 
 export const darkTheme = {
-  navBG: '#000',
+  navBG: '#36454F',
   //  tabBG:'#222831',
   tabBorder: '#222831',
-  tabBG: '#000',
-  selectedTab: 'whitesmoke',
-  sidebarBG: '#000',
-  sidebarInnerBG: '#000',
-  canvaSurroundsBG: '#000',
-  canvasBG: '#222831',
-  sidebarContent: 'white',
-  tabContentClr: 'white',
-  title: 'whitesmoke',
+  tabBG: '#36454F',
+  selectedTab: '#D1D9E0',
+  sidebarBG: '#36454F',
+  sidebarInnerBG: '#36454F',
+  canvaSurroundsBG: '#36454F',
+  canvasBG: '#36454F',
+  sidebarContent: '#D1D9E0',
+  tabContentClr: '#D1D9E0',
+  title: '#D1D9E0',
   logo: '#5FBDFF',
-  iconColor: 'white',
+  iconColor: '#D1D9E0',
+  stroke: '#f5f5f5',
+  line: '#000',
   leftbarBG: '#222831'
 };

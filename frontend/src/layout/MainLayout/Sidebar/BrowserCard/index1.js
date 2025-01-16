@@ -18,7 +18,7 @@ import {
   setAttackScene,
   DerivationTableOpen,
   attackTableOpen,
-  drawerOpen
+  draweropen
 } from '../../../../store/slices/CurrentIdSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import CyberSecurityModal from '../../../../ui-component/Modal/CyberSecurityModal';
@@ -338,7 +338,7 @@ const BrowserCard = ({ models }) => {
   };
 
   const handleAddNewNode = () => {
-    dispatch(drawerOpen());
+    dispatch(draweropen());
     // setOpenNewNode(true);
     setOpenItemRight(false);
   };
