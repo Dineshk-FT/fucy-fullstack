@@ -83,7 +83,7 @@ export default function DsDerivationTable() {
   const [rowsPerPage, setRowsPerPage] = React.useState(25); // Add state for rows per page
   const [columnWidths, setColumnWidths] = React.useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns1);
+  const visibleColumns = useStore((state) => state.DsTable);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -318,7 +318,7 @@ export default function DsDerivationTable() {
                 control={
                   <Checkbox
                     checked={visibleColumns.includes(column.name)}
-                    onChange={() => toggleColumnVisibility('visibleColumns1', column.name)}
+                    onChange={() => toggleColumnVisibility('DsTable', column.name)}
                   />
                 }
                 label={column.name} // Display column name as label
