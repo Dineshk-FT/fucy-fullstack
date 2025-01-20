@@ -125,7 +125,7 @@ export default function Tstable() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns2);
+  const visibleColumns = useStore((state) => state.threatScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -609,7 +609,7 @@ export default function Tstable() {
               control={
                 <Checkbox
                   checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('visibleColumns2', column.name)}
+                  onChange={() => toggleColumnVisibility('threatScenTblClms', column.name)}
                 />
               }
               label={column.name} // Display column name as label

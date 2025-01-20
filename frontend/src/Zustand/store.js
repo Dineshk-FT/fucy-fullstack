@@ -595,58 +595,46 @@ const useStore = createWithEqualityFn((set, get) => ({
   scenerio: {},
   component: [],
   originalNodes: [],
-  visibleColumns: DSTableHeader.map((column) => column.name), // Initialize with all columns visible
-  visibleColumns1: DsDerivationHeader.map((column) => column.name),
-  visibleColumns2: TsTableHeader.map((column) => column.name),
-  visibleColumns3: AttackTableHeader.map((column) => column.name),
-  visibleColumns4: RiskTreatmentHeaderTable.map((column) => column.name),
-  visibleColumns5: CybersecurityGoalsHeader.map((column) => column.name),
-  visibleColumns6: CybersecurityRequirementsHeader.map((column) => column.name),
-  visibleColumns7: CybersecurityControlsHeader.map((column) => column.name),
-  visibleColumns8: CybersecurityClaimsHeader.map((column) => column.name),
+  DsTable: DsDerivationHeader.map((column) => column.name),
+  dmgScenTblClms: DSTableHeader.map((column) => column.name),
+  threatScenTblClms: TsTableHeader.map((column) => column.name),
+  attackTreeTblClms: AttackTableHeader.map((column) => column.name),
+  riskTreatmentTblClms: RiskTreatmentHeaderTable.map((column) => column.name),
+  CybersecurityGoalsTable: CybersecurityGoalsHeader.map((column) => column.name),
+  CybersecurityRequirementsTable: CybersecurityRequirementsHeader.map((column) => column.name),
+  CybersecurityControlsTable: CybersecurityControlsHeader.map((column) => column.name),
+  CybersecurityClaimsTable: CybersecurityClaimsHeader.map((column) => column.name),
 
+  // Object to store filtered data for multiple tables
+  filteredTableData: {},
+
+  // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
     set((state) => ({
-      [table]: columns
+      [table]: columns,
     }));
   },
 
+  // Toggle column visibility for a specific table
   toggleColumnVisibility: (table, columnName) => {
-    const {
-      visibleColumns,
-      visibleColumns1,
-      visibleColumns2,
-      visibleColumns3,
-      visibleColumns4,
-      visibleColumns5,
-      visibleColumns6,
-      visibleColumns7,
-      visibleColumns8
-    } = get();
-    const tableColumns =
-      table === 'visibleColumns'
-        ? visibleColumns
-        : table === 'visibleColumns1'
-        ? visibleColumns1
-        : table === 'visibleColumns2'
-        ? visibleColumns2
-        : table === 'visibleColumns3'
-        ? visibleColumns3
-        : table === 'visibleColumns4'
-        ? visibleColumns4
-        : table === 'visibleColumns5'
-        ? visibleColumns5
-        : table === 'visibleColumns6'
-        ? visibleColumns6
-        : table === 'visibleColumns7'
-        ? visibleColumns7
-        : visibleColumns8;
-    const isCurrentlyVisible = tableColumns.includes(columnName);
-    const updatedColumns = isCurrentlyVisible ? tableColumns.filter((col) => col !== columnName) : [...tableColumns, columnName];
+    const currentColumns = get()[table] || [];
+    const isCurrentlyVisible = currentColumns.includes(columnName);
+    const updatedColumns = isCurrentlyVisible
+      ? currentColumns.filter((col) => col !== columnName)
+      : [...currentColumns, columnName];
 
+    // Update visible columns for the table
     set({
-      [table]: updatedColumns
+      [table]: updatedColumns,
     });
+
+    // Update the filteredTableData object
+    set((state) => ({
+      filteredTableData: {
+        ...state.filteredTableData,
+        [table]: updatedColumns,
+      },
+    }));
   },
 
   getCatalog: async () => {
@@ -671,6 +659,18 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   generateDocument: async (payload) => {
     try {
+      const { filteredTableData } = get();
+
+      // Iterate through filteredTableData and append all tables to the payload
+      Object.keys(filteredTableData).forEach((tableKey) => {
+        const tableData = filteredTableData[tableKey];
+        if (Array.isArray(tableData)) {
+          // Join array elements into a string with a delimiter (e.g., comma or newline)
+          const tableString = tableData.join(','); // Change delimiter if needed (e.g., use '\n' for newline separation)
+          payload.append(tableKey, tableString);  // Append the plain string
+        }
+      });
+
       const url = `${configuration.apiBaseUrl}v1/generate/doc`;
       const options = {
         method: 'POST',
@@ -1529,7 +1529,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
-    // console.log('res', res);
+    console.log('res', res);
     return res;
   },
 

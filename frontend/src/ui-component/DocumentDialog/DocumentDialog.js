@@ -30,7 +30,7 @@ const DocumentDialog = ({ open, onClose }) => {
     formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
     formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
     formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
-    // formData.append('riskTreatmentTable', selectedItems.includes(81));
+    formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
 
     if (selectedItems.includes(1)) {
       try {

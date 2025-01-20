@@ -217,7 +217,7 @@ export default function DsTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns);
+  const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -750,7 +750,7 @@ export default function DsTable() {
               control={
                 <Checkbox
                   checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('visibleColumns', column.name)}
+                  onChange={() => toggleColumnVisibility('dmgScenTblClms', column.name)}
                 />
               }
               label={column.name} // Display column name as label

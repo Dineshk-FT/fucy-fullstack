@@ -117,7 +117,7 @@ export default function RiskTreatmentTable() {
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.visibleColumns4);
+  const visibleColumns = useStore((state) => state.riskTreatmentTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   // Open/Close the filter modal
@@ -575,7 +575,7 @@ export default function RiskTreatmentTable() {
               control={
                 <Checkbox
                   checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('visibleColumns4', column.name)}
+                  onChange={() => toggleColumnVisibility('riskTreatmentTblClms', column.name)}
                 />
               }
               label={column.name} // Display column name as label
