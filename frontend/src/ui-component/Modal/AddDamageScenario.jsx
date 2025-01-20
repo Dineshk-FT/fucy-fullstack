@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
+import ColorTheme from '../../store/ColorTheme';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -25,6 +26,7 @@ const selector = (state) => ({
 });
 
 export default function AddDamageScenarios({ open, handleClose, model, rows, notify }) {
+  const color = ColorTheme();
   // console.log('rows', rows);
   const { addDamageScene, getDamageScenarios } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
@@ -78,7 +80,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
         aria-describedby="alert-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
-            // background:'#999999',
+            background: color?.tabBG,
             width: '-webkit-fill-available'
           }
         }}
@@ -89,7 +91,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Name :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -98,7 +100,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Description :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"
@@ -112,7 +114,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+          <Button variant="outlined" color="error" onClick={handleClose}>
             cancel
           </Button>
           <Button variant="contained" color="primary" onClick={handleCreate}>

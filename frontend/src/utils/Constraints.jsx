@@ -1,4 +1,18 @@
 import { v4 as uid } from 'uuid';
+import {
+  CircularNode,
+  CustomGroupNode,
+  CustomNode,
+  DefaultNode,
+  DiagonalNode,
+  InputNode,
+  Memory,
+  MicroController,
+  MultiHandleNode,
+  OutputNode
+} from '../ui-component/custom';
+import AttackNode from '../ui-component/custom/nodes/AttackNode';
+import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../ui-component/CustomGates';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);
@@ -45,4 +59,37 @@ export const style = {
   borderColor: 'black',
   borderWidth: '2px',
   borderStyle: 'solid'
+};
+
+export const pageNodeTypes = {
+  maincanvas: {
+    input: InputNode,
+    output: OutputNode,
+    default: DefaultNode,
+    receiver: CustomNode,
+    signal: CustomNode,
+    custom: CustomNode,
+    transmitter: CircularNode,
+    transceiver: DiagonalNode,
+    mcu: MicroController,
+    memory: Memory,
+    group: CustomGroupNode,
+    multihandle: MultiHandleNode
+  },
+  attackcanvas: {
+    input: InputNode,
+    output: OutputNode,
+    default: AttackNode,
+    receiver: CustomNode,
+    custom: CustomNode,
+    signal: CustomNode,
+    transmitter: CircularNode,
+    transceiver: DiagonalNode,
+    attack_tree_node: AttackTreeNode,
+    Event: Event,
+    [`OR Gate`]: ORGate,
+    [`AND Gate`]: ANDGate,
+    [`Transfer Gate`]: TransferGate,
+    [`Voting Gate`]: VotingGate
+  }
 };

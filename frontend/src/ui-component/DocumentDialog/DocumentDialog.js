@@ -56,17 +56,17 @@ const DocumentDialog = ({ open, onClose }) => {
     const width = 1024;
     const height = 768;
 
+    // Set canvas dimensions
     canvas.width = width;
     canvas.height = height;
 
+    // Background color
     ctx.fillStyle = '#1a365d';
     ctx.fillRect(0, 0, width, height);
 
     const { nodes, edges } = template;
 
-    const scaleX = width / 1000;
-    const scaleY = height / 1000;
-
+    // Calculate bounds of all nodes to center the graph
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -83,84 +83,181 @@ const DocumentDialog = ({ open, onClose }) => {
       maxY = Math.max(maxY, y + nodeHeight / 2);
     });
 
-    const offsetX = (width - (maxX - minX)) / 2 - minX;
-    const offsetY = (height - (maxY - minY)) / 2 - minY;
+    const graphWidth = maxX - minX;
+    const graphHeight = maxY - minY;
+    const scale = Math.min(width / graphWidth, height / graphHeight) * 0.9; // Add padding
+    const offsetX = (width - graphWidth * scale) / 2 - minX * scale;
+    const offsetY = (height - graphHeight * scale) / 2 - minY * scale;
 
-    nodes.forEach((node) => {
-      const { x, y } = node.position;
-      const label = node.data.label || node.id;
-
-      const nodeStyle = node.data.style || {};
-      const nodeWidth = node.width || 100;
-      const nodeHeight = node.height || 50;
-      const backgroundColor = nodeStyle.backgroundColor || 'white';
-      const borderColor = nodeStyle.borderColor || 'black';
-      const borderWidth = nodeStyle.borderWidth || 2;
-
-      const nodeX = (x + offsetX) * scaleX;
-      const nodeY = (y + offsetY) * scaleY;
-
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(nodeX - nodeWidth / 2, nodeY - nodeHeight / 2, nodeWidth, nodeHeight);
-
-      ctx.lineWidth = borderWidth;
-      ctx.strokeStyle = borderColor;
-      ctx.strokeRect(nodeX - nodeWidth / 2, nodeY - nodeHeight / 2, nodeWidth, nodeHeight);
-
-      ctx.fillStyle = 'black';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, nodeX, nodeY);
+    // Helper to transform positions
+    const transformPosition = (x, y) => ({
+      x: x * scale + offsetX,
+      y: y * scale + offsetY
     });
 
+    // Draw nodes
+    nodes.forEach((node) => {
+      const { x, y } = node.position;
+      const label = node.data?.label || node.id;
+
+      const nodeStyle = node.data?.style || {};
+      const nodeWidth = (node.width || 100) * scale;
+      const nodeHeight = (node.height || 50) * scale;
+      const backgroundColor = nodeStyle.backgroundColor || 'white';
+      const borderColor = nodeStyle.borderColor || 'black';
+      const borderWidth = 2; // nodeStyle.borderWidth
+      const textColor = nodeStyle.color || 'black';
+
+      const { x: transformedX, y: transformedY } = transformPosition(x, y);
+
+      // Draw node rectangle
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(transformedX - nodeWidth / 2, transformedY - nodeHeight / 2, nodeWidth, nodeHeight);
+
+      // Draw border
+      ctx.lineWidth = borderWidth * scale;
+      ctx.strokeStyle = borderColor;
+      ctx.strokeRect(transformedX - nodeWidth / 2, transformedY - nodeHeight / 2, nodeWidth, nodeHeight);
+
+      // Draw label
+      ctx.fillStyle = textColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `${14 * scale}px Arial`;
+      ctx.fillText(label, transformedX, transformedY);
+    });
+
+    // Draw edges
     edges.forEach((edge) => {
       const fromNode = nodes.find((node) => node.id === edge.source);
       const toNode = nodes.find((node) => node.id === edge.target);
 
       if (fromNode && toNode) {
-        const fromX = (fromNode.position.x + offsetX) * scaleX;
-        const fromY = (fromNode.position.y + offsetY) * scaleY;
-        const toX = (toNode.position.x + offsetX) * scaleX;
-        const toY = (toNode.position.y + offsetY) * scaleY;
+        const fromHandle = getHandlePosition(fromNode, 'bottom');
+        const toHandle = getHandlePosition(toNode, 'top');
 
-        const angleFromTo = Math.atan2(toY - fromY, toX - fromX);
-        const angleToFrom = Math.atan2(fromY - toY, fromX - toX);
+        const transformedFrom = transformPosition(fromHandle.x, fromHandle.y);
+        const transformedTo = transformPosition(toHandle.x, toHandle.y);
 
-        const fromRadiusX = (fromNode.width || 100) / 2;
-        const fromRadiusY = (fromNode.height || 50) / 2;
-        const toRadiusX = (toNode.width || 100) / 2;
-        const toRadiusY = (toNode.height || 50) / 2;
+        // Calculate adjusted endpoints to ensure edges touch only the borders
+        const adjustedFrom = adjustEdgeEndpoint(fromNode, transformedFrom, transformedTo);
+        const adjustedTo = adjustEdgeEndpoint(toNode, transformedTo, transformedFrom);
 
-        const startX = fromX + fromRadiusX * Math.cos(angleFromTo);
-        const startY = fromY + fromRadiusY * Math.sin(angleFromTo);
-        const endX = toX + toRadiusX * Math.cos(angleToFrom);
-        const endY = toY + toRadiusY * Math.sin(angleToFrom);
+        ctx.lineWidth = (edge.style?.strokeWidth || 2) * scale;
+        ctx.strokeStyle = edge.style?.stroke || 'white';
 
-        // Draw the edge line
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 4;
-        ctx.stroke();
+        // Draw edge shape based on type
+        switch (edge.type) {
+          case 'bezier':
+            drawBezierEdge(ctx, adjustedFrom, adjustedTo);
+            break;
+          case 'step':
+            drawStepEdge(ctx, adjustedFrom, adjustedTo);
+            break;
+          default:
+            drawStraightEdge(ctx, adjustedFrom, adjustedTo);
+            break;
+        }
 
-        // Draw marker only at the target node
+        // Draw arrow marker at target node
         if (edge.markerEnd) {
-          drawArrowMarker(ctx, endX, endY, startX, startY, edge.markerEnd);
+          drawArrowMarker(ctx, adjustedTo.x, adjustedTo.y, adjustedFrom.x, adjustedFrom.y, edge.markerEnd);
         }
       }
     });
 
-    const imageData = canvas.toDataURL('image/png');
-    return imageData;
+    // Convert canvas to image data
+    return canvas.toDataURL('image/png');
   };
 
+  // Helper: Draw a straight edge
+  function drawStraightEdge(ctx, from, to) {
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  }
+
+  // Helper: Draw a Bezier edge
+  function drawBezierEdge(ctx, from, to) {
+    const controlPoint1 = { x: from.x, y: (from.y + to.y) / 2 };
+    const controlPoint2 = { x: to.x, y: (from.y + to.y) / 2 };
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.bezierCurveTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, to.x, to.y);
+    ctx.stroke();
+  }
+
+  // Helper: Draw a stepped edge
+  function drawStepEdge(ctx, from, to) {
+    const midX = (from.x + to.x) / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(midX, from.y);
+    ctx.lineTo(midX, to.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  }
+
+  // Helper: Get handle position
+  function getHandlePosition(node, handle) {
+    const nodeWidth = node.width || 100;
+    const nodeHeight = node.height || 50;
+
+    switch (handle) {
+      case 'top':
+        return { x: node.position.x, y: node.position.y - nodeHeight / 2 };
+      case 'bottom':
+        return { x: node.position.x, y: node.position.y + nodeHeight / 2 };
+      default:
+        return { x: node.position.x, y: node.position.y };
+    }
+  }
+
+  // Helper: Adjust edge endpoint
+  function adjustEdgeEndpoint(node, from, to) {
+    const nodeWidth = (node.width || 100) / 2;
+    const nodeHeight = (node.height || 50) / 2;
+
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const angle = Math.atan2(dy, dx);
+
+    const radiusX = Math.abs(nodeWidth / Math.cos(angle));
+    const radiusY = Math.abs(nodeHeight / Math.sin(angle));
+    const radius = Math.min(radiusX, radiusY);
+
+    return {
+      x: from.x + radius * Math.cos(angle),
+      y: from.y + radius * Math.sin(angle)
+    };
+  }
+
+  // Helper: Draw arrow marker
   function drawArrowMarker(ctx, x, y, fromX, fromY, marker) {
     const { width = 10, height = 15, color = 'black' } = marker;
-    const angle = Math.atan2(y - fromY, x - fromX);
+    let angle = Math.atan2(y - fromY, x - fromX);
+
+    // Check if the edge direction is upwards or downwards
+    const isDownwardArrow = y > fromY;
+
+    // If downward, rotate the arrow to point downward, otherwise point upward
+    if (isDownwardArrow) {
+      // Pointing down
+      angle = Math.atan2(1, 0); // Rotate to 90 degrees downward
+    } else {
+      // Pointing up
+      angle = Math.atan2(-1, 0); // Rotate to -90 degrees upward
+    }
+
+    // Adjust the position of the arrow slightly below the edge
+    const arrowOffset = 20; // Small value to move the arrow below the edge
+    const adjustedY = y + (isDownwardArrow ? arrowOffset : -arrowOffset);
 
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(x, adjustedY); // Apply the adjusted position for the marker
     ctx.rotate(angle);
 
     ctx.fillStyle = color;

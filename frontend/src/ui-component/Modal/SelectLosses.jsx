@@ -11,7 +11,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import ColorTheme from '../../store/ColorTheme';
 
 export default function SelectLosses({
   details,
@@ -25,6 +26,7 @@ export default function SelectLosses({
   update,
   getThreatScenario
 }) {
+  const color = ColorTheme();
   useEffect(() => {
     const updateDetailsWithCyberLosses = (details, cyberLosses) => {
       const updatedDetails = details.map((item) => {
@@ -144,7 +146,8 @@ export default function SelectLosses({
         sx={{
           '& .MuiPaper-root': {
             minWidth: 350,
-            width: 'fit-content'
+            width: 'fit-content',
+            background: color?.tabBG
           }
         }}
       >
@@ -174,7 +177,11 @@ export default function SelectLosses({
                                 onClick={(e) => e.stopPropagation()}
                               />
                             }
-                            label={item?.name}
+                            label={
+                              <Typography variant="h5" sx={{ color: color?.title }}>
+                                {item?.name}
+                              </Typography>
+                            }
                           />
                         </FormGroup>
                       </div>
@@ -194,7 +201,7 @@ export default function SelectLosses({
                                   onChange={(e) => handleChildChange(e, pr, item)}
                                 />
                               }
-                              label={`Loss of ${pr.name}`}
+                              label={<Typography variant="p" sx={{ color: color?.title }}>{`Loss of ${pr.name}`}</Typography>}
                             />
                           </FormGroup>
                         }

@@ -15,12 +15,11 @@ import useStore from '../../Zustand/store';
 const selector = (state) => ({
   getAssets: state.getAssets,
   model: state.model,
-  setNodes: state.setNodes,
   getCyberSecurityScenario: state.getCyberSecurityScenario
 });
 const AttackTree = () => {
   const color = ColorTheme();
-  const { getAssets, model, setNodes, getCyberSecurityScenario } = useStore(selector);
+  const { getAssets, model, getCyberSecurityScenario } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 

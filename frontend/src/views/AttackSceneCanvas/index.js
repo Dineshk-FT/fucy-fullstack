@@ -15,7 +15,7 @@ import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import { style } from '../../utils/Constraints';
+import { pageNodeTypes, style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
@@ -132,23 +132,6 @@ const edgeOptions = {
   }
 };
 
-const nodetypes = {
-  input: InputNode,
-  output: OutputNode,
-  default: AttackNode,
-  receiver: CustomNode,
-  custom: CustomNode,
-  signal: CustomNode,
-  transmitter: CircularNode,
-  transceiver: DiagonalNode,
-  attack_tree_node: AttackTreeNode,
-  Event: Event,
-  [`OR Gate`]: ORGate,
-  [`AND Gate`]: ANDGate,
-  [`Transfer Gate`]: TransferGate,
-  [`Voting Gate`]: VotingGate
-};
-
 export default function AttackBlock({ attackScene, color }) {
   const {
     nodes,
@@ -169,26 +152,54 @@ export default function AttackBlock({ attackScene, color }) {
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
+  const [nodeTypes, setNodeTypes] = useState({});
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
-  // console.log('attackScene', attackScene);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const newNodeTypes = pageNodeTypes['attackcanvas'] || {};
+    setNodeTypes(newNodeTypes);
+    setNodes([]);
+    setEdges([]);
+    setTimeout(() => setIsReady(true), 0); // Defer rendering
+  }, []);
+  // Prevent rendering until ready
 
   useEffect(() => {
     if (attackScene) {
       setTimeout(() => {
         setNodes(attackScene?.templates?.nodes ?? []);
         setEdges(attackScene?.templates?.edges ?? []);
-      }, 400);
+      }, 300);
     }
   }, [attackScene]);
 
+  const onLayout = useCallback(
+    async ({ direction = 'DOWN' } = {}) => {
+      try {
+        const opts = { 'elk.direction': direction };
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
+
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+      } catch (error) {
+        console.error('Error during layout:', error);
+      }
+    },
+    [nodes, edges, setNodes, setEdges]
+  );
   useEffect(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
     }
-  }, [reactFlowInstance, nodes?.length]);
+  }, [reactFlowInstance, nodes?.length, onLayout]);
+
+  useLayoutEffect(() => {
+    onLayout({ direction: 'DOWN', useInitialNodes: true });
+  }, []);
 
   const handleNodeContextMenu = (event, node) => {
     if (node.type !== 'default') {
@@ -465,25 +476,6 @@ export default function AttackBlock({ attackScene, color }) {
     [reactFlowInstance, nodes, addNode, addEdge]
   );
 
-  const onLayout = useCallback(
-    async ({ direction = 'DOWN' } = {}) => {
-      try {
-        const opts = { 'elk.direction': direction };
-        const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
-
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
-      } catch (error) {
-        console.error('Error during layout:', error);
-      }
-    },
-    [nodes, edges, setNodes, setEdges]
-  );
-
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
-
   const handleSave = () => {
     const template = {
       nodes: nodes,
@@ -535,6 +527,7 @@ export default function AttackBlock({ attackScene, color }) {
     background: color?.canvasBG
   };
   // console.log('nodes', nodes);
+  if (!isReady) return null;
 
   return (
     <div style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
@@ -545,7 +538,7 @@ export default function AttackBlock({ attackScene, color }) {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          nodeTypes={nodetypes}
+          nodeTypes={nodeTypes}
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
           onInit={setReactFlowInstance}

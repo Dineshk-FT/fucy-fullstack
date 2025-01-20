@@ -40,7 +40,7 @@ import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
-import { style } from '../../utils/Constraints';
+import { pageNodeTypes, style } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
@@ -144,21 +144,6 @@ const edgeOptions = {
   }
 };
 
-const nodetypes = {
-  input: InputNode,
-  output: OutputNode,
-  default: DefaultNode,
-  receiver: CustomNode,
-  signal: CustomNode,
-  custom: CustomNode,
-  transmitter: CircularNode,
-  transceiver: DiagonalNode,
-  mcu: MicroController,
-  memory: Memory,
-  group: CustomGroupNode,
-  multihandle: MultiHandleNode
-};
-
 const CustomStepEdge = (props) => {
   return <StepEdge {...props} />;
 };
@@ -202,6 +187,7 @@ export default function MainCanvas() {
   // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
+  const [nodeTypes, setNodeTypes] = useState({});
   const [selectedElement, setSelectedElement] = useState({});
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -213,6 +199,7 @@ export default function MainCanvas() {
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
+  const [isReady, setIsReady] = useState(false);
 
   const handleClear = () => {
     setNodes([]);
@@ -222,6 +209,14 @@ export default function MainCanvas() {
   // useEffect(() => {
   //   handleClear();
   // }, []);
+
+  useEffect(() => {
+    const newNodeTypes = pageNodeTypes['maincanvas'] || {};
+    setNodeTypes(newNodeTypes);
+    setNodes([]);
+    setEdges([]);
+    setTimeout(() => setIsReady(true), 0);
+  }, []);
 
   useEffect(() => {
     const template = assets?.template;
@@ -259,20 +254,20 @@ export default function MainCanvas() {
     };
   }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
-  const onLayout = useCallback(
-    ({ direction, useInitialNodes = false }) => {
-      const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? nodes : nodes;
-      const es = useInitialNodes ? nodes : edges;
-      getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+  // const onLayout = useCallback(
+  //   ({ direction, useInitialNodes = false }) => {
+  //     const opts = { 'elk.direction': direction, ...elkOptions };
+  //     const ns = useInitialNodes ? nodes : nodes;
+  //     const es = useInitialNodes ? nodes : edges;
+  //     getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+  //       setNodes(layoutedNodes);
+  //       setEdges(layoutedEdges);
 
-        // window.requestAnimationFrame(() => fitView());
-      });
-    },
-    [nodes, edges]
-  );
+  //       // window.requestAnimationFrame(() => fitView());
+  //     });
+  //   },
+  //   [nodes, edges]
+  // );
 
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
@@ -284,9 +279,9 @@ export default function MainCanvas() {
     setNodes(updated);
   };
 
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
+  // useLayoutEffect(() => {
+  //   onLayout({ direction: 'DOWN', useInitialNodes: true });
+  // }, []);
 
   const onNodeDragStart = useCallback((_, node) => {
     dragRef.current = node;
@@ -502,7 +497,7 @@ export default function MainCanvas() {
         handleClear();
       }
     },
-    [reactFlowInstance]
+    [reactFlowInstance, assets]
   );
 
   const handleSaveToModel = () => {
@@ -686,6 +681,8 @@ export default function MainCanvas() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  if (!isReady) return null;
+
   return (
     <>
       <div
@@ -699,8 +696,8 @@ export default function MainCanvas() {
             nodes={nodes}
             setNodes={setNodes}
             setSelectedElement={setSelectedElement}
-            horizontal={() => onLayout({ direction: 'RIGHT' })}
-            vertical={() => onLayout({ direction: 'DOWN' })}
+            // horizontal={() => onLayout({ direction: 'RIGHT' })}
+            // vertical={() => onLayout({ direction: 'DOWN' })}
             handleClear={handleClear}
             handleSave={handleSaveToModel}
             download={handleDownload}
@@ -714,7 +711,7 @@ export default function MainCanvas() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            nodeTypes={nodetypes}
+            nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onInit={onInit}
             onLoad={onLoad}

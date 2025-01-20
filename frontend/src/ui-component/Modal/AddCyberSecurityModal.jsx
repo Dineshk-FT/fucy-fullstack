@@ -16,6 +16,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 // import { v4 as uid } from 'uuid';
 import toast, { Toaster } from 'react-hot-toast';
+import ColorTheme from '../../store/ColorTheme';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -29,6 +30,7 @@ const selector = (state) => ({
 
 const notify = (message, status) => toast[status](message);
 export default function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
+  const color = ColorTheme();
   const { addScene, model, getCyberSecurityScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
     Name: '',
@@ -76,7 +78,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
         aria-describedby="alert-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
-            // background:'#999999',
+            background: color?.tabBG,
             width: 475
           }
         }}
@@ -87,7 +89,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Name :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -96,7 +98,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Description :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"

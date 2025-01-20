@@ -17,6 +17,7 @@ import { shallow } from 'zustand/shallow';
 import { ToasterContext } from '../../layout/MainLayout/Sidebar1';
 import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
+import ColorTheme from '../../store/ColorTheme';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -28,6 +29,7 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario
 });
 export default function CommonModal({ open, handleClose, name }) {
+  const color = ColorTheme();
   const { notify } = React.useContext(ToasterContext);
   const { id } = useParams();
   const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
@@ -68,8 +70,15 @@ export default function CommonModal({ open, handleClose, name }) {
 
   return (
     <React.Fragment>
-      <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={onClose} aria-describedby="alert-dialog-slide-description">
-        <DialogTitle sx={{ fontSize: 20, fontFamily: 'Inter' }}>{`Add New ${name}`}</DialogTitle>
+      <Dialog
+        open={open}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={onClose}
+        aria-describedby="alert-dialog-slide-description"
+        sx={{ '& .MuiPaper-root': { backgroundColor: color?.tabBG } }}
+      >
+        <DialogTitle variant="h4" color="primary" sx={{ fontFamily: 'Inter' }}>{`Add New ${name}`}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
