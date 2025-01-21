@@ -336,7 +336,7 @@ export default function RiskTreatmentTable() {
         data={row}
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
-          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          backgroundColor: isSelected ? '#B2BEB5' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }

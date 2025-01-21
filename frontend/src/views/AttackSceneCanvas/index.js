@@ -1,19 +1,16 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType, Background } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { CustomNode, DefaultNode, InputNode, OutputNode, CircularNode, DiagonalNode, CustomEdge } from '../../ui-component/custom';
-import { AttackTreeNode, ORGate, ANDGate, TransferGate, VotingGate, Event } from '../../ui-component/CustomGates';
-import { Button } from '@mui/material';
+import { CustomEdge } from '../../ui-component/custom';
+import { Button, Checkbox } from '@mui/material';
 import { v4 as uid } from 'uuid';
-import { useDispatch, useSelector } from 'react-redux';
-import { setAttackScene } from '../../store/slices/CurrentIdSlice';
+import { useDispatch } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
-import AttackNode from '../../ui-component/custom/nodes/AttackNode';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
@@ -104,7 +101,11 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   addAttackScene: state.addAttackScene,
-  addcybersecurityScene: state.addcybersecurityScene
+  addcybersecurityScene: state.addcybersecurityScene,
+  deleteCybersecurity: state.deleteCybersecurity,
+  deleteAttacks: state.deleteAttacks,
+  attacks: state.attackScenarios['subs'][0],
+  requirements: state.cybersecurity['subs'][1]
 });
 
 // Edge line styling
@@ -148,7 +149,11 @@ export default function AttackBlock({ attackScene, color }) {
     getAttackScenario,
     getCyberSecurityScenario,
     addAttackScene,
-    addcybersecurityScene
+    addcybersecurityScene,
+    deleteCybersecurity,
+    deleteAttacks,
+    attacks,
+    requirements
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -158,6 +163,16 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   const [isReady, setIsReady] = useState(false);
+  const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
+  const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
+
+  const getMatchingId = useCallback(() => {
+    const matchingScene = attacks['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId);
+    return matchingScene ? matchingScene.ID : null;
+  }, [attacks, selectedNode]);
+  function check(scene) {
+    return scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId;
+  }
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['attackcanvas'] || {};
@@ -210,7 +225,7 @@ export default function AttackBlock({ attackScene, color }) {
         visible: true,
         x: event.clientX,
         y: event.clientY,
-        options: node.type === 'Event' ? ['Copy', 'Paste', 'Convert to attack', 'convert to requirement'] : ['Copy', 'Paste'],
+        options: node.type === 'Event' ? ['Copy', 'Paste', 'Attack', 'Requirement'] : ['Copy', 'Paste'],
         node
       });
     }
@@ -233,9 +248,82 @@ export default function AttackBlock({ attackScene, color }) {
     }
   };
 
-  const handleMenuOptionClick = (option) => {
+  const handleCheckboxChange = (e, option, isChecked) => {
+    e.stopPropagation();
+    // console.log(`${option} checkbox is now ${isChecked ? 'checked' : 'unchecked'}`);
     const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
-    const { threatId, key } = threatNode;
+    const { threatId, key } = threatNode || {};
+
+    if (isChecked) {
+      if (option === 'Attack') {
+        const details = {
+          modelId: model?._id,
+          threatId,
+          type: 'attack',
+          attackId: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addAttackScene(details).then((res) => {
+          if (!res.error) {
+            getAttackScenario(model?._id);
+            notify(res.message ?? 'Converted to Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+      } else if (option === 'Requirement') {
+        const detail = {
+          modelId: model?._id,
+          threatId,
+          threatKey: key,
+          type: 'cybersecurity_requirements',
+          id: selectedNode?.id,
+          name: selectedNode?.data?.label
+        };
+        addcybersecurityScene(detail).then((res) => {
+          if (!res.error) {
+            getCyberSecurityScenario(model?._id);
+            notify(res.message ?? 'Converted to Requirement', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+      }
+    } else {
+      // If the checkbox is unchecked
+      if (option === 'Attack') {
+        const matchingId = getMatchingId();
+        const removeDetails = {
+          id: attacks?._id,
+          rowId: [matchingId]
+        };
+        deleteAttacks(removeDetails).then((res) => {
+          if (!res.error) {
+            getAttackScenario(model?._id);
+            notify(res.message ?? 'Removed Attack', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+      } else if (option === 'Requirement') {
+        const removeDetail = {
+          id: requirements?._id,
+          rowId: [selectedNode?.id]
+        };
+        deleteCybersecurity(removeDetail).then((res) => {
+          if (!res.error) {
+            getCyberSecurityScenario(model?._id);
+            notify(res.message ?? 'Removed Requirement', 'success');
+          } else {
+            notify(res.error, 'error');
+          }
+        });
+      }
+    }
+  };
+
+  const handleMenuOptionClick = (e, option) => {
+    e.stopPropagation();
     switch (option) {
       case 'Copy':
         if (copiedNode) {
@@ -243,7 +331,9 @@ export default function AttackBlock({ attackScene, color }) {
           setCopiedNode(nodeToCopy);
           notify('Node copied!', 'success');
         }
+        setContextMenu({ visible: false, x: 0, y: 0 }); // Close context menu
         break;
+
       case 'Paste':
         if (Array.isArray(copiedNode) && copiedNode.length > 0) {
           copiedNode.forEach((node) => {
@@ -255,56 +345,18 @@ export default function AttackBlock({ attackScene, color }) {
                 y: contextMenu.y - 50
               }
             };
-
             const nodetoPaste = [...nodes, newNode];
             setNodes(nodetoPaste);
           });
         } else {
           console.error('No valid copied node found');
         }
+        setContextMenu({ visible: false, x: 0, y: 0 }); // Close context menu
         break;
-      case 'Convert to attack':
-        const details = {
-          modelId: model?._id,
-          threatId: threatId,
-          type: 'attack',
-          attackId: selectedNode?.id,
-          name: selectedNode?.data?.label
-        };
-        addAttackScene(details).then((res) => {
-          // console.log('res', res);
-          if (!res.error) {
-            getAttackScenario(model?._id);
-            notify(res.message ?? 'converted to Attack', 'success');
-          } else {
-            notify(res.error, 'error');
-          }
-        });
-        break;
-      case 'convert to requirement':
-        const detail = {
-          modelId: model?._id,
-          threatId: threatId,
-          threatKey: key,
-          type: 'cybersecurity_requirements',
-          id: selectedNode?.id,
-          name: selectedNode?.data?.label
-        };
-        addcybersecurityScene(detail).then((res) => {
-          // console.log('res', res);
-          if (!res.error) {
-            getCyberSecurityScenario(model?._id);
-            notify(res.message ?? 'converted to Attack', 'success');
-          } else {
-            notify(res.error, 'error');
-          }
-        });
-        break;
+
       default:
         break;
     }
-
-    setContextMenu({ visible: false, x: 0, y: 0 });
   };
 
   useEffect(() => {
@@ -569,7 +621,7 @@ export default function AttackBlock({ attackScene, color }) {
           <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
         </ReactFlow>
       </ReactFlowProvider>
-      {contextMenu.visible && (
+      {contextMenu?.visible && (
         <div
           style={{
             position: 'absolute',
@@ -586,7 +638,7 @@ export default function AttackBlock({ attackScene, color }) {
             fontSize: '12px'
           }}
         >
-          {contextMenu.options.map((option) => (
+          {contextMenu?.options.map((option) => (
             <div
               key={option}
               style={{
@@ -594,20 +646,30 @@ export default function AttackBlock({ attackScene, color }) {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between', // Space between text/icon and checkbox
                 borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
                 transition: 'background-color 0.2s ease' // Smooth transition for hover effect
               }}
-              onClick={() => handleMenuOptionClick(option)}
+              onClick={(e) => handleMenuOptionClick(e, option)}
               onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
               onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
             >
-              <span style={{ marginRight: '8px' }}>
+              <span style={{ display: 'flex', alignItems: 'center' }}>
                 {option === 'Copy' && <ContentCopyIcon />}
                 {option === 'Paste' && <ContentPasteIcon />}
-                {option.includes('attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
-                {option.includes('requirement') && <img src={CybersecurityIcon} alt="attack" height="20px" width="20px" />}
+                {option.includes('Attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
+                {option.includes('Requirement') && <img src={CybersecurityIcon} alt="requirement" height="20px" width="20px" />}
+                <span style={{ marginLeft: '8px' }}>{option}</span>
               </span>
-              {option}
+              {/* Add MUI Checkbox for "Attack" and "Requirement" */}
+              {['Attack', 'Requirement'].includes(option) && (
+                <Checkbox
+                  checked={option === 'Attack' ? isAttack : option === 'Requirement' ? isRequirement : false}
+                  onChange={(e) => handleCheckboxChange(e, option, e.target.checked)}
+                  color="primary"
+                  sx={{ marginLeft: 'auto', p: 0 }}
+                />
+              )}
             </div>
           ))}
         </div>

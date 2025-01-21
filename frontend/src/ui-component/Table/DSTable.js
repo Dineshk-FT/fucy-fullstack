@@ -302,7 +302,7 @@ export default function DsTable() {
       const filterValue = rows.filter((rw) => {
         if (
           rw.Name.toLowerCase().includes(value.toLowerCase()) ||
-          rw['Description/ Scalability']?.toLowerCase().includes(value.toLowerCase())
+          rw['Description/Scalability']?.toLowerCase().includes(value.toLowerCase())
         ) {
           return rw;
         }
@@ -322,7 +322,7 @@ export default function DsTable() {
         id: ls._id,
         ID: `DS${ls?.key?.toString().padStart(3, '0') ?? (i + 1).toString().padStart(3, '0')}`,
         Name: ls?.Name,
-        'Description/ Scalability': ls['Description'],
+        'Description/Scalability': ls['Description'],
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         'Asset is Evaluated': ls?.is_asset_evaluated === 'true' ? true : false,
         'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true' ? true : false,
@@ -516,7 +516,7 @@ export default function DsTable() {
           }}
         >
           {Head?.map((item, index) => {
-            const isEditableField = item.name === 'Name' || item.name === 'Description/ Scalability';
+            const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
             let cellContent;
             switch (true) {
               case isEditableField:

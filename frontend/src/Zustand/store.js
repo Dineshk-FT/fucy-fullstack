@@ -611,7 +611,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
     set((state) => ({
-      [table]: columns,
+      [table]: columns
     }));
   },
 
@@ -619,21 +619,19 @@ const useStore = createWithEqualityFn((set, get) => ({
   toggleColumnVisibility: (table, columnName) => {
     const currentColumns = get()[table] || [];
     const isCurrentlyVisible = currentColumns.includes(columnName);
-    const updatedColumns = isCurrentlyVisible
-      ? currentColumns.filter((col) => col !== columnName)
-      : [...currentColumns, columnName];
+    const updatedColumns = isCurrentlyVisible ? currentColumns.filter((col) => col !== columnName) : [...currentColumns, columnName];
 
     // Update visible columns for the table
     set({
-      [table]: updatedColumns,
+      [table]: updatedColumns
     });
 
     // Update the filteredTableData object
     set((state) => ({
       filteredTableData: {
         ...state.filteredTableData,
-        [table]: updatedColumns,
-      },
+        [table]: updatedColumns
+      }
     }));
   },
 
@@ -667,7 +665,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         if (Array.isArray(tableData)) {
           // Join array elements into a string with a delimiter (e.g., comma or newline)
           const tableString = tableData.join(','); // Change delimiter if needed (e.g., use '\n' for newline separation)
-          payload.append(tableKey, tableString);  // Append the plain string
+          payload.append(tableKey, tableString); // Append the plain string
         }
       });
 
@@ -1731,11 +1729,17 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
+  deleteAttacks: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
   deleteRiskTreatment: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/risktreatment`;
     const res = await DELETE_CALL(details, url);
     return res;
   },
+
   // deleteModels: async (ids) => {
 
   //   let data = new FormData();

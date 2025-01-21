@@ -6,6 +6,7 @@ import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
+import { useDispatch } from 'react-redux';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
@@ -18,6 +19,7 @@ const selector = (state) => ({
 });
 
 export default function Event(props) {
+  const dispatch = useDispatch();
   const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const inputValueFromProps = useMemo(() => {
