@@ -429,7 +429,10 @@ const BrowserCard = () => {
                   e.stopPropagation(), setClickedItem(detail.nodeId);
                 }}
                 onDragStart={(e) => onDragStart(e, detail)}
-                sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
+                sx={{
+                  backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit',
+                  color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
+                }}
               >
                 {detail.props?.map((prop) => (
                   <DraggableTreeItem

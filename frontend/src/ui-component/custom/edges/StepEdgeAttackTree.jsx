@@ -6,9 +6,8 @@ import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
 import './buttonedge.css';
 import ColorTheme from '../../../store/ColorTheme';
-import { useSelector } from 'react-redux';
 
-export default function StepEdge({
+export default function StepEdgeAttackTree({
   id,
   sourceX,
   sourceY,
@@ -22,11 +21,10 @@ export default function StepEdge({
   data
 }) {
   // const [setEdges] = useEdgesState([]);
-  const { selectedBlock } = useSelector((state) => state?.canvas);
   const { getEdges, setEdges } = useReactFlow();
-  const edges = getEdges();
   const color = ColorTheme();
-  // const [label, setLabel] = useState(data.label || 'edge');
+  const edges = getEdges();
+  const [label, setLabel] = useState(data.label || 'edge');
   const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
     start: true,
@@ -67,11 +65,11 @@ export default function StepEdge({
     setEdges(updated); // Update the edges globally
   };
 
-  // const onLabelChange = (e) => {
-  //   const newLabel = e.target.textContent;
-  //   setLabel(newLabel); // Update label in state
-  //   updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
-  // };
+  const onLabelChange = (e) => {
+    const newLabel = e.target.textContent;
+    setLabel(newLabel); // Update label in state
+    updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
+  };
 
   const handleDivClick = () => {
     setIsButtonVisible((prev) => !prev);
@@ -142,7 +140,7 @@ export default function StepEdge({
         path={edgePath}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
-        style={{ ...style, stroke: color?.title }}
+        style={{ ...style, stroke: color?.stroke }}
       />
       <EdgeLabelRenderer>
         <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}>
@@ -162,26 +160,24 @@ export default function StepEdge({
               borderRadius: '20px',
               zIndex: 1,
               cursor: 'pointer',
-              outline: 'none',
-              backgroundColor: selectedBlock.id === id ? 'wheat' : 'transparent'
-              // color: selectedBlock.id === id ? 'black' : 'inherit'
+              outline: 'none'
             }}
             className="nodrag nopan"
           >
             <div
               className="edge-label"
               onClick={handleDivClick}
-              // onKeyPress={handleKeyPress}
-              // contentEditable
-              // suppressContentEditableWarning
-              // onBlur={onLabelChange}
+              onKeyPress={handleKeyPress}
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={onLabelChange}
               style={{
                 outline: 'none',
                 cursor: 'text',
-                color: data?.label.length && selectedBlock.id === id ? 'black' : data?.label.length ? color?.title : color?.label
+                color: color?.title
               }}
             >
-              {data?.label.length ? data?.label : 'Enter name'}
+              {label}
             </div>
             {isButtonVisible && (
               <Box display="flex" gap={0.5}>

@@ -11,12 +11,12 @@ import { v4 as uid } from 'uuid';
 import { useDispatch } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
-import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
+import StepEdgeAttackTree from '../../ui-component/custom/edges/StepEdgeAttackTree';
 
 const elk = new ELK();
 
@@ -33,17 +33,17 @@ const getLayoutedElements = async (nodes, edges) => {
   const graph = {
     id: 'root',
     layoutOptions: {
-      'elk.algorithm': 'layered', // Automatically organizes elements in layers
-      'elk.direction': 'DOWN', // Tree flows downward
-      'elk.spacing.nodeNode': 50, // Dynamic horizontal spacing
-      'elk.spacing.nodeNodeBetweenLayers': 70, // Dynamic vertical spacing
-      'elk.edgeRouting': 'ORTHOGONAL', // Ensures clean edge routing
-      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX' // Handles diverse tree structures
+      'elk.algorithm': 'layered',
+      'elk.direction': 'DOWN',
+      'elk.spacing.nodeNode': 50,
+      'elk.spacing.nodeNodeBetweenLayers': 70,
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX'
     },
     children: nodes.map((node) => ({
       id: node.id,
-      width: node.width || 150, // Default node width
-      height: node.height || 50 // Default node height
+      width: node.width || 150,
+      height: node.height || 50
     })),
     edges: edges.map((edge) => ({
       id: edge.id,
@@ -56,21 +56,47 @@ const getLayoutedElements = async (nodes, edges) => {
     const elkGraph = await elk.layout(graph);
 
     // Update node positions based on ELK layout
-    const layoutedNodes = elkGraph.children.map((node) => {
+    let layoutedNodes = elkGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
       return {
         ...originalNode,
         position: {
           x: node.x || 0,
-          y: node.y || 0
+          y: (node.y || 0) + 30 // Add extra 30 units to y-axis distance for all nodes
         }
       };
+    });
+
+    // Align nodes that are close to each other within a range of 50 units
+    layoutedNodes = layoutedNodes.map((node, index, allNodes) => {
+      allNodes.forEach((otherNode) => {
+        if (node.id !== otherNode.id) {
+          // Align horizontally if x-coordinates are close and y-coordinates overlap
+          if (Math.abs(node.position.x - otherNode.position.x) < 50 && Math.abs(node.position.y - otherNode.position.y) < node.height) {
+            node.position.x = otherNode.position.x;
+          }
+
+          // Align vertically if y-coordinates are close and x-coordinates overlap
+          if (Math.abs(node.position.y - otherNode.position.y) < 50 && Math.abs(node.position.x - otherNode.position.x) < node.width) {
+            node.position.y = otherNode.position.y + 30; // Add extra 30 units for vertical spacing
+          }
+
+          // Adjust to prevent intersection
+          if (
+            Math.abs(node.position.x - otherNode.position.x) < node.width &&
+            Math.abs(node.position.y - otherNode.position.y) < node.height
+          ) {
+            node.position.x += node.width + 10; // Add some buffer to prevent overlap
+          }
+        }
+      });
+      return node;
     });
 
     // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id),
-      points: edge.sections?.[0]?.bendPoints || [] // Add bend points for orthogonal routing
+      points: edge.sections?.[0]?.bendPoints || []
     }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
@@ -83,7 +109,7 @@ const getLayoutedElements = async (nodes, edges) => {
 // Define edge types outside and pass edges, setEdges as props
 const edgeTypes = {
   custom: CustomEdge,
-  step: StepEdge
+  step: StepEdgeAttackTree
 };
 
 const selector = (state) => ({
@@ -122,7 +148,7 @@ const edgeOptions = {
     type: MarkerType.ArrowClosed,
     width: 20,
     height: 20,
-    color: '#FF0072'
+    color: 'black'
   },
   animated: false,
   style: {
@@ -387,25 +413,25 @@ export default function AttackBlock({ attackScene, color }) {
     });
 
     if (overlappingNode) {
-      // Updated condition for default or Event type nodes
       let condition = true;
+
       if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
         condition =
           (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
           (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
           (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event'); // Added this case
+          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event');
       }
 
-      // Check if the draggedNode's type is already connected
-      const hasDifferentGate =
-        overlappingNode.data.connections?.some((connection) => connection.type.includes('Gate') && connection.type !== draggedNode.type) ||
-        false;
+      const edgeExists = edges.some(
+        (edge) =>
+          (edge.source === overlappingNode.id && edge.target === draggedNode.id) ||
+          (edge.source === draggedNode.id && edge.target === overlappingNode.id)
+      );
 
-      if (condition && !hasDifferentGate) {
-        // Create a new edge
+      if (condition && !edgeExists) {
         const newEdge = {
-          id: uid(),
+          id: `${overlappingNode.id}-${draggedNode.id}`, // Use consistent ID to avoid duplicates
           source: overlappingNode.id,
           target: draggedNode.id,
           type: 'step',
@@ -417,13 +443,10 @@ export default function AttackBlock({ attackScene, color }) {
           }
         };
 
-        // Update edges in Zustand store
         setEdges([...edges, newEdge]);
 
-        // Update overlappingNode's data with the new connection
         const updatedNodes = nodes.map((node) => {
           if (node.id === overlappingNode.id) {
-            // Avoid duplication in connections
             const updatedConnections = node.data.connections || [];
             if (!updatedConnections.some((connection) => connection.id === draggedNode.id)) {
               updatedConnections.push({ id: draggedNode.id, type: draggedNode.type });
@@ -439,11 +462,9 @@ export default function AttackBlock({ attackScene, color }) {
           return node;
         });
 
-        // Update nodes in Zustand store
         setNodes(updatedNodes);
       }
     } else {
-      // Remove edge if moved from some distance (150 in x or y)
       const connectedEdge = edges.find((edge) => edge.target === draggedNode.id);
       if (connectedEdge) {
         const sourceNode = nodes.find((node) => node.id === connectedEdge.source);
@@ -451,8 +472,7 @@ export default function AttackBlock({ attackScene, color }) {
           const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
           const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
 
-          if (distanceX > 450 || distanceY > 450) {
-            // Remove edge and connection
+          if (distanceX > 550 || distanceY > 550) {
             const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
             setEdges(updatedEdges);
 

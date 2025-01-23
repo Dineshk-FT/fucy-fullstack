@@ -21,7 +21,8 @@ const useStyles = makeStyles(() => ({
   inputlabel: {
     fontSize: fontSize,
     fontFamily: 'Inter',
-    fontWeight: 600
+    fontWeight: 600,
+    color: '#000'
   },
   bottomPanel: {
     position: 'fixed',
@@ -129,7 +130,7 @@ const EditProperties = ({
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
                   width: 'auto',
-                  background: `${color?.sidebarBG} !important`,
+                  //   background: `${color?.sidebarBG} !important`,
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
                     height: '0.4rem',
@@ -169,7 +170,7 @@ const EditProperties = ({
               />
             </Box>
             <FormControlLabel
-              sx={{ fontSize: fontSize, color: color?.sidebarContent }}
+              sx={{ fontSize: fontSize, color: '#000' }}
               control={<Checkbox onChange={handleChecked} checked={Boolean(details?.isAsset)} />}
               label="Asset"
             />

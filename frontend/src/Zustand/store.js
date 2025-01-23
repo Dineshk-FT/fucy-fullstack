@@ -804,6 +804,18 @@ const useStore = createWithEqualityFn((set, get) => ({
       return;
     }
 
+    // Check if an edge already exists between source and target
+    const edgeExists = edges.some(
+      (edge) =>
+        (edge.source === connection.source && edge.target === connection.target) ||
+        (edge.source === connection.target && edge.target === connection.source)
+    );
+
+    if (edgeExists) {
+      console.log('Connection already exists between the source and target.');
+      return;
+    }
+
     // Allow unrestricted connection if both nodes are of type "Gate"
     if (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) {
       const newConnection = { ...connection, data: { label: '' } };
@@ -820,10 +832,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     const child = parent === sourceNode ? targetNode : sourceNode;
 
     // Check if the child node's type matches any type in the parent's connections
-    const isMatchingType = parent.data.connections?.some((connection) => connection.type === child.type);
+    const isMatchingType = parent.data.connections?.some((conn) => conn.type === child.type);
 
     if (!isMatchingType) {
-      // console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
+      console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
       return;
     }
 
@@ -1527,7 +1539,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   },
 

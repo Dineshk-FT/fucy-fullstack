@@ -34,7 +34,8 @@ export const lightTheme = {
   iconColor: '#555555',
   stroke: '#000',
   line: '#f5f5f5',
-  leftbarBG: '#f5f5f5'
+  leftbarBG: '#f5f5f5',
+  label: 'gray'
 };
 
 export const darkTheme = {
@@ -54,5 +55,6 @@ export const darkTheme = {
   iconColor: '#D1D9E0',
   stroke: '#f5f5f5',
   line: '#000',
-  leftbarBG: '#222831'
+  leftbarBG: '#222831',
+  label: '#f7f7f7'
 };
