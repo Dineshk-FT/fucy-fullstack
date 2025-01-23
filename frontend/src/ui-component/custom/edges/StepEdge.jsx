@@ -5,6 +5,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
 import './buttonedge.css';
+import ColorTheme from '../../../store/ColorTheme';
 
 export default function StepEdge({
   id,
@@ -22,6 +23,7 @@ export default function StepEdge({
   // const [setEdges] = useEdgesState([]);
   const { getEdges, setEdges } = useReactFlow();
   const edges = getEdges();
+  const color = ColorTheme();
   // const [label, setLabel] = useState(data.label || 'edge');
   const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
@@ -138,7 +140,7 @@ export default function StepEdge({
         path={edgePath}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
-        style={style}
+        style={{ ...style, stroke: color?.title }}
       />
       <EdgeLabelRenderer>
         <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}>
@@ -171,7 +173,8 @@ export default function StepEdge({
               // onBlur={onLabelChange}
               style={{
                 outline: 'none',
-                cursor: 'text'
+                cursor: 'text',
+                color: color?.title
               }}
             >
               {data?.label}

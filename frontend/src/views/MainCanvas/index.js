@@ -48,6 +48,7 @@ const selector = (state) => ({
   model: state.model,
   update: state.updateAssets,
   getAssets: state.getAssets,
+  getDamageScenarios: state.getDamageScenarios,
   getGroupedNodes: state.getGroupedNodes,
   reactFlowInstance: state.reactFlowInstance,
   setReactFlowInstance: state.setReactFlowInstance,
@@ -123,6 +124,7 @@ export default function MainCanvas() {
     assets,
     update,
     getAssets,
+    getDamageScenarios,
     isNodePasted,
     setIsNodePasted
   } = useStore(selector, shallow);
@@ -404,6 +406,7 @@ export default function MainCanvas() {
 
   const RefreshAPI = () => {
     getAssets(model?._id);
+    getDamageScenarios(model?._id);
   };
 
   const handleClose = () => {
@@ -520,6 +523,7 @@ export default function MainCanvas() {
     e.stopPropagation();
     e.preventDefault();
     setAnchorEl(e.currentTarget);
+    dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
     setDetails({
       ...details,

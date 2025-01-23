@@ -414,32 +414,39 @@ const BrowserCard = () => {
           data,
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
-          data.Details?.map((detail) => (
-            <DraggableTreeItem
-              key={detail.nodeId}
-              nodeId={detail.nodeId}
-              label={detail.name}
-              onClick={(e) => {
-                e.stopPropagation(), setClickedItem(detail.nodeId);
-              }}
-              onDragStart={(e) => onDragStart(e, detail)}
-              sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
-            >
-              {detail.props?.map((prop) => (
-                <DraggableTreeItem
-                  key={prop.id}
-                  nodeId={prop.id}
-                  onClick={(e) => e.stopPropagation()}
-                  label={
-                    <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                      <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                      {`Loss of ${prop.name}`}
-                    </div>
-                  }
-                />
-              ))}
-            </DraggableTreeItem>
-          ))
+          data.Details?.map((detail, i) => {
+            // console.log('detail', detail);
+            return (
+              <DraggableTreeItem
+                key={detail.nodeId}
+                nodeId={detail.nodeId}
+                label={
+                  <Box>
+                    {i + 1}. {detail.name}
+                  </Box>
+                }
+                onClick={(e) => {
+                  e.stopPropagation(), setClickedItem(detail.nodeId);
+                }}
+                onDragStart={(e) => onDragStart(e, detail)}
+                sx={{ backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit' }}
+              >
+                {detail.props?.map((prop) => (
+                  <DraggableTreeItem
+                    key={prop.id}
+                    nodeId={prop.id}
+                    onClick={(e) => e.stopPropagation()}
+                    label={
+                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                        {`Loss of ${prop.name}`}
+                      </div>
+                    }
+                  />
+                ))}
+              </DraggableTreeItem>
+            );
+          })
         );
 
       case 'damageScenarios':

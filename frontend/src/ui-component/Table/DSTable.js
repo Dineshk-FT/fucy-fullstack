@@ -293,7 +293,8 @@ export default function DsTable() {
   const handleCloseCl = () => {
     setOpenCl(false);
     setSelectedRow({});
-    setDetails(Details);
+    const details = Details?.filter((detail) => detail?.props?.length) ?? [];
+    setDetails(details);
   };
 
   const handleSearch = (e) => {
@@ -337,7 +338,8 @@ export default function DsTable() {
       }));
       setRows(scene);
       setFiltered(scene);
-      setDetails(Details);
+      const details = Details?.filter((detail) => detail?.props?.length) ?? [];
+      setDetails(details);
     }
   }, [damageScenarios]);
 
