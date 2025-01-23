@@ -1,40 +1,24 @@
 /* eslint-disable */
-import React, { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
   Background,
   ReactFlowProvider,
-  // Panel,
   getRectOfNodes,
   getTransformForBounds,
   MarkerType,
-  useReactFlow,
   Panel
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
-import {
-  CustomNode,
-  DefaultNode,
-  InputNode,
-  OutputNode,
-  CircularNode,
-  DiagonalNode,
-  MicroController,
-  CustomGroupNode,
-  CustomEdge,
-  MultiHandleNode
-} from '../../ui-component/custom';
+import { CustomEdge } from '../../ui-component/custom';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
-// import { Button } from '@mui/material';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
-import ELK from 'elkjs/lib/elk.bundled';
-import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
 import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
@@ -43,52 +27,13 @@ import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
 import { Button } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
-
-const elk = new ELK();
-
-const elkOptions = {
-  'elk.algorithm': 'layered',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-  'elk.spacing.nodeNode': '80'
-};
-const getLayoutedElements = (nodes, edges, options = {}) => {
-  const isHorizontal = options?.['elk.direction'] === 'RIGHT';
-  const graph = {
-    id: 'root',
-    layoutOptions: options,
-    children: nodes.map((node) => ({
-      ...node,
-      // Adjust the target and source handle positions based on the layout
-      // direction.
-      targetPosition: isHorizontal ? 'left' : 'top',
-      sourcePosition: isHorizontal ? 'right' : 'bottom',
-
-      // Hardcode a width and height for elk to use when layouting.
-      width: 150,
-      height: 50
-    })),
-    edges: edges
-  };
-
-  return elk
-    .layout(graph)
-    .then((layoutedGraph) => ({
-      nodes: layoutedGraph.children.map((node) => ({
-        ...node,
-        position: { x: node.x, y: node.y }
-      })),
-
-      edges: layoutedGraph.edges
-    }))
-    .catch(console.error);
-};
+import EditProperties from '../../ui-component/Poppers/EditProperties';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -200,15 +145,18 @@ export default function MainCanvas() {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
   const [isReady, setIsReady] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isPopperFocused, setIsPopperFocused] = useState(false);
+  const [details, setDetails] = useState({
+    name: '',
+    properties: [],
+    isAsset: false
+  });
 
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
   };
-
-  // useEffect(() => {
-  //   handleClear();
-  // }, []);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -254,21 +202,6 @@ export default function MainCanvas() {
     };
   }, [nodes, edges]); // Re-run this effect if nodes or edges change
 
-  // const onLayout = useCallback(
-  //   ({ direction, useInitialNodes = false }) => {
-  //     const opts = { 'elk.direction': direction, ...elkOptions };
-  //     const ns = useInitialNodes ? nodes : nodes;
-  //     const es = useInitialNodes ? nodes : edges;
-  //     getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-  //       setNodes(layoutedNodes);
-  //       setEdges(layoutedEdges);
-
-  //       // window.requestAnimationFrame(() => fitView());
-  //     });
-  //   },
-  //   [nodes, edges]
-  // );
-
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
@@ -278,10 +211,6 @@ export default function MainCanvas() {
     });
     setNodes(updated);
   };
-
-  // useLayoutEffect(() => {
-  //   onLayout({ direction: 'DOWN', useInitialNodes: true });
-  // }, []);
 
   const onNodeDragStart = useCallback((_, node) => {
     dragRef.current = node;
@@ -581,6 +510,47 @@ export default function MainCanvas() {
     }
   };
 
+  const handleClosePopper = () => {
+    if (!isPopperFocused) {
+      setAnchorEl(null);
+    }
+  };
+
+  const handleSelectEdge = (e, edge) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setAnchorEl(e.currentTarget);
+    setSelectedElement(edge);
+    setDetails({
+      ...details,
+      name: edge?.data?.label ?? '',
+      properties: edge?.properties ?? [],
+      isAsset: edge.isAsset ?? false
+    });
+  };
+
+  const handleSaveEdit = (e) => {
+    e.stopPropagation();
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    const details = {
+      assetId: assets?._id,
+      'model-id': model?._id,
+      template: JSON.stringify(template)
+    };
+    update(details)
+      .then(() => {
+        notify('Updated Successfully', 'success');
+        RefreshAPI();
+      })
+      .catch(() => {
+        notify('Something went wrong', 'error');
+      });
+  };
+  // console.log('selectedElement', selectedElement);
+
   const createGroup = (e) => {
     if (!e.x) {
       e.preventDefault();
@@ -726,12 +696,11 @@ export default function MainCanvas() {
             connectionMode="loose"
             onNodeDoubleClick={handleSidebarOpen}
             onNodeClick={handleSelectNode}
+            onEdgeContextMenu={handleSelectEdge}
+            // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}
             defaultzoom={1}
             onNodeContextMenu={handleNodeContextMenu}
-            // onContextMenu={createGroup}
-            // onNodeContextMenu={handleSidebarOpen}
-            // onEdgeContextMenu={handleSidebarOpen}
           >
             <Panel position="left" style={{ display: 'flex', gap: 10 }}>
               <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
@@ -794,6 +763,19 @@ export default function MainCanvas() {
               </div>
             ))}
           </div>
+        )}
+        {anchorEl && (
+          <EditProperties
+            anchorEl={anchorEl}
+            handleSaveEdit={handleSaveEdit}
+            handleClosePopper={handleClosePopper}
+            setDetails={setDetails}
+            details={details}
+            setIsPopperFocused={setIsPopperFocused}
+            edges={edges}
+            setEdges={setEdges}
+            selectedElement={selectedElement}
+          />
         )}
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />

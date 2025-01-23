@@ -22,7 +22,7 @@ export default function StepEdge({
   // const [setEdges] = useEdgesState([]);
   const { getEdges, setEdges } = useReactFlow();
   const edges = getEdges();
-  const [label, setLabel] = useState(data.label || 'edge');
+  // const [label, setLabel] = useState(data.label || 'edge');
   const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
     start: true,
@@ -63,11 +63,11 @@ export default function StepEdge({
     setEdges(updated); // Update the edges globally
   };
 
-  const onLabelChange = (e) => {
-    const newLabel = e.target.textContent;
-    setLabel(newLabel); // Update label in state
-    updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
-  };
+  // const onLabelChange = (e) => {
+  //   const newLabel = e.target.textContent;
+  //   setLabel(newLabel); // Update label in state
+  //   updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
+  // };
 
   const handleDivClick = () => {
     setIsButtonVisible((prev) => !prev);
@@ -136,7 +136,7 @@ export default function StepEdge({
     <>
       <BaseEdge
         path={edgePath}
-        markerEnd={isMarkerVisible.end ? markerEnd : undefined} 
+        markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
         style={style}
       />
@@ -165,16 +165,16 @@ export default function StepEdge({
             <div
               className="edge-label"
               onClick={handleDivClick}
-              onKeyPress={handleKeyPress}
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={onLabelChange}
+              // onKeyPress={handleKeyPress}
+              // contentEditable
+              // suppressContentEditableWarning
+              // onBlur={onLabelChange}
               style={{
                 outline: 'none',
                 cursor: 'text'
               }}
             >
-              {label}
+              {data?.label}
             </div>
             {isButtonVisible && (
               <Box display="flex" gap={0.5}>

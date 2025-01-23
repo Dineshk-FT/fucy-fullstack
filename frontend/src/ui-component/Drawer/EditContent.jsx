@@ -92,10 +92,6 @@ const EditContent = ({
     setSelectedElement(updatedSelected);
   };
 
-  const handleChangeTab = (event, newValue) => {
-    setValue(newValue);
-  };
-
   // console.log('nodes', nodes);
 
   useEffect(() => {
