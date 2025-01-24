@@ -55,8 +55,10 @@ iframe#webpack-dev-server-client-overlay {
   background-color: inherit !important;
   font-family: 'Inter', sans-serif;
   height: initial;
-  width: initial;
+  width: auto !important;
+  /* width: initial; */
   z-index: 1 !important;
+  box-shadow: none !important;
 }
 .react-flow__edge {
   z-index: 1 !important;
@@ -94,6 +96,7 @@ iframe#webpack-dev-server-client-overlay {
   /* border: 1px solid black; */
   border-radius: 3px;
   padding: 10px 15px;
+  box-shadow: none !important;
 }
 
 .react-flow__resize-control {
