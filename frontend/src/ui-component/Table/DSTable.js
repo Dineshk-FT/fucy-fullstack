@@ -56,6 +56,7 @@ const selector = (state) => ({
   updateImpact: state.updateImpact,
   getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
+  getRiskTreatment: state.getRiskTreatment,
   damageScenarios: state.damageScenarios['subs'][1],
   Details: state.damageScenarios['subs'][0]['Details'],
   damageID: state.damageScenarios['subs'][1]['_id'],
@@ -196,6 +197,7 @@ export default function DsTable() {
     damageID,
     getDamageScenarios,
     getThreatScenario,
+    getRiskTreatment,
     updateImpact,
     deleteDamageScenario,
     updateDerived,
@@ -257,6 +259,7 @@ export default function DsTable() {
           notify(res.message ?? 'Deleted successfully', 'success');
           getDamageScenarios(model?._id);
           getThreatScenario(model?._id);
+          getRiskTreatment(model?._id);
           setSelectedRows([]);
         } else {
           notify('Something went wrong', 'error');

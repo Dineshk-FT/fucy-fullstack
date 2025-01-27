@@ -168,7 +168,7 @@ export default function RiskTreatmentTable() {
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
         detailId: item?.id,
-        Assets: item?.threat_scene[0]?.detail?.node,
+        Assets: item?.threat_scene[0]?.detail?.node ?? '',
         // 'Damage Scenarios': item?.damage_scenarios,
         'Damage Scenarios':
           `[DS${
