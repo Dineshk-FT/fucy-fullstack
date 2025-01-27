@@ -19,10 +19,9 @@ import { fontSize } from '../../store/constant';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
-    fontSize: fontSize,
+    fontSize: fontSize - 2,  // Slightly reduced font size for more compact labels
     fontFamily: 'Inter',
-    fontWeight: 600,
-    color: '#000'
+    fontWeight: 600
   },
   bottomPanel: {
     position: 'fixed',
@@ -30,10 +29,10 @@ const useStyles = makeStyles(() => ({
     right: 0,
     borderTop: '1px solid #ccc',
     zIndex: 1300,
-    padding: '16px',
-    boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.2)',
-    maxHeight: '50vh',
-    width: '65%',
+    padding: '8px', 
+    boxShadow: '0 -2px 6px rgba(0, 0, 0, 0.2)',
+    maxHeight: '45vh', 
+    width: '45%', 
     overflowY: 'auto'
   }
 }));
@@ -88,40 +87,40 @@ const EditProperties = ({
     const updatedEdges = edges.map((node) =>
       node.id === selectedElement?.id ? { ...node, properties: updatedProperties, isAsset: updatedProperties.length > 0 } : node
     );
-
     setEdges(updatedEdges);
   };
 
   return (
-    <>
-      <Popper
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        placement="bottom-start"
-        modifiers={[
-          {
-            name: 'offset',
-            options: {
-              offset: [0, -10] // Adjusts the offset [skidding, distance]
-            }
-          },
-          {
-            name: 'preventOverflow',
-            options: {
-              boundary: 'viewport' // Ensures Popper stays within the viewport
-            }
+    <Popper
+      open={Boolean(anchorEl)}
+      anchorEl={anchorEl}
+      placement="bottom-start"
+      modifiers={[
+        {
+          name: 'offset',
+          options: {
+            offset: [0, -8]  // Reduced offset for a tighter fit
           }
-        ]}
-        sx={{
-          minWidth: 320,
-          width: 'auto',
-          boxShadow: '0px 0px 6px black',
-          borderRadius: '10px'
-        }}
-      >
-        <ClickAwayListener onClickAway={handleClosePopper}>
-          <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+        },
+        {
+          name: 'preventOverflow',
+          options: {
+            boundary: 'viewport'
+          }
+        }
+      ]}
+      sx={{
+        minWidth: 250,  // Slightly smaller minimum width for compact design
+        width: 'auto',
+        boxShadow: '0px 0px 4px black',
+        borderRadius: '8px' 
+      }}
+    >
+      <ClickAwayListener onClickAway={handleClosePopper}>
+        <Paper sx={{ padding: 1, display: 'flex', flexDirection: 'column', gap: 1, alignContent: 'center' }}>
+          {/* Name and Asset checkbox in same line */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, flex: 1 }}>
               <InputLabel className={classes.inputlabel}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
@@ -129,61 +128,61 @@ const EditProperties = ({
                 value={details?.name}
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
-                  width: 'auto',
-                  //   background: `${color?.sidebarBG} !important`,
+                  background: `${color?.sidebarBG} !important`,
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
-                    height: '0.4rem',
-                    fontSize: fontSize
-                  }
+                    fontSize: fontSize - 2,  // Slightly reduced font size for input
+                    padding: '6px 8px'  // Standard padding for input fields
+                  },
+                  width: '150px'  // Reduced width for the input field
                 }}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-              <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
-              <Autocomplete
-                multiple
-                id="tags-filled"
-                options={Properties}
-                value={details.properties}
-                onChange={handleChange}
-                sx={{
-                  minWidth: '150px',
-                  maxWidth: '350px',
-                  '& .MuiOutlinedInput-root': {
-                    padding: '3px'
-                  }
-                }}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      sx={{ '& .MuiChip-label': { fontSize: 11 } }}
-                      key={option}
-                      variant="outlined"
-                      label={option}
-                      {...getTagProps({ index })}
-                      onDelete={handleDelete(option)}
-                    />
-                  ))
-                }
-                renderInput={(params) => <TextField {...params} variant="outlined" />}
               />
             </Box>
             <FormControlLabel
-              sx={{ fontSize: fontSize, color: '#000' }}
+              sx={{ fontSize: fontSize - 2, color: color?.sidebarContent }}  // Reduced font size for the label
               control={<Checkbox onChange={handleChecked} checked={Boolean(details?.isAsset)} />}
               label="Asset"
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={handleClosePopper}>Cancel</Button>
-              <Button onClick={handleSaveEdit} color="primary" variant="contained">
-                Update
-              </Button>
-            </div>
-          </Paper>
-        </ClickAwayListener>
-      </Popper>
-    </>
+          </Box>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
+            <Autocomplete
+              multiple
+              id="tags-filled"
+              options={Properties}
+              value={details.properties}
+              onChange={handleChange}
+              sx={{
+                minWidth: '130px',  // Reduced minimum width
+                maxWidth: '240px',  // Reduced max-width for more compact autocomplete input
+                '& .MuiOutlinedInput-root': {
+                  padding: '4px'  // Reduced padding for the input field
+                }
+              }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    sx={{ '& .MuiChip-label': { fontSize: 10 } }}  // Slightly smaller font size for chips
+                    key={option}
+                    variant="outlined"
+                    label={option}
+                    {...getTagProps({ index })}
+                    onDelete={handleDelete(option)}
+                  />
+                ))
+              }
+              renderInput={(params) => <TextField {...params} variant="outlined" />}
+            />
+          </Box>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>Cancel</Button> {/* Adjusted padding for compact buttons */}
+            <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>Update</Button> {/* Adjusted padding for compact buttons */}
+          </div>
+        </Paper>
+      </ClickAwayListener>
+    </Popper>
   );
 };
 
