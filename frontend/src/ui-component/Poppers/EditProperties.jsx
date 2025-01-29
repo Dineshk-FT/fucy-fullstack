@@ -19,7 +19,7 @@ import { fontSize } from '../../store/constant';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
-    fontSize: fontSize - 2,  // Slightly reduced font size for more compact labels
+    fontSize: fontSize - 2, // Slightly reduced font size for more compact labels
     fontFamily: 'Inter',
     fontWeight: 600
   },
@@ -29,10 +29,10 @@ const useStyles = makeStyles(() => ({
     right: 0,
     borderTop: '1px solid #ccc',
     zIndex: 1300,
-    padding: '8px', 
+    padding: '8px',
     boxShadow: '0 -2px 6px rgba(0, 0, 0, 0.2)',
-    maxHeight: '45vh', 
-    width: '45%', 
+    maxHeight: '45vh',
+    width: '45%',
     overflowY: 'auto'
   }
 }));
@@ -99,7 +99,7 @@ const EditProperties = ({
         {
           name: 'offset',
           options: {
-            offset: [0, -8]  // Reduced offset for a tighter fit
+            offset: [0, -8] // Reduced offset for a tighter fit
           }
         },
         {
@@ -110,10 +110,10 @@ const EditProperties = ({
         }
       ]}
       sx={{
-        minWidth: 250,  // Slightly smaller minimum width for compact design
+        minWidth: 250, // Slightly smaller minimum width for compact design
         width: 'auto',
         boxShadow: '0px 0px 4px black',
-        borderRadius: '8px' 
+        borderRadius: '8px'
       }}
     >
       <ClickAwayListener onClickAway={handleClosePopper}>
@@ -129,17 +129,19 @@ const EditProperties = ({
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
                   background: `${color?.sidebarBG} !important`,
+                  borderRadius: 'none',
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
-                    fontSize: fontSize - 2,  // Slightly reduced font size for input
-                    padding: '6px 8px'  // Standard padding for input fields
+                    fontSize: fontSize - 2, // Slightly reduced font size for input
+                    padding: '6px 8px' // Standard padding for input fields
                   },
-                  width: '150px'  // Reduced width for the input field
+                  width: '150px' // Reduced width for the input field
                 }}
               />
             </Box>
+
             <FormControlLabel
-              sx={{ fontSize: fontSize - 2, color: color?.sidebarContent }}  // Reduced font size for the label
+              sx={{ fontSize: fontSize - 2, color: color?.sidebarContent, position: 'relative', top: '10px' }} // Reduced font size for the label
               control={<Checkbox onChange={handleChecked} checked={Boolean(details?.isAsset)} />}
               label="Asset"
             />
@@ -154,16 +156,16 @@ const EditProperties = ({
               value={details.properties}
               onChange={handleChange}
               sx={{
-                minWidth: '130px',  // Reduced minimum width
-                maxWidth: '240px',  // Reduced max-width for more compact autocomplete input
+                minWidth: '130px', // Reduced minimum width
+                maxWidth: '240px', // Reduced max-width for more compact autocomplete input
                 '& .MuiOutlinedInput-root': {
-                  padding: '4px'  // Reduced padding for the input field
+                  padding: '4px' // Reduced padding for the input field
                 }
               }}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
-                    sx={{ '& .MuiChip-label': { fontSize: 10 } }}  // Slightly smaller font size for chips
+                    sx={{ '& .MuiChip-label': { fontSize: 10 } }} // Slightly smaller font size for chips
                     key={option}
                     variant="outlined"
                     label={option}
@@ -177,8 +179,14 @@ const EditProperties = ({
           </Box>
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>Cancel</Button> {/* Adjusted padding for compact buttons */}
-            <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>Update</Button> {/* Adjusted padding for compact buttons */}
+            <Button onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+              Cancel
+            </Button>
+            {/* Adjusted padding for compact buttons */}
+            <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+              Update
+            </Button>
+            {/* Adjusted padding for compact buttons */}
           </div>
         </Paper>
       </ClickAwayListener>
