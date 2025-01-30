@@ -51,6 +51,7 @@ const selector = (state) => ({
   UserDefinedId: state.threatScenarios['subs'][1]['_id'],
   getDamageScenarios: state.getDamageScenarios,
   getThreatScenario: state.getThreatScenario,
+  getRiskTreatment: state.getRiskTreatment,
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
@@ -110,7 +111,8 @@ export default function Tstable() {
     updateName,
     derivedId,
     UserDefinedId,
-    deleteThreatScenario
+    deleteThreatScenario,
+    getRiskTreatment
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -289,6 +291,7 @@ export default function Tstable() {
           notify(res.message ?? 'Deleted successfully', 'success');
           getDamageScenarios(model?._id);
           getThreatScenario(model?._id);
+          getRiskTreatment(model?._id);
           setSelectedRows([]);
         } else {
           notify('Something went wrong', 'error');

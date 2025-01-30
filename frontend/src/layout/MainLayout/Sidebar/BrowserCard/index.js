@@ -415,8 +415,7 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
           data.Details?.map((detail, i) => {
-            // console.log('detail', detail);
-            return (
+            return detail?.name?.length ? (
               <DraggableTreeItem
                 key={detail.nodeId}
                 nodeId={detail.nodeId}
@@ -434,7 +433,7 @@ const BrowserCard = () => {
                   color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
                 }}
               >
-                {detail.props?.map((prop) => (
+                {detail?.props?.map((prop) => (
                   <DraggableTreeItem
                     key={prop.id}
                     nodeId={prop.id}
@@ -448,7 +447,7 @@ const BrowserCard = () => {
                   />
                 ))}
               </DraggableTreeItem>
-            );
+            ) : null;
           })
         );
 
