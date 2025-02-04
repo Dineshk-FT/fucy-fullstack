@@ -27,13 +27,14 @@ import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import { Button } from '@mui/material';
+import { Button, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditProperties from '../../ui-component/Poppers/EditProperties';
+import GridOnIcon from '@mui/icons-material/GridOn';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -655,6 +656,12 @@ export default function MainCanvas() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  const handleGroupDrag = (event) => {
+    const parseFile = JSON.stringify('');
+    event.dataTransfer.setData('application/group', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
   if (!isReady) return null;
 
   return (
@@ -713,6 +720,18 @@ export default function MainCanvas() {
               <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
                 Save
               </Button>
+              <React.Fragment>
+                <Tooltip title="Grouping">
+                  <Typography
+                    sx={{ color: Color?.iconColor, alignSelf: 'end' }}
+                    // onClick={item?.onclick()}
+                    onDragStart={(e) => handleGroupDrag(e)}
+                    draggable={true}
+                  >
+                    <GridOnIcon />
+                  </Typography>
+                </Tooltip>
+              </React.Fragment>
               {/* <button onClick={undo} disabled={undoStack.length === 0}>
                 Undo
               </button>

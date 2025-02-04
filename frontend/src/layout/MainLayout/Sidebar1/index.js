@@ -194,7 +194,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
 };
 
 Sidebar.propTypes = {
-  draweropen: PropTypes.bool,
+  // draweropen: PropTypes.bool,
   drawerToggle: PropTypes.func,
   window: PropTypes.object
 };

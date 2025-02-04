@@ -668,7 +668,7 @@ const BrowserCard = () => {
           >
             <TreeItem
               key={model?._id}
-              nodeId={model?._id}
+              nodeId={model?._id ?? 'model1'}
               label={
                 isEditing ? (
                   <TextField

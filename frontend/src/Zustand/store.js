@@ -127,19 +127,19 @@ const useStore = createWithEqualityFn((set, get) => ({
     icon: 'CybersecurityIcon',
     subs: [
       {
-        id: 51,
+        id: '51',
         name: 'Cybersecurity Goals'
       },
       {
-        id: 53,
+        id: '53',
         name: 'Cybersecurity Requirements'
       },
       {
-        id: 52,
+        id: '52',
         name: 'Cybersecurity Controls'
       },
       {
-        id: 54,
+        id: '54',
         name: 'Cybersecurity Claims'
       }
     ]
@@ -1204,19 +1204,19 @@ const useStore = createWithEqualityFn((set, get) => ({
         icon: 'CybersecurityIcon',
         subs: [
           {
-            id: 51,
+            id: '51',
             name: 'Cybersecurity Goals'
           },
           {
-            id: 53,
+            id: '53',
             name: 'Cybersecurity Requirements'
           },
           {
-            id: 52,
+            id: '52',
             name: 'Cybersecurity Controls'
           },
           {
-            id: 54,
+            id: '54',
             name: 'Cybersecurity Claims'
           }
         ]
@@ -1418,19 +1418,19 @@ const useStore = createWithEqualityFn((set, get) => ({
           ...state.cybersecurity,
           subs: [
             {
-              id: 51,
+              id: '51',
               name: 'Cybersecurity Goals'
             },
             {
-              id: 53,
+              id: '53',
               name: 'Cybersecurity Requirements'
             },
             {
-              id: 52,
+              id: '52',
               name: 'Cybersecurity Controls'
             },
             {
-              id: 54,
+              id: '54',
               name: 'Cybersecurity Claims'
             }
           ]
@@ -1460,7 +1460,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           ...state.riskTreatment,
           subs: [
             {
-              id: 81,
+              id: '81',
               name: 'Threat Assessment & Risk Treatment',
               Details: []
             }

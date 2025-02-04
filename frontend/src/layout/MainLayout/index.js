@@ -62,7 +62,8 @@ const selector = (state) => ({
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(
-  ({ theme, open, isclose, color, draweropen }) => {
+  ({ theme, open, isclose, color, draweropenstr }) => {
+    const draweropen = Boolean(draweropenstr);
     // console.log('color', color)
     // console.log('isclose', isclose)
     return {
@@ -279,7 +280,7 @@ const MainLayout = ({ children }) => {
         <Sidebar1 draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         {/* -------------------- main content -------------------------*/}
-        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropen={leftDrawerOpened}>
+        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropenstr={leftDrawerOpened.toString()}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
           <Outlet />
