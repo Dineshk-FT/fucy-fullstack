@@ -16,6 +16,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import AlertMessage from '../Alert';
 import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -47,7 +48,7 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
         // console.log('res page', res);
         if (res) {
           setTimeout(() => {
-            handleClose();
+            // handleClose();
             getThreatScenario(id);
             setOpenMsg(true);
             setMessage(res?.message);
@@ -73,7 +74,8 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        PaperComponent={PaperComponent}
+        aria-describedby="draggable-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
             background: color?.tabBG,
@@ -85,7 +87,7 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
           {'Add Threat Scenario'}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Name :</InputLabel>
               <TextField

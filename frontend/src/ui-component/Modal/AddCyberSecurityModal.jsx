@@ -17,6 +17,7 @@ import { shallow } from 'zustand/shallow';
 // import { v4 as uid } from 'uuid';
 import toast, { Toaster } from 'react-hot-toast';
 import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -54,7 +55,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
           // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
           notify(res.message ?? 'Deleted successfully', 'success');
-          handleClose();
+          // handleClose();
           setTemplateDetails({
             name: '',
             Description: ''
@@ -74,8 +75,10 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
         open={open}
         TransitionComponent={Transition}
         keepMounted
+        PaperComponent={PaperComponent}
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="draggable-dialog-title"
+        aria-describedby="draggable-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
             background: color?.tabBG,
@@ -87,7 +90,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
           Add {name}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Name :</InputLabel>
               <TextField

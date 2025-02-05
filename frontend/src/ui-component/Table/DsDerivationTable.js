@@ -94,6 +94,28 @@ export default function DsDerivationTable() {
     return DsDerivationHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
+  const handleSelectAll = (event) => {
+    const isChecked = event.target.checked;
+    const updatedRows = filtered.map((row) => ({
+      ...row,
+      Checked: isChecked
+    }));
+
+    // Update the state with the new rows
+    setFiltered(updatedRows);
+    const details = {
+      id: damageScenarios?._id,
+      isAllChecked: isChecked
+    };
+    update(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(modelId);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
+
   React.useEffect(() => {
     if (damageScenarios['Derivations']) {
       const scene = damageScenarios['Derivations']?.map((dt) => {
@@ -112,20 +134,28 @@ export default function DsDerivationTable() {
   }, [damageScenarios]);
 
   const handleChange = (value, rowId) => {
+    setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: !value } : row)));
+
     const details = {
       id: damageScenarios?._id,
       isChecked: !value,
       'detail-id': rowId
     };
-    // console.log('details', details);
+
     update(details)
       .then((res) => {
         if (res) {
-          getDamageScenarios(modelId);
+          getDamageScenarios(modelId); // Fetch updated data from backend
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.error('Error updating row:', err);
+
+        // Revert UI state if backend update fails
+        setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: value } : row)));
+      });
   };
+
   const handleSearch = (e) => {
     const { value } = e.target;
     // console.log('value', value);
@@ -347,20 +377,34 @@ export default function DsDerivationTable() {
               <TableRow>
                 {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                    {hd?.name}
-                    <div
-                      className="resize-handle"
-                      style={{
-                        position: 'absolute',
-                        right: 0,
-                        top: 0,
-                        width: '5px',
-                        height: '100%',
-                        cursor: 'col-resize',
-                        backgroundColor: 'transparent'
-                      }}
-                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                    />
+                    {hd?.name === 'Checked' ? (
+                      <Box display="flex" alignItems="center">
+                        <Checkbox
+                          {...label}
+                          checked={filtered.length > 0 && filtered.every((row) => row.Checked)}
+                          indeterminate={filtered.some((row) => row.Checked) && !filtered.every((row) => row.Checked)}
+                          onChange={handleSelectAll}
+                        />
+                        {hd?.name}
+                      </Box>
+                    ) : (
+                      hd?.name
+                    )}
+                    {
+                      <div
+                        className="resize-handle"
+                        style={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 0,
+                          width: '5px',
+                          height: '100%',
+                          cursor: 'col-resize',
+                          backgroundColor: 'transparent'
+                        }}
+                        onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                      />
+                    }
                   </StyledTableCell>
                 ))}
               </TableRow>

@@ -40,7 +40,7 @@ import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
-import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 
@@ -425,7 +425,13 @@ const BrowserCard = () => {
                   </Box>
                 }
                 onClick={(e) => {
-                  e.stopPropagation(), setClickedItem(detail.nodeId);
+                  e.stopPropagation();
+                  if (!detail.nodeId.includes('edge')) {
+                    // console.log('clicked', detail);
+
+                    setClickedItem(detail.nodeId);
+                  }
+                  dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                 }}
                 onDragStart={(e) => onDragStart(e, detail)}
                 sx={{

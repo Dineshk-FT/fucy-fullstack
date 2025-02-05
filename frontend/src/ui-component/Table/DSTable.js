@@ -227,24 +227,51 @@ export default function DsTable() {
   const handleCloseFilter = () => setOpenFilter(false);
 
   const handleChecked = (value, item, rowId) => {
+    setFiltered((prevFiltered) =>
+      prevFiltered.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              [item]: !value // Update checkbox state instantly
+            }
+          : row
+      )
+    );
+
     const details = {
       id: damageScenarios?._id,
       'detail-id': rowId
     };
+
     if (item === 'Asset is Evaluated') {
       details.isAssetEvaluated = !value;
     } else {
       details.isCybersecurityEvaluated = !value;
     }
-    // console.log('details', details);
+
     updateDerived(details)
       .then((res) => {
         if (res) {
-          getDamageScenarios(model?._id);
+          getDamageScenarios(model?._id); // Fetch updated data from backend
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.error('Error updating row:', err);
+
+        // Revert UI state if backend update fails
+        setFiltered((prevFiltered) =>
+          prevFiltered.map((row) =>
+            row.id === rowId
+              ? {
+                  ...row,
+                  [item]: value // Revert to previous state
+                }
+              : row
+          )
+        );
+      });
   };
+
   // console.log('selectedRows', selectedRows);
   // console.log('damageID', damageID);
   const handleDeleteSelected = () => {
@@ -363,21 +390,35 @@ export default function DsTable() {
   const handleChange = (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
-    const seleced = JSON.parse(JSON.stringify(row));
-    seleced['impacts'][`${name}`] = value;
-    // console.log('seleced', seleced);
+    const prevValue = row.impacts[name]; // Store previous value in case of failure
+
+    // Optimistically update the UI
+    setFiltered((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r)));
+
+    // Prepare API data
+    const updatedRow = JSON.parse(JSON.stringify(row));
+    updatedRow.impacts[name] = value;
 
     const info = {
       id: damageID,
-      detailId: seleced?.id,
-      impacts: JSON.stringify(seleced['impacts'])
+      detailId: updatedRow.id,
+      impacts: JSON.stringify(updatedRow.impacts)
     };
+
     updateImpact(info)
       .then((res) => {
-        // console.log('res', res);
-        refreshAPI();
+        if (res) {
+          refreshAPI(); // Fetch latest data if successful
+        }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.error('Error updating impact:', err);
+
+        // Revert UI if API request fails
+        setFiltered((prevFiltered) =>
+          prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r))
+        );
+      });
   };
 
   const checkforLabel = (item) => {

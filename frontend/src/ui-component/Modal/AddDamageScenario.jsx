@@ -15,6 +15,7 @@ import {
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -52,7 +53,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           // setTimeout(() => {
           notify(res?.message, 'success');
           // window.location.reload();
-          handleClose();
+          // handleClose();
           getDamageScenarios(model?._id);
           setTemplateDetails({
             ID: '',
@@ -75,9 +76,10 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
       <Dialog
         open={open}
         TransitionComponent={Transition}
+        PaperComponent={PaperComponent}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-describedby="draggable-dialog-title"
         sx={{
           '& .MuiPaper-root': {
             background: color?.tabBG,
@@ -85,11 +87,11 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           }
         }}
       >
-        <DialogTitle variant="h4" color="primary">
+        <DialogTitle variant="h4" color="primary" id="draggable-dialog-title">
           {'Add Damage Scenario'}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Name :</InputLabel>
               <TextField

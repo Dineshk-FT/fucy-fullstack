@@ -163,7 +163,7 @@ export default function StepEdge({
               zIndex: 1,
               cursor: 'pointer',
               outline: 'none',
-              backgroundColor: selectedBlock.id === id ? 'wheat' : 'transparent'
+              backgroundColor: selectedBlock?.id === id ? 'wheat' : 'transparent'
               // color: selectedBlock.id === id ? 'black' : 'inherit'
             }}
             className="nodrag nopan"
