@@ -25,7 +25,7 @@ import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
-import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
+import { OpenPropertiesTab, setSelectedBlock, setDetails, setAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { Button, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -143,18 +143,21 @@ export default function MainCanvas() {
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, details, anchorEl } = useSelector((state) => state?.canvas);
+  const anchorElId = anchorEl?.includes('reactflow__edge')
+    ? document.querySelector(`[data-testid="${anchorEl}"]`)
+    : document.querySelector(`[data-id="${anchorEl}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
   const [isReady, setIsReady] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
+  // const [anchorEl, setAnchorEl] = useState(null);
   const [isPopperFocused, setIsPopperFocused] = useState(false);
-  const [details, setDetails] = useState({
-    name: '',
-    properties: [],
-    isAsset: false
-  });
+  // const [details, setDetails] = useState({
+  //   name: '',
+  //   properties: [],
+  //   isAsset: false
+  // });
 
   const handleClear = () => {
     setNodes([]);
@@ -472,10 +475,6 @@ export default function MainCanvas() {
       });
   };
 
-  // const toggleDrawerOpen = (tab) => dispatch(draweropen(tab));
-  // const toggleDrawerClose = () => dispatch(drawerClose());
-  // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
-  // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
@@ -483,15 +482,19 @@ export default function MainCanvas() {
   const handleSidebarOpen = (e, node) => {
     e.preventDefault();
     if (node.type !== 'group') {
-      dispatch(OpenPropertiesTab());
+      // dispatch(OpenPropertiesTab());
       setSelectedElement(node);
       dispatch(setSelectedBlock(node));
+      // console.log('node', node);
       // toggleDrawerOpen('MainCanvasTab');
       dispatch(setProperties(node?.properties));
     }
   };
 
   const handleSelectNode = (e, node) => {
+    // console.log('e.currentTarget', e.currentTarget);
+    e.stopPropagation();
+    e.preventDefault();
     let grp = [...groupList];
     function addNodeToArray(node) {
       const existingNode = grp.find((obj) => obj.id === node.id);
@@ -501,9 +504,21 @@ export default function MainCanvas() {
       }
     }
     if (node.type !== 'group') {
-      setSelectedElement(node);
+      // setAnchorEl(e.currentTarget);
+      dispatch(setAnchorEl(e.currentTarget.getAttribute('data-id')));
       dispatch(setSelectedBlock(node));
-      dispatch(setProperties(node?.properties));
+      setSelectedElement(node);
+      dispatch(
+        setDetails({
+          ...details,
+          name: node?.data?.label ?? '',
+          properties: node?.properties ?? [],
+          isAsset: node.isAsset ?? false
+        })
+      );
+      // setSelectedElement(node);
+      // dispatch(setSelectedBlock(node));
+      // dispatch(setProperties(node?.properties));
 
       if (!grp.length) {
         grp.push(node);
@@ -516,22 +531,27 @@ export default function MainCanvas() {
 
   const handleClosePopper = () => {
     if (!isPopperFocused) {
-      setAnchorEl(null);
+      // setAnchorEl(null);
+      dispatch(setAnchorEl(null));
     }
   };
 
   const handleSelectEdge = (e, edge) => {
     e.stopPropagation();
     e.preventDefault();
-    setAnchorEl(e.currentTarget);
+    // setAnchorEl(e.currentTarget);
+    console.log('e.currentTarget', e.currentTarget);
+    dispatch(setAnchorEl(e.currentTarget.getAttribute('data-testid')));
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
-    setDetails({
-      ...details,
-      name: edge?.data?.label ?? '',
-      properties: edge?.properties ?? [],
-      isAsset: edge.isAsset ?? false
-    });
+    dispatch(
+      setDetails({
+        ...details,
+        name: edge?.data?.label ?? '',
+        properties: edge?.properties ?? [],
+        isAsset: edge.isAsset ?? false
+      })
+    );
   };
 
   const handleSaveEdit = (e) => {
@@ -789,14 +809,17 @@ export default function MainCanvas() {
         )}
         {anchorEl && (
           <EditProperties
-            anchorEl={anchorEl}
+            anchorEl={anchorElId}
             handleSaveEdit={handleSaveEdit}
             handleClosePopper={handleClosePopper}
             setDetails={setDetails}
             details={details}
+            dispatch={dispatch}
             setIsPopperFocused={setIsPopperFocused}
             edges={edges}
             setEdges={setEdges}
+            nodes={nodes}
+            setNodes={setNodes}
             selectedElement={selectedElement}
           />
         )}

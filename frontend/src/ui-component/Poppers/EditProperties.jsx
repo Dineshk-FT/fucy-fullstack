@@ -45,49 +45,65 @@ const EditProperties = ({
   details,
   setDetails,
   handleSaveEdit,
+  dispatch,
   setIsPopperFocused,
   edges,
   setEdges,
+  nodes,
+  setNodes,
   selectedElement
 }) => {
   const color = ColorTheme();
   const classes = useStyles();
-  const handleChange = (event, newValue) => {
-    setDetails({
-      ...details,
-      properties: newValue
-    });
-
-    const updatedEdges = edges.map((node) => (node.id === selectedElement?.id ? { ...node, properties: newValue } : node));
-    setEdges(updatedEdges);
+  // Helper function to update nodes or edges
+  const updateElement = (updateFn) => {
+    if (!selectedElement.target) {
+      const updatedNodes = nodes.map((node) => (node.id === selectedElement?.id ? updateFn(node) : node));
+      setNodes(updatedNodes);
+    } else {
+      const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? updateFn(edge) : edge));
+      setEdges(updatedEdges);
+    }
   };
+
+  const handleChange = (event, newValue) => {
+    dispatch(
+      setDetails({
+        ...details,
+        properties: newValue
+      })
+    );
+    updateElement((element) => ({ ...element, properties: newValue }));
+  };
+
   const handleStyle = (e) => {
     const { value } = e.target;
-    setDetails((state) => ({ ...state, name: value }));
-    const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? { ...edge, data: { ...edge.data, label: value } } : edge));
-    setEdges(updatedEdges);
+    dispatch(setDetails((state) => ({ ...state, name: value })));
+    updateElement((element) => ({
+      ...element,
+      data: { ...element.data, label: value }
+    }));
   };
 
   const handleChecked = (event) => {
     const { checked } = event.target;
-    // Manually update `isAsset` without overriding automatic logic
-    setDetails((state) => ({ ...state, isAsset: checked }));
-    const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? { ...edge, isAsset: checked } : edge));
-    setEdges(updatedEdges);
+    dispatch(setDetails((state) => ({ ...state, isAsset: checked })));
+    updateElement((element) => ({ ...element, isAsset: checked }));
   };
 
   const handleDelete = (valueToDelete) => () => {
-    const updatedProperties = details.properties.filter((property) => property !== valueToDelete);
-    // Update details with the filtered properties
-    setDetails((prevDetails) => ({
-      ...prevDetails,
-      properties: updatedProperties
-    }));
-    // Update nodes and selectedElement to reflect the changes in `isAsset`
-    const updatedEdges = edges.map((node) =>
-      node.id === selectedElement?.id ? { ...node, properties: updatedProperties, isAsset: updatedProperties.length > 0 } : node
+    const updatedProperties = details?.properties.filter((property) => property !== valueToDelete);
+    dispatch(
+      setDetails((prevDetails) => ({
+        ...prevDetails,
+        properties: updatedProperties
+      }))
     );
-    setEdges(updatedEdges);
+    updateElement((element) => ({
+      ...element,
+      properties: updatedProperties,
+      isAsset: updatedProperties.length > 0
+    }));
   };
 
   return (
@@ -153,7 +169,7 @@ const EditProperties = ({
               multiple
               id="tags-filled"
               options={Properties}
-              value={details.properties}
+              value={details?.properties}
               onChange={handleChange}
               sx={{
                 minWidth: '130px', // Reduced minimum width

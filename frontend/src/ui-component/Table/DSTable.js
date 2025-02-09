@@ -860,7 +860,7 @@ export default function DsTable() {
           <TableBody>
             {filtered?.map((row, rowkey) => (
               <>
-                <RenderTableRow row={row} rowKey={rowkey} />
+                <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
               </>
             ))}
           </TableBody>

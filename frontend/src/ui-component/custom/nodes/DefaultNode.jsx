@@ -4,7 +4,7 @@ import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -27,12 +27,23 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
 
   const handleInfoClick = () => {
     // Open properties tab and set the selected node
-    dispatch(OpenPropertiesTab());
+    // dispatch(OpenPropertiesTab());
+    const selectedNode = nodes.find((node) => node.id === id);
+    const { isAsset, properties } = selectedNode;
+    // console.log('selectedNode', selectedNode);
     dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl(id));
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
   };
 
   const onNodeClick = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+    setNodes((nodes) => nodes?.filter((node) => node.id !== id));
     setIsVisible(false);
   };
 

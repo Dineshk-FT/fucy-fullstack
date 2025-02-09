@@ -5,7 +5,13 @@ const initialState = {
   selectedBlock: {},
   initialDialogOpen: false,
   propertiesTabOpen: false,
-  addNodeTabOpen: false
+  addNodeTabOpen: false,
+  anchorEl: null,
+  details: {
+    name: '',
+    properties: [],
+    isAsset: false
+  }
 };
 
 const CanvasSlice = createSlice({
@@ -14,6 +20,17 @@ const CanvasSlice = createSlice({
   reducers: {
     openAddNodeTab: (state) => {
       return { ...state, addNodeTabOpen: true };
+    },
+    setAnchorEl: (state, action) => {
+      // console.log('action', action?.payload?.id);
+      return { ...state, anchorEl: action.payload };
+    },
+    setDetails: (state, action) => {
+      if (typeof action.payload === 'function') {
+        state.details = action.payload(state.details);
+      } else {
+        state.details = action.payload;
+      }
     },
     closeAddNodeTab: (state) => {
       return { ...state, addNodeTabOpen: false };
@@ -47,6 +64,8 @@ export const {
   OpenPropertiesTab,
   ClosePropertiesTab,
   openAddNodeTab,
-  closeAddNodeTab
+  closeAddNodeTab,
+  setAnchorEl,
+  setDetails
 } = CanvasSlice.actions;
 export default CanvasSlice.reducer;

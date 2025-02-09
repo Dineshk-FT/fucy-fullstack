@@ -40,7 +40,7 @@ import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
-import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab, setAnchorEl, setDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 
@@ -122,6 +122,7 @@ const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
+  edges: state.edges,
   model: state.model,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
@@ -156,6 +157,7 @@ const BrowserCard = () => {
   const {
     getModels,
     nodes,
+    edges,
     model,
     getModelById,
     assets,
@@ -415,6 +417,7 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
           data.Details?.map((detail, i) => {
+            // console.log('detail', detail);
             return detail?.name?.length ? (
               <DraggableTreeItem
                 key={detail.nodeId}
@@ -426,12 +429,21 @@ const BrowserCard = () => {
                 }
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!detail.nodeId.includes('edge')) {
-                    // console.log('clicked', detail);
+                  // if (!detail.nodeId.includes('edge')) {
+                  // console.log('clicked', detail);
 
-                    setClickedItem(detail.nodeId);
-                  }
+                  setClickedItem(detail.nodeId);
+                  // }
                   dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                  const selected = nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
+                  dispatch(setAnchorEl(selected?.target ? 'rf__edge-'.concat(selected?.id) : selected?.id));
+                  dispatch(
+                    setDetails({
+                      name: selected?.data?.label ?? '',
+                      properties: selected?.properties ?? [],
+                      isAsset: selected?.isAsset ?? false
+                    })
+                  );
                 }}
                 onDragStart={(e) => onDragStart(e, detail)}
                 sx={{
@@ -439,19 +451,22 @@ const BrowserCard = () => {
                   color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
                 }}
               >
-                {detail?.props?.map((prop) => (
-                  <DraggableTreeItem
-                    key={prop.id}
-                    nodeId={prop.id}
-                    onClick={(e) => e.stopPropagation()}
-                    label={
-                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                        {`Loss of ${prop.name}`}
-                      </div>
-                    }
-                  />
-                ))}
+                {detail?.props?.map((prop) => {
+                  // console.log('prop', prop);
+                  return (
+                    <DraggableTreeItem
+                      key={prop.id}
+                      nodeId={prop.id}
+                      onClick={(e) => e.stopPropagation()}
+                      label={
+                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                          <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                          {`Loss of ${prop.name}`}
+                        </div>
+                      }
+                    />
+                  );
+                })}
               </DraggableTreeItem>
             ) : null;
           })
