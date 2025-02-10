@@ -155,10 +155,10 @@ const EditProperties = ({
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
                   background: `${color?.sidebarBG} !important`,
-                  borderRadius: 'none',
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
                     fontSize: fontSize - 2, // Slightly reduced font size for input
+                    borderRadius: 0,
                     padding: '6px 8px' // Standard padding for input fields
                   },
                   width: '150px' // Reduced width for the input field
