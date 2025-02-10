@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { fontSize } from '../../store/constant';
 import { makeStyles } from '@mui/styles';
 import ColorTheme from '../../store/ColorTheme';
+import Draggable from 'react-draggable';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 const notify = (message, status) => toast[status](message);
@@ -166,24 +167,21 @@ const EditContent = ({
 
   // console.log('details', details);
   return (
-    <Box className={classes.bottomPanel} sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent }}>
-      <Typography variant="h4" color="primary">
-        Change the Properties
-      </Typography>
-      <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={() => dispatch(ClosePropertiesTab())}>
-        <CancelTwoToneIcon />
+    <Draggable handle=".drag-handle">
+    <Paper elevation={3} className={classes.bottomPanel} 
+      sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent }}>
+      <Box className="drag-handle" sx={{ cursor: 'move', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: color?.sidebarBG }}>
+        <Typography variant="h5" color="primary">
+          Change the Properties
+        </Typography>
+        <Box sx={{ cursor: 'pointer' }} onClick={() => dispatch(ClosePropertiesTab())}>
+          <CancelTwoToneIcon />
+        </Box>
       </Box>
       <TabContext value={value}>
-        {/* <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '270px' }}>
-          <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
-            <Tab label="Text" value="1" sx={{ minWidth: '90px' }} />
-            <Tab label="Diagram" value="2" sx={{ minWidth: '90px' }} />
-            <Tab label="Style" value="3" sx={{ minWidth: '90px' }} />
-          </TabList>
-        </Box> */}
         <TabPanel value="1" sx={{ p: 0 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 1, mt: 1 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <InputLabel className={classes.inputlabel}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
@@ -195,13 +193,13 @@ const EditContent = ({
                   background: `${color?.sidebarBG} !important`,
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
-                    height: '0.4rem',
+                    height: '0.2rem',
                     fontSize: fontSize
                   }
                 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
               <Autocomplete
                 multiple
@@ -213,7 +211,7 @@ const EditContent = ({
                   minWidth: '150px',
                   maxWidth: '350px',
                   '& .MuiOutlinedInput-root': {
-                    padding: '3px'
+                    padding: '1px'
                   }
                 }}
                 renderTags={(value, getTagProps) =>
@@ -241,11 +239,12 @@ const EditContent = ({
             <Button variant="outlined" onClick={handleUpdate} sx={{ height: '50%', marginRight: 1 }}>
               Update
             </Button>
-          </Box>
+            </Box>
         </TabPanel>
       </TabContext>
       <Toaster position="top-right" reverseOrder={false} />
-    </Box>
+    </Paper>
+  </Draggable>
   );
 };
 
