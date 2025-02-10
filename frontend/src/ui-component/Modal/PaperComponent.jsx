@@ -4,7 +4,7 @@ import Draggable from 'react-draggable';
 import { Resizable } from 'react-resizable';
 
 export default function PaperComponent(props) {
-  const [size, setSize] = useState({ width: 400, height: 'fitcontent' });
+  const [size, setSize] = useState({ width: 400, height: 400 });
 
   const onResize = (event, { size }) => {
     setSize(size);

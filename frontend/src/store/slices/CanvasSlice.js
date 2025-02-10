@@ -7,6 +7,7 @@ const initialState = {
   propertiesTabOpen: false,
   addNodeTabOpen: false,
   anchorEl: null,
+  isHeaderOpen: false,
   details: {
     name: '',
     properties: [],
@@ -20,6 +21,12 @@ const CanvasSlice = createSlice({
   reducers: {
     openAddNodeTab: (state) => {
       return { ...state, addNodeTabOpen: true };
+    },
+    openHeader: (state) => {
+      return { ...state, isHeaderOpen: true };
+    },
+    closeHeader: (state) => {
+      return { ...state, isHeaderOpen: false };
     },
     setAnchorEl: (state, action) => {
       // console.log('action', action?.payload?.id);
@@ -66,6 +73,8 @@ export const {
   openAddNodeTab,
   closeAddNodeTab,
   setAnchorEl,
-  setDetails
+  setDetails,
+  openHeader,
+  closeHeader
 } = CanvasSlice.actions;
 export default CanvasSlice.reducer;

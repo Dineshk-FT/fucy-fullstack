@@ -1,22 +1,13 @@
 /*eslint-disable*/
 import * as React from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  InputLabel,
-  Box,
-  TextField,
-  Slide
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import AlertMessage from '../Alert';
 import ColorTheme from '../../store/ColorTheme';
 import PaperComponent from './PaperComponent';
+import DialogCommonTitle from './DialogCommonTitle';
+import { ThreatIcon } from '../../assets/icons';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -78,14 +69,12 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
         aria-describedby="draggable-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
-            background: color?.tabBG,
+            background: color?.modalBg,
             width: '-webkit-fill-available'
           }
         }}
       >
-        <DialogTitle variant="h4" color="primary">
-          {'Add Threat Scenario'}
-        </DialogTitle>
+        <DialogCommonTitle icon={ThreatIcon} title={'Add Threat Scenario'} />
         <DialogContent>
           <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>

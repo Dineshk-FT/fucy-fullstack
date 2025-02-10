@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
+import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import { iconStyle } from '../../../store/constant';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -107,26 +109,20 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               handleInfoClick();
             }}
-            style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '-12px',
-              background: '#007bff',
-              borderRadius: '50%',
-              width: '20px',
-              height: '19px',
-              fontSize: '0.7rem',
-              color: 'white',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
-            }}
+            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
             i
           </div>
+          <Box
+            sx={{
+              ...iconStyle,
+              left: '20px',
+              opacity: isHovered ? 1 : 0
+            }}
+            onClick={() => dispatch(openHeader())}
+          >
+            <EditIcon sx={{ fontSize: '1rem' }} />
+          </Box>
           <div
             className="delete-icon"
             onClick={(e) => {
@@ -134,19 +130,12 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               setIsVisible(true);
             }}
             style={{
-              position: 'absolute',
-              width: '20px',
-              height: '19px',
-              top: '-12px',
+              ...iconStyle,
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              borderRadius: '50%',
               fontSize: '0.8rem',
-              color: 'white',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
+              opacity: isHovered ? 1 : 0
             }}
           >
             x

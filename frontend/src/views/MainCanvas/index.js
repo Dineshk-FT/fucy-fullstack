@@ -143,7 +143,7 @@ export default function MainCanvas() {
   const dragRef = useRef(null);
   const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen, details, anchorEl } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, details, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
   const anchorElId = anchorEl?.includes('reactflow__edge')
     ? document.querySelector(`[data-testid="${anchorEl}"]`)
     : document.querySelector(`[data-id="${anchorEl}"]`) || null;
@@ -540,7 +540,7 @@ export default function MainCanvas() {
     e.stopPropagation();
     e.preventDefault();
     // setAnchorEl(e.currentTarget);
-    console.log('e.currentTarget', e.currentTarget);
+    // console.log('e.currentTarget', e.currentTarget);
     dispatch(setAnchorEl(e.currentTarget.getAttribute('data-testid')));
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
@@ -691,7 +691,7 @@ export default function MainCanvas() {
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
       >
-        {propertiesTabOpen && (
+        {isHeaderOpen && (
           <Header
             selectedElement={selectedElement}
             nodes={nodes}
@@ -703,6 +703,7 @@ export default function MainCanvas() {
             handleSave={handleSaveToModel}
             download={handleDownload}
             createGroup={createGroup}
+            dispatch={dispatch}
           />
         )}
         <ReactFlowProvider fitView>
@@ -725,8 +726,8 @@ export default function MainCanvas() {
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
-            onNodeDoubleClick={handleSidebarOpen}
-            onNodeClick={handleSelectNode}
+            onNodeDoubleClick={handleSelectNode}
+            // onNodeClick={handleSelectNode}
             onEdgeContextMenu={handleSelectEdge}
             // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}

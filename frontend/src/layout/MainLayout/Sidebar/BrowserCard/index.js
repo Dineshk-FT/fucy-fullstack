@@ -184,7 +184,6 @@ const BrowserCard = () => {
     getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
-  const { tableOpen } = useSelector((state) => state?.currentId);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);

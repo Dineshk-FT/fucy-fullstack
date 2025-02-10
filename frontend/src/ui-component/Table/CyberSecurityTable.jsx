@@ -568,7 +568,7 @@ export default function CybersecurityTable() {
             </TableHead>
             <TableBody>
               {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-                <RenderTableRow row={row} rowKey={rowkey} />
+                <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
           </Table>

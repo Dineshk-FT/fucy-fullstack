@@ -16,6 +16,7 @@ import { makeStyles } from '@mui/styles';
 import React from 'react';
 import ColorTheme from '../../store/ColorTheme';
 import { fontSize } from '../../store/constant';
+import { useSelector } from 'react-redux';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -55,17 +56,26 @@ const EditProperties = ({
 }) => {
   const color = ColorTheme();
   const classes = useStyles();
+  const { selectedBlock } = useSelector((state) => state?.canvas);
+
   // Helper function to update nodes or edges
   const updateElement = (updateFn) => {
-    if (!selectedElement.target) {
-      const updatedNodes = nodes.map((node) => (node.id === selectedElement?.id ? updateFn(node) : node));
+    // console.log('Selected Element:', selectedBlock); // Debugging
+
+    if (!selectedBlock.target) {
+      // Update nodes if target is not present
+      const updatedNodes = nodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node));
       setNodes(updatedNodes);
+      // console.log('Updated Nodes:', updatedNodes); // Debugging
     } else {
-      const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? updateFn(edge) : edge));
+      // Update edges if target is present
+      const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
       setEdges(updatedEdges);
+      // console.log('Updated Edges:', updatedEdges); // Debugging
     }
   };
 
+  // Example handlers
   const handleChange = (event, newValue) => {
     dispatch(
       setDetails({
@@ -195,8 +205,8 @@ const EditProperties = ({
           </Box>
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
-              Cancel
+            <Button variant="outlined" color="error" onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+              Close
             </Button>
             {/* Adjusted padding for compact buttons */}
             <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
