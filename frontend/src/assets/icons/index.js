@@ -19,3 +19,4 @@ export { default as ANDGateIcon } from './ANDGateIcon.png';
 export { default as VotingGateIcon } from './VotingGateIcon.png';
 export { default as TransferGateIcon } from './TransferGateIcon.png';
 export { default as EventIcon } from './EventIcon.png';
+export { default as ChatbotIcon } from './chatbotIcon.png';

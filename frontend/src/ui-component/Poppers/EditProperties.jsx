@@ -125,7 +125,7 @@ const EditProperties = ({
         {
           name: 'offset',
           options: {
-            offset: [0, -8] // Reduced offset for a tighter fit
+            offset: [0, 5] // Reduced offset for a tighter fit
           }
         },
         {
