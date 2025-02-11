@@ -16,7 +16,8 @@ const Customization = () => {
   const [message, setMessage] = useState(''); // State to manage the message input
   const buttonRef = useRef(null); // Reference for Popper positioning
 
-  const handleToggle = () => {
+  const handleToggle = (e) => {
+    // e.stopProgation();
     setOpen((prev) => !prev);
   };
 

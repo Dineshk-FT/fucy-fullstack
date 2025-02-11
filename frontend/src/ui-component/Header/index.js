@@ -348,8 +348,8 @@ export default function Header({
             background: '#f83e3e',
             border: 'none',
             fontSize: '0.6rem',
-            height: '1.8vh',
-            width: '1.5vw',
+            height: '1rem',
+            width: '1rem',
             zIndex: 1100
             // opacity: isHovered ? 1 : 0
           }}

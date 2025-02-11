@@ -505,7 +505,7 @@ export default function MainCanvas() {
     }
     if (node.type !== 'group') {
       // setAnchorEl(e.currentTarget);
-      dispatch(setAnchorEl(e.currentTarget.getAttribute('data-id')));
+      // dispatch(setAnchorEl(e.currentTarget.getAttribute('data-id')));
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
       dispatch(
@@ -690,6 +690,7 @@ export default function MainCanvas() {
         style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
+        // onClick={() => dispatch(setSelectedBlock({}))}
       >
         {isHeaderOpen && (
           <Header
@@ -724,10 +725,11 @@ export default function MainCanvas() {
             defaultEdgeOptions={edgeOptions}
             onDrop={onDrop}
             onDragOver={onDragOver}
+            onClick={() => dispatch(setSelectedBlock({}))}
             fitView
             connectionMode="loose"
-            onNodeDoubleClick={handleSelectNode}
-            // onNodeClick={handleSelectNode}
+            // onNodeDoubleClick={handleSelectNode}
+            onNodeClick={handleSelectNode}
             onEdgeContextMenu={handleSelectEdge}
             // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}

@@ -53,7 +53,12 @@ const InitialModal = () => {
 
   return (
     <>
-      <Dialog open={initialDialogOpen} onClose={onClose} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
+      <Dialog
+        open={initialDialogOpen}
+        onClose={onClose}
+        PaperComponent={(props) => <PaperComponent {...props} height="fit-content" />}
+        aria-labelledby="draggable-dialog-title"
+      >
         <DialogTitle style={{ cursor: 'move' }} id="draggable-dialog-title">
           <Typography variant="h4" color="primary">
             Project Menu

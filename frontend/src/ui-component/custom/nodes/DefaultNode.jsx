@@ -84,7 +84,11 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
 
   return (
     <>
-      <NodeResizer minWidth={150} minHeight={40} />
+      <NodeResizer
+        minWidth={Math.max(150, (data?.label?.length || 0) * 8)} // Approx 8px per character
+        minHeight={Math.max(40, (data?.label?.split('\n').length || 1) * 20)} // 20px per line
+      />
+
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"

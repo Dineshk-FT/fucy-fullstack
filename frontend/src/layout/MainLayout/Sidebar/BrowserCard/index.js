@@ -293,7 +293,7 @@ const BrowserCard = () => {
     // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    if (name !== 'Attack Trees' && !name.includes('UNICE')) {
+    if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
       dispatch(setTableOpen(name));
       dispatch(setTitle(name));
     }
