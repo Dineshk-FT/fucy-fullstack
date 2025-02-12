@@ -84,7 +84,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    '& .MuiTableCell-root': {
+      transition: 'width 0.2s ease'
+    }
     // color: '#000'
   }
 }));
@@ -834,8 +837,8 @@ export default function DsTable() {
         <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+              {Head?.map((hd, i) => (
+                <StyledTableCell key={hd?.id ?? i} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
                   {hd?.name}
                   <div
                     className="resize-handle"
@@ -846,10 +849,7 @@ export default function DsTable() {
                       width: '5px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent',
-                      '& .MuiTableCell-root': {
-                        transition: 'width 0.2s ease'
-                      }
+                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />

@@ -344,7 +344,7 @@ const BrowserCard = () => {
   //   return node?.dragged;
   // }
 
-  const getTitleLabel = (icon, name, id, drawerwidthChange) => {
+  const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
@@ -369,7 +369,7 @@ const BrowserCard = () => {
     );
   };
 
-  const getImageLabel = (icon, name, drawerwidthChange) => {
+  const getImageLabel = (icon, name) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
@@ -393,7 +393,7 @@ const BrowserCard = () => {
     );
   };
 
-  const getLabel = (icon, name, index, drawerwidthChange) => {
+  const getLabel = (icon, name, index) => {
     const IconComponent = iconComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
