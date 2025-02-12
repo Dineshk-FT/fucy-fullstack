@@ -60,31 +60,62 @@ const getLayoutedElements = async (nodes, edges) => {
       };
     });
 
-    // Align nodes neatly
-    layoutedNodes = layoutedNodes.map((node, index, allNodes) => {
-      allNodes.forEach((otherNode) => {
-        if (node.id !== otherNode.id) {
-          // Align horizontally if x-coordinates are close and y-coordinates overlap
-          if (Math.abs(node.position.x - otherNode.position.x) < 50 && Math.abs(node.position.y - otherNode.position.y) < node.height) {
-            node.position.x = otherNode.position.x;
-          }
+    // Function to check if two nodes overlap
+    const nodesOverlap = (nodeA, nodeB) => {
+      return (
+        Math.abs(nodeA.position.x - nodeB.position.x) < (nodeA.width + nodeB.width) / 2 + 20 && // Add buffer
+        Math.abs(nodeA.position.y - nodeB.position.y) < (nodeA.height + nodeB.height) / 2 + 20 // Add buffer
+      );
+    };
 
-          // Align vertically if y-coordinates are close and x-coordinates overlap
-          if (Math.abs(node.position.y - otherNode.position.y) < 50 && Math.abs(node.position.x - otherNode.position.x) < node.width) {
-            node.position.y = otherNode.position.y + 30; // Add extra 30 units for vertical spacing
-          }
+    // Function to resolve overlaps with minimal displacement
+    const resolveOverlap = (nodeA, nodeB) => {
+      const xSpacing = (nodeA.width + nodeB.width) / 2 + 20; // Add buffer
+      const ySpacing = (nodeA.height + nodeB.height) / 2 + 20; // Add buffer
 
-          // Prevent intersection by adjusting positions
-          if (
-            Math.abs(node.position.x - otherNode.position.x) < node.width &&
-            Math.abs(node.position.y - otherNode.position.y) < node.height
-          ) {
-            node.position.x += node.width + 10; // Add buffer to prevent overlap
+      // Calculate overlap in x and y directions
+      const xOverlap = xSpacing - Math.abs(nodeA.position.x - nodeB.position.x);
+      const yOverlap = ySpacing - Math.abs(nodeA.position.y - nodeB.position.y);
+
+      if (xOverlap > 0 && yOverlap > 0) {
+        // Move nodes apart minimally in the direction of least resistance
+        if (xOverlap < yOverlap) {
+          // Adjust x positions
+          if (nodeA.position.x < nodeB.position.x) {
+            nodeA.position.x -= xOverlap / 2;
+            nodeB.position.x += xOverlap / 2;
+          } else {
+            nodeA.position.x += xOverlap / 2;
+            nodeB.position.x -= xOverlap / 2;
+          }
+        } else {
+          // Adjust y positions
+          if (nodeA.position.y < nodeB.position.y) {
+            nodeA.position.y -= yOverlap / 2;
+            nodeB.position.y += yOverlap / 2;
+          } else {
+            nodeA.position.y += yOverlap / 2;
+            nodeB.position.y -= yOverlap / 2;
           }
         }
+      }
+    };
+
+    // Iterate multiple times to resolve all overlaps
+    let hasOverlaps = true;
+    let maxIterations = 100; // Prevent infinite loops
+    while (hasOverlaps && maxIterations > 0) {
+      hasOverlaps = false;
+      layoutedNodes.forEach((nodeA, indexA) => {
+        layoutedNodes.slice(indexA + 1).forEach((nodeB) => {
+          if (nodesOverlap(nodeA, nodeB)) {
+            resolveOverlap(nodeA, nodeB);
+            hasOverlaps = true;
+          }
+        });
       });
-      return node;
-    });
+      maxIterations--;
+    }
 
     // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
