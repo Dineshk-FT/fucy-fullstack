@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   isCanvasPage: '',
   selectedBlock: {},
+  drawerwidthChange: 400,
   initialDialogOpen: false,
   propertiesTabOpen: false,
   addNodeTabOpen: false,
@@ -27,6 +28,9 @@ const CanvasSlice = createSlice({
     },
     closeHeader: (state) => {
       return { ...state, isHeaderOpen: false };
+    },
+    setDrawerwidth: (state, action) => {
+      return { ...state, drawerwidthChange: Number(action.payload) };
     },
     setAnchorEl: (state, action) => {
       // console.log('action', action?.payload?.id);
@@ -75,6 +79,7 @@ export const {
   setAnchorEl,
   setDetails,
   openHeader,
-  closeHeader
+  closeHeader,
+  setDrawerwidth
 } = CanvasSlice.actions;
 export default CanvasSlice.reducer;

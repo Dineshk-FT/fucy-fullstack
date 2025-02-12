@@ -53,7 +53,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '0px 15px',
-    textAlign: 'justify'
+    textAlign: 'left'
   }
 }));
 

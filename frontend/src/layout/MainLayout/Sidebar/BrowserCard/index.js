@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useMemo } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import ColorTheme from '../../../../store/ColorTheme';
@@ -184,7 +184,7 @@ const BrowserCard = () => {
     getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
-  const { selectedBlock } = useSelector((state) => state?.canvas);
+  const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
   const [openNodelist, setOpenNodelist] = useState(false);
@@ -194,6 +194,7 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
+  // console.log('drawerwidthChange', drawerwidthChange);
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
   };
@@ -343,39 +344,77 @@ const BrowserCard = () => {
   //   return node?.dragged;
   // }
 
-  const getTitleLabel = (icon, name, id) => {
+  const getTitleLabel = (icon, name, id, drawerwidthChange) => {
     const Image = imageComponents[icon];
     return (
-      <Box color={color?.sidebarContent} className={classes.title}>
-        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'}>
-          {name}
-        </Typography>
-      </Box>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <Box
+          color={color?.sidebarContent}
+          className={classes.title}
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
+          <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'} noWrap>
+            {name}
+          </Typography>
+        </Box>
+      </Tooltip>
     );
   };
 
-  const getImageLabel = (icon, name) => {
+  const getImageLabel = (icon, name, drawerwidthChange) => {
     const Image = imageComponents[icon];
     return (
-      <div className={classes.labelRoot}>
-        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-          {name}
-        </Typography>
-      </div>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
+          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
     );
   };
-  const getLabel = (icon, name, index) => {
+
+  const getLabel = (icon, name, index, drawerwidthChange) => {
     const IconComponent = iconComponents[icon];
     return (
-      <div className={classes.labelRoot}>
-        {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
-        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-          {index && `${index}. `}
-          {name}
-        </Typography>
-      </div>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {IconComponent && <IconComponent color="inherit" sx={{ fontSize: 16 }} />}
+          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+            {index && `${index}. `}
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
     );
   };
 
@@ -422,9 +461,21 @@ const BrowserCard = () => {
                 key={detail.nodeId}
                 nodeId={detail.nodeId}
                 label={
-                  <Box>
-                    {i + 1}. {detail.name}
-                  </Box>
+                  <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= 400}>
+                    <Box
+                      sx={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content' // Adjust width as needed
+                      }}
+                    >
+                      {i + 1}.{' '}
+                      <Typography component="span" noWrap>
+                        {detail.name}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
                 }
                 onClick={(e) => {
                   e.stopPropagation();
