@@ -119,8 +119,8 @@ export default function Event(props) {
     <>
       <NodeResizer
         lineStyle={{ backgroundColor: bgColor ?? 'gray', borderWidth: '2px' }}
-        minWidth={100}
-        minHeight={60}
+        minWidth={120}
+        minHeight={80}
         onResize={(event, params) => {
           setNodeDimensions({ width: params.width, height: params.height });
         }}
