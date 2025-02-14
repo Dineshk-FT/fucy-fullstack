@@ -16,6 +16,7 @@ import { makeStyles } from '@mui/styles';
 import React from 'react';
 import ColorTheme from '../../store/ColorTheme';
 import { fontSize } from '../../store/constant';
+import { useSelector } from 'react-redux';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -45,49 +46,74 @@ const EditProperties = ({
   details,
   setDetails,
   handleSaveEdit,
+  dispatch,
   setIsPopperFocused,
   edges,
   setEdges,
+  nodes,
+  setNodes,
   selectedElement
 }) => {
   const color = ColorTheme();
   const classes = useStyles();
-  const handleChange = (event, newValue) => {
-    setDetails({
-      ...details,
-      properties: newValue
-    });
+  const { selectedBlock } = useSelector((state) => state?.canvas);
 
-    const updatedEdges = edges.map((node) => (node.id === selectedElement?.id ? { ...node, properties: newValue } : node));
-    setEdges(updatedEdges);
+  // Helper function to update nodes or edges
+  const updateElement = (updateFn) => {
+    // console.log('Selected Element:', selectedBlock); // Debugging
+
+    if (!selectedBlock.target) {
+      // Update nodes if target is not present
+      const updatedNodes = nodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node));
+      setNodes(updatedNodes);
+      // console.log('Updated Nodes:', updatedNodes); // Debugging
+    } else {
+      // Update edges if target is present
+      const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
+      setEdges(updatedEdges);
+      // console.log('Updated Edges:', updatedEdges); // Debugging
+    }
   };
+
+  // Example handlers
+  const handleChange = (event, newValue) => {
+    dispatch(
+      setDetails({
+        ...details,
+        properties: newValue
+      })
+    );
+    updateElement((element) => ({ ...element, properties: newValue }));
+  };
+
   const handleStyle = (e) => {
     const { value } = e.target;
-    setDetails((state) => ({ ...state, name: value }));
-    const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? { ...edge, data: { ...edge.data, label: value } } : edge));
-    setEdges(updatedEdges);
+    dispatch(setDetails((state) => ({ ...state, name: value })));
+    updateElement((element) => ({
+      ...element,
+      data: { ...element.data, label: value }
+    }));
   };
 
   const handleChecked = (event) => {
     const { checked } = event.target;
-    // Manually update `isAsset` without overriding automatic logic
-    setDetails((state) => ({ ...state, isAsset: checked }));
-    const updatedEdges = edges.map((edge) => (edge.id === selectedElement?.id ? { ...edge, isAsset: checked } : edge));
-    setEdges(updatedEdges);
+    dispatch(setDetails((state) => ({ ...state, isAsset: checked })));
+    updateElement((element) => ({ ...element, isAsset: checked }));
   };
 
   const handleDelete = (valueToDelete) => () => {
-    const updatedProperties = details.properties.filter((property) => property !== valueToDelete);
-    // Update details with the filtered properties
-    setDetails((prevDetails) => ({
-      ...prevDetails,
-      properties: updatedProperties
-    }));
-    // Update nodes and selectedElement to reflect the changes in `isAsset`
-    const updatedEdges = edges.map((node) =>
-      node.id === selectedElement?.id ? { ...node, properties: updatedProperties, isAsset: updatedProperties.length > 0 } : node
+    const updatedProperties = details?.properties.filter((property) => property !== valueToDelete);
+    dispatch(
+      setDetails((prevDetails) => ({
+        ...prevDetails,
+        properties: updatedProperties
+      }))
     );
-    setEdges(updatedEdges);
+    updateElement((element) => ({
+      ...element,
+      properties: updatedProperties,
+      isAsset: updatedProperties.length > 0
+    }));
   };
 
   return (
@@ -99,7 +125,7 @@ const EditProperties = ({
         {
           name: 'offset',
           options: {
-            offset: [0, -8] // Reduced offset for a tighter fit
+            offset: [0, 5] // Reduced offset for a tighter fit
           }
         },
         {
@@ -129,10 +155,10 @@ const EditProperties = ({
                 onChange={(e) => handleStyle(e, 'name')}
                 sx={{
                   background: `${color?.sidebarBG} !important`,
-                  borderRadius: 'none',
                   color: color?.sidebarContent,
                   '& .MuiInputBase-input': {
                     fontSize: fontSize - 2, // Slightly reduced font size for input
+                    borderRadius: 0,
                     padding: '6px 8px' // Standard padding for input fields
                   },
                   width: '150px' // Reduced width for the input field
@@ -153,7 +179,7 @@ const EditProperties = ({
               multiple
               id="tags-filled"
               options={Properties}
-              value={details.properties}
+              value={details?.properties}
               onChange={handleChange}
               sx={{
                 minWidth: '130px', // Reduced minimum width
@@ -179,8 +205,8 @@ const EditProperties = ({
           </Box>
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
-              Cancel
+            <Button variant="outlined" color="error" onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+              Close
             </Button>
             {/* Adjusted padding for compact buttons */}
             <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>

@@ -219,7 +219,10 @@ export default function AttackTreeTable() {
     e.stopPropagation();
     const { name, value } = e.target;
 
-    // Update the selected category with the new value
+    // Store previous state to rollback if needed
+    const previousRows = [...filtered];
+
+    // Optimistically update the selected category
     const updatedRows = rows.map((r) => {
       if (r.ID === row.ID) {
         return { ...r, [name]: value };
@@ -227,15 +230,15 @@ export default function AttackTreeTable() {
       return r;
     });
 
-    // setRows(updatedRows);
+    setFiltered(updatedRows); // Update UI immediately
 
-    // // Calculate average Attack Feasabilities Rating if the updated category is part of the specified categories
+    // Simulate average rating calculation
     const calculateAverageRating = (row) => {
       const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
       let totalRating = 0;
 
       categories.forEach((category) => {
-        const selectedOption = options[category].find((option) => option.value === row[category]);
+        const selectedOption = options[category]?.find((option) => option.value === row[category]);
         if (selectedOption) {
           totalRating += selectedOption.rating;
         }
@@ -256,14 +259,17 @@ export default function AttackTreeTable() {
       'Attack Feasibilities Rating': getRating(averageRating)
     };
 
-    // console.log('details', details);
+    // Simulate a delay before reverting the update if request fails
     update(details)
       .then((res) => {
         if (res) {
           getAttackScenario(model?._id);
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.log('err', err);
+        setFiltered(previousRows); // Revert UI to previous state if request fails
+      });
   };
 
   const handleBack = () => {

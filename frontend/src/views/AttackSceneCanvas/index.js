@@ -20,30 +20,23 @@ import StepEdgeAttackTree from '../../ui-component/custom/edges/StepEdgeAttackTr
 
 const elk = new ELK();
 
-const elkOptions = {
-  'elk.algorithm': 'layered',
-  'elk.direction': 'DOWN',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '70', // More spacing between layers
-  'elk.spacing.nodeNode': '10', // Spacing between nodes in the same layer
-  'elk.layered.considerModelOrder': true, // Respect input order when arranging
-  'elk.layered.mergeEdges': true // Merge edges where possible for clarity
-};
-
 const getLayoutedElements = async (nodes, edges) => {
   const graph = {
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
-      'elk.direction': 'DOWN',
-      'elk.spacing.nodeNode': 50,
-      'elk.spacing.nodeNodeBetweenLayers': 70,
-      'elk.edgeRouting': 'ORTHOGONAL',
-      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX'
+      'elk.direction': 'DOWN', // Layout direction (DOWN, UP, LEFT, RIGHT)
+      'elk.spacing.nodeNode': 50, // Spacing between nodes in the same layer
+      'elk.spacing.nodeNodeBetweenLayers': 70, // Spacing between layers
+      'elk.edgeRouting': 'ORTHOGONAL', // Edge routing style
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', // Node placement strategy
+      'elk.layered.considerModelOrder': true, // Respect input order
+      'elk.layered.mergeEdges': true // Merge edges for clarity
     },
     children: nodes.map((node) => ({
       id: node.id,
-      width: node.width || 150,
-      height: node.height || 50
+      width: node.width || 150, // Default width if not provided
+      height: node.height || 50 // Default height if not provided
     })),
     edges: edges.map((edge) => ({
       id: edge.id,
@@ -62,41 +55,72 @@ const getLayoutedElements = async (nodes, edges) => {
         ...originalNode,
         position: {
           x: node.x || 0,
-          y: (node.y || 0) + 30 // Add extra 30 units to y-axis distance for all nodes
+          y: (node.y || 0) + 30 // Add extra 30 units to y-axis for spacing
         }
       };
     });
 
-    // Align nodes that are close to each other within a range of 50 units
-    layoutedNodes = layoutedNodes.map((node, index, allNodes) => {
-      allNodes.forEach((otherNode) => {
-        if (node.id !== otherNode.id) {
-          // Align horizontally if x-coordinates are close and y-coordinates overlap
-          if (Math.abs(node.position.x - otherNode.position.x) < 50 && Math.abs(node.position.y - otherNode.position.y) < node.height) {
-            node.position.x = otherNode.position.x;
-          }
+    // Function to check if two nodes overlap
+    const nodesOverlap = (nodeA, nodeB) => {
+      return (
+        Math.abs(nodeA.position.x - nodeB.position.x) < (nodeA.width + nodeB.width) / 2 + 20 && // Add buffer
+        Math.abs(nodeA.position.y - nodeB.position.y) < (nodeA.height + nodeB.height) / 2 + 20 // Add buffer
+      );
+    };
 
-          // Align vertically if y-coordinates are close and x-coordinates overlap
-          if (Math.abs(node.position.y - otherNode.position.y) < 50 && Math.abs(node.position.x - otherNode.position.x) < node.width) {
-            node.position.y = otherNode.position.y + 30; // Add extra 30 units for vertical spacing
-          }
+    // Function to resolve overlaps with minimal displacement
+    const resolveOverlap = (nodeA, nodeB) => {
+      const xSpacing = (nodeA.width + nodeB.width) / 2 + 20; // Add buffer
+      const ySpacing = (nodeA.height + nodeB.height) / 2 + 20; // Add buffer
 
-          // Adjust to prevent intersection
-          if (
-            Math.abs(node.position.x - otherNode.position.x) < node.width &&
-            Math.abs(node.position.y - otherNode.position.y) < node.height
-          ) {
-            node.position.x += node.width + 10; // Add some buffer to prevent overlap
+      // Calculate overlap in x and y directions
+      const xOverlap = xSpacing - Math.abs(nodeA.position.x - nodeB.position.x);
+      const yOverlap = ySpacing - Math.abs(nodeA.position.y - nodeB.position.y);
+
+      if (xOverlap > 0 && yOverlap > 0) {
+        // Move nodes apart minimally in the direction of least resistance
+        if (xOverlap < yOverlap) {
+          // Adjust x positions
+          if (nodeA.position.x < nodeB.position.x) {
+            nodeA.position.x -= xOverlap / 2;
+            nodeB.position.x += xOverlap / 2;
+          } else {
+            nodeA.position.x += xOverlap / 2;
+            nodeB.position.x -= xOverlap / 2;
+          }
+        } else {
+          // Adjust y positions
+          if (nodeA.position.y < nodeB.position.y) {
+            nodeA.position.y -= yOverlap / 2;
+            nodeB.position.y += yOverlap / 2;
+          } else {
+            nodeA.position.y += yOverlap / 2;
+            nodeB.position.y -= yOverlap / 2;
           }
         }
+      }
+    };
+
+    // Iterate multiple times to resolve all overlaps
+    let hasOverlaps = true;
+    let maxIterations = 100; // Prevent infinite loops
+    while (hasOverlaps && maxIterations > 0) {
+      hasOverlaps = false;
+      layoutedNodes.forEach((nodeA, indexA) => {
+        layoutedNodes.slice(indexA + 1).forEach((nodeB) => {
+          if (nodesOverlap(nodeA, nodeB)) {
+            resolveOverlap(nodeA, nodeB);
+            hasOverlaps = true;
+          }
+        });
       });
-      return node;
-    });
+      maxIterations--;
+    }
 
     // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id),
-      points: edge.sections?.[0]?.bendPoints || []
+      points: edge.sections?.[0]?.bendPoints || [] // Use bend points for smooth edges
     }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
@@ -105,7 +129,6 @@ const getLayoutedElements = async (nodes, edges) => {
     return { nodes, edges }; // Return original if layout fails
   }
 };
-
 // Define edge types outside and pass edges, setEdges as props
 const edgeTypes = {
   custom: CustomEdge,
@@ -472,25 +495,25 @@ export default function AttackBlock({ attackScene, color }) {
           const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
           const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
 
-          if (distanceX > 550 || distanceY > 550) {
-            const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
-            setEdges(updatedEdges);
+          // if (distanceX > 550 || distanceY > 550) {
+          //   const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
+          //   setEdges(updatedEdges);
 
-            const updatedNodes = nodes.map((node) => {
-              if (node.data?.connections) {
-                return {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    connections: node.data.connections.filter((connection) => connection.id !== draggedNode.id)
-                  }
-                };
-              }
-              return node;
-            });
+          //   const updatedNodes = nodes.map((node) => {
+          //     if (node.data?.connections) {
+          //       return {
+          //         ...node,
+          //         data: {
+          //           ...node.data,
+          //           connections: node.data.connections.filter((connection) => connection.id !== draggedNode.id)
+          //         }
+          //       };
+          //     }
+          //     return node;
+          //   });
 
-            setNodes(updatedNodes);
-          }
+          //   setNodes(updatedNodes);
+          // }
         }
       }
     }

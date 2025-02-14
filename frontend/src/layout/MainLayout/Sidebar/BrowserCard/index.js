@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useMemo } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import ColorTheme from '../../../../store/ColorTheme';
@@ -40,7 +40,7 @@ import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
-import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab, setAnchorEl, setDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 
@@ -122,6 +122,7 @@ const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
+  edges: state.edges,
   model: state.model,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
@@ -156,6 +157,7 @@ const BrowserCard = () => {
   const {
     getModels,
     nodes,
+    edges,
     model,
     getModelById,
     assets,
@@ -182,8 +184,7 @@ const BrowserCard = () => {
     getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
-  const { tableOpen } = useSelector((state) => state?.currentId);
-  const { selectedBlock } = useSelector((state) => state?.canvas);
+  const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
   const [openNodelist, setOpenNodelist] = useState(false);
@@ -193,6 +194,7 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
+  // console.log('drawerwidthChange', drawerwidthChange);
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
   };
@@ -292,7 +294,7 @@ const BrowserCard = () => {
     // console.log('name', name);
     e.stopPropagation();
     setClickedItem(id);
-    if (name !== 'Attack Trees' && !name.includes('UNICE')) {
+    if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
       dispatch(setTableOpen(name));
       dispatch(setTitle(name));
     }
@@ -345,36 +347,74 @@ const BrowserCard = () => {
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Box color={color?.sidebarContent} className={classes.title}>
-        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'}>
-          {name}
-        </Typography>
-      </Box>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <Box
+          color={color?.sidebarContent}
+          className={classes.title}
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
+          <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'} noWrap>
+            {name}
+          </Typography>
+        </Box>
+      </Tooltip>
     );
   };
 
   const getImageLabel = (icon, name) => {
     const Image = imageComponents[icon];
     return (
-      <div className={classes.labelRoot}>
-        {Image ? <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} /> : null}
-        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-          {name}
-        </Typography>
-      </div>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
+          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
     );
   };
+
   const getLabel = (icon, name, index) => {
     const IconComponent = iconComponents[icon];
     return (
-      <div className={classes.labelRoot}>
-        {IconComponent ? <IconComponent color="inherit" sx={{ fontSize: 16 }} /> : null}
-        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
-          {index && `${index}. `}
-          {name}
-        </Typography>
-      </div>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {IconComponent && <IconComponent color="inherit" sx={{ fontSize: 16 }} />}
+          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+            {index && `${index}. `}
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
     );
   };
 
@@ -415,23 +455,45 @@ const BrowserCard = () => {
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
           data.Details?.map((detail, i) => {
+            // console.log('detail', detail);
             return detail?.name?.length ? (
               <DraggableTreeItem
                 key={detail.nodeId}
                 nodeId={detail.nodeId}
                 label={
-                  <Box>
-                    {i + 1}. {detail.name}
-                  </Box>
+                  <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= 400}>
+                    <Box
+                      sx={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content' // Adjust width as needed
+                      }}
+                    >
+                      {i + 1}.{' '}
+                      <Typography component="span" noWrap>
+                        {detail.name}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
                 }
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!detail.nodeId.includes('edge')) {
-                    // console.log('clicked', detail);
+                  // if (!detail.nodeId.includes('edge')) {
+                  // console.log('clicked', detail);
 
-                    setClickedItem(detail.nodeId);
-                  }
+                  setClickedItem(detail.nodeId);
+                  // }
                   dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                  const selected = nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
+                  dispatch(setAnchorEl(selected?.target ? 'rf__edge-'.concat(selected?.id) : selected?.id));
+                  dispatch(
+                    setDetails({
+                      name: selected?.data?.label ?? '',
+                      properties: selected?.properties ?? [],
+                      isAsset: selected?.isAsset ?? false
+                    })
+                  );
                 }}
                 onDragStart={(e) => onDragStart(e, detail)}
                 sx={{
@@ -439,19 +501,22 @@ const BrowserCard = () => {
                   color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
                 }}
               >
-                {detail?.props?.map((prop) => (
-                  <DraggableTreeItem
-                    key={prop.id}
-                    nodeId={prop.id}
-                    onClick={(e) => e.stopPropagation()}
-                    label={
-                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                        <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                        {`Loss of ${prop.name}`}
-                      </div>
-                    }
-                  />
-                ))}
+                {detail?.props?.map((prop) => {
+                  // console.log('prop', prop);
+                  return (
+                    <DraggableTreeItem
+                      key={prop.id}
+                      nodeId={prop.id}
+                      onClick={(e) => e.stopPropagation()}
+                      label={
+                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                          <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                          {`Loss of ${prop.name}`}
+                        </div>
+                      }
+                    />
+                  );
+                })}
               </DraggableTreeItem>
             ) : null;
           })

@@ -215,7 +215,7 @@ export const AttackTableHeader = [
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
-  { id: 5, name: 'Approach' },
+  // { id: 5, name: 'Approach' },
   { id: 6, name: 'Elapsed Time' },
   { id: 7, name: 'Expertise' },
   { id: 8, name: 'Knowledge of the Item' },

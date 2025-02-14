@@ -20,6 +20,8 @@ import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
 import ColorTheme from '../../store/ColorTheme';
 import Draggable from 'react-draggable';
+import DialogCommonTitle from './DialogCommonTitle';
+import { AttackIcon } from '../../assets/icons';
 
 function PaperComponent(props) {
   const nodeRef = React.useRef(null);
@@ -88,9 +90,10 @@ export default function CommonModal({ open, handleClose, name }) {
         PaperComponent={PaperComponent}
         onClose={onClose}
         aria-labelledby="draggable-dialog-title"
-        sx={{ '& .MuiPaper-root': { backgroundColor: color?.tabBG } }}
+        sx={{ '& .MuiPaper-root': { backgroundColor: color?.modalBg } }}
       >
-        <DialogTitle variant="h4" color="primary" sx={{ fontFamily: 'Inter' }} id="draggable-dialog-title">{`Add New ${name}`}</DialogTitle>
+        <DialogCommonTitle icon={AttackIcon} title={`Add New ${name}`} />
+
         <DialogContent>
           <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>

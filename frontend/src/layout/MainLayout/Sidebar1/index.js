@@ -21,7 +21,7 @@ import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import MenuCard from '../Sidebar/MenuCard/index1';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
-import { ClosePropertiesTab } from '../../../store/slices/CanvasSlice';
+import { ClosePropertiesTab, setDrawerwidth } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -60,10 +60,12 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
 
   const handleResize = (event, { size }) => {
     setSidebarWidth(size.width);
+    dispatch(setDrawerwidth(size.width));
   };
 
   const handleDrawerToggle = () => {
     setSidebarWidth(draweropen ? 0 : 370);
+    dispatch(setDrawerwidth(draweropen ? 0 : 370));
     drawerToggle();
   };
 
@@ -166,6 +168,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             variant={matchUpMd ? 'persistent' : 'temporary'}
             anchor="left"
             open={draweropen}
+            id="sidebar_drawer"
             onClose={handleDrawerToggle} // Use handleDrawerToggle here
             sx={{
               '& .MuiDrawer-paper': {

@@ -659,7 +659,7 @@ export default function Tstable() {
           </TableHead>
           <TableBody>
             {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} />
+              <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
             ))}
           </TableBody>
         </Table>

@@ -1,21 +1,12 @@
 /* eslint-disable */
 import * as React from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  InputLabel,
-  Box,
-  TextField,
-  Slide
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import ColorTheme from '../../store/ColorTheme';
 import PaperComponent from './PaperComponent';
+import { DamageIcon } from '../../assets/icons';
+import DialogCommonTitle from './DialogCommonTitle';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -82,14 +73,12 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
         aria-describedby="draggable-dialog-title"
         sx={{
           '& .MuiPaper-root': {
-            background: color?.tabBG,
+            background: color?.modalBg,
             width: '-webkit-fill-available'
           }
         }}
       >
-        <DialogTitle variant="h4" color="primary" id="draggable-dialog-title">
-          {'Add Damage Scenario'}
-        </DialogTitle>
+        <DialogCommonTitle icon={DamageIcon} title={'Add Damage Scenario'} />
         <DialogContent>
           <DialogContentText id="draggable-dialog-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>

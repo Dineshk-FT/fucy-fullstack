@@ -19,6 +19,9 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
 import AddIcon from '@mui/icons-material/Add';
+import { iconStyle } from '../../store/constant';
+import { useDispatch } from 'react-redux';
+import { closeHeader } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   header: {
@@ -47,7 +50,8 @@ export default function Header({
   handleClear,
   handleSave,
   download,
-  createGroup
+  createGroup,
+  dispatch
 }) {
   const color = ColorTheme();
   const classes = useStyles();
@@ -200,46 +204,46 @@ export default function Header({
     event.dataTransfer.setData('application/group', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
-  const segments = [
-    {
-      id: 1,
-      title: 'Grouping',
-      onclick: () => createGroup,
-      onDragStart: handleDragStart,
-      isDraggable: true,
-      component: <GridOnIcon />
-    },
-    // {
-    //   id: 2,
-    //   title: 'Clear',
-    //   onclick: () => handleClear,
-    //   component: <ClearIcon />
-    // },
-    {
-      id: 3,
-      title: 'Save',
-      onclick: () => handleSave,
-      component: <SaveIcon />
-    },
-    {
-      id: 4,
-      title: 'Vertical Align',
-      onclick: () => vertical,
-      component: <VerticalAlignCenterIcon />
-    },
-    {
-      id: 5,
-      title: 'Horizontal Align',
-      onclick: () => horizontal,
-      component: <VerticalAlignCenterIcon sx={{ rotate: '90deg' }} />
-    },
-    {
-      id: 6,
-      title: 'Download',
-      onclick: () => download,
-      component: <GetAppIcon />
-    }
-  ];
+  // const segments = [
+  //   // {
+  //   //   id: 1,
+  //   //   title: 'Grouping',
+  //   //   onclick: () => createGroup,
+  //   //   onDragStart: handleDragStart,
+  //   //   isDraggable: true,
+  //   //   component: <GridOnIcon />
+  //   // },
+  //   // {
+  //   //   id: 2,
+  //   //   title: 'Clear',
+  //   //   onclick: () => handleClear,
+  //   //   component: <ClearIcon />
+  //   // },
+  //   // {
+  //   //   id: 3,
+  //   //   title: 'Save',
+  //   //   onclick: () => handleSave,
+  //   //   component: <SaveIcon />
+  //   // },
+  //   {
+  //     id: 4,
+  //     title: 'Vertical Align',
+  //     onclick: () => vertical,
+  //     component: <VerticalAlignCenterIcon />
+  //   },
+  //   {
+  //     id: 5,
+  //     title: 'Horizontal Align',
+  //     onclick: () => horizontal,
+  //     component: <VerticalAlignCenterIcon sx={{ rotate: '90deg' }} />
+  //   },
+  //   {
+  //     id: 6,
+  //     title: 'Download',
+  //     onclick: () => download,
+  //     component: <GetAppIcon />
+  //   }
+  // ];
   // console.log('styles', styles)
   return (
     <>
@@ -322,7 +326,7 @@ export default function Header({
           <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
         </label>
 
-        {segments?.map((item) => (
+        {/* {segments?.map((item) => (
           <React.Fragment key={item?.id}>
             <Tooltip title={item?.title}>
               <Typography
@@ -335,7 +339,24 @@ export default function Header({
               </Typography>
             </Tooltip>
           </React.Fragment>
-        ))}
+        ))} */}
+        <Box
+          sx={{
+            ...iconStyle,
+            top: '15vh',
+            right: '12px',
+            background: '#f83e3e',
+            border: 'none',
+            fontSize: '0.6rem',
+            height: '1rem',
+            width: '1rem',
+            zIndex: 1100
+            // opacity: isHovered ? 1 : 0
+          }}
+          onClick={() => dispatch(closeHeader())}
+        >
+          X
+        </Box>
       </Box>
     </>
   );

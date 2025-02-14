@@ -26,7 +26,7 @@ import InitialModal from '../../ui-component/Modal/InitialModal';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../assets/icons';
 import useStore from '../../Zustand/store';
 
-// import Customization from '../Customization';
+import Customization from '../Customization';
 
 // const items = [
 //   {
@@ -283,6 +283,7 @@ const MainLayout = ({ children }) => {
         <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropenstr={leftDrawerOpened.toString()}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
+          <Customization />
           <Outlet />
         </Main>
       </Box>

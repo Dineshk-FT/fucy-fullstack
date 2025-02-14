@@ -1,10 +1,13 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import { iconStyle } from '../../../store/constant';
+import { minHeight } from '@mui/system';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -24,54 +27,91 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
+  const [width, setWidth] = useState(100);
+  const textRef = useRef(null);
+  const [height, setHeight] = useState(40);
+
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Function to calculate width based on label length
+  const getCalculatedSize = (label) => {
+    const lines = label ? label.split('\n') : [];
+    const maxLineWidth = Math.max(...lines.map((line) => line.length), 10);
+
+    return {
+      width: Math.max(100, maxLineWidth * 10),
+      height: Math.max(40, lines.length * 20) // Adjust height per line
+    };
+  };
+
+  useEffect(() => {
+    if (!isResizing && data.label) {
+      setWidth((prevWidth) => {
+        const newSize = getCalculatedSize(data.label);
+        return newSize.width !== prevWidth ? newSize.width : prevWidth;
+      });
+
+      setHeight(textRef.current.scrollHeight + 10); // Add some padding
+    }
+  }, [data.label, isResizing]);
+
+  const handleResize = (_, { width: newWidth, height: newHeight }) => {
+    requestAnimationFrame(() => {
+      setIsResizing(true);
+      setWidth(newWidth);
+      setHeight(newHeight);
+    });
+  };
 
   const handleInfoClick = () => {
-    // Open properties tab and set the selected node
-    dispatch(OpenPropertiesTab());
+    const selectedNode = nodes.find((node) => node.id === id);
+    const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl(id));
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
   };
 
   const onNodeClick = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+    setNodes((nodes) => nodes?.filter((node) => node.id !== id));
     setIsVisible(false);
   };
 
   const handleDelete = () => {
     deleteNode({ assetId: assets?._id, nodeId: id })
-      .then((res) => {
-        getAssets(model?._id);
-      })
-      .catch((err) => {
-        console.log('err', err);
-      });
-    setIsUnsavedDialogVisible(false); // Close unsaved dialog if open
+      .then(() => getAssets(model?._id))
+      .catch((err) => console.log('err', err));
+    setIsUnsavedDialogVisible(false);
     setIsVisible(false);
   };
 
   const handlePermanentDeleteClick = () => {
     if (nodes.length > originalNodes.length) {
-      setIsUnsavedDialogVisible(true); // Show unsaved changes dialog
+      setIsUnsavedDialogVisible(true);
     } else {
-      handleDelete(); // Perform delete directly
+      handleDelete();
     }
   };
 
-  const handleUnsavedDialogClose = () => {
-    setIsUnsavedDialogVisible(false);
-  };
-
-  const handleUnsavedDialogContinue = () => {
-    handleDelete(); // Proceed with deletion
-  };
+  const handleUnsavedDialogClose = () => setIsUnsavedDialogVisible(false);
+  const handleUnsavedDialogContinue = () => handleDelete();
 
   const copiedNodes = nodes.filter((node) => node.isCopied === true);
-
-  // Check if the current node is a copied node
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
-      <NodeResizer minWidth={150} minHeight={40} />
+      <NodeResizer
+        minWidth={width >= 100 ? 150 : 100}
+        minHeight={height >= 40 ? 60 : 40}
+        onResize={handleResize}
+        onResizeStop={() => setIsResizing(false)}
+      />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
           role="button"
@@ -81,14 +121,26 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             ...data?.style,
             position: 'relative',
             overflow: 'visible',
-            boxShadow: selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none'
+            boxShadow: selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
+            width: width,
+            height: height, // Apply dynamic height
+            // minHeight: height ,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '5px',
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap' // Allow text to wrap properly
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
           <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
-          <div>{data?.label}</div>
+          <div ref={textRef} style={{ maxWidth: width - 10, textAlign: 'center' }}>
+            {data?.label}
+          </div>
           <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
           <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
           <div
@@ -96,26 +148,20 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               handleInfoClick();
             }}
-            style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '-12px',
-              background: '#007bff',
-              borderRadius: '50%',
-              width: '20px',
-              height: '19px',
-              fontSize: '0.7rem',
-              color: 'white',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
-            }}
+            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
             i
           </div>
+          <Box
+            sx={{
+              ...iconStyle,
+              left: '20px',
+              opacity: isHovered ? 1 : 0
+            }}
+            onClick={() => dispatch(openHeader())}
+          >
+            <EditIcon sx={{ fontSize: '1rem' }} />
+          </Box>
           <div
             className="delete-icon"
             onClick={(e) => {
@@ -123,19 +169,12 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               setIsVisible(true);
             }}
             style={{
-              position: 'absolute',
-              width: '20px',
-              height: '19px',
-              top: '-12px',
+              ...iconStyle,
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              borderRadius: '50%',
               fontSize: '0.8rem',
-              color: 'white',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
+              opacity: isHovered ? 1 : 0
             }}
           >
             x

@@ -140,6 +140,7 @@ export default function StepEdge({
     <>
       <BaseEdge
         path={edgePath}
+        id={id}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
         style={{ ...style, stroke: color?.title }}
@@ -178,7 +179,7 @@ export default function StepEdge({
               style={{
                 outline: 'none',
                 cursor: 'text',
-                color: data?.label.length && selectedBlock.id === id ? 'black' : data?.label.length ? color?.title : color?.label
+                color: data?.label.length && selectedBlock?.id === id ? 'black' : data?.label.length ? color?.title : color?.label
               }}
             >
               {data?.label.length ? data?.label : 'Enter name'}
