@@ -25,6 +25,8 @@ import RenameProject from '../../../../ui-component/Modal/RenameModal';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
 import ColorTheme from '../../../../store/ColorTheme';
+import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 const LeftSection = () => {
   const selector = (state) => ({
@@ -45,10 +47,19 @@ const LeftSection = () => {
     Delete: false
   });
 
+  const dispatch = useDispatch();
+  const [openItemRight, setOpenItemRight] = useState(false);
+
   useEffect(() => {
     getSidebarNode();
     getTemplates();
   }, []);
+
+  const handleAddNewNode = (e) => {
+    e.stopPropagation();
+    dispatch(openAddNodeTab());
+    setOpenItemRight(false);
+  };
 
   const tabs = [
     {
@@ -68,13 +79,59 @@ const LeftSection = () => {
       ]
     },
     {
-      name: 'Insert',
+      name: 'Model Defination',
+      options: [
+        { label: 'New', icon: AddIcon, action: handleAddNewNode },
+      ]
+    },
+    {
+      name: 'Damage Scenarios',
       options: [
         { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
         { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
         { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
       ]
     },
+    {
+      name: 'Threat Scenarios',
+      options: [
+        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
+        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
+        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+      ]
+    },
+    {
+      name: 'Attack Path',
+      options: [
+        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
+        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
+        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+      ]
+    },
+    {
+      name: 'Cyber Security',
+      options: [
+        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
+        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
+        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+      ]
+    },
+    {
+      name: 'Risk Determination',
+      options: [
+        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
+        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
+        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+      ]
+    },
+    // {
+    //   name: 'Insert',
+    //   options: [
+    //     { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
+    //     { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
+    //     { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+    //   ]
+    // },
     {
       name: 'System',
       options: [
@@ -123,10 +180,10 @@ const LeftSection = () => {
         {tabs.map((tab) => (
           <Typography
             key={tab.name}
-            // onClick={() => setActiveTab(tab.name)}
+            onClick={() => setActiveTab(tab.name)}
             sx={{
               cursor: 'pointer',
-              fontSize: '14px',
+              fontSize: '12px',
               color: activeTab === tab.name ? 'blue' : color.title,
               fontWeight: activeTab === tab.name ? 'bold' : 'normal',
               margin: '0 8px',
@@ -185,7 +242,7 @@ const LeftSection = () => {
                           '&:hover': { backgroundColor: color.sidebarBG }
                         }}
                       >
-                        <Icon fontSize="extra-small" />
+                        <Icon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Typography
