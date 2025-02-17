@@ -47,6 +47,9 @@ const LeftSection = () => {
     Delete: false
   });
 
+  const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
+  const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
+
   const dispatch = useDispatch();
   const [openItemRight, setOpenItemRight] = useState(false);
 
@@ -59,6 +62,15 @@ const LeftSection = () => {
     e.stopPropagation();
     dispatch(openAddNodeTab());
     setOpenItemRight(false);
+  };
+
+  // Function to open the TemplateList dialog from "System" tab
+  const handleSystemTabClick = () => {
+    setOpenTemplateDialog(true); // Open TemplateList dialog
+  };
+
+  const handleComponentsTabClick = () => {
+    setOpenComponentsDialog(true); 
   };
 
   const tabs = [
@@ -82,14 +94,24 @@ const LeftSection = () => {
       name: 'Model Defination',
       options: [
         { label: 'New', icon: AddIcon, action: handleAddNewNode },
+        {
+          label: 'System',
+          icon: OpenIcon,
+          action: handleSystemTabClick, // Open dialog when clicked on System tab
+          subLevel: null // Don't show sub-level here
+        },
+        {
+          label: 'Components',
+          icon: OpenIcon,
+          action: handleComponentsTabClick, // Open dialog when clicked on System tab
+          subLevel: null // Don't show sub-level here
+        }
       ]
     },
     {
       name: 'Damage Scenarios',
       options: [
-        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
-        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
-        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
+        { label: 'New', icon: AddIcon, action: () => console.log('Insert Image') },
       ]
     },
     {
@@ -132,22 +154,22 @@ const LeftSection = () => {
     //     { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
     //   ]
     // },
-    {
-      name: 'System',
-      options: [
-        {
-          subLevel: <TemplateList />
-        }
-      ]
-    },
-    {
-      name: 'Components',
-      options: [
-        {
-          subLevel: <Components />
-        }
-      ]
-    }
+    // {
+    //   name: 'System',
+    //   options: [
+    //     {
+    //       subLevel: <TemplateList />
+    //     }
+    //   ]
+    // },
+    // {
+    //   name: 'Components',
+    //   options: [
+    //     {
+    //       subLevel: <Components />
+    //     }
+    //   ]
+    // }
   ];
 
   const handleCloseNewModal = () => {
@@ -277,6 +299,8 @@ const LeftSection = () => {
           getModels={getModels}
         />
       )}
+      <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
+      <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
     </Box>
   );
 };
