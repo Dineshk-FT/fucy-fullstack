@@ -51,8 +51,7 @@ const EditProperties = ({
   edges,
   setEdges,
   nodes,
-  setNodes,
-  selectedElement
+  setNodes
 }) => {
   const color = ColorTheme();
   const classes = useStyles();

@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../store/constant';
-import { minHeight } from '@mui/system';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -107,8 +106,8 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   return (
     <>
       <NodeResizer
-        minWidth={width >= 100 ? 150 : 100}
-        minHeight={height >= 40 ? 60 : 40}
+        minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 150}
+        minHeight={data?.label?.length <= 15 ? 30 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 50 : 80}
         onResize={handleResize}
         onResizeStop={() => setIsResizing(false)}
       />
