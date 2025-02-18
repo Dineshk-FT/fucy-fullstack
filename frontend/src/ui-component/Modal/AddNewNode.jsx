@@ -101,7 +101,9 @@ const AddNewNode = () => {
           textDecoration: 'none',
           borderColor: 'gray',
           borderWidth: '2px',
-          borderStyle: 'solid'
+          borderStyle: 'solid',
+          width: 120,
+          height: 50
         }
       },
       type: 'default',

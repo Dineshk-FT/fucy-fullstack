@@ -7,29 +7,30 @@ const selector = (state) => ({
   nodes: state.nodes,
   setNodes: state.setNodes
 });
+
 const CustomGroupNode = ({ data, id }) => {
   const { nodes, setNodes } = useStore(selector, shallow);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(data?.label || '');
 
+  // Sync value state with data.label when it changes
   useEffect(() => {
-    setValue(data?.label);
-  }, [data]);
-  const handlechange = (e) => {
-    const nod = [...nodes];
+    setValue(data?.label || '');
+  }, [data?.label]);
+
+  const handleChange = (e) => {
     const val = e.target.value;
-    setValue(val);
-    const node = nodes?.find((nd) => nd?.id === id);
-    const Index = nodes?.findIndex((nd) => nd?.id === id);
-    node.data.label = e.target.value;
-    nod[Index] = node;
-    setNodes(nod);
+    setValue(val); // Update local state
+    const updatedNodes = nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node));
+    // Update Zustand state
+    setNodes(updatedNodes);
   };
+
   return (
     <div>
       <input
         type="text"
         value={value}
-        onChange={handlechange}
+        onChange={handleChange}
         style={{
           alignSelf: 'flex-start',
           fontSize: '25px',
@@ -43,12 +44,7 @@ const CustomGroupNode = ({ data, id }) => {
       />
 
       <NodeResizer />
-      <div
-        className="group_node"
-        style={{
-          ...data?.style
-        }}
-      >
+      <div className="group_node" style={{ ...data?.style }}>
         <div
           style={{
             color: 'black',
@@ -57,7 +53,7 @@ const CustomGroupNode = ({ data, id }) => {
             height: 'inherit',
             width: 'inherit'
           }}
-        ></div>
+        />
       </div>
     </div>
   );

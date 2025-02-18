@@ -184,6 +184,7 @@ const BrowserCard = () => {
     getCatalog
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
+  const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const [anchorItemEl, setAnchorItemEl] = useState(null);
   const [openItemRight, setOpenItemRight] = useState(false);
@@ -347,7 +348,7 @@ const BrowserCard = () => {
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
         <Box
           color={color?.sidebarContent}
           className={classes.title}
@@ -355,7 +356,7 @@ const BrowserCard = () => {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            maxWidth: 'fit-content',
             display: 'flex',
             alignItems: 'center'
           }}
@@ -372,14 +373,14 @@ const BrowserCard = () => {
   const getImageLabel = (icon, name) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
         <div
           className={classes.labelRoot}
           style={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            maxWidth: 'fit-content',
             display: 'flex',
             alignItems: 'center'
           }}
@@ -396,14 +397,14 @@ const BrowserCard = () => {
   const getLabel = (icon, name, index) => {
     const IconComponent = iconComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= 400}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
         <div
           className={classes.labelRoot}
           style={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content',
+            maxWidth: 'fit-content',
             display: 'flex',
             alignItems: 'center'
           }}
@@ -461,13 +462,13 @@ const BrowserCard = () => {
                 key={detail.nodeId}
                 nodeId={detail.nodeId}
                 label={
-                  <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= 400}>
+                  <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
                     <Box
                       sx={{
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        maxWidth: drawerwidthChange <= 400 ? '150px' : 'fit-content' // Adjust width as needed
+                        maxWidth: 'fit-content' // Adjust width as needed
                       }}
                     >
                       {i + 1}.{' '}

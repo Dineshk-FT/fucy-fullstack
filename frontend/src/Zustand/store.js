@@ -849,15 +849,29 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   setNodes: (newNodes) => {
-    set({
-      nodes: newNodes
-    });
+    set((state) => ({
+      nodes: typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes
+    }));
   },
   setEdges: (newEdges) => {
     set({
       edges: newEdges
     });
   },
+
+  updateNodeDimensions: (nodeId, newDimensions) =>
+    set((state) => {
+      const updatedNodes = state.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            style: { ...node.style, ...newDimensions } // Update dimensions in the style
+          };
+        }
+        return node;
+      });
+      return { nodes: updatedNodes };
+    }),
 
   //Attack tree Section
   onAttackNodesChange: (changes) => {

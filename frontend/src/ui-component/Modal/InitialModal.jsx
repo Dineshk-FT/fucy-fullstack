@@ -75,7 +75,7 @@ const InitialModal = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button autoFocus onClick={onClose} variant="outlined" color="error">
+          <Button onClick={onClose} variant="outlined" color="error">
             Close
           </Button>
         </DialogActions>

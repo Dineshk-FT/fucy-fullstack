@@ -590,7 +590,6 @@ export default function RiskTreatmentTable() {
       </Dialog>
 
       <TableContainer
-        stickyHeader
         component={Paper}
         sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
         onDrop={onDrop}

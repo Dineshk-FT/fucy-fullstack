@@ -17,7 +17,11 @@ import React from 'react';
 import ColorTheme from '../../store/ColorTheme';
 import { fontSize } from '../../store/constant';
 import { useSelector } from 'react-redux';
+import useStore from '../../Zustand/store';
 
+const selector = (state) => ({
+  updateNodeDimensions: state.updateNodeDimensions
+});
 const useStyles = makeStyles(() => ({
   inputlabel: {
     fontSize: fontSize - 2, // Slightly reduced font size for more compact labels
@@ -47,7 +51,6 @@ const EditProperties = ({
   setDetails,
   handleSaveEdit,
   dispatch,
-  setIsPopperFocused,
   edges,
   setEdges,
   nodes,
@@ -55,6 +58,7 @@ const EditProperties = ({
 }) => {
   const color = ColorTheme();
   const classes = useStyles();
+  const { updateNodeDimensions } = useStore();
   const { selectedBlock } = useSelector((state) => state?.canvas);
 
   // Helper function to update nodes or edges
@@ -85,13 +89,42 @@ const EditProperties = ({
     updateElement((element) => ({ ...element, properties: newValue }));
   };
 
-  const handleStyle = (e) => {
+  const getCalculatedSize = (label) => {
+    if (!label) return { height: 40 };
+
+    const lines = label.split('\n');
+    const lineHeight = 20; // Adjust based on styling
+
+    return {
+      height: Math.max(40, lines.length * lineHeight) // Ensures minimum height
+    };
+  };
+
+  const handleName = (e) => {
     const { value } = e.target;
-    dispatch(setDetails((state) => ({ ...state, name: value })));
-    updateElement((element) => ({
-      ...element,
-      data: { ...element.data, label: value }
-    }));
+    const { height } = getCalculatedSize(value);
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === selectedBlock?.id) {
+          return {
+            ...node,
+            data: { ...node.data, label: value },
+            style: { ...node.style, height } // Ensure height updates
+          };
+        }
+        return node;
+      })
+    );
+    const newDimensions = { height: height };
+    // Dispatch to update the `name` field
+    dispatch(
+      setDetails((state) => ({
+        ...state,
+        name: value // Update the `name` with the full value (sentence)
+      }))
+    );
+
+    updateNodeDimensions(selectedBlock?.id, newDimensions);
   };
 
   const handleChecked = (event) => {
@@ -151,7 +184,7 @@ const EditProperties = ({
                 id="outlined-basic"
                 variant="outlined"
                 value={details?.name}
-                onChange={(e) => handleStyle(e, 'name')}
+                onChange={(e) => handleName(e, 'name')}
                 sx={{
                   background: `${color?.sidebarBG} !important`,
                   color: color?.sidebarContent,
