@@ -16,6 +16,7 @@ import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibr
 import { useDispatch } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { openAddNodeTab } from '../../store/slices/CanvasSlice';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
 const useStyles = makeStyles(() => ({
   paper: {
@@ -47,7 +48,7 @@ const selector = (state) => ({
   sidebarNodes: state.sidebarNodes
 });
 
-const Components = () => {
+const Components = ({ openDialog, setOpenDialog }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [openAdd, setOpenAdd] = useState(false);
@@ -84,20 +85,27 @@ const Components = () => {
     return { children: initials };
   }
 
+  const handleCloseDialog = () => {
+    setOpenDialog(false); // Close the dialog when the user clicks the close button
+  };
+
   return (
-    <>
-      <Box
-        component="nav"
-        aria-label="sidebar"
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 2,
-          overflowX: 'auto',
-          borderRadius: '8px'
-        }}
-      >
+    <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <DialogTitle>Components</DialogTitle>
+      <DialogContent>
+        <Box
+          component="nav"
+          aria-label="sidebar"
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 2,
+            overflowX: 'auto',
+            borderRadius: '8px',
+            justifyContent: 'flex-start',
+            paddingBottom: '20px',
+          }}
+        >
         {sidebarNodes?.map((item, i) => (
           <Box
             key={i}
@@ -189,8 +197,14 @@ const Components = () => {
           <AddIcon />
         </Fab>
       </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCloseDialog} color="primary">
+          Close
+        </Button>
+      </DialogActions>
       <AddNewComponentLibrary open={openAdd} handleClose={() => setOpenAdd(false)} />
-    </>
+    </Dialog>
   );
 };
 
