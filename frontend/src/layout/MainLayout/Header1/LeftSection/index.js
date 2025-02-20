@@ -15,7 +15,10 @@ import {
   Image as ImageIcon,
   TableChart as TableIcon,
   Link as LinkIcon,
-  Edit as RenameIcon
+  Edit as RenameIcon,
+  Error as DamageIcon,
+  Star as RatingIcon,
+  Warning as ThreatIcon
 } from '@mui/icons-material';
 import TemplateList from '../../../../views/Libraries';
 import Components from '../../../../views/NodeList';
@@ -25,17 +28,30 @@ import RenameProject from '../../../../ui-component/Modal/RenameModal';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
 import ColorTheme from '../../../../store/ColorTheme';
+import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { useDispatch } from 'react-redux';
+import { closeAll, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 
 const LeftSection = () => {
   const selector = (state) => ({
     Models: state.Models,
+    model: state.model,
     getModels: state.getModels,
     deleteModels: state.deleteModels,
     getSidebarNode: state.getSidebarNode,
-    getTemplates: state.getTemplates
+    getTemplates: state.getTemplates,
+    setClickedItem: state.setClickedItem,
   });
   const color = ColorTheme();
-  const { Models, getModels, deleteModels, getSidebarNode, getTemplates } = useStore(selector);
+  const {
+    Models,
+    model,
+    getModels,
+    deleteModels,
+    getSidebarNode,
+    getTemplates,
+    setClickedItem,
+  } = useStore(selector);
 
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
@@ -45,10 +61,55 @@ const LeftSection = () => {
     Delete: false
   });
 
+  const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
+  const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
+
+  const dispatch = useDispatch();
+  const [openItemRight, setOpenItemRight] = useState(false);
+
   useEffect(() => {
     getSidebarNode();
     getTemplates();
   }, []);
+
+  const handleAddNewNode = (e) => {
+    dispatch(openAddNodeTab());
+  };
+
+  // Function to open the TemplateList dialog from "System" tab
+  const handleSystemTabClick = () => setOpenTemplateDialog(true); // Open TemplateList dialog
+
+  const handleComponentsTabClick = () => setOpenComponentsDialog(true);
+
+
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    const actions = {
+      'Model Defination': () => handleModelDefinationClick(),
+      'Threat Scenarios': handleThreatClick,
+      'Damage Scenarios': handleDerivationClick,
+      'Attack Path': () => handleAttackClick('41', 'Attack'),
+      'Risk Determination': handleRiskClick
+    };
+    actions[tabName]?.();
+  };
+
+  const handleDerivationClick = () => dispatch(setTableOpen('Damage Scenarios Derivations'));
+  const handleRatingClick = () => dispatch(setTableOpen('Damage Scenarios - Collection & Impact Ratings'));
+  const handleThreatClick = () => dispatch(setTableOpen('Threat Scenarios'));
+  const handleRiskClick = () => dispatch(setTableOpen('Threat Assessment & Risk Treatment'));
+
+  const handleModelDefinationClick = () => {
+    setClickedItem(model?._id);
+    dispatch(closeAll());
+  };
+
+  const handleAttackClick = (id, name) => {
+    setClickedItem(id);
+    if (!['Attack Trees', 'UNICE', 'Vulnerability Analysis'].includes(name)) {
+      dispatch(setTableOpen(name));
+    }
+  };
 
   const tabs = [
     {
@@ -68,29 +129,70 @@ const LeftSection = () => {
       ]
     },
     {
-      name: 'Insert',
+      name: 'Model Defination',
       options: [
-        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
-        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
-        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
-      ]
-    },
-    {
-      name: 'System',
-      options: [
+        { label: 'New', icon: AddIcon, action: handleAddNewNode },
         {
-          subLevel: <TemplateList />
+          label: 'System',
+          icon: OpenIcon,
+          action: handleSystemTabClick, // Open dialog when clicked on System tab
+          subLevel: null // Don't show sub-level here
+        },
+        {
+          label: 'Components',
+          icon: OpenIcon,
+          action: handleComponentsTabClick, // Open dialog when clicked on System tab
+          subLevel: null // Don't show sub-level here
         }
       ]
     },
     {
-      name: 'Components',
+      name: 'Damage Scenarios',
       options: [
-        {
-          subLevel: <Components />
-        }
+        { label: 'Derivation', icon: DamageIcon, action: handleDerivationClick },
+        { label: 'Rating', icon: RatingIcon, action: handleRatingClick }
       ]
+    },
+    {
+      name: 'Threat Scenarios',
+      options: [{ label: 'Threat-table', icon: ThreatIcon, action: handleThreatClick }]
+    },
+    {
+      name: 'Attack Path',
+      options: [
+        { label: 'Attack-Table', icon: DamageIcon},
+        { label: 'Attack-Tree', icon: RatingIcon}
+      ]
+    },
+    {
+      name: 'Cyber Security',
+      options: [
+        { label: 'Goals', icon: DamageIcon,  },
+        { label: 'Requirements', icon: RatingIcon,  },
+        { label: 'Controls', icon: DamageIcon, },
+        { label: 'Claims', icon: RatingIcon,  }
+      ]
+    },
+    {
+      name: 'Risk Determination',
+      options: [{ label: 'Risk-Table', icon: ThreatIcon, action: handleRiskClick }]
     }
+    // {
+    //   name: 'System',
+    //   options: [
+    //     {
+    //       subLevel: <TemplateList />
+    //     }
+    //   ]
+    // },
+    // {
+    //   name: 'Components',
+    //   options: [
+    //     {
+    //       subLevel: <Components />
+    //     }
+    //   ]
+    // }
   ];
 
   const handleCloseNewModal = () => {
@@ -123,10 +225,10 @@ const LeftSection = () => {
         {tabs.map((tab) => (
           <Typography
             key={tab.name}
-            // onClick={() => setActiveTab(tab.name)}
+            onClick={() => handleTabChange(tab.name)}
             sx={{
               cursor: 'pointer',
-              fontSize: '14px',
+              fontSize: '12px',
               color: activeTab === tab.name ? 'blue' : color.title,
               fontWeight: activeTab === tab.name ? 'bold' : 'normal',
               margin: '0 8px',
@@ -185,7 +287,7 @@ const LeftSection = () => {
                           '&:hover': { backgroundColor: color.sidebarBG }
                         }}
                       >
-                        <Icon fontSize="extra-small" />
+                        <Icon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Typography
@@ -220,6 +322,8 @@ const LeftSection = () => {
           getModels={getModels}
         />
       )}
+      <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
+      <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
     </Box>
   );
 };
