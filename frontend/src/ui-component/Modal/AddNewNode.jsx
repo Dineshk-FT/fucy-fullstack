@@ -44,7 +44,7 @@ function getStyles(name, nodes, theme) {
   };
 }
 
-const AddNewNode = () => {
+const AddNewNode = ({ assets }) => {
   const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -129,7 +129,11 @@ const AddNewNode = () => {
       const list = [...nodes, nodeDetail];
       setNodes(list);
       const template = { nodes: list, edges: edges };
-      const details = { 'model-id': model?._id, template: JSON.stringify(template), assetId: assets?._id };
+      const details = {
+        'model-id': model?._id,
+        template: JSON.stringify(template),
+        ...(assets && { assetId: assets?._id }) // Conditional property
+      };
 
       update(details)
         .then((res) => {

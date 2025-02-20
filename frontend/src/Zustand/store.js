@@ -59,6 +59,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   cyberEdges: [],
   nodes: [],
   edges: [],
+  selectedNodes: [],
   undoStack: [],
   redoStack: [],
   sidebarNodes: [],
@@ -853,6 +854,12 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes
     }));
   },
+  setSelectedNodes: (newNodes) => {
+    set((state) => ({
+      selectedNodes: newNodes
+    }));
+  },
+
   setEdges: (newEdges) => {
     set({
       edges: newEdges

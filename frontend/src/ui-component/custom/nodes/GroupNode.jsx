@@ -1,16 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { NodeResizer } from 'reactflow';
+import { NodeResizer, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
-  nodes: state.nodes,
-  setNodes: state.setNodes
+  nodes: state.nodes
 });
 
 const CustomGroupNode = ({ data, id }) => {
-  const { nodes, setNodes } = useStore(selector, shallow);
+  const { nodes } = useStore(selector, shallow);
+  const { setNodes } = useReactFlow();
+  const [dimesions, setDimenstions] = useState({
+    width: data?.style?.width || 200,
+    height: data?.style?.height || 200
+  });
   const [value, setValue] = useState(data?.label || '');
+
+  const handleResize = (_, { width: newWidth, height: newHeight }) => {
+    requestAnimationFrame(() => {
+      setDimenstions({ width: newWidth, height: newHeight });
+
+      // Update node dimensions in Zustand
+      setNodes((nodes) =>
+        nodes.map((node) => (node.id === id ? { ...node, style: { ...node.style, width: newWidth, height: newHeight } } : node))
+      );
+    });
+  };
 
   // Sync value state with data.label when it changes
   useEffect(() => {
@@ -26,7 +41,7 @@ const CustomGroupNode = ({ data, id }) => {
   };
 
   return (
-    <div>
+    <div style={{ height: dimesions?.height }}>
       <input
         type="text"
         value={value}
@@ -39,12 +54,21 @@ const CustomGroupNode = ({ data, id }) => {
           textAlign: 'center',
           border: 'none',
           background: 'transparent',
-          outline: 'none'
+          outline: 'none',
+          width: dimesions?.width
         }}
       />
+      <NodeResizer minWidth={150} minHeight={150} onResize={handleResize} />
 
-      <NodeResizer />
-      <div className="group_node" style={{ ...data?.style }}>
+      <div
+        className="my-group-node"
+        style={{
+          // ...data?.style,
+          position: 'relative'
+          // height: dimesions?.height,
+          // width: dimesions?.width
+        }}
+      >
         <div
           style={{
             color: 'black',
