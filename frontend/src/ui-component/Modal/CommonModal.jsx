@@ -22,6 +22,7 @@ import ColorTheme from '../../store/ColorTheme';
 import Draggable from 'react-draggable';
 import DialogCommonTitle from './DialogCommonTitle';
 import { AttackIcon } from '../../assets/icons';
+import toast, { Toaster } from 'react-hot-toast';
 
 function PaperComponent(props) {
   const nodeRef = React.useRef(null);
@@ -43,7 +44,8 @@ const selector = (state) => ({
 });
 export default function CommonModal({ open, handleClose, name }) {
   const color = ColorTheme();
-  const { notify } = React.useContext(ToasterContext);
+  // const { notify } = React.useContext(ToasterContext);
+  const notify = (message, status) => toast[status](message);
   const { id } = useParams();
   const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({

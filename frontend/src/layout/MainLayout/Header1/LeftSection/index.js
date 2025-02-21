@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Tooltip, Typography, IconButton } from '@mui/material';
 import {
   Add as AddIcon,
-  FolderOpen as OpenIcon,
+  FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
   Undo as UndoIcon,
   Redo as RedoIcon,
@@ -11,14 +11,23 @@ import {
   ContentCopy as CopyIcon,
   ContentPaste as PasteIcon,
   SelectAll as SelectAllIcon,
-  DeselectOutlined as DeselectIcon,
-  Image as ImageIcon,
+  Deselect as DeselectIcon,
   TableChart as TableIcon,
-  Link as LinkIcon,
-  Edit as RenameIcon,
-  Error as DamageIcon,
-  Star as RatingIcon,
-  Warning as ThreatIcon
+  Edit as EditIcon,
+  // New imports for more specific icons
+  CreateNewFolder as NewFolderIcon,    // For new project
+  DriveFileRenameOutline as RenameIcon,// For rename
+  Assessment as AssessmentIcon,        // For analysis/risk
+  Warning as WarningIcon,              // For threats/damage
+  Star as StarIcon,                    // For ratings
+  Security as SecurityIcon,            // For cybersecurity
+  PlaylistAdd as AddListIcon,          // For adding attacks
+  AccountTree as TreeIcon,             // For attack trees
+  Build as BuildIcon,                  // For system/components
+  Assignment as AssignmentIcon,        // For requirements/claims
+  Shield as ShieldIcon,                // For controls
+  ReportProblem as ReportIcon,         // For derivation
+  ListAlt as ListAltIcon,              // For detailed tables
 } from '@mui/icons-material';
 import TemplateList from '../../../../views/Libraries';
 import Components from '../../../../views/NodeList';
@@ -27,10 +36,13 @@ import AddModel from '../../../../ui-component/Modal/AddModal';
 import RenameProject from '../../../../ui-component/Modal/RenameModal';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
+import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../store/ColorTheme';
-import { openAddNodeTab, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
 import { closeAll, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import CommonModal from '../../../../ui-component/Modal/CommonModal';
+import { setTitle } from '../../../../store/slices/PageSectionSlice';
 
 const LeftSection = () => {
   const selector = (state) => ({
@@ -41,187 +53,235 @@ const LeftSection = () => {
     getSidebarNode: state.getSidebarNode,
     getTemplates: state.getTemplates,
     setClickedItem: state.setClickedItem,
+    getAttackScenario: state.getAttackScenario,
+    attackScenarios: state.attackScenarios
   });
+
   const color = ColorTheme();
-  const {
-    Models,
-    model,
-    getModels,
-    deleteModels,
-    getSidebarNode,
-    getTemplates,
-    setClickedItem,
-  } = useStore(selector);
+  const { Models, model, getModels, deleteModels, getSidebarNode, getTemplates, setClickedItem, getAttackScenario, attackScenarios } =
+    useStore(selector);
 
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
     Rename: false,
     Open: false,
-    Delete: false
+    Delete: false,
+    AttackModal: false
   });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
-
   const dispatch = useDispatch();
-  const [openItemRight, setOpenItemRight] = useState(false);
 
   useEffect(() => {
     getSidebarNode();
     getTemplates();
-  }, []);
+    if (model?._id) {
+      getAttackScenario(model._id);
+    }
+  }, [model?._id]);
 
   const handleAddNewNode = (e) => {
     dispatch(openAddNodeTab());
   };
 
-  // Function to open the TemplateList dialog from "System" tab
-  const handleSystemTabClick = () => setOpenTemplateDialog(true); // Open TemplateList dialog
-
+  const handleSystemTabClick = () => setOpenTemplateDialog(true);
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
-
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
     const actions = {
-      'Model Defination': () => handleModelDefinationClick(),
-      'Threat Scenarios': handleThreatClick,
-      'Damage Scenarios': handleDerivationClick,
-      'Attack Path': () => handleAttackClick('41', 'Attack'),
-      'Risk Determination': handleRiskClick
+      'Model Defination & Assets': handleModelDefinationClick,
+      'Threat Scenarios': () => handleClick('Threat Scenarios'),
+      'Damage Scenarios': () => handleClick('Damage Scenarios Derivations'),
+      'Attack Path': handleAttackTableClick,
+      'CyberSecurity': () => handleClick('Cybersecurity Goals'),
+      'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment')
     };
     actions[tabName]?.();
   };
 
-  const handleDerivationClick = () => dispatch(setTableOpen('Damage Scenarios Derivations'));
-  const handleRatingClick = () => dispatch(setTableOpen('Damage Scenarios - Collection & Impact Ratings'));
-  const handleThreatClick = () => dispatch(setTableOpen('Threat Scenarios'));
-  const handleRiskClick = () => dispatch(setTableOpen('Threat Assessment & Risk Treatment'));
+  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [subName, setSubName] = useState('');
+
+  const handleContext = (name, event) => {
+    if (name === 'Attack') {
+      setOpenAttackModal(true);
+      setSubName(name);
+    } else if (name === 'Attack Trees') {
+      setOpenAttackModal(true);
+      setSubName(name);
+    }
+  };
+
+  const handleAttackTreeClose = () => {
+    setOpenAttackModal(false);
+  };
+
+  const handleClick = (name) => {
+    dispatch(setTitle(name));
+    dispatch(setTableOpen(name));
+  };
 
   const handleModelDefinationClick = () => {
     setClickedItem(model?._id);
     dispatch(closeAll());
   };
 
-  const handleAttackClick = (id, name) => {
-    setClickedItem(id);
-    if (!['Attack Trees', 'UNICE', 'Vulnerability Analysis'].includes(name)) {
-      dispatch(setTableOpen(name));
+  const handleAttackTreeClick = async (e) => {
+    setIsLoading(true);
+    setAnchorEl(e.currentTarget);
+    if (model?._id) {
+      await getAttackScenario(model._id);
+      setOpenModal((prev) => ({ ...prev, AttackModal: true }));
     }
+    setIsLoading(false);
   };
+
+  const handleAttackTableClick = () => {
+    if (model?._id) {
+        setClickedItem(model._id);
+        dispatch(setTitle('Attack'));  // Changed from 'Attack-Table' to 'Attack'
+        dispatch(setTableOpen('Attack'));  // Changed from 'Attack-Table' to 'Attack'
+    }
+};
+
+  // const tabs = [
+  //   {
+  //     name: 'Project',
+  //     options: [
+  //       { label: 'New', icon: AddIcon, action: () => setOpenModal({ ...openModal, New: true }) },
+  //       { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) },
+  //       { label: 'Open', icon: OpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
+  //       { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) },
+  //       { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') },
+  //       { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') },
+  //       { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') },
+  //       { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') },
+  //       { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') },
+  //       { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') },
+  //       { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') }
+  //     ]
+  //   },
+  //   {
+  //     name: 'Model Defination & Assets',
+  //     options: [
+  //       { label: 'New', icon: AddIcon, action: handleAddNewNode },
+  //       { label: 'System', icon: OpenIcon, action: handleSystemTabClick },
+  //       { label: 'Components', icon: OpenIcon, action: handleComponentsTabClick }
+  //     ]
+  //   },
+  //   {
+  //     name: 'Damage Scenarios',
+  //     options: [
+  //       { label: 'Derivation Table', icon: DamageIcon, action: () => handleClick('Damage Scenarios Derivations') },
+  //       { label: 'Impact Rating Table', icon: RatingIcon, action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') }
+  //     ]
+  //   },
+  //   {
+  //     name: 'Threat Scenarios',
+  //     options: [{ label: 'Threat Table', icon: ThreatIcon, action: () => handleClick('Threat Scenarios') }]
+  //   },
+  //   {
+  //     name: 'Attack Path',
+  //     options: [
+  //       { label: 'Attack Table', icon: DamageIcon, action: handleAttackTableClick },
+  //       { label: 'Add Attack', icon: AddIcon, action: (e) => handleContext('Attack', e) },
+  //       { label: 'Attack Trees', icon: RatingIcon, action: handleAttackTreeClick },
+  //       { label: 'Add Attack Tree', icon: AddIcon, action: (e) => handleContext('Attack Trees', e) }
+  //     ]
+  //   },
+  //   {
+  //     name: 'CyberSecurity',
+  //     options: [
+  //       { label: 'Goals', icon: DamageIcon, action: () => handleClick('Cybersecurity Goals') },
+  //       { label: 'Requirements', icon: RatingIcon, action: () => handleClick('Cybersecurity Requirements') },
+  //       { label: 'Controls', icon: DamageIcon, action: () => handleClick('Cybersecurity Controls') },
+  //       { label: 'Claims', icon: RatingIcon, action: () => handleClick('Cybersecurity Claims') }
+  //     ]
+  //   },
+  //   {
+  //     name: 'Risk Determination',
+  //     options: [{ label: 'Risk Table', icon: ThreatIcon, action: () => handleClick('Threat Assessment & Risk Treatment') }]
+  //   }
+  // ];
 
   const tabs = [
     {
       name: 'Project',
       options: [
-        { label: 'New', icon: AddIcon, action: () => setOpenModal({ ...openModal, New: true }) },
-        { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) },
-        { label: 'Open', icon: OpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
-        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) },
-        { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') },
-        { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') },
-        { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') },
-        { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') },
-        { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') },
-        { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') },
-        { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') }
+        { label: 'New', icon: NewFolderIcon, action: () => setOpenModal({ ...openModal, New: true }) }, // New folder for new project
+        { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) }, // Specific rename icon
+        { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) }, // Open folder
+        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) }, // Trash bin
+        { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') }, // Undo arrow
+        { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') }, // Redo arrow
+        { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') }, // Scissors
+        { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') }, // Copy sheets
+        { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') }, // Clipboard paste
+        { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') }, // Check all
+        { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') } // Uncheck all
       ]
     },
     {
-      name: 'Model Defination',
+      name: 'Model Definition & Assets',
       options: [
-        { label: 'New', icon: AddIcon, action: handleAddNewNode },
-        {
-          label: 'System',
-          icon: OpenIcon,
-          action: handleSystemTabClick, // Open dialog when clicked on System tab
-          subLevel: null // Don't show sub-level here
-        },
-        {
-          label: 'Components',
-          icon: OpenIcon,
-          action: handleComponentsTabClick, // Open dialog when clicked on System tab
-          subLevel: null // Don't show sub-level here
-        }
+        { label: 'New', icon: AddIcon, action: handleAddNewNode }, // Plus for new model
+        { label: 'System', icon: BuildIcon, action: handleSystemTabClick }, // Wrench for system
+        { label: 'Components', icon: ListAltIcon, action: handleComponentsTabClick } // List for components
       ]
     },
     {
       name: 'Damage Scenarios',
       options: [
-        { label: 'Derivation', icon: DamageIcon, action: handleDerivationClick },
-        { label: 'Rating', icon: RatingIcon, action: handleRatingClick }
+        { label: 'Derivation Table', icon: ReportIcon, action: () => handleClick('Damage Scenarios Derivations') }, // Report for derivation
+        { label: 'Impact Rating Table', icon: StarIcon, action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') } // Star for rating
       ]
     },
     {
       name: 'Threat Scenarios',
-      options: [{ label: 'Threat-table', icon: ThreatIcon, action: handleThreatClick }]
+      options: [
+        { label: 'Threat Table', icon: WarningIcon, action: () => handleClick('Threat Scenarios') } // Warning for threats
+      ]
     },
     {
       name: 'Attack Path',
       options: [
-        { label: 'Attack-Table', icon: DamageIcon},
-        { label: 'Attack-Tree', icon: RatingIcon}
+        { label: 'Attack Table', icon: TableIcon, action: handleAttackTableClick }, // Table for attack data
+        { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) }, // Add list for attacks
+        { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick }, // Tree for attack trees
+        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) } // Playlist add for trees
       ]
     },
     {
-      name: 'Cyber Security',
+      name: 'Cybersecurity',
       options: [
-        { label: 'Goals', icon: DamageIcon,  },
-        { label: 'Requirements', icon: RatingIcon,  },
-        { label: 'Controls', icon: DamageIcon, },
-        { label: 'Claims', icon: RatingIcon,  }
+        { label: 'Goals', icon: SecurityIcon, action: () => handleClick('Cybersecurity Goals') }, // Shield for goals
+        { label: 'Requirements', icon: AssignmentIcon, action: () => handleClick('Cybersecurity Requirements') }, // Document for requirements
+        { label: 'Controls', icon: ShieldIcon, action: () => handleClick('Cybersecurity Controls') }, // Stronger shield for controls
+        { label: 'Claims', icon: AssessmentIcon, action: () => handleClick('Cybersecurity Claims') } // Assessment for claims
       ]
     },
     {
-      name: 'Risk Determination',
-      options: [{ label: 'Risk-Table', icon: ThreatIcon, action: handleRiskClick }]
+      name: 'Risk Determination & Treatment',
+      options: [
+        { label: 'Risk Table', icon: AssessmentIcon, action: () => handleClick('Threat Assessment & Risk Treatment') } // Assessment for risk
+      ]
     }
-    // {
-    //   name: 'System',
-    //   options: [
-    //     {
-    //       subLevel: <TemplateList />
-    //     }
-    //   ]
-    // },
-    // {
-    //   name: 'Components',
-    //   options: [
-    //     {
-    //       subLevel: <Components />
-    //     }
-    //   ]
-    // }
   ];
 
-  const handleCloseNewModal = () => {
-    setOpenModal((prev) => ({ ...prev, New: false }));
-  };
-
-  const handleCloseOpenModal = () => {
-    setOpenModal((prev) => ({ ...prev, Open: false }));
-  };
-
-  const handleCloseDeleteModal = () => {
-    setOpenModal((prev) => ({ ...prev, Delete: false }));
-  };
-
-  const handleCloseRenameModal = () => {
-    setOpenModal((prev) => ({ ...prev, Rename: false }));
-  };
+  const handleCloseNewModal = () => setOpenModal((prev) => ({ ...prev, New: false }));
+  const handleCloseOpenModal = () => setOpenModal((prev) => ({ ...prev, Open: false }));
+  const handleCloseDeleteModal = () => setOpenModal((prev) => ({ ...prev, Delete: false }));
+  const handleCloseRenameModal = () => setOpenModal((prev) => ({ ...prev, Rename: false }));
+  const handleCloseAttackModal = () => setOpenModal((prev) => ({ ...prev, AttackModal: false }));
 
   return (
     <Box>
-      {/* Tabs */}
-      <Box
-        sx={{
-          display: 'flex',
-          backgroundColor: 'transparent',
-          padding: '4px',
-          paddingTop: '8px'
-        }}
-      >
+      <Box sx={{ display: 'flex', backgroundColor: 'transparent', padding: '4px', paddingTop: '8px' }}>
         {tabs.map((tab) => (
           <Typography
             key={tab.name}
@@ -243,7 +303,6 @@ const LeftSection = () => {
         ))}
       </Box>
 
-      {/* Tab Content */}
       <Box
         sx={{
           display: 'flex',
@@ -269,10 +328,9 @@ const LeftSection = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  width: activeTab === 'System' || activeTab === 'Components' ? 'auto' : '60px'
+                  width: '60px'
                 }}
               >
-                {/* Only show label and icon for other tabs */}
                 {option.label && (
                   <>
                     <Tooltip title={option.label}>
@@ -302,14 +360,11 @@ const LeftSection = () => {
                     </Typography>
                   </>
                 )}
-                {/* Render the subLevel (TemplateList) for the "System" tab */}
-                {option.subLevel && <Box>{option.subLevel}</Box>}
               </Box>
             );
           })}
       </Box>
 
-      {/* Modals */}
       {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={handleCloseNewModal} />}
       {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={handleCloseRenameModal} Models={Models} />}
       {openModal.Open && <SelectProject open={openModal.Open} handleClose={handleCloseOpenModal} Models={Models} />}
@@ -324,6 +379,17 @@ const LeftSection = () => {
       )}
       <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
       <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
+      {openAttackModal && <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />}
+      {openModal.AttackModal && (
+        <AttackTreeRibbonModal
+          open={openModal.AttackModal}
+          handleClose={handleCloseAttackModal}
+          isLoading={isLoading}
+          anchorEl={anchorEl}
+          attackScenarios={attackScenarios}
+          getAttackScenario={getAttackScenario}
+        />
+      )}
     </Box>
   );
 };
