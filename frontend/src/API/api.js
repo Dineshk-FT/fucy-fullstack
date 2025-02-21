@@ -61,7 +61,7 @@ export const GET_CALL = async (modelId, url) => {
 export const GET_CALL_WITH_DETAILS = async (modelId, url) => {
   let data = new FormData();
   data.append('model-id', modelId);
-  console.log('createHeadersForJson', createHeadersForJson());
+  // console.log('createHeadersForJson', createHeadersForJson());
 
   try {
     const res = await axios({

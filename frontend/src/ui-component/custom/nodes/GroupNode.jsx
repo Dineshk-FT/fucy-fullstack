@@ -1,35 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { NodeResizer } from 'reactflow';
+import { NodeResizer, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
-  nodes: state.nodes,
-  setNodes: state.setNodes
+  nodes: state.nodes
 });
-const CustomGroupNode = ({ data, id }) => {
-  const { nodes, setNodes } = useStore(selector, shallow);
-  const [value, setValue] = useState('');
 
-  useEffect(() => {
-    setValue(data?.label);
-  }, [data]);
-  const handlechange = (e) => {
-    const nod = [...nodes];
-    const val = e.target.value;
-    setValue(val);
-    const node = nodes?.find((nd) => nd?.id === id);
-    const Index = nodes?.findIndex((nd) => nd?.id === id);
-    node.data.label = e.target.value;
-    nod[Index] = node;
-    setNodes(nod);
+const CustomGroupNode = ({ data, id }) => {
+  const { nodes } = useStore(selector, shallow);
+  const { setNodes } = useReactFlow();
+  const [dimesions, setDimenstions] = useState({
+    width: data?.style?.width || 200,
+    height: data?.style?.height || 200
+  });
+  const [value, setValue] = useState(data?.label || '');
+
+  const handleResize = (_, { width: newWidth, height: newHeight }) => {
+    requestAnimationFrame(() => {
+      setDimenstions({ width: newWidth, height: newHeight });
+
+      // Update node dimensions in Zustand
+      setNodes((nodes) =>
+        nodes.map((node) => (node.id === id ? { ...node, style: { ...node.style, width: newWidth, height: newHeight } } : node))
+      );
+    });
   };
+
+  // Sync value state with data.label when it changes
+  useEffect(() => {
+    setValue(data?.label || '');
+  }, [data?.label]);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setValue(val); // Update local state
+    const updatedNodes = nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node));
+    // Update Zustand state
+    setNodes(updatedNodes);
+  };
+
   return (
-    <div>
+    <div style={{ height: dimesions?.height }}>
       <input
         type="text"
         value={value}
-        onChange={handlechange}
+        onChange={handleChange}
         style={{
           alignSelf: 'flex-start',
           fontSize: '25px',
@@ -38,15 +54,19 @@ const CustomGroupNode = ({ data, id }) => {
           textAlign: 'center',
           border: 'none',
           background: 'transparent',
-          outline: 'none'
+          outline: 'none',
+          width: dimesions?.width
         }}
       />
+      <NodeResizer minWidth={150} minHeight={150} onResize={handleResize} />
 
-      <NodeResizer />
       <div
-        className="group_node"
+        className="my-group-node"
         style={{
-          ...data?.style
+          // ...data?.style,
+          position: 'relative'
+          // height: dimesions?.height,
+          // width: dimesions?.width
         }}
       >
         <div
@@ -57,7 +77,7 @@ const CustomGroupNode = ({ data, id }) => {
             height: 'inherit',
             width: 'inherit'
           }}
-        ></div>
+        />
       </div>
     </div>
   );

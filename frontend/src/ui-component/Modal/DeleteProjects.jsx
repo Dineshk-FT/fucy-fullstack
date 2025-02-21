@@ -18,7 +18,7 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
   const handleDelete = () => {
     deleteModels({ 'model-ids': selectedModels })
       .then((res) => {
-        console.log('res', res);
+        // console.log('res', res);
         if (res) {
           notify(res.message ?? 'Models deleted successfully', 'success');
           getModels();

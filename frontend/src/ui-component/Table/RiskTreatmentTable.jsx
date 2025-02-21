@@ -247,7 +247,7 @@ export default function RiskTreatmentTable() {
     addRiskTreatment(details)
       .then((res) => {
         if (!res.error) {
-          console.log('res', res);
+          // console.log('res', res);
           notify(res.message ?? 'Threat scene added', 'success');
           getRiskTreatment(model?._id);
         } else {
@@ -590,7 +590,6 @@ export default function RiskTreatmentTable() {
       </Dialog>
 
       <TableContainer
-        stickyHeader
         component={Paper}
         sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
         onDrop={onDrop}

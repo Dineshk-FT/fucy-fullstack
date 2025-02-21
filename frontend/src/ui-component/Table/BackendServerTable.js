@@ -152,12 +152,8 @@ export default function BackendServerTable() {
           </Box>
         </Box>
 
-        <TableContainer
-          stickyHeader
-          component={Paper}
-          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
-        >
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <TableContainer component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}>
+          <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
                 <StyledTableCell>ID</StyledTableCell>

@@ -14,51 +14,47 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  originalNodes: state.originalNodes
+  originalNodes: state.originalNodes,
+  updateNodeDimensions: state.updateNodeDimensions,
+  selectedNodes: state.selectedNodes
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, updateNodeDimensions } =
+    useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
-
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes } = useStore(selector);
+  // console.log('selectedNodes', selectedNodes);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [width, setWidth] = useState(100);
+  const [width, setWidth] = useState(data?.style?.width ?? 100);
   const textRef = useRef(null);
-  const [height, setHeight] = useState(40);
+  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
 
-  const [isResizing, setIsResizing] = useState(false);
-
-  // Function to calculate width based on label length
-  const getCalculatedSize = (label) => {
-    const lines = label ? label.split('\n') : [];
-    const maxLineWidth = Math.max(...lines.map((line) => line.length), 10);
-
-    return {
-      width: Math.max(100, maxLineWidth * 10),
-      height: Math.max(40, lines.length * 20) // Adjust height per line
-    };
-  };
-
-  useEffect(() => {
-    if (!isResizing && data.label) {
-      setWidth((prevWidth) => {
-        const newSize = getCalculatedSize(data.label);
-        return newSize.width !== prevWidth ? newSize.width : prevWidth;
-      });
-
-      setHeight(textRef.current.scrollHeight + 10); // Add some padding
-    }
-  }, [data.label, isResizing]);
+  // useEffect(() => {
+  //   setNodes((nodes) =>
+  //     nodes.map((node) =>
+  //       node.id === id
+  //         ? {
+  //             ...node,
+  //             style: { ...node.style, height: data.style.height }, // Update height in state
+  //           }
+  //         : node
+  //     )
+  //   );
+  //   updateNodeDimensions(id, { height: data.style.height });
+  // }, [data.label]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
     requestAnimationFrame(() => {
-      setIsResizing(true);
-      setWidth(newWidth);
-      setHeight(newHeight);
+      const updatedWidth = newWidth;
+      const updatedHeight = newHeight;
+
+      // Update state
+      setWidth(updatedWidth);
+      setHeight(updatedHeight);
     });
   };
 
@@ -100,16 +96,16 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const handleUnsavedDialogClose = () => setIsUnsavedDialogVisible(false);
   const handleUnsavedDialogContinue = () => handleDelete();
 
-  const copiedNodes = nodes.filter((node) => node.isCopied === true);
+  // console.log('nodes', nodes);
+  const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
       <NodeResizer
-        minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 150}
+        minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 130}
         minHeight={data?.label?.length <= 15 ? 30 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 50 : 80}
         onResize={handleResize}
-        onResizeStop={() => setIsResizing(false)}
       />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
@@ -120,6 +116,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             ...data?.style,
             position: 'relative',
             overflow: 'visible',
+            // boxShadow: selectedNodes?.includes(id) ? '0px 0px 7px 3px wheat' : selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
             boxShadow: selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
             width: width,
             height: height, // Apply dynamic height

@@ -8,7 +8,8 @@ import ReactFlow, {
   getRectOfNodes,
   getTransformForBounds,
   MarkerType,
-  Panel
+  Panel,
+  useReactFlow
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -46,6 +47,8 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
+  selectedNodes: state.selectedNodes,
+  setSelectedNodes: state.setSelectedNodes,
   model: state.model,
   update: state.updateAssets,
   getAssets: state.getAssets,
@@ -113,6 +116,8 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
+    selectedNodes,
+    setSelectedNodes,
     model,
     getGroupedNodes,
     reactFlowInstance,
@@ -131,6 +136,7 @@ export default function MainCanvas() {
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();
+
   const Color = ColorTheme();
   // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
@@ -491,21 +497,26 @@ export default function MainCanvas() {
     }
   };
 
+  // console.log('selectedNodes', selectedNodes);
   const handleSelectNode = (e, node) => {
-    // console.log('e.currentTarget', e.currentTarget);
-    e.stopPropagation();
-    e.preventDefault();
-    let grp = [...groupList];
-    function addNodeToArray(node) {
-      const existingNode = grp.find((obj) => obj.id === node.id);
+    e.stopPropagation(); // Prevent event bubbling
 
-      if (!existingNode) {
-        grp.push(node);
-      }
+    let newSelectedNodes;
+
+    if (e.shiftKey) {
+      // Add to selection or remove if already selected
+      newSelectedNodes = selectedNodes.includes(node.id)
+        ? selectedNodes.filter((id) => id !== node.id) // Deselect if already selected
+        : [...selectedNodes, node.id]; // Add to selection
+    } else {
+      // Select only this node (deselect others)
+      newSelectedNodes = selectedNodes.includes(node.id) ? [] : [node.id];
     }
+
+    setSelectedNodes(newSelectedNodes); // Update state
+    // console.log('Updated Selection:', newSelectedNodes); // Debugging if needed
+    // Update node details if not a group
     if (node.type !== 'group') {
-      // setAnchorEl(e.currentTarget);
-      // dispatch(setAnchorEl(e.currentTarget.getAttribute('data-id')));
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
       dispatch(
@@ -516,18 +527,10 @@ export default function MainCanvas() {
           isAsset: node.isAsset ?? false
         })
       );
-      // setSelectedElement(node);
-      // dispatch(setSelectedBlock(node));
-      // dispatch(setProperties(node?.properties));
-
-      if (!grp.length) {
-        grp.push(node);
-      } else {
-        addNodeToArray(node);
-      }
-      setGroupList(grp);
     }
   };
+
+  // console.log('nodes', nodes);
 
   const handleClosePopper = () => {
     if (!isPopperFocused) {
@@ -575,7 +578,7 @@ export default function MainCanvas() {
       });
   };
   // console.log('selectedElement', selectedElement);
-
+  // console.log('nodes', nodes);
   const createGroup = (e) => {
     if (!e.x) {
       e.preventDefault();
@@ -583,8 +586,6 @@ export default function MainCanvas() {
     const newNode = {
       id: uid(),
       type: 'group',
-      height: 300,
-      width: 300,
       position: {
         x: e.x ?? e.clientX,
         y: e.y ?? e.clientY
@@ -592,10 +593,12 @@ export default function MainCanvas() {
       data: {
         label: 'group',
         style: {
-          height: 300,
-          width: 300
+          height: '200px',
+          width: '200px'
         }
-      }
+      },
+      height: 200,
+      width: 200
     };
     dragAdd(newNode);
   };
@@ -682,6 +685,43 @@ export default function MainCanvas() {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  const onSelectionClick = useCallback((e, selectedNodes) => {
+    if (!selectedNodes || selectedNodes.length === 0) return;
+
+    // Calculate the bounding box of selected nodes
+    const minX = Math.min(...selectedNodes.map((n) => n.position.x));
+    const minY = Math.min(...selectedNodes.map((n) => n.position.y));
+    const maxX = Math.max(...selectedNodes.map((n) => n.position.x + n.width));
+    const maxY = Math.max(...selectedNodes.map((n) => n.position.y + n.height));
+
+    const groupWidth = maxX - minX;
+    const groupHeight = maxY - minY;
+    const additionalWidth = 50;
+    const additionalHeight = 70;
+
+    const newNode = {
+      id: uid(),
+      type: 'group',
+      width: groupWidth + additionalWidth,
+      height: groupHeight + additionalHeight,
+      position: {
+        x: minX - additionalWidth / 2, // Shift left by half of additionalValue
+        y: minY - additionalHeight + 20 / 2 // Shift up by half of additionalValue
+      },
+      data: {
+        label: 'group',
+        style: {
+          width: groupWidth + additionalWidth,
+          height: groupHeight + additionalHeight
+        }
+      },
+      children: selectedNodes.map((node) => node.id) // Optionally track children nodes
+    };
+
+    dragAdd(newNode);
+    checkForNodes();
+  }, []);
+
   if (!isReady) return null;
 
   return (
@@ -728,6 +768,10 @@ export default function MainCanvas() {
             onClick={() => dispatch(setSelectedBlock({}))}
             fitView
             connectionMode="loose"
+            selectionMode="partial"
+            multiSelectionKeyCode="Shift"
+            onSelectionContextMenu={onSelectionClick}
+            // onPaneClick={onSelectionChange}
             // onNodeDoubleClick={handleSelectNode}
             onNodeClick={handleSelectNode}
             onEdgeContextMenu={handleSelectEdge}
