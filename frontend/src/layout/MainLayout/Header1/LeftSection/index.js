@@ -94,7 +94,7 @@ const LeftSection = () => {
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
     const actions = {
-      'Model Defination & Assets': handleModelDefinationClick,
+      'Model Definition & Assets': handleModelDefinationClick,
       'Threat Scenarios': () => handleClick('Threat Scenarios'),
       'Damage Scenarios': () => handleClick('Damage Scenarios Derivations'),
       'Attack Path': handleAttackTableClick,
@@ -148,8 +148,6 @@ const LeftSection = () => {
         dispatch(setTableOpen('Attack'));  // Changed from 'Attack-Table' to 'Attack'
     }
 };
-
-  // const tabs = [
   //   {
   //     name: 'Project',
   //     options: [
