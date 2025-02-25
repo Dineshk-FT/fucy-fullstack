@@ -734,21 +734,21 @@ export default function MainCanvas() {
         onContextMenu={handleCanvasContextMenu}
         // onClick={() => dispatch(setSelectedBlock({}))}
       >
-        {isHeaderOpen && (
-          <Header
-            selectedElement={selectedElement}
-            nodes={nodes}
-            setNodes={setNodes}
-            setSelectedElement={setSelectedElement}
-            // horizontal={() => onLayout({ direction: 'RIGHT' })}
-            // vertical={() => onLayout({ direction: 'DOWN' })}
-            handleClear={handleClear}
-            handleSave={handleSaveToModel}
-            download={handleDownload}
-            createGroup={createGroup}
-            dispatch={dispatch}
-          />
-        )}
+        {/* {isHeaderOpen && ( */}
+        <Header
+          selectedElement={selectedElement}
+          nodes={nodes}
+          setNodes={setNodes}
+          setSelectedElement={setSelectedElement}
+          // horizontal={() => onLayout({ direction: 'RIGHT' })}
+          // vertical={() => onLayout({ direction: 'DOWN' })}
+          handleClear={handleClear}
+          handleSave={handleSaveToModel}
+          download={handleDownload}
+          createGroup={createGroup}
+          dispatch={dispatch}
+        />
+        {/* )} */}
         <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}

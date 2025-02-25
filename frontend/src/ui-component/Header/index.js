@@ -98,7 +98,8 @@ export default function Header({
     });
     setHighlight({
       ...highlight,
-      bold: selectedElement?.data?.style?.fontSize === 700 ? true : false,
+      bold: selectedElement?.data?.style?.fontWeight === 700 ? true : false,
+
       italic: selectedElement?.data?.style?.fontStyle === 'italic' ? true : false,
       decor: selectedElement?.data?.style?.textDecoration === 'underline' ? true : false
     });
@@ -244,7 +245,9 @@ export default function Header({
   //     component: <GetAppIcon />
   //   }
   // ];
-  // console.log('styles', styles)
+  // console.log('styles', styles);
+
+  // console.log('highlight', highlight);
   return (
     <>
       <Box className={classes.header} sx={{ background: color?.canvasBG }}>
@@ -340,7 +343,7 @@ export default function Header({
             </Tooltip>
           </React.Fragment>
         ))} */}
-        <Box
+        {/* <Box
           sx={{
             ...iconStyle,
             top: '15vh',
@@ -356,7 +359,7 @@ export default function Header({
           onClick={() => dispatch(closeHeader())}
         >
           X
-        </Box>
+        </Box> */}
       </Box>
     </>
   );

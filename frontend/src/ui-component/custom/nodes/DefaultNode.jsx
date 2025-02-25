@@ -172,7 +172,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           >
             i
           </div>
-          <Box
+          {/* <Box
             sx={{
               ...iconStyle,
               left: '20px',
@@ -181,7 +181,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             onClick={() => dispatch(openHeader())}
           >
             <EditIcon sx={{ fontSize: '1rem' }} />
-          </Box>
+          </Box> */}
           <div
             className="delete-icon"
             onClick={(e) => {
