@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NodeResizer, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 
@@ -7,7 +7,7 @@ const selector = (state) => ({
   nodes: state.nodes
 });
 
-const CustomGroupNode = ({ data, id }) => {
+const CustomGroupNode = ({ data, id, isConnectable }) => {
   const { nodes } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const [dimesions, setDimenstions] = useState({
@@ -59,6 +59,10 @@ const CustomGroupNode = ({ data, id }) => {
         }}
       />
       <NodeResizer minWidth={150} minHeight={150} onResize={handleResize} />
+      <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
+      <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
+      <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
 
       <div
         className="my-group-node"

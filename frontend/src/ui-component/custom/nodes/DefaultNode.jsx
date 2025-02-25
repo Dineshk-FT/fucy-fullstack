@@ -55,8 +55,28 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
       // Update state
       setWidth(updatedWidth);
       setHeight(updatedHeight);
+
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  style: {
+                    ...node.data.style,
+                    height: updatedHeight,
+                    width: updatedWidth
+                  }
+                }
+              }
+            : node
+        )
+      );
     });
   };
+
+  // console.log('nodes', nodes);
 
   const handleInfoClick = () => {
     const selectedNode = nodes.find((node) => node.id === id);
@@ -106,6 +126,10 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
         minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 130}
         minHeight={data?.label?.length <= 15 ? 30 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 50 : 80}
         onResize={handleResize}
+        style={{
+          pointerEvents: 'auto',
+          zIndex: 10
+        }}
       />
       <ClickAwayListener onClickAway={() => setIsVisible(false)}>
         <div
@@ -132,13 +156,13 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
-          <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
+          <Handle className="handle" id="top" position={Position.Top} isConnectable={true} />
+          <Handle className="handle" id="left" position={Position.Left} isConnectable={true} />
           <div ref={textRef} style={{ maxWidth: width - 10, textAlign: 'center' }}>
             {data?.label}
           </div>
-          <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
-          <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
+          <Handle className="handle" id="bottom" position={Position.Bottom} isConnectable={true} />
+          <Handle className="handle" id="right" position={Position.Right} isConnectable={true} />
           <div
             onClick={(e) => {
               e.stopPropagation();

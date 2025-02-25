@@ -767,8 +767,8 @@ const useStore = createWithEqualityFn((set, get) => ({
     const updatedNodes = applyNodeChanges(changes, currentNodes); // apply changes
 
     set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
+      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      // redoStack: [],
       nodes: updatedNodes // set the updated nodes
     }));
   },
@@ -778,8 +778,8 @@ const useStore = createWithEqualityFn((set, get) => ({
     const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
 
     set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
+      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      // redoStack: [],
       edges: updatedEdges // set the updated edges
     }));
   },
