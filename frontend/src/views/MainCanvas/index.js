@@ -85,6 +85,7 @@ const edgeOptions = {
   },
   animated: false,
   style: {
+    strokeWidth: 2,
     stroke: 'grey',
     start: false,
     end: true
@@ -721,6 +722,7 @@ export default function MainCanvas() {
     dragAdd(newNode);
     checkForNodes();
   }, []);
+  // console.log('edges', edges);
 
   if (!isReady) return null;
 

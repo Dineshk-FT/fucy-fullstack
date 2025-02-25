@@ -729,7 +729,7 @@ const BrowserCard = () => {
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
-      <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG }}>
+      <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG, scrollbarWidth: 'none' }}>
         <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
           <TreeView
             aria-label="file system navigator"

@@ -40,18 +40,10 @@ const LeftSection = () => {
     deleteModels: state.deleteModels,
     getSidebarNode: state.getSidebarNode,
     getTemplates: state.getTemplates,
-    setClickedItem: state.setClickedItem,
+    setClickedItem: state.setClickedItem
   });
   const color = ColorTheme();
-  const {
-    Models,
-    model,
-    getModels,
-    deleteModels,
-    getSidebarNode,
-    getTemplates,
-    setClickedItem,
-  } = useStore(selector);
+  const { Models, model, getModels, deleteModels, getSidebarNode, getTemplates, setClickedItem } = useStore(selector);
 
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
@@ -80,7 +72,6 @@ const LeftSection = () => {
   const handleSystemTabClick = () => setOpenTemplateDialog(true); // Open TemplateList dialog
 
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
-
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
@@ -160,17 +151,17 @@ const LeftSection = () => {
     {
       name: 'Attack Path',
       options: [
-        { label: 'Attack-Table', icon: DamageIcon},
-        { label: 'Attack-Tree', icon: RatingIcon}
+        { label: 'Attack-Table', icon: DamageIcon },
+        { label: 'Attack-Tree', icon: RatingIcon }
       ]
     },
     {
       name: 'Cyber Security',
       options: [
-        { label: 'Goals', icon: DamageIcon,  },
-        { label: 'Requirements', icon: RatingIcon,  },
-        { label: 'Controls', icon: DamageIcon, },
-        { label: 'Claims', icon: RatingIcon,  }
+        { label: 'Goals', icon: DamageIcon },
+        { label: 'Requirements', icon: RatingIcon },
+        { label: 'Controls', icon: DamageIcon },
+        { label: 'Claims', icon: RatingIcon }
       ]
     },
     {
@@ -254,8 +245,9 @@ const LeftSection = () => {
           border: '1px solid #ddd',
           gap: '5px',
           width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
-          height: { xs: '50px', sm: '50px', md: '60px', lg: 'auto' },
-          overflow: 'auto'
+          height: { xs: '50px', sm: '50px', md: 'inherit', lg: 'auto' },
+          overflow: 'auto',
+          my: 0.4
         }}
       >
         {tabs

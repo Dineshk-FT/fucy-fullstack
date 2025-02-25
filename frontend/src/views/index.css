@@ -40,6 +40,13 @@ iframe#webpack-dev-server-client-overlay {
   border-radius: 50%;
   background-color: #784be8;
 }
+
+/* .handleX {
+  width: inherit !important;
+  height: 1px !important;
+  border-radius: 0% !important;
+  background-color: transparent !important;
+} */
 /* .react-flow {
   height: 97.5% !important;
 } */
