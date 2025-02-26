@@ -219,7 +219,6 @@ export default function DsTable() {
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0); // Add state for page
   const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
@@ -228,6 +227,17 @@ export default function DsTable() {
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+  const Head = useMemo(() => {
+    if (stakeHolder) {
+      return stakeHeader;
+    } else {
+      return DSTableHeader.filter((header) => visibleColumns.includes(header.name)); // Only show columns that are visible
+    }
+  }, [visibleColumns]);
+
+  const [columnWidths, setColumnWidths] = useState(
+    Object.fromEntries(Head?.map((hd) => [hd.id, 120])) // Default 100px width
+  );
 
   const handleChecked = (value, item, rowId) => {
     setFiltered((prevFiltered) =>
@@ -310,13 +320,6 @@ export default function DsTable() {
   };
 
   // console.log('damageID', damageID);
-  const Head = useMemo(() => {
-    if (stakeHolder) {
-      return stakeHeader;
-    } else {
-      return DSTableHeader.filter((header) => visibleColumns.includes(header.name)); // Only show columns that are visible
-    }
-  }, [visibleColumns]);
 
   const handleOpenCl = (row) => {
     setSelectedRow(row);
@@ -478,16 +481,16 @@ export default function DsTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    // console.log('e', e);
-    const startX = e.clientX;
+    e.preventDefault();
+    e.stopPropagation(); // Prevent unwanted bubbling
 
-    // Use the actual width of the column if no width is set in state
-    const headerCell = e.target.parentNode;
+    const startX = e.clientX;
+    const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
     const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX; // Calculate movement direction
-      const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + delta);
 
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
@@ -497,8 +500,8 @@ export default function DsTable() {
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('mouseup', handleMouseUp, { passive: true });
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
@@ -577,7 +580,7 @@ export default function DsTable() {
                       onMouseLeave={() => {
                         if (!anchorEl) setHoveredField(null);
                       }}
-                      style={{ position: 'relative', cursor: 'pointer' }}
+                      style={{ position: 'relative', cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
                     >
                       {row[item.name] || '-'}
                       {(hoveredField === item.name || editingField === item.name) && (
@@ -615,12 +618,24 @@ export default function DsTable() {
 
               case item.name === 'Losses of Cybersecurity Properties':
                 cellContent = (
-                  <StyledTableCell key={index} component="th" scope="row" onClick={() => handleOpenCl(row)} sx={{ cursor: 'pointer' }}>
+                  <StyledTableCell
+                    key={index}
+                    component="th"
+                    scope="row"
+                    onClick={() => handleOpenCl(row)}
+                    sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                  >
                     {row.cyberLosses.length ? (
                       row?.cyberLosses?.map((loss) => (
                         <div
                           key={loss?.id}
-                          style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                          style={{
+                            marginBottom: '5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            width: `${columnWidths[item.id] || 'auto'}`
+                          }}
                         >
                           <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
                           <span>Loss of {loss?.name}</span>
@@ -635,7 +650,7 @@ export default function DsTable() {
 
               case item.name === 'Assets':
                 cellContent = (
-                  <StyledTableCell key={index} component="th" scope="row">
+                  <StyledTableCell key={index} sx={{ width: `${columnWidths[item.id] || 'auto'}` }} component="th" scope="row">
                     {row?.cyberLosses?.map((loss) => (
                       <div
                         key={loss?.id}
@@ -652,7 +667,11 @@ export default function DsTable() {
                   <StyledTableCell
                     component="th"
                     scope="row"
-                    sx={{ backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`, color: '#000' }}
+                    sx={{
+                      backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`,
+                      color: '#000',
+                      width: `${columnWidths[item.id] || 'auto'}`
+                    }}
                   >
                     {OverallImpact(row?.impacts)}
                   </StyledTableCell>
@@ -661,7 +680,7 @@ export default function DsTable() {
 
               case item.name.includes('Evaluated'):
                 cellContent = (
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                     <Checkbox {...label} checked={row[item.name]} onChange={() => handleChecked(row[item.name], item.name, row?.id)} />
                   </StyledTableCell>
                 );
@@ -834,11 +853,14 @@ export default function DsTable() {
           scrollbarWidth: 'thin'
         }}
       >
-        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd, i) => (
-                <StyledTableCell key={hd?.id ?? i} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                <StyledTableCell
+                  key={hd?.id ?? i}
+                  style={{ width: columnWidths[hd.id] || 'auto', position: 'relative', overflowWrap: 'break-word' }}
+                >
                   {hd?.name}
                   <div
                     className="resize-handle"

@@ -68,7 +68,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '5px',
+    fontSize: 13,
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
@@ -120,9 +123,21 @@ export default function RiskTreatmentTable() {
   const visibleColumns = useStore((state) => state.riskTreatmentTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
+  const Head = useMemo(() => {
+    if (title.includes('Derived')) {
+      const col = [...column];
+      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+      return col.filter((header) => visibleColumns.includes(header.name));
+    } else {
+      return column.filter((header) => visibleColumns.includes(header.name));
+    }
+  }, [title, visibleColumns]);
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+  const [columnWidths, setColumnWidths] = useState(
+    Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
+  );
 
   const handleOpenSelect = (row, name) => {
     setSelectedRow(row);
@@ -202,15 +217,6 @@ export default function RiskTreatmentTable() {
 
   // console.log('details', details);
   // console.log('rows', rows);
-  const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
-  }, [title, visibleColumns]);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -325,6 +331,30 @@ export default function RiskTreatmentTable() {
         return [...prevSelectedRows, shorted];
       }
     });
+  };
+
+  const handleResizeStart = (e, columnId) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent unwanted bubbling
+
+    const startX = e.clientX;
+    const headerCell = e.currentTarget.parentElement;
+    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + delta);
+
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const RenderTableRow = React.memo(({ row, Head, color, isChild = false }) => {
@@ -595,11 +625,33 @@ export default function RiskTreatmentTable() {
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
       >
-        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
+                <StyledTableCell
+                  key={hd.id}
+                  style={{
+                    width: `${columnWidths[hd.id]}px`,
+                    position: 'relative',
+                    overflowWrap: 'break-word'
+                  }}
+                >
+                  {hd.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
