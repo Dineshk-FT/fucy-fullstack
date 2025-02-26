@@ -107,12 +107,12 @@ export default function Event(props) {
   // console.log('bgColor', bgColor);
   // console.log('props.data.style', props.data.style);
   // Calculate font size dynamically based on node dimensions
-  const calculateFontSize = () => {
-    const baseFontSize = 14; // Base font size
-    return Math.max(baseFontSize, (nodeDimensions.width + nodeDimensions.height) / 15);
-  };
+  // const calculateFontSize = () => {
+  //   const baseFontSize = 14; // Base font size
+  //   return Math.max(baseFontSize, (nodeDimensions.width + nodeDimensions.height) / 15);
+  // };
 
-  const fontSize = calculateFontSize();
+  // const fontSize = calculateFontSize();
   const inputPadding = 5; // Padding inside the input box
 
   return (
@@ -122,7 +122,25 @@ export default function Event(props) {
         minWidth={120}
         minHeight={80}
         onResize={(event, params) => {
+          const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
+
           setNodeDimensions({ width: params.width, height: params.height });
+          setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === props?.id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      style: {
+                        ...node.data.style,
+                        fontSize: newSize
+                      }
+                    }
+                  }
+                : node
+            )
+          );
         }}
       />
       <Handle type="target" position={Position.Top} />
@@ -180,18 +198,21 @@ export default function Event(props) {
             update(props?.id, e.target.value);
 
             // Dynamically adjust the height
-            const target = e.target;
-            target.style.height = 'auto'; // Reset height to calculate new height
-            target.style.height = `${target.scrollHeight}px`; // Set height based on content
+            // const target = e.target;
+            // target.style.height = 'auto'; // Reset height to calculate new height
+            // target.style.height = `${target.scrollHeight}px`; // Set height based on content
           }}
           style={{
             marginRight: '10px',
-            width: `${nodeDimensions.width - 20}px`, // Adjust width relative to node size
+            height: 'inherit',
+            width: 'fit-content', // Adjust width relative to node size
+            // minWidth: `${nodeDimensions.width}px`,
+            // minHeight: `${nodeDimensions.height}px`,
             backgroundColor: 'inherit',
             borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
-            fontSize: `${fontSize}px`, // Dynamically adjust font size
+            fontSize: `${props?.data?.style?.fontSize}px`, // Dynamically adjust font size
             color: 'inherit',
             padding: `${inputPadding}px`, // Consistent padding
             border: 'none',
@@ -266,4 +287,5 @@ export default function Event(props) {
       </Dialog>
     </>
   );
+  x;
 }
