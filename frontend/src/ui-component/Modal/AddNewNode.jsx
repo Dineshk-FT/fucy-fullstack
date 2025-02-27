@@ -20,9 +20,18 @@ const MenuProps = {
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 'inherit'
-    }
-  }
+      width: 'inherit',
+    },
+  },
+  anchorOrigin: {
+    vertical: 'top',
+    horizontal: 'left',
+  },
+  transformOrigin: {
+    vertical: 'bottom',
+    horizontal: 'left',
+  },
+  getContentAnchorEl: null,
 };
 
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
@@ -35,12 +44,12 @@ const selector = (state) => ({
   edges: state.edges,
   getSidebarNode: state.getSidebarNode,
   model: state.model,
-  update: state.updateAssets
+  update: state.updateAssets,
 });
 
 function getStyles(name, nodes, theme) {
   return {
-    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
+    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium,
   };
 }
 
@@ -54,21 +63,19 @@ const AddNewNode = ({ assets }) => {
     nodeName: '',
     type: '',
     properties: [],
-    bgColor: ''
+    bgColor: '',
   });
-
-  // console.log('selectedNodeGroupId', selectedNodeGroupId);
 
   const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector);
 
   const handleChange = (event) => {
     const {
-      target: { value, name }
+      target: { value, name },
     } = event;
     if (name) {
       setNewNode({
         ...newNode,
-        [`${name}`]: value
+        [`${name}`]: value,
       });
     }
   };
@@ -80,7 +87,7 @@ const AddNewNode = ({ assets }) => {
       nodeName: '',
       type: '',
       properties: [],
-      bgColor: '#dadada'
+      bgColor: '#dadada',
     });
   };
 
@@ -103,14 +110,14 @@ const AddNewNode = ({ assets }) => {
           borderWidth: '2px',
           borderStyle: 'solid',
           width: 120,
-          height: 50
-        }
+          height: 50,
+        },
       },
       type: 'default',
       properties: newNode.properties,
       width: 120,
       height: 50,
-      isAsset: false
+      isAsset: false,
     };
 
     const details = { id: selectedNodeGroupId, new_node: dataNode };
@@ -132,7 +139,7 @@ const AddNewNode = ({ assets }) => {
       const details = {
         'model-id': model?._id,
         template: JSON.stringify(template),
-        ...(assets && { assetId: assets?._id }) // Conditional property
+        ...(assets && { assetId: assets?._id }),
       };
 
       update(details)
@@ -143,13 +150,11 @@ const AddNewNode = ({ assets }) => {
           }
         })
         .catch((err) => {
-          // console.log('err', err);
           notify('Something went wrong', 'error');
         });
     } else {
       createNode(details)
         .then((res) => {
-          // console.log('res', res);
           if (res.data) {
             notify(res?.data?.message ?? 'Node added successfully', 'success');
             getSidebarNode();
@@ -157,27 +162,27 @@ const AddNewNode = ({ assets }) => {
           }
         })
         .catch((err) => {
-          // console.log('err', err);
           notify('Something went wrong', 'error');
         });
     }
 
-    setNewNode({
+    // Reset only the nodeName, keeping properties intact
+    setNewNode((prev) => ({
+      ...prev,
       nodeName: '',
       type: '',
-      properties: [],
-      bgColor: '#dadada'
-    });
+      // properties: [],
+      bgColor: '#dadada',
+    }));
   };
 
   return (
-    <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent }}>
+    <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent, position: 'relative' }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h4" color="primary">
             Add New Node
           </Typography>
-          {/* <CloseCircle size="20" color="#000" onClick={CloseModel} style={{ cursor: 'pointer', background: `${color?.sidebarBG } !important`, color: color?.sidebarConten }} /> */}
           <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={CloseModel}>
             <CancelTwoToneIcon />
           </Box>
@@ -189,50 +194,15 @@ const AddNewNode = ({ assets }) => {
           name="nodeName"
           variant="outlined"
           onChange={handleChange}
+          value={newNode.nodeName}
           sx={{
             fontSize: fontSize,
             background: `${color?.sidebarBG} !important`,
-            color: color?.sidebarContent
-            // '& .MuiOutlinedInput-notchedOutline': {
-            //   borderColor: color?.sidebarContent,
-            //   backgroundColor: color?.sidebarBG,
-            // }
+            color: color?.sidebarContent,
           }}
         />
 
         <Grid container spacing={1} my={1}>
-          {/* <Grid item xs={6}>
-            <FormControl size="small" fullWidth>
-              <InputLabel id="demo-simple-select-label">Type</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={newNode.type}
-                label="Type"
-                onChange={handleChange}
-                name="type"
-                sx={{
-                  fontSize: fontSize,
-                  background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent
-                  // '& .MuiOutlinedInput-notchedOutline': {
-                  //   borderColor: color?.sidebarContent,
-                  //   backgroundColor: color?.sidebarBG,
-                  // },
-                }}
-              >
-                <MenuItem value="input">Input</MenuItem>
-                <MenuItem value="default">Default</MenuItem>
-                <MenuItem value="custom">Custom</MenuItem>
-                <MenuItem value="signal">Signal</MenuItem>
-                <MenuItem value="receiver">Receiver</MenuItem>
-                <MenuItem value="output">Output</MenuItem>
-                <MenuItem value="transceiver">Transceiver</MenuItem>
-                <MenuItem value="transmitter">Transmitter</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid> */}
-
           <Grid item xs={12}>
             <FormControl size="small" fullWidth>
               <InputLabel notched id="demo-multiple-chip-label">
@@ -246,11 +216,7 @@ const AddNewNode = ({ assets }) => {
                 sx={{
                   fontSize: fontSize,
                   background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent
-                  // '& .MuiOutlinedInput-notchedOutline': {
-                  //   borderColor: color?.sidebarContent,
-                  //   backgroundColor: color?.sidebarBG,
-                  // }
+                  color: color?.sidebarContent,
                 }}
                 value={newNode.properties}
                 onChange={handleChange}
@@ -274,11 +240,15 @@ const AddNewNode = ({ assets }) => {
           </Grid>
         </Grid>
 
-        <Box display="flex" justifyContent="space-between" height="30px">
+        <Box display="flex" justifyContent="space-between" height="30px" sx={{ mt: 2 }}>
           <Button onClick={CloseModel} variant="outlined" color="warning">
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={!newNode.nodeName || newNode.properties.length === 0}>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={!newNode.nodeName || newNode.properties.length === 0}
+          >
             Add
           </Button>
         </Box>

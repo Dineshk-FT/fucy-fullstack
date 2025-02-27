@@ -31,7 +31,7 @@ import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { makeStyles } from '@mui/styles';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
@@ -70,8 +70,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '5px',
     fontSize: 13,
-    padding: '2px 8px',
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
@@ -177,18 +177,27 @@ export default function AttackTreeTable() {
   const [filtered, setFiltered] = useState([]);
   const [page, setPage] = useState(0); // Pagination state
   const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
-  const [columnWidths, setColumnWidths] = useState({});
+  const { title } = useSelector((state) => state?.pageName);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.attackTreeTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const Head = useMemo(() => {
+    if (title.includes('Derived')) {
+      const col = [...column];
+      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+      return col.filter((header) => visibleColumns.includes(header.name));
+    } else {
+      return column.filter((header) => visibleColumns.includes(header.name));
+    }
+  }, [title, visibleColumns]);
+  const [columnWidths, setColumnWidths] = useState(
+    Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
+  );
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
 
-  const Head = useMemo(() => {
-    return column.filter((header) => visibleColumns.includes(header.name));
-  }, [visibleColumns]);
 
   useEffect(() => {
     if (attacks['scenes']) {
@@ -320,15 +329,16 @@ export default function AttackTreeTable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    const startX = e.clientX;
+    e.preventDefault();
+    e.stopPropagation(); // Prevent unwanted bubbling
 
-    // Use the actual width of the column if no width is set in state
-    const headerCell = e.target.parentNode;
+    const startX = e.clientX;
+    const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
     const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX; // Calculate movement direction
-      const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + delta);
 
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
@@ -474,29 +484,33 @@ export default function AttackTreeTable() {
           scrollbarWidth: 'thin'
         }}
       >
-        <Table stickyHeader aria-label="sticky table" sx={{ minWidth: 650 }}>
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                  {hd?.name}
-                  <div
-                    className="resize-handle"
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 0,
-                      width: '5px',
-                      height: '100%',
-                      cursor: 'col-resize',
-                      backgroundColor: 'transparent',
-                      '& .MuiTableCell-root': {
-                        transition: 'width 0.2s ease'
-                      }
-                    }}
-                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                  />
-                </StyledTableCell>
+                <StyledTableCell
+                key={hd.id}
+                style={{
+                  width: `${columnWidths[hd.id]}px`,
+                  position: 'relative',
+                  overflowWrap: 'break-word'
+                }}
+              >
+                {hd.name}
+                <div
+                  className="resize-handle"
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: '5px',
+                    height: '100%',
+                    cursor: 'col-resize',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                />
+              </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>

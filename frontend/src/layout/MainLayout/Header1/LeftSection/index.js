@@ -148,65 +148,7 @@ const LeftSection = () => {
       dispatch(setTableOpen('Attack')); // Changed from 'Attack-Table' to 'Attack'
     }
   };
-  //   {
-  //     name: 'Project',
-  //     options: [
-  //       { label: 'New', icon: AddIcon, action: () => setOpenModal({ ...openModal, New: true }) },
-  //       { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) },
-  //       { label: 'Open', icon: OpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
-  //       { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) },
-  //       { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') },
-  //       { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') },
-  //       { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') },
-  //       { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') },
-  //       { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') },
-  //       { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') },
-  //       { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') }
-  //     ]
-  //   },
-  //   {
-  //     name: 'Model Defination & Assets',
-  //     options: [
-  //       { label: 'New', icon: AddIcon, action: handleAddNewNode },
-  //       { label: 'System', icon: OpenIcon, action: handleSystemTabClick },
-  //       { label: 'Components', icon: OpenIcon, action: handleComponentsTabClick }
-  //     ]
-  //   },
-  //   {
-  //     name: 'Damage Scenarios',
-  //     options: [
-  //       { label: 'Derivation Table', icon: DamageIcon, action: () => handleClick('Damage Scenarios Derivations') },
-  //       { label: 'Impact Rating Table', icon: RatingIcon, action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') }
-  //     ]
-  //   },
-  //   {
-  //     name: 'Threat Scenarios',
-  //     options: [{ label: 'Threat Table', icon: ThreatIcon, action: () => handleClick('Threat Scenarios') }]
-  //   },
-  //   {
-  //     name: 'Attack Path',
-  //     options: [
-  //       { label: 'Attack Table', icon: DamageIcon, action: handleAttackTableClick },
-  //       { label: 'Add Attack', icon: AddIcon, action: (e) => handleContext('Attack', e) },
-  //       { label: 'Attack Trees', icon: RatingIcon, action: handleAttackTreeClick },
-  //       { label: 'Add Attack Tree', icon: AddIcon, action: (e) => handleContext('Attack Trees', e) }
-  //     ]
-  //   },
-  //   {
-  //     name: 'CyberSecurity',
-  //     options: [
-  //       { label: 'Goals', icon: DamageIcon, action: () => handleClick('Cybersecurity Goals') },
-  //       { label: 'Requirements', icon: RatingIcon, action: () => handleClick('Cybersecurity Requirements') },
-  //       { label: 'Controls', icon: DamageIcon, action: () => handleClick('Cybersecurity Controls') },
-  //       { label: 'Claims', icon: RatingIcon, action: () => handleClick('Cybersecurity Claims') }
-  //     ]
-  //   },
-  //   {
-  //     name: 'Risk Determination',
-  //     options: [{ label: 'Risk Table', icon: ThreatIcon, action: () => handleClick('Threat Assessment & Risk Treatment') }]
-  //   }
-  // ];
-
+  
   const tabs = [
     {
       name: 'Project',
