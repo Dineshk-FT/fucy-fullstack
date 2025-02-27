@@ -191,7 +191,7 @@ export default function AttackTreeTable() {
     }
   }, [title, visibleColumns]);
   const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
+    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
   );
 
   // Open/Close the filter modal
