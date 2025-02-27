@@ -14,7 +14,8 @@ const useStyles = makeStyles((theme) => ({
   MenuItem: {
     fontSize: '15px',
     fontWeight: 600,
-    gap: 3
+    gap: 3,
+    color: '#000'
   }
 }));
 

@@ -257,9 +257,11 @@ export default function AttackBlock({ attackScene, color }) {
   );
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+      }, 500);
     }
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, attackScene]);
 
   useLayoutEffect(() => {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
