@@ -241,6 +241,14 @@ export default function AttackBlock({ attackScene, color }) {
     }
   }, [attackScene]);
 
+  const centerLayout = () => {
+    if (reactFlowInstance) {
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+      }, 300);
+    }
+  };
+
   const onLayout = useCallback(
     async ({ direction = 'DOWN' } = {}) => {
       try {
@@ -249,6 +257,7 @@ export default function AttackBlock({ attackScene, color }) {
 
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
+        centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);
       }
@@ -256,11 +265,7 @@ export default function AttackBlock({ attackScene, color }) {
     [nodes, edges, setNodes, setEdges]
   );
   useEffect(() => {
-    if (reactFlowInstance) {
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
-      }, 500);
-    }
+    centerLayout();
   }, [reactFlowInstance, attackScene]);
 
   useLayoutEffect(() => {
@@ -599,12 +604,15 @@ export default function AttackBlock({ attackScene, color }) {
 
     update(details)
       .then((res) => {
-        if (res) {
+        if (!res.error) {
+          // console.log('res', res);
           setTimeout(() => {
             notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
             getCyberSecurityScenario(model?._id);
-          }, 500);
+          }, 300);
+        } else {
+          notify(res?.error ?? 'Something Went Wrong', 'error');
         }
       })
       .catch((err) => {
@@ -624,6 +632,7 @@ export default function AttackBlock({ attackScene, color }) {
     background: color?.canvasBG
   };
   // console.log('nodes', nodes);
+  // console.log('edges', edges);
   if (!isReady) return null;
 
   return (

@@ -47,6 +47,8 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
+  setInitialNodes: state.setInitialNodes,
+  setInitialEdges: state.setInitialEdges,
   selectedNodes: state.selectedNodes,
   setSelectedNodes: state.setSelectedNodes,
   model: state.model,
@@ -117,6 +119,8 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
+    setInitialNodes,
+    setInitialEdges,
     selectedNodes,
     setSelectedNodes,
     model,
@@ -436,6 +440,8 @@ export default function MainCanvas() {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
+        setInitialNodes(temp.nodes);
+        setInitialEdges(temp.edges);
       } else {
         handleClear();
       }
