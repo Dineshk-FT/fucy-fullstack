@@ -73,14 +73,14 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '5px',
     fontSize: 13,
-    padding: '2px 8px',
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
+    fontSize: 14,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '2px 8px',
+    padding: '10px 8px',
     textAlign: 'center'
   }
 }));
@@ -118,17 +118,26 @@ export default function Tstable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
+  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const visibleColumns = useStore((state) => state.threatScenTblClms);
+  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
-  // console.log('damageScenarios', damageScenarios);
-  // console.log('threatID', threatID);
+  const Head = useMemo(() => {
+    if (title.includes('Derived')) {
+      const col = [...column];
+      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+      return col.filter((header) => visibleColumns.includes(header.name));
+    } else {
+      return column.filter((header) => visibleColumns.includes(header.name));
+    }
+  }, [title, visibleColumns]);
 
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [columnWidths, setColumnWidths] = useState({});
-  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.threatScenTblClms);
-  const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const [columnWidths, setColumnWidths] = useState(
+      Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
+    );
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Open/Close the filter modal
@@ -149,16 +158,6 @@ export default function Tstable() {
     handleCloseSelect();
   };
 
-  const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
-  }, [title, visibleColumns]);
-
   useEffect(() => {
     getDamageScenarios(model?._id);
   }, []);
@@ -168,7 +167,6 @@ export default function Tstable() {
       let id = 0;
       const mod1 = derived['Details']
         ?.map((detail) => {
-          // console.log('detail', detail);
           return detail?.Details?.map((nodedetail) => {
             return nodedetail?.props?.map((prop) => {
               id++;
@@ -211,14 +209,9 @@ export default function Tstable() {
       const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
-      // const data = {
-      //   name: damageScenarios?.name,
-      //   scenes: damageScenarios?.Details
-      // };
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);
-  // console.log('filtered', filtered);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -258,15 +251,16 @@ export default function Tstable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    const startX = e.clientX;
+    e.preventDefault();
+    e.stopPropagation(); // Prevent unwanted bubbling
 
-    // Use the actual width of the column if no width is set in state
-    const headerCell = e.target.parentNode;
+    const startX = e.clientX;
+    const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
     const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX; // Calculate movement direction
-      const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + delta);
 
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
@@ -323,10 +317,7 @@ export default function Tstable() {
     });
   };
 
-  // console.log('selectedRows', selectedRows);
-
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
-    // console.log('row', row);
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -361,7 +352,6 @@ export default function Tstable() {
 
         updateName(details)
           .then((res) => {
-            // console.log('res', res);
             if (!res.error) {
               handleClosePopper();
               notify(res.message ?? 'Deleted successfully', 'success');
@@ -373,10 +363,8 @@ export default function Tstable() {
           .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
       }
     };
-    // console.log('isPopperFocused', isPopperFocused);
 
     const handleClosePopper = () => {
-      // console.log('closed');
       if (!isPopperFocused) {
         setEditingField(null);
         setEditValue('');
@@ -492,7 +480,6 @@ export default function Tstable() {
                           <img src={DamageIcon} alt="damage" height="10px" width="10px" />
                           <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
                             {`[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`}
-                            {/* {damage?.name} */}
                           </span>
                         </span>
                       ))
@@ -626,12 +613,23 @@ export default function Tstable() {
         </DialogActions>
       </Dialog>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}>
-        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
+      <TableContainer
+        component={Paper}
+        sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+        onDragOver={(e) => e.preventDefault()}
+      >
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                <StyledTableCell
+                  key={hd.id}
+                  style={{
+                    width: `${columnWidths[hd.id]}px`,
+                    position: 'relative',
+                    overflowWrap: 'break-word'
+                  }}
+                 >
                   {hd?.name}
                   <div
                     className="resize-handle"
@@ -642,10 +640,7 @@ export default function Tstable() {
                       width: '5px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent',
-                      '& .MuiTableCell-root': {
-                        transition: 'width 0.2s ease'
-                      }
+                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
