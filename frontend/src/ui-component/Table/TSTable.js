@@ -136,7 +136,7 @@ export default function Tstable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState(
-      Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
+      Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
     );
   const [selectedRows, setSelectedRows] = useState([]);
 
