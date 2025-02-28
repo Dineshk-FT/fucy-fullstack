@@ -8,6 +8,7 @@ const initialState = {
   propertiesTabOpen: false,
   addNodeTabOpen: false,
   anchorEl: null,
+  isSaveModalOpen: false,
   isHeaderOpen: false,
   details: {
     name: '',
@@ -28,6 +29,9 @@ const CanvasSlice = createSlice({
     },
     closeHeader: (state) => {
       return { ...state, isHeaderOpen: false };
+    },
+    setSaveModal: (state, action) => {
+      return { ...state, isSaveModalOpen: Boolean(action.payload) };
     },
     setDrawerwidth: (state, action) => {
       return { ...state, drawerwidthChange: Number(action.payload) };
@@ -80,6 +84,7 @@ export const {
   setDetails,
   openHeader,
   closeHeader,
+  setSaveModal,
   setDrawerwidth
 } = CanvasSlice.actions;
 export default CanvasSlice.reducer;

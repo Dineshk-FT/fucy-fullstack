@@ -70,6 +70,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   Models: [],
   model: {},
   clickedItem: [],
+  isSaveModalOpen: false,
+
   assets: {
     id: '1',
     name: 'Item Model & Assets',
@@ -617,6 +619,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       [table]: columns
     }));
   },
+
+  setSaveModal: (value) =>
+    set(() => ({
+      isSaveModalOpen: Boolean(value)
+    })),
 
   // Toggle column visibility for a specific table
   toggleColumnVisibility: (table, columnName) => {

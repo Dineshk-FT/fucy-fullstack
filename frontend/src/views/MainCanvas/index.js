@@ -472,36 +472,20 @@ export default function MainCanvas() {
       .then((res) => {
         if (res) {
           // setTimeout(() => {
-          setOpen(true);
-          setMessage('Saved Successfully');
-          setSuccess(true);
+          notify('Saved Successfully', 'success');
           handleClose();
           RefreshAPI();
           // }, 500);
         }
       })
       .catch((err) => {
-        console.log('err', err);
-        setOpen(true);
-        setSuccess(false);
-        setMessage('Something went wrong');
+        notify('Something went wrong', 'error');
       });
   };
 
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
-  };
-  const handleSidebarOpen = (e, node) => {
-    e.preventDefault();
-    if (node.type !== 'group') {
-      // dispatch(OpenPropertiesTab());
-      setSelectedElement(node);
-      dispatch(setSelectedBlock(node));
-      // console.log('node', node);
-      // toggleDrawerOpen('MainCanvasTab');
-      dispatch(setProperties(node?.properties));
-    }
   };
 
   // console.log('selectedNodes', selectedNodes);
@@ -881,6 +865,7 @@ export default function MainCanvas() {
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
+
         <AlertMessage open={open} message={message} setOpen={setOpen} success={success} />
       </div>
     </>

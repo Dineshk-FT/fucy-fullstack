@@ -43,6 +43,8 @@ import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { openAddNodeTab, setAnchorEl, setDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
+import SaveModal from '../../../../ui-component/Modal/SaveModal';
+import toast from 'react-hot-toast';
 
 const imageComponents = {
   AttackIcon,
@@ -118,11 +120,17 @@ const CardStyle = styled(Card)(() => ({
   }
 }));
 
+const notify = (message, status) => toast[status](message);
+
 const selector = (state) => ({
   getModels: state.getModels,
   getModelById: state.getModelById,
   nodes: state.nodes,
   edges: state.edges,
+  initialNodes: state.initialNodes,
+  initialEdges: state.initialEdges,
+  setInitialNodes: state.setInitialNodes,
+  setInitialEdges: state.setInitialEdges,
   model: state.model,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
@@ -145,7 +153,10 @@ const selector = (state) => ({
   setClickedItem: state.setClickedItem,
   updateModelName: state.updateModelName,
   setNodes: state.setNodes,
-  getCatalog: state.getCatalog
+  getCatalog: state.getCatalog,
+  update: state.updateAssets,
+  setSaveModal: state.setSaveModal,
+  isSaveModalOpen: state.isSaveModalOpen
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -158,6 +169,10 @@ const BrowserCard = () => {
     getModels,
     nodes,
     edges,
+    initialNodes,
+    initialEdges,
+    setInitialNodes,
+    setInitialEdges,
     model,
     getModelById,
     assets,
@@ -181,7 +196,10 @@ const BrowserCard = () => {
     setClickedItem,
     updateModelName,
     setNodes,
-    getCatalog
+    getCatalog,
+    update,
+    isSaveModalOpen,
+    setSaveModal
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
@@ -195,7 +213,50 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
-  // console.log('drawerwidthChange', drawerwidthChange);
+  const handleSaveToModel = () => {
+    // model - id,
+    //   template
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template),
+      assetId: assets?._id
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          // setTimeout(() => {
+          notify('Saved Successfully', 'success');
+          setSaveModal(false);
+          setInitialEdges(edges);
+          setInitialNodes(nodes);
+          getAssets(model?._id);
+
+          // }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
+  };
+
+  const handleCloseSave = () => {
+    setSaveModal(false);
+    setInitialEdges(edges);
+    setInitialNodes(nodes);
+  };
+
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
   };
@@ -292,7 +353,14 @@ const BrowserCard = () => {
   };
 
   const handleOpenTable = (e, id, name) => {
-    // console.log('name', name);
+    // console.log('nodes', nodes);
+    // console.log('nodes', initialNodes);
+    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+
+    // console.log('hasChanged', hasChanged);
+    if (hasChanged) {
+      setSaveModal(true);
+    }
     e.stopPropagation();
     setClickedItem(id);
     if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
@@ -805,6 +873,7 @@ const BrowserCard = () => {
       </CardStyle>
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />
       <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
+      {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
     </>
   );
 };
