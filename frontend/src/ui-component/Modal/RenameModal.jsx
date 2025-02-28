@@ -19,48 +19,54 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  rename: state.renameModel,
+  updateModelName: state.updateModelName,
   model: state.model,
+  getModels: state.getModels
 });
 
 export default function RenameProject({ open, handleClose, Models }) {
-  const { 
-    rename, 
-    model 
-    } = useStore(selector, shallow);
+  const { updateModelName, model, getModels } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
 
-  const [renameDetails, setRenameDetails] = React.useState({
-    currentName: model.name,
-    newName: ''
-  });
+  // State for the new name, initialized with the current model name
+  const [newName, setNewName] = React.useState('');
 
+  // Sync newName with model.name when model changes or dialog opens
+  React.useEffect(() => {
+    setNewName(model?.name || '');
+  }, [model, open]);
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    setNewName(e.target.value);
+  };
+
+  // Handle rename button click
   const handleRename = () => {
-    const { currentName, newName } = renameDetails;
-
-    if (!currentName || !newName) {
-      notify('Both fields are required', 'error');
+    if (!newName) {
+      notify('New name is required', 'error');
       return;
     }
 
-    const existingModel = Models.find((model) => model.name === currentName);
+    const existingModel = Models.find((m) => m.id === model?.id); // Check based on ID
     if (!existingModel) {
       notify('Model not found', 'error');
       return;
     }
 
-    rename(existingModel.id, newName)
+    // Call updateModelName with specified parameters
+    updateModelName({ 'model-id': model?._id, name: newName })
       .then((res) => {
-        if (res.success) {
-          notify(res.message || 'Model renamed successfully', 'success');
-          handleClose();
+        if (res) {
+          notify('Model renamed successfully', 'success');
+          getModels(); // Refresh models in the store
+          window.location.reload(); // Refresh the page
+          handleClose(); // Close dialog
         } else {
-          notify(res.message || 'Rename failed', 'error');
+          notify('Rename failed', 'error');
         }
       })
       .catch(() => notify('An error occurred', 'error'));
-
-    setRenameDetails({ currentName: '', newName: '' });
   };
 
   return (
@@ -73,25 +79,29 @@ export default function RenameProject({ open, handleClose, Models }) {
         aria-describedby="alert-dialog-slide-description"
       >
         <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Rename Project'}</DialogTitle>
-        <DialogTitle sx={{ fontSize: 14, fontFamily: 'italic', pt: 0, pb: 1 }}>{'Provide the current and new names for your project.'}</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14, fontFamily: 'italic', pt: 0, pb: 1 }}>
+          {'Provide the new name for your project.'}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
+              {/* Current Name (Disabled) */}
               <TextField
-                value={renameDetails.currentName}
+                value={model?.name || ''}
                 id="current-name"
                 label="Current Name"
                 variant="outlined"
                 disabled
-                onChange={(e) => setRenameDetails({ ...renameDetails, currentName: e.target.value })}
                 sx={{ width: '300px' }}
               />
+              {/* New Name (Editable by default) */}
               <TextField
-                value={renameDetails.newName}
+                value={newName}
                 id="new-name"
                 label="New Name"
                 variant="outlined"
-                onChange={(e) => setRenameDetails({ ...renameDetails, newName: e.target.value })}
+                onChange={handleInputChange}
+                autoFocus // Automatically focus on this field when dialog opens
                 sx={{ width: '300px' }}
               />
             </Box>
