@@ -261,7 +261,7 @@ export default function DsDerivationTable() {
             case typeof row[item.name] === 'object':
               cellContent = (
                 <StyledTableCell key={index} align={'left'}>
-                  {row[item.name].length ? row[item.name].join() : '-'}
+                  {row[item.name]?.length ? row[item.name].join() : '-'}
                 </StyledTableCell>
               );
               break;

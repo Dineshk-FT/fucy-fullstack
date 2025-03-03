@@ -136,7 +136,7 @@ const renderMenuItem = (option, name) => (
   </MenuItem>
 );
 
-const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, name }) => {
+const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impact, name, columnWidths }) => {
   // console.log('name', name);
   const [open, setOpen] = useState(false); // Manage open state of dropdown
   const selectRef = useRef(null);
@@ -151,7 +151,8 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
     <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
-          width: 130,
+          // width: 130,
+          width: columnWidths[item?.id] ?? 'auto',
           background: 'transparent',
           '& .MuiInputBase-root': {
             backgroundColor: 'transparent'
@@ -168,7 +169,7 @@ const SelectableCell = ({ row, options, handleChange, colorPickerTab, impact, na
         }}
       >
         {!impact && (
-          <InputLabel id="demo-simple-select-label" shrink={false}>
+          <InputLabel sx={{ width: columnWidths[item?.id] ?? 'auto' }} id="demo-simple-select-label" shrink={false}>
             Select Impacts
           </InputLabel>
         )}
@@ -235,9 +236,27 @@ export default function DsTable() {
     }
   }, [visibleColumns]);
 
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 120])) // Default 100px width
-  );
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(DSTableHeader.map((col) => [col.id, col.w])));
+
+  // fn for resizing the columns
+  const handleResizeStart = (e, columnId) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = columnWidths[columnId];
+
+    const handleMouseMove = (event) => {
+      const newWidth = Math.max(startWidth + (event.clientX - startX), DSTableHeader.find((col) => col.id === columnId)?.minW || 50);
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   const handleChecked = (value, item, rowId) => {
     setFiltered((prevFiltered) =>
@@ -480,30 +499,6 @@ export default function DsTable() {
     setPage(0);
   };
 
-  const handleResizeStart = (e, columnId) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent unwanted bubbling
-
-    const startX = e.clientX;
-    const headerCell = e.currentTarget.parentElement;
-    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-
-    const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(80, startWidth + delta);
-
-      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
@@ -580,7 +575,7 @@ export default function DsTable() {
                       onMouseLeave={() => {
                         if (!anchorEl) setHoveredField(null);
                       }}
-                      style={{ position: 'relative', cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                      style={{ position: 'relative', cursor: 'pointer', width: columnWidths[item.id] ?? item?.w, minWidth: item?.minW }}
                     >
                       {row[item.name] || '-'}
                       {(hoveredField === item.name || editingField === item.name) && (
@@ -610,6 +605,7 @@ export default function DsTable() {
                     handleChange={handleChange}
                     name={item.name}
                     options={options}
+                    columnWidths={columnWidths}
                     colorPickerTab={colorPickerTab}
                     impact={row?.impacts[item.name]}
                   />
@@ -626,21 +622,24 @@ export default function DsTable() {
                     sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
                   >
                     {row.cyberLosses.length ? (
-                      row?.cyberLosses?.map((loss) => (
-                        <div
-                          key={loss?.id}
-                          style={{
-                            marginBottom: '5px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            width: `${columnWidths[item.id] || 'auto'}`
-                          }}
-                        >
-                          <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
-                          <span>Loss of {loss?.name}</span>
-                        </div>
-                      ))
+                      <span style={{ display: 'inline-grid' }}>
+                        {row?.cyberLosses?.map((loss) => (
+                          <div
+                            key={loss?.id}
+                            style={{
+                              marginBottom: '5px',
+                              display: 'flex',
+                              // justifyContent: 'center',
+                              alignItems: 'center',
+                              gap: '5px',
+                              width: `${columnWidths[item.id] || 'auto'}`
+                            }}
+                          >
+                            <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
+                            <span>Loss of {loss?.name}</span>
+                          </div>
+                        ))}
+                      </span>
                     ) : (
                       <InputLabel>Select losses</InputLabel>
                     )}
@@ -651,14 +650,16 @@ export default function DsTable() {
               case item.name === 'Assets':
                 cellContent = (
                   <StyledTableCell key={index} sx={{ width: `${columnWidths[item.id] || 'auto'}` }} component="th" scope="row">
-                    {row?.cyberLosses?.map((loss) => (
-                      <div
-                        key={loss?.id}
-                        style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
-                      >
-                        <span> {loss?.node}</span>
-                      </div>
-                    ))}
+                    <span style={{ display: 'inline-grid' }}>
+                      {row?.cyberLosses?.map((loss) => (
+                        <div
+                          key={loss?.id}
+                          style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                        >
+                          <span> {loss?.node}</span>
+                        </div>
+                      ))}
+                    </span>
                   </StyledTableCell>
                 );
                 break;
@@ -868,10 +869,10 @@ export default function DsTable() {
                       position: 'absolute',
                       right: 0,
                       top: 0,
-                      width: '5px',
+                      width: '10px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent'
+                      backgroundColor: 'rgba(0, 0, 0, 0.1)' // Slight highlight on hover
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
