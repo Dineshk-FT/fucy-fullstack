@@ -27,7 +27,8 @@ import {
   Assignment as AssignmentIcon, // For requirements/claims
   Shield as ShieldIcon, // For controls
   ReportProblem as ReportIcon, // For derivation
-  ListAlt as ListAltIcon // For detailed tables
+  ListAlt as ListAltIcon, // For detailed tables
+  Group as GroupIcon
 } from '@mui/icons-material';
 import TemplateList from '../../../../views/Libraries';
 import Components from '../../../../views/NodeList';
@@ -236,6 +237,12 @@ const LeftSection = () => {
     }
   };
 
+  const handleGroupDrag = (event) => {
+    const parseFile = JSON.stringify('');
+    event.dataTransfer.setData('application/group', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
   const tabs = [
     {
       name: 'Project',
@@ -258,7 +265,8 @@ const LeftSection = () => {
       options: [
         { label: 'New', icon: AddIcon, action: handleAddNewNode }, // Plus for new model
         { label: 'System', icon: BuildIcon, action: handleSystemTabClick }, // Wrench for system
-        { label: 'Components', icon: ListAltIcon, action: handleComponentsTabClick } // List for components
+        { label: 'Components', icon: ListAltIcon, action: handleComponentsTabClick }, // List for components
+        { label: 'Group', icon: GroupIcon, action: handleGroupDrag } // List for components
       ]
     },
     {
@@ -358,6 +366,8 @@ const LeftSection = () => {
                   alignItems: 'center',
                   width: '60px'
                 }}
+                draggable={option.label === 'Group'} // Make only the Group option draggable
+                onDragStart={option.label === 'Group' ? handleGroupDrag : undefined} // Handle drag start
               >
                 {option.label && (
                   <>
