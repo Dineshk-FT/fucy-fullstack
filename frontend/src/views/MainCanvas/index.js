@@ -494,17 +494,22 @@ export default function MainCanvas() {
 
     let newSelectedNodes;
 
+    // console.log('e.shiftkey', e.shiftKey);
     if (e.shiftKey) {
-      // Add to selection or remove if already selected
-      newSelectedNodes = selectedNodes.includes(node.id)
-        ? selectedNodes.filter((id) => id !== node.id) // Deselect if already selected
-        : [...selectedNodes, node.id]; // Add to selection
-    } else {
-      // Select only this node (deselect others)
-      newSelectedNodes = selectedNodes.includes(node.id) ? [] : [node.id];
+      setSelectedNodes((prevSelectedNodes) => {
+        const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
+
+        return isAlreadySelected
+          ? prevSelectedNodes.filter((snode) => snode.id !== node.id) // Remove if already selected
+          : [...prevSelectedNodes, node]; // Add if not selected
+      });
     }
 
-    setSelectedNodes(newSelectedNodes); // Update state
+    // else {
+    //   // Select only this node (deselect others)
+    //   newSelectedNodes = selectedNodes.includes(node.id) ? [] : [node.id];
+    // }
+
     // console.log('Updated Selection:', newSelectedNodes); // Debugging if needed
     // Update node details if not a group
     if (node.type !== 'group') {
@@ -522,7 +527,7 @@ export default function MainCanvas() {
   };
 
   // console.log('nodes', nodes);
-
+  // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
     if (!isPopperFocused) {
       // setAnchorEl(null);
@@ -711,6 +716,7 @@ export default function MainCanvas() {
 
     dragAdd(newNode);
     checkForNodes();
+    setSelectedNodes([]);
   }, []);
   // console.log('edges', edges);
 
@@ -782,8 +788,8 @@ export default function MainCanvas() {
               <React.Fragment>
                 <Tooltip title="Grouping">
                   <Typography
-                    sx={{ color: Color?.iconColor, alignSelf: 'end' }}
-                    // onClick={item?.onclick()}
+                    sx={{ color: Color?.iconColor, alignSelf: 'end', cursor: 'pointer' }}
+                    onClick={(e) => onSelectionClick(e, selectedNodes)}
                     onDragStart={(e) => handleGroupDrag(e)}
                     draggable={true}
                   >

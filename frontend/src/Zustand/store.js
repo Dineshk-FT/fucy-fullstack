@@ -871,7 +871,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   setSelectedNodes: (newNodes) => {
     set((state) => ({
-      selectedNodes: newNodes
+      selectedNodes: typeof newNodes === 'function' ? newNodes(state.selectedNodes) : newNodes
     }));
   },
 

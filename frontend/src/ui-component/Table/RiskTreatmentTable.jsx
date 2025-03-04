@@ -135,9 +135,29 @@ export default function RiskTreatmentTable() {
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 100])) // Default 100px width
-  );
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(RiskTreatmentHeaderTable?.map((col) => [col.id, col.w])));
+
+  const handleResizeStart = (e, columnId) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = columnWidths[columnId];
+
+    const handleMouseMove = (event) => {
+      const newWidth = Math.max(
+        startWidth + (event.clientX - startX),
+        RiskTreatmentHeaderTable?.find((col) => col.id === columnId)?.minW || 50
+      );
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   const handleOpenSelect = (row, name) => {
     setSelectedRow(row);
@@ -333,30 +353,6 @@ export default function RiskTreatmentTable() {
     });
   };
 
-  const handleResizeStart = (e, columnId) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent unwanted bubbling
-
-    const startX = e.clientX;
-    const headerCell = e.currentTarget.parentElement;
-    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
-
-    const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(80, startWidth + delta);
-
-      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   const RenderTableRow = React.memo(({ row, Head, color, isChild = false }) => {
     const isSelected = selectedRows.some((selectedRow) => selectedRow.SNo === row.SNo);
 
@@ -377,7 +373,7 @@ export default function RiskTreatmentTable() {
           switch (true) {
             case item.name === 'Losses of Cybersecurity Properties':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
@@ -391,7 +387,7 @@ export default function RiskTreatmentTable() {
               cellContent = (
                 <StyledTableCell
                   key={index}
-                  style={{ width: 'auto', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
                   align="left"
                   onClick={() => toggleRowSelection(row)}
                 >
@@ -403,7 +399,7 @@ export default function RiskTreatmentTable() {
             case item.name === 'Attack Tree or Attack Path(s)':
               cellContent = (
                 // onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name] !== null ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <img src={AttackIcon} alt="damage" height="10px" width="10px" />
@@ -420,7 +416,12 @@ export default function RiskTreatmentTable() {
               break;
             case item.name.includes('Cybersecurity'):
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row, item.name)} sx={{ cursor: 'pointer' }}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  onClick={() => handleOpenSelect(row, item.name)}
+                  sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item.name] && row[item.name].length ? (
                     row[item?.name]?.map((goal) => (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={goal?.ID}>
@@ -441,10 +442,15 @@ export default function RiskTreatmentTable() {
               break;
             case item.name === 'Related UNECE Threats or Vulns':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenCatalog(row)} sx={{ cursor: 'pointer' }}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  onClick={() => handleOpenCatalog(row)}
+                  sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item.name] && row[item.name].length ? (
                     row[item?.name]?.map((catalog) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={catalog}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }} key={catalog}>
                         <img src={CatalogIcon} alt="damage" height="15px" width="15px" />
                         <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{catalog}</span>
                       </span>
@@ -458,11 +464,11 @@ export default function RiskTreatmentTable() {
 
             case item.name === 'Damage Scenarios':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {
                     // row[item.name] && row[item.name].length ? (
                     // row[item.name].map((damage, i) => (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
                       <img src={DamageIcon} alt="damage" height="10px" width="10px" />
                       <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item?.name]}</span>
                     </span>
@@ -476,7 +482,7 @@ export default function RiskTreatmentTable() {
               break;
             case item.name === 'Contributing Requirements':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name]?.map((require, i) => (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={require?.ID}>
                       <img src={CyberRequireIcon} alt="damage" height="10px" width="10px" />
@@ -492,14 +498,22 @@ export default function RiskTreatmentTable() {
               const impact = colorPickerTab(row[item?.name]);
 
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: impact, color: '#000' }}>
+                <StyledTableCell
+                  key={index}
+                  align={'left'}
+                  sx={{ backgroundColor: impact, color: '#000', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item?.name]}
                 </StyledTableCell>
               );
             case item.name === 'Attack Feasibility Rating':
               const bgColor = RatingColor(row[item?.name]);
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: bgColor, color: '#000' }}>
+                <StyledTableCell
+                  key={index}
+                  align={'left'}
+                  sx={{ backgroundColor: bgColor, color: '#000', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item?.name]}
                 </StyledTableCell>
               );
@@ -632,7 +646,8 @@ export default function RiskTreatmentTable() {
                 <StyledTableCell
                   key={hd.id}
                   style={{
-                    width: `${columnWidths[hd.id]}px`,
+                    width: columnWidths[hd.id] ?? hd?.w,
+                    minWidth: hd?.minW,
                     position: 'relative',
                     overflowWrap: 'break-word'
                   }}

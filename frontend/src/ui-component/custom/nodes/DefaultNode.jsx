@@ -141,7 +141,11 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             position: 'relative',
             overflow: 'visible',
             // boxShadow: selectedNodes?.includes(id) ? '0px 0px 7px 3px wheat' : selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
-            boxShadow: selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
+            boxShadow: selectedNodes.some((node) => node.id === id)
+              ? '0px 0px 7px 3px #32ed0f'
+              : selectedBlock?.id === id
+              ? '0px 0px 7px 3px violet'
+              : 'none',
             width: width,
             height: height, // Apply dynamic height
             // minHeight: height ,
@@ -170,7 +174,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             }}
             style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
-            i
+            <EditIcon sx={{ fontSize: '0.9rem' }} />
           </div>
           {/* <Box
             sx={{
