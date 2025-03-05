@@ -491,10 +491,6 @@ export default function MainCanvas() {
   // console.log('selectedNodes', selectedNodes);
   const handleSelectNode = (e, node) => {
     e.stopPropagation(); // Prevent event bubbling
-
-    let newSelectedNodes;
-
-    // console.log('e.shiftkey', e.shiftKey);
     if (e.shiftKey) {
       setSelectedNodes((prevSelectedNodes) => {
         const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
@@ -504,15 +500,8 @@ export default function MainCanvas() {
           : [...prevSelectedNodes, node]; // Add if not selected
       });
     }
-
-    // else {
-    //   // Select only this node (deselect others)
-    //   newSelectedNodes = selectedNodes.includes(node.id) ? [] : [node.id];
-    // }
-
-    // console.log('Updated Selection:', newSelectedNodes); // Debugging if needed
-    // Update node details if not a group
     if (node.type !== 'group') {
+      dispatch(setAnchorEl(node?.id));
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
       dispatch(
@@ -770,8 +759,8 @@ export default function MainCanvas() {
             multiSelectionKeyCode="Shift"
             onSelectionContextMenu={onSelectionClick}
             // onPaneClick={onSelectionChange}
-            // onNodeDoubleClick={handleSelectNode}
-            onNodeClick={handleSelectNode}
+            onNodeDoubleClick={handleSelectNode}
+            // onNodeClick={handleSelectNode}
             onEdgeContextMenu={handleSelectEdge}
             // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}

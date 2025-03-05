@@ -352,9 +352,8 @@ const BrowserCard = () => {
     await get_api[name](ModelId);
   };
 
+  // console.log('initialNodes', initialNodes);
   const handleOpenTable = (e, id, name) => {
-    // console.log('nodes', nodes);
-    // console.log('nodes', initialNodes);
     const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
 
     // console.log('hasChanged', hasChanged);

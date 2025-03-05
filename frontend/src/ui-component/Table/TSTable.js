@@ -136,8 +136,8 @@ export default function Tstable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState(
-      Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
-    );
+    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
+  );
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Open/Close the filter modal
@@ -544,9 +544,9 @@ export default function Tstable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>
@@ -629,7 +629,7 @@ export default function Tstable() {
                     position: 'relative',
                     overflowWrap: 'break-word'
                   }}
-                 >
+                >
                   {hd?.name}
                   <div
                     className="resize-handle"

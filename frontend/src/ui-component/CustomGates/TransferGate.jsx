@@ -97,7 +97,7 @@ export default function TransferGate(props) {
               //eslint-disable-next-line
               strokeWidth="6"
               transform="rotate(-90 256 256)"
-              d="M 105,111.3 V 400.7 L 365.5,256 Z M 16,247 v "
+              d="M 105,111.3 V 400.7 L 365.5,256 Z M 16,247"
             />
           </svg>
         </div>

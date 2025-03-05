@@ -555,9 +555,9 @@ export default function RiskTreatmentTable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} />
+          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>

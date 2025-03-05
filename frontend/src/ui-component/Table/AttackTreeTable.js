@@ -198,7 +198,6 @@ export default function AttackTreeTable() {
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
 
-
   useEffect(() => {
     if (attacks['scenes']) {
       const mod1 = attacks['scenes']?.map((dt, i) => {
@@ -408,9 +407,9 @@ export default function AttackTreeTable() {
   // console.log('selectedRow', selectedRow)
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+          {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
         <Box display="flex" alignItems="center">
@@ -489,28 +488,28 @@ export default function AttackTreeTable() {
             <TableRow>
               {Head?.map((hd) => (
                 <StyledTableCell
-                key={hd.id}
-                style={{
-                  width: `${columnWidths[hd.id]}px`,
-                  position: 'relative',
-                  overflowWrap: 'break-word'
-                }}
-              >
-                {hd.name}
-                <div
-                  className="resize-handle"
+                  key={hd.id}
                   style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '5px',
-                    height: '100%',
-                    cursor: 'col-resize',
-                    backgroundColor: 'transparent'
+                    width: `${columnWidths[hd.id]}px`,
+                    position: 'relative',
+                    overflowWrap: 'break-word'
                   }}
-                  onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                />
-              </StyledTableCell>
+                >
+                  {hd.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>

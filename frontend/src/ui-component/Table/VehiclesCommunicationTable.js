@@ -125,9 +125,9 @@ export default function VehiclesCommunicationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" my={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" my={1} mx={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
               Vehicle communication channel vulnerabilities Table
             </Typography>

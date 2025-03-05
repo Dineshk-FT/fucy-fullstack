@@ -33,7 +33,7 @@ export default function ANDGate(props) {
           stroke={color?.stroke}
           strokeWidth="6"
           transform="rotate(-90 256 256)"
-          d="M105 105v302h151c148 0 148-302 0-302H105zm-89"
+          d="M105 105v302h151c148 0 148-302 0-302H105z"
         />
       </svg>
       <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />

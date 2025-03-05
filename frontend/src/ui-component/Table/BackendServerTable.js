@@ -124,9 +124,9 @@ export default function BackendServerTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} />
+            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} /> */}
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>
               Back-end servers associated with vehicle field operations Table
             </Typography>

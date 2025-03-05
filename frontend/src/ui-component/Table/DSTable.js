@@ -739,15 +739,15 @@ export default function DsTable() {
         height: 'auto' // Ensure the table takes up the full height of the parent
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon
+          {/* <KeyboardBackspaceRoundedIcon
             sx={{
               cursor: 'pointer',
               color: color?.title
             }}
             onClick={handleBack}
-          />
+          /> */}
           <Typography
             sx={{
               color: color?.title,

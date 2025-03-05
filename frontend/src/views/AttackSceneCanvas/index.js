@@ -145,6 +145,8 @@ const selector = (state) => ({
   addEdge: state.addEdge,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
+  setInitialNodes: state.setInitialNodes,
+  setInitialEdges: state.setInitialEdges,
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
@@ -192,6 +194,8 @@ export default function AttackBlock({ attackScene, color }) {
     addNode,
     addEdge,
     setNodes,
+    setInitialNodes,
+    setInitialEdges,
     setEdges,
     model,
     update,
@@ -234,9 +238,12 @@ export default function AttackBlock({ attackScene, color }) {
 
   useEffect(() => {
     if (attackScene) {
+      const { nodes = [], edges = [] } = attackScene?.templates;
       setTimeout(() => {
-        setNodes(attackScene?.templates?.nodes ?? []);
-        setEdges(attackScene?.templates?.edges ?? []);
+        setNodes(nodes);
+        setEdges(edges);
+        setInitialNodes(nodes);
+        setInitialEdges(edges);
       }, 300);
     }
   }, [attackScene]);
@@ -254,9 +261,10 @@ export default function AttackBlock({ attackScene, color }) {
       try {
         const opts = { 'elk.direction': direction };
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
-
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
+        // setInitialNodes(layoutedNodes);
+        // setInitialEdges(layoutedEdges);
         centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);

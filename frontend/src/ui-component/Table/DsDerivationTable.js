@@ -296,9 +296,9 @@ export default function DsDerivationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mr={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
           <Box display="flex" justifyContent="center" gap={1}>

@@ -33,7 +33,7 @@ export default function VotingGate(props) {
           stroke={color?.stroke}
           strokeWidth="6"
           transform="rotate(-90 256 256)"
-          d="M105 105v302h151c148 0 148-302 0-302H105zm-89"
+          d="M105 105v302h151c148 0 148-302 0-302H105z"
         />
 
         <path fill="none" stroke={color?.stroke} strokeWidth="6" d="M105 407 L350 165" />
