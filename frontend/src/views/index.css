@@ -117,6 +117,7 @@ iframe#webpack-dev-server-client-overlay {
 .react-flow__resize-control {
   /* display: none !important; */
   border-color: transparent !important ;
+  cursor: nesw-resize;
   &.handle {
     background-color: transparent !important;
   }

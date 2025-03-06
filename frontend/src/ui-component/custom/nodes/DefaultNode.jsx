@@ -1,10 +1,10 @@
 /*eslint-disable*/
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { OpenPropertiesTab, setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
+import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../store/constant';
 
@@ -15,37 +15,20 @@ const selector = (state) => ({
   getAssets: state.getAssets,
   assets: state.assets,
   originalNodes: state.originalNodes,
-  updateNodeDimensions: state.updateNodeDimensions,
   selectedNodes: state.selectedNodes
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, updateNodeDimensions } =
-    useStore(selector);
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes } = useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
-  // console.log('selectedNodes', selectedNodes);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [width, setWidth] = useState(data?.style?.width ?? 100);
+  const [width, setWidth] = useState(data?.style?.width ?? 120);
   const textRef = useRef(null);
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
-
-  // useEffect(() => {
-  //   setNodes((nodes) =>
-  //     nodes.map((node) =>
-  //       node.id === id
-  //         ? {
-  //             ...node,
-  //             style: { ...node.style, height: data.style.height }, // Update height in state
-  //           }
-  //         : node
-  //     )
-  //   );
-  //   updateNodeDimensions(id, { height: data.style.height });
-  // }, [data.label]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
     requestAnimationFrame(() => {
@@ -140,7 +123,6 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             ...data?.style,
             position: 'relative',
             overflow: 'visible',
-            // boxShadow: selectedNodes?.includes(id) ? '0px 0px 7px 3px wheat' : selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none',
             boxShadow: selectedNodes.some((node) => node.id === id)
               ? '0px 0px 7px 3px #32ed0f'
               : selectedBlock?.id === id
@@ -176,16 +158,6 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           >
             <EditIcon sx={{ fontSize: '0.9rem' }} />
           </div>
-          {/* <Box
-            sx={{
-              ...iconStyle,
-              left: '20px',
-              opacity: isHovered ? 1 : 0
-            }}
-            onClick={() => dispatch(openHeader())}
-          >
-            <EditIcon sx={{ fontSize: '1rem' }} />
-          </Box> */}
           <div
             className="delete-icon"
             onClick={(e) => {

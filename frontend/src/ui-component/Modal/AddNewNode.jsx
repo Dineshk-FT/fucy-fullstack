@@ -20,18 +20,18 @@ const MenuProps = {
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 'inherit',
-    },
+      width: 'inherit'
+    }
   },
   anchorOrigin: {
     vertical: 'top',
-    horizontal: 'left',
+    horizontal: 'left'
   },
   transformOrigin: {
     vertical: 'bottom',
-    horizontal: 'left',
+    horizontal: 'left'
   },
-  getContentAnchorEl: null,
+  getContentAnchorEl: null
 };
 
 const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
@@ -44,12 +44,12 @@ const selector = (state) => ({
   edges: state.edges,
   getSidebarNode: state.getSidebarNode,
   model: state.model,
-  update: state.updateAssets,
+  update: state.updateAssets
 });
 
 function getStyles(name, nodes, theme) {
   return {
-    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium,
+    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
   };
 }
 
@@ -63,19 +63,19 @@ const AddNewNode = ({ assets }) => {
     nodeName: '',
     type: '',
     properties: [],
-    bgColor: '',
+    bgColor: ''
   });
 
   const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector);
 
   const handleChange = (event) => {
     const {
-      target: { value, name },
+      target: { value, name }
     } = event;
     if (name) {
       setNewNode({
         ...newNode,
-        [`${name}`]: value,
+        [`${name}`]: value
       });
     }
   };
@@ -87,7 +87,7 @@ const AddNewNode = ({ assets }) => {
       nodeName: '',
       type: '',
       properties: [],
-      bgColor: '#dadada',
+      bgColor: '#dadada'
     });
   };
 
@@ -109,15 +109,15 @@ const AddNewNode = ({ assets }) => {
           borderColor: 'gray',
           borderWidth: '2px',
           borderStyle: 'solid',
-          width: 120,
-          height: 50,
-        },
+          width: 150,
+          height: 50
+        }
       },
       type: 'default',
       properties: newNode.properties,
-      width: 120,
+      width: 150,
       height: 50,
-      isAsset: false,
+      isAsset: false
     };
 
     const details = { id: selectedNodeGroupId, new_node: dataNode };
@@ -139,7 +139,7 @@ const AddNewNode = ({ assets }) => {
       const details = {
         'model-id': model?._id,
         template: JSON.stringify(template),
-        ...(assets && { assetId: assets?._id }),
+        ...(assets && { assetId: assets?._id })
       };
 
       update(details)
@@ -172,7 +172,7 @@ const AddNewNode = ({ assets }) => {
       nodeName: '',
       type: '',
       // properties: [],
-      bgColor: '#dadada',
+      bgColor: '#dadada'
     }));
   };
 
@@ -198,7 +198,7 @@ const AddNewNode = ({ assets }) => {
           sx={{
             fontSize: fontSize,
             background: `${color?.sidebarBG} !important`,
-            color: color?.sidebarContent,
+            color: color?.sidebarContent
           }}
         />
 
@@ -216,7 +216,7 @@ const AddNewNode = ({ assets }) => {
                 sx={{
                   fontSize: fontSize,
                   background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent,
+                  color: color?.sidebarContent
                 }}
                 value={newNode.properties}
                 onChange={handleChange}
@@ -244,11 +244,7 @@ const AddNewNode = ({ assets }) => {
           <Button onClick={CloseModel} variant="outlined" color="warning">
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={!newNode.nodeName || newNode.properties.length === 0}
-          >
+          <Button variant="contained" onClick={handleSubmit} disabled={!newNode.nodeName || newNode.properties.length === 0}>
             Add
           </Button>
         </Box>

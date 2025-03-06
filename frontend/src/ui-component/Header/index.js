@@ -160,14 +160,21 @@ export default function Header({
     const list = JSON.parse(JSON.stringify(nodes));
     const node = list?.find((nd) => nd?.id === selectedElement?.id);
     const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
+
+    if (!node) return;
+
     const { style } = node.data;
+    let newFontSize = parseInt(style.fontSize, 10) || 16; // Default size if undefined
+
     if (name === 'inc') {
-      setStyles((state) => ({ ...state, fontSize: state.fontSize + 2 }));
-      style.fontSize = `${styles.fontSize + 2}px`;
+      newFontSize = Math.min(newFontSize + 2, 48);
     } else {
-      setStyles((state) => ({ ...state, fontSize: state.fontSize - 2 }));
-      style.fontSize = `${styles.fontSize - 2}px`;
+      newFontSize = Math.max(newFontSize - 2, 12);
     }
+
+    setStyles((state) => ({ ...state, fontSize: newFontSize }));
+    style.fontSize = `${newFontSize}px`;
+
     setSelectedElement(node);
     list[Index] = node;
     setNodes(list);

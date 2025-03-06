@@ -491,15 +491,6 @@ export default function MainCanvas() {
   // console.log('selectedNodes', selectedNodes);
   const handleSelectNode = (e, node) => {
     e.stopPropagation(); // Prevent event bubbling
-    if (e.shiftKey) {
-      setSelectedNodes((prevSelectedNodes) => {
-        const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
-
-        return isAlreadySelected
-          ? prevSelectedNodes.filter((snode) => snode.id !== node.id) // Remove if already selected
-          : [...prevSelectedNodes, node]; // Add if not selected
-      });
-    }
     if (node.type !== 'group') {
       dispatch(setAnchorEl(node?.id));
       dispatch(setSelectedBlock(node));
@@ -515,6 +506,22 @@ export default function MainCanvas() {
     }
   };
 
+  const handleSelectNodeSingleClick = (e, node) => {
+    e.stopPropagation(); // Prevent event bubbling
+    if (e.shiftKey) {
+      setSelectedNodes((prevSelectedNodes) => {
+        const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
+
+        return isAlreadySelected
+          ? prevSelectedNodes.filter((snode) => snode.id !== node.id) // Remove if already selected
+          : [...prevSelectedNodes, node]; // Add if not selected
+      });
+    }
+    if (node.type !== 'group') {
+      dispatch(setSelectedBlock(node));
+      setSelectedElement(node);
+    }
+  };
   // console.log('nodes', nodes);
   // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
@@ -760,7 +767,7 @@ export default function MainCanvas() {
             onSelectionContextMenu={onSelectionClick}
             // onPaneClick={onSelectionChange}
             onNodeDoubleClick={handleSelectNode}
-            // onNodeClick={handleSelectNode}
+            onNodeClick={handleSelectNodeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
             // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}
