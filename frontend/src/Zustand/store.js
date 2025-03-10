@@ -1650,20 +1650,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await ADD_CALL(details, url);
     // console.log('res', res);
     return res;
-    // set((state) => ({
-    //   riskTreatment: {
-    //     ...state.riskTreatment,
-    //     subs: [
-    //       {
-    //         ...state.riskTreatment.subs[0],
-    //         scenes: [
-    //           ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
-    //           res // Add the new res
-    //         ]
-    //       }
-    //     ]
-    //   }
-    // }));
+  },
+
+  createPropmt: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generateAndStoreAttack`;
+    const res = await ADD_CALL(details, url);
+    // console.log('res', res);
+    return res;
   },
 
   createComponent: async (newTemplate) => {

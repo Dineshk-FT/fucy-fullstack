@@ -2,7 +2,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import React from 'react';
 import { makeStyles } from '@mui/styles';
-import PaperComponent from './PaperComponent';
+import WarningIcon from '@mui/icons-material/Warning';
 
 const useStyles = makeStyles((theme) => ({
   MenuItem: {
@@ -19,21 +19,30 @@ const SaveModal = ({ open, handleClose, handleSave }) => {
       <Dialog
         open={open}
         onClose={handleClose}
-        PaperComponent={(props) => <PaperComponent {...props} height="fit-content" />}
-        aria-labelledby="draggable-dialog-title"
+        PaperProps={{
+          sx: { width: 400, borderRadius: 3, padding: 2 }
+        }}
+        aria-labelledby="save-dialog-title"
       >
-        <DialogTitle style={{ cursor: 'move' }} id="draggable-dialog-title">
-          <Typography variant="h4" color="primary">
-            You made some changes, Do you want to save them ?
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon color="warning" />
+          <Typography variant="h4" fontWeight="bold">
+            Unsaved Changes
           </Typography>
         </DialogTitle>
-        <DialogContent></DialogContent>
-        <DialogActions>
+
+        <DialogContent>
+          <Typography variant="body1" color="text.primary">
+            You have made changes. Do you want to save them before exiting?
+          </Typography>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: 'flex-end', padding: 2 }}>
           <Button onClick={handleClose} variant="outlined" color="error">
-            Close
+            Discard
           </Button>
           <Button onClick={handleSave} variant="contained" color="primary">
-            Save
+            Save Changes
           </Button>
         </DialogActions>
       </Dialog>

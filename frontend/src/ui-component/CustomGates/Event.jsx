@@ -31,7 +31,10 @@ export default function Event(props) {
   const [inputValue, setInputValue] = useState(inputValueFromProps);
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
+  const [nodeDimensions, setNodeDimensions] = useState({
+    width: props?.data?.style?.width ?? 150,
+    height: props?.data?.style?.height ?? 60
+  }); // Default node dimensions
   const [isHovered, setIsHovered] = useState(false);
 
   const handleDeleteFromCanvas = () => {
@@ -122,7 +125,7 @@ export default function Event(props) {
         minWidth={120}
         minHeight={80}
         onResize={(event, params) => {
-          const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
+          // const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
 
           setNodeDimensions({ width: params.width, height: params.height });
           setNodes((nodes) =>
@@ -134,7 +137,8 @@ export default function Event(props) {
                       ...node.data,
                       style: {
                         ...node.data.style,
-                        fontSize: newSize
+                        width: params.width,
+                        height: params.height
                       }
                     }
                   }
@@ -164,22 +168,6 @@ export default function Event(props) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* <Typography
-          variant="body2"
-          sx={{
-            position: 'absolute',
-            top: 4,
-            left: 4,
-            backgroundColor: '#000',
-            color: '#fff',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '10px',
-            fontWeight: 600
-          }}
-        >
-          {props?.id?.slice(0, 5)}
-        </Typography> */}
         <Box
           sx={{
             position: 'absolute',
@@ -196,31 +184,29 @@ export default function Event(props) {
           onChange={(e) => {
             setInputValue(e.target.value);
             update(props?.id, e.target.value);
-
-            // Dynamically adjust the height
-            // const target = e.target;
-            // target.style.height = 'auto'; // Reset height to calculate new height
-            // target.style.height = `${target.scrollHeight}px`; // Set height based on content
+          }}
+          onInput={(e) => {
+            e.target.style.height = 'auto'; // Reset height
+            e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height dynamically
           }}
           style={{
+            height: inputValue.length > 20 ? nodeDimensions?.height : 'auto',
             marginRight: '10px',
-            height: 'inherit',
-            width: 'fit-content', // Adjust width relative to node size
-            // minWidth: `${nodeDimensions.width}px`,
-            // minHeight: `${nodeDimensions.height}px`,
+            width: 'fit-content',
             backgroundColor: 'inherit',
             borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
-            fontSize: `${props?.data?.style?.fontSize}px`, // Dynamically adjust font size
+            fontSize: `${props?.data?.style?.fontSize}px`,
             color: 'inherit',
-            padding: `${inputPadding}px`, // Consistent padding
+            padding: `${inputPadding}px`,
             border: 'none',
-            resize: 'none', // Prevent manual resizing by user
-            overflowWrap: 'break-word', // Enable word wrapping
-            whiteSpace: 'pre-wrap', // Preserve whitespace and enable wrapping
-            overflow: 'hidden', // Prevent scrollbars
-            fontFamily: 'inherit'
+            resize: 'none',
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflow: 'hidden',
+            fontFamily: 'inherit',
+            minHeight: '20px' // Prevents collapsing
           }}
           rows={1} // Start with a single row
         />

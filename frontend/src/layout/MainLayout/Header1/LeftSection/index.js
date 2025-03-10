@@ -46,6 +46,7 @@ import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import SaveModal from '../../../../ui-component/Modal/SaveModal';
 import toast from 'react-hot-toast';
+import PromptModal from '../../../../ui-component/Modal/PromptModal';
 
 const LeftSection = () => {
   const selector = (state) => ({
@@ -97,7 +98,8 @@ const LeftSection = () => {
     Rename: false,
     Open: false,
     Delete: false,
-    AttackModal: false
+    AttackModal: false,
+    AIModal: false
   });
   const [anchorEl, setAnchorEl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -105,6 +107,8 @@ const LeftSection = () => {
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
   const dispatch = useDispatch();
+  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [subName, setSubName] = useState('');
 
   const CheckforChange = () => {
     const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
@@ -188,9 +192,6 @@ const LeftSection = () => {
     actions[tabName]?.();
   };
 
-  const [openAttackModal, setOpenAttackModal] = useState(false);
-  const [subName, setSubName] = useState('');
-
   const handleContext = (name, event) => {
     CheckforChange();
     if (name === 'Attack') {
@@ -199,6 +200,8 @@ const LeftSection = () => {
     } else if (name === 'Attack Trees') {
       setOpenAttackModal(true);
       setSubName(name);
+    } else if (name === 'create with AI') {
+      setOpenModal((prev) => ({ ...prev, AIModal: true }));
     }
   };
 
@@ -288,7 +291,8 @@ const LeftSection = () => {
         { label: 'Attack Table', icon: TableIcon, action: handleAttackTableClick }, // Table for attack data
         { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) }, // Add list for attacks
         { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick }, // Tree for attack trees
-        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) } // Playlist add for trees
+        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) }, // Playlist add for trees
+        { label: 'create with AI', icon: AddListIcon, action: (e) => handleContext('create with AI', e) } // Playlist add for trees
       ]
     },
     {
@@ -414,6 +418,9 @@ const LeftSection = () => {
           deleteModels={deleteModels}
           getModels={getModels}
         />
+      )}
+      {openModal.AIModal && (
+        <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((pre) => ({ ...pre, AIModal: false }))} />
       )}
       <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
       <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
