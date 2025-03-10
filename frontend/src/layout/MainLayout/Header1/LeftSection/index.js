@@ -316,7 +316,7 @@ const LeftSection = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', backgroundColor: 'transparent', padding: '4px', paddingTop: '8px' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-evenly', backgroundColor: 'transparent', padding: '4px', paddingTop: '8px' }}>
         {tabs.map((tab) => (
           <Typography
             key={tab.name}
@@ -342,12 +342,14 @@ const LeftSection = () => {
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
+          justifyContent: 'space-evenly',
           padding: '6px',
           borderRadius: '10px',
           backgroundColor: color.canvasBG,
           border: '1px solid #ddd',
           gap: '5px',
-          width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
+          // width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
+          width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
           height: { xs: '50px', sm: '50px', md: 'inherit', lg: 'auto' },
           overflow: 'auto',
           my: 0.4
@@ -364,7 +366,7 @@ const LeftSection = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  width: '60px'
+                  width: '100px'
                 }}
                 draggable={option.label === 'Group'} // Make only the Group option draggable
                 onDragStart={option.label === 'Group' ? handleGroupDrag : undefined} // Handle drag start
@@ -383,7 +385,7 @@ const LeftSection = () => {
                           '&:hover': { backgroundColor: color.sidebarBG }
                         }}
                       >
-                        <Icon fontSize="small" />
+                        <Icon fontSize="medium" />
                       </IconButton>
                     </Tooltip>
                     <Typography

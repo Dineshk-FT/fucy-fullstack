@@ -72,7 +72,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const drawer = (
     <>
       <BrowserView>
-        <PerfectScrollbar component="div" style={{ paddingRight: '28px', paddingLeft: '15px', paddingTop: '15px' }}>
+        <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
           <BrowserCard template={template} models={models} />
         </PerfectScrollbar>
         <IconButton
@@ -80,7 +80,8 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           sx={{
             position: 'absolute',
             border: `1px solid ${color?.title}`,
-            margin: 0.5,
+            marginTop: 2.5,
+            marginRight: 2.5,
             padding: '0px',
             width: '0.8em',
             height: '0.8em',
