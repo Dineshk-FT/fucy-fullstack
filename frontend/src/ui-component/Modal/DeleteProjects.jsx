@@ -39,7 +39,7 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
         anchorEl={anchorRef.current}
         placement="bottom-end"
         disablePortal={false}
-        style={{ zIndex: 1500, top: 90, left: 150 }}
+        style={{ zIndex: 1500, top: 100, left: 940 }}
       >
         <Paper
           sx={{
