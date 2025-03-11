@@ -40,38 +40,19 @@ const useStyles = makeStyles(() => ({
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
-const EditProperties = ({
-  anchorEl,
-  handleClosePopper,
-  details,
-  setDetails,
-  handleSaveEdit,
-  dispatch,
-  setIsPopperFocused,
-  edges,
-  setEdges,
-  nodes,
-  setNodes
-}) => {
+const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, nodes, setNodes }) => {
   const color = ColorTheme();
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
+  console.log('selectedBlock', selectedBlock);
 
   // Helper function to update nodes or edges
   const updateElement = (updateFn) => {
     // console.log('Selected Element:', selectedBlock); // Debugging
-
-    if (!selectedBlock.target) {
-      // Update nodes if target is not present
-      const updatedNodes = nodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node));
-      setNodes(updatedNodes);
-      // console.log('Updated Nodes:', updatedNodes); // Debugging
-    } else {
-      // Update edges if target is present
-      const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
-      setEdges(updatedEdges);
-      // console.log('Updated Edges:', updatedEdges); // Debugging
-    }
+    // Update nodes if target is not present
+    const updatedNodes = nodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node));
+    setNodes(updatedNodes);
+    // console.log('Updated Nodes:', updatedNodes); // Debugging
   };
 
   // Example handlers

@@ -1,11 +1,11 @@
 .edgebutton {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 18px;
   background: #eee;
   border: 1px solid #fff;
   cursor: pointer;
   border-radius: 50%;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1;
   /* display: none; */
 }
@@ -21,7 +21,23 @@
 }
 
 .icons {
-  font-size: 17px;
+  font-size: 15px;
   position: relative;
   right: 5px;
+}
+
+.edge-container {
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.edge-buttons {
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.edge-container:hover .edge-buttons {
+  opacity: 1;
 }

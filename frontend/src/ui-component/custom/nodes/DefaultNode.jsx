@@ -65,7 +65,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
-    dispatch(setAnchorEl(id));
+    dispatch(setAnchorEl({ type: 'node', value: id }));
     dispatch(
       setDetails({
         name: data?.label ?? '',

@@ -7,7 +7,10 @@ const initialState = {
   initialDialogOpen: false,
   propertiesTabOpen: false,
   addNodeTabOpen: false,
-  anchorEl: null,
+  anchorEl: {
+    node: null,
+    edge: null
+  },
   isSaveModalOpen: false,
   isHeaderOpen: false,
   details: {
@@ -38,7 +41,10 @@ const CanvasSlice = createSlice({
     },
     setAnchorEl: (state, action) => {
       // console.log('action', action?.payload?.id);
-      return { ...state, anchorEl: action.payload };
+      return { ...state, anchorEl: { [action.payload.type]: action.payload.value } };
+    },
+    clearAnchorEl: () => {
+      return { anchorEl: { node: null, edge: null } };
     },
     setDetails: (state, action) => {
       if (typeof action.payload === 'function') {
@@ -81,6 +87,7 @@ export const {
   openAddNodeTab,
   closeAddNodeTab,
   setAnchorEl,
+  clearAnchorEl,
   setDetails,
   openHeader,
   closeHeader,

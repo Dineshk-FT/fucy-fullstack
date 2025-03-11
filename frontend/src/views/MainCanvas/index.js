@@ -21,12 +21,11 @@ import { toPng } from 'html-to-image';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import AlertMessage from '../../ui-component/Alert';
 import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
-import { OpenPropertiesTab, setSelectedBlock, setDetails, setAnchorEl } from '../../store/slices/CanvasSlice';
+import { OpenPropertiesTab, setSelectedBlock, setDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { Button, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -36,6 +35,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditProperties from '../../ui-component/Poppers/EditProperties';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import EditEdge from '../../ui-component/custom/edges/EditEdge';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -148,27 +148,22 @@ export default function MainCanvas() {
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
   const [selectedElement, setSelectedElement] = useState({});
-  const [open, setOpen] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [message, setMessage] = useState('');
   const dragRef = useRef(null);
-  const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, details, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
-  const anchorElId = anchorEl?.includes('reactflow__edge')
-    ? document.querySelector(`[data-testid="${anchorEl}"]`)
-    : document.querySelector(`[data-id="${anchorEl}"]`) || null;
+  const anchorElNodeId = document.querySelector(`[data-id="${anchorEl.node}"]`) || null;
+  const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
   const [isReady, setIsReady] = useState(false);
-  // const [anchorEl, setAnchorEl] = useState(null);
   const [isPopperFocused, setIsPopperFocused] = useState(false);
   // const [details, setDetails] = useState({
   //   name: '',
   //   properties: [],
   //   isAsset: false
   // });
+  // console.log('anchorEl', anchorEl);
 
   const handleClear = () => {
     setNodes([]);
@@ -492,7 +487,7 @@ export default function MainCanvas() {
   const handleSelectNode = (e, node) => {
     e.stopPropagation(); // Prevent event bubbling
     if (node.type !== 'group') {
-      dispatch(setAnchorEl(node?.id));
+      dispatch(setAnchorEl({ type: 'node', value: node?.id }));
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
       dispatch(
@@ -527,7 +522,7 @@ export default function MainCanvas() {
   const handleClosePopper = () => {
     if (!isPopperFocused) {
       // setAnchorEl(null);
-      dispatch(setAnchorEl(null));
+      dispatch(clearAnchorEl());
     }
   };
 
@@ -535,8 +530,7 @@ export default function MainCanvas() {
     e.stopPropagation();
     e.preventDefault();
     // setAnchorEl(e.currentTarget);
-    // console.log('e.currentTarget', e.currentTarget);
-    dispatch(setAnchorEl(e.currentTarget.getAttribute('data-testid')));
+    dispatch(setAnchorEl({ type: 'edge', value: e.currentTarget.getAttribute('data-testid') }));
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
     dispatch(
@@ -715,7 +709,7 @@ export default function MainCanvas() {
     setSelectedNodes([]);
   }, []);
   // console.log('edges', edges);
-
+  // console.log('anchorElId', anchorElId);
   if (!isReady) return null;
 
   return (
@@ -759,7 +753,7 @@ export default function MainCanvas() {
             defaultEdgeOptions={edgeOptions}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            onClick={() => dispatch(setSelectedBlock({}))}
+            // onClick={(e) => {dispatch(setSelectedBlock({}))}}
             fitView
             connectionMode="loose"
             selectionMode="partial"
@@ -848,9 +842,25 @@ export default function MainCanvas() {
             ))}
           </div>
         )}
-        {anchorEl && (
+        {anchorElNodeId && (
           <EditProperties
-            anchorEl={anchorElId}
+            anchorEl={anchorElNodeId}
+            handleSaveEdit={handleSaveEdit}
+            handleClosePopper={handleClosePopper}
+            setDetails={setDetails}
+            details={details}
+            dispatch={dispatch}
+            setIsPopperFocused={setIsPopperFocused}
+            edges={edges}
+            setEdges={setEdges}
+            nodes={nodes}
+            setNodes={setNodes}
+            selectedElement={selectedElement}
+          />
+        )}
+        {anchorElEdgeId && (
+          <EditEdge
+            anchorEl={anchorElEdgeId}
             handleSaveEdit={handleSaveEdit}
             handleClosePopper={handleClosePopper}
             setDetails={setDetails}
@@ -867,8 +877,6 @@ export default function MainCanvas() {
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
-
-        <AlertMessage open={open} message={message} setOpen={setOpen} success={success} />
       </div>
     </>
   );

@@ -555,7 +555,12 @@ const BrowserCard = () => {
                   // }
                   dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                   const selected = nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
-                  dispatch(setAnchorEl(selected?.target ? 'rf__edge-'.concat(selected?.id) : selected?.id));
+                  dispatch(
+                    setAnchorEl({
+                      type: selected?.target ? 'edge' : 'node',
+                      value: selected?.target ? `rf__edge-${selected.id}` : selected?.id
+                    })
+                  );
                   dispatch(
                     setDetails({
                       name: selected?.data?.label ?? '',

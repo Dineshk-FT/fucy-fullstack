@@ -6,7 +6,9 @@ import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
 import './buttonedge.css';
 import ColorTheme from '../../../store/ColorTheme';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import EditIcon from '@mui/icons-material/Edit';
+import { setAnchorEl, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 
 export default function StepEdge({
   id,
@@ -22,12 +24,11 @@ export default function StepEdge({
   data
 }) {
   // const [setEdges] = useEdgesState([]);
+  const dispatch = useDispatch();
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { getEdges, setEdges } = useReactFlow();
   const edges = getEdges();
   const color = ColorTheme();
-  // const [label, setLabel] = useState(data.label || 'edge');
-  const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isMarkerVisible, setIsMarkerVisible] = useState({
     start: true,
     end: true
@@ -67,22 +68,6 @@ export default function StepEdge({
     setEdges(updated); // Update the edges globally
   };
 
-  // const onLabelChange = (e) => {
-  //   const newLabel = e.target.textContent;
-  //   setLabel(newLabel); // Update label in state
-  //   updateEdges({ ...getEdges().find((edge) => edge.id === id), data: { ...data, label: newLabel } }); // Update label in the edges
-  // };
-
-  const handleDivClick = () => {
-    setIsButtonVisible((prev) => !prev);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      handleDivClick();
-    }
-  };
-
   const handleSwap = () => {
     if (isMarkerVisible.start && isMarkerVisible.end) {
       setIsMarkerVisible({ start: false, end: true });
@@ -105,35 +90,33 @@ export default function StepEdge({
     }
   };
 
+  const onEditEdge = (e) => {
+    dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
+    const info = { id, data };
+    dispatch(setSelectedBlock(info));
+  };
   const renderButton = () => {
-    if (isMarkerVisible.start && isMarkerVisible.end) {
-      return (
-        <button className="edgebutton">
-          <ArrowRightAltIcon className="icons" />
-        </button>
-      );
+    const { start, end } = isMarkerVisible;
+
+    let Icon = ArrowSwapHorizontal;
+    let iconProps = { className: 'icons' };
+    // If not, use `size` prop
+    iconProps.size = 15;
+
+    if (start && end) {
+      Icon = ArrowRightAltIcon;
+    } else if (end) {
+      Icon = ArrowRightAltIcon;
+      if (Icon.muiName) {
+        iconProps.sx = { ...iconProps.sx, transform: 'rotate(180deg)' };
+      }
     }
-    if (isMarkerVisible.start) {
-      return (
-        <button className="edgebutton">
-          <ArrowSwapHorizontal size="16" className="icons" />
-        </button>
-      );
-    }
-    if (isMarkerVisible.end) {
-      return (
-        <button className="edgebutton">
-          <ArrowRightAltIcon className="icons" sx={{ transform: 'rotate(180deg)' }} />
-        </button>
-      );
-    }
-    if (!isMarkerVisible.end && !isMarkerVisible.start) {
-      return (
-        <button className="edgebutton">
-          <ArrowSwapHorizontal size="16" className="icons" />
-        </button>
-      );
-    }
+
+    return (
+      <button className="edgebutton">
+        <Icon {...iconProps} />
+      </button>
+    );
   };
 
   return (
@@ -146,54 +129,55 @@ export default function StepEdge({
         style={{ ...style, stroke: color?.title }}
       />
       <EdgeLabelRenderer>
-        <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}>
+        {/* <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}> */}
+        <div
+          role="button"
+          tabIndex={0}
+          style={{
+            position: 'absolute',
+            top: '-10px',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 12,
+            pointerEvents: 'all',
+            display: 'flex',
+            alignItems: 'center',
+            height: 'auto',
+            gap: 5,
+            borderRadius: '20px',
+            zIndex: 1,
+            cursor: 'pointer',
+            outline: 'none',
+            backgroundColor: selectedBlock?.id === id ? 'wheat' : 'transparent',
+            padding: '4px 8px'
+          }}
+          className="nodrag nopan edge-container"
+        >
+          {/* Edge Label */}
           <div
-            role="button"
-            tabIndex={0}
+            className="edge-label"
             style={{
-              position: 'absolute',
-              top: '-10px',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              fontSize: 12,
-              pointerEvents: 'all',
-              display: 'flex',
-              alignItems: 'center',
-              height: 'auto',
-              gap: 3,
-              borderRadius: '20px',
-              zIndex: 1,
-              cursor: 'pointer',
               outline: 'none',
-              backgroundColor: selectedBlock?.id === id ? 'wheat' : 'transparent'
-              // color: selectedBlock.id === id ? 'black' : 'inherit'
+              cursor: 'text',
+              color: data?.label.length && selectedBlock?.id === id ? 'black' : data?.label.length ? color?.title : color?.label
             }}
-            className="nodrag nopan"
           >
-            <div
-              className="edge-label"
-              onClick={handleDivClick}
-              // onKeyPress={handleKeyPress}
-              // contentEditable
-              // suppressContentEditableWarning
-              // onBlur={onLabelChange}
-              style={{
-                outline: 'none',
-                cursor: 'text',
-                color: data?.label.length && selectedBlock?.id === id ? 'black' : data?.label.length ? color?.title : color?.label
-              }}
-            >
-              {data?.label.length ? data?.label : 'Enter name'}
-            </div>
-            {isButtonVisible && (
-              <Box display="flex" gap={0.5}>
-                {<Box onClick={handleSwap}>{renderButton()}</Box>}
-                <button className="edgebutton" onClick={onEdgeClick}>
-                  ×
-                </button>
-              </Box>
-            )}
+            {data?.label.length ? data?.label : 'Enter name'}
           </div>
-        </ClickAwayListener>
+          {/* Buttons as a prefix, hidden by default */}
+          <Box className="edge-buttons" display="flex" gap={0.5}>
+            <Box onClick={handleSwap}>{renderButton()}</Box>
+            <Box className="edgebutton" onClick={onEditEdge}>
+              <EditIcon sx={{ fontSize: '0.6rem', ml: 0.5, mt: 0.4 }} />
+            </Box>
+            <button className="edgebutton" onClick={onEdgeClick}>
+              X
+            </button>
+          </Box>
+
+          {/* Popper for Editing */}
+        </div>
+
+        {/* </ClickAwayListener> */}
       </EdgeLabelRenderer>
     </>
   );
