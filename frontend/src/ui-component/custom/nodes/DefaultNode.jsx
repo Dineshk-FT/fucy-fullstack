@@ -15,12 +15,14 @@ const selector = (state) => ({
   getAssets: state.getAssets,
   assets: state.assets,
   originalNodes: state.originalNodes,
-  selectedNodes: state.selectedNodes
+  selectedNodes: state.selectedNodes,
+  setSelectedElement: state.setSelectedElement
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes } = useStore(selector);
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement } =
+    useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
@@ -66,6 +68,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
     dispatch(setAnchorEl({ type: 'node', value: id }));
+    setSelectedElement(selectedNode);
     dispatch(
       setDetails({
         name: data?.label ?? '',

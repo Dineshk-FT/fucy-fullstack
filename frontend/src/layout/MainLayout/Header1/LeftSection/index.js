@@ -44,54 +44,24 @@ import { useDispatch } from 'react-redux';
 import { closeAll, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import SaveModal from '../../../../ui-component/Modal/SaveModal';
-import toast from 'react-hot-toast';
 import PromptModal from '../../../../ui-component/Modal/PromptModal';
 
 const LeftSection = () => {
   const selector = (state) => ({
     Models: state.Models,
     model: state.model,
-    nodes: state.nodes,
-    edges: state.edges,
-    setInitialNodes: state.setInitialNodes,
-    setInitialEdges: state.setInitialEdges,
-    initialNodes: state.initialNodes,
-    initialEdges: state.initialEdges,
     getModels: state.getModels,
     deleteModels: state.deleteModels,
     getSidebarNode: state.getSidebarNode,
     getTemplates: state.getTemplates,
     setClickedItem: state.setClickedItem,
     getAttackScenario: state.getAttackScenario,
-    attackScenarios: state.attackScenarios,
-    setSaveModal: state.setSaveModal,
-    isSaveModalOpen: state.isSaveModalOpen,
-    getAssets: state.getAssets
+    attackScenarios: state.attackScenarios
   });
 
   const color = ColorTheme();
-  const {
-    Models,
-    model,
-    getModels,
-    deleteModels,
-    getSidebarNode,
-    getTemplates,
-    setClickedItem,
-    getAttackScenario,
-    attackScenarios,
-    nodes,
-    edges,
-    initialNodes,
-    initialEdges,
-    setInitialNodes,
-    setInitialEdges,
-    isSaveModalOpen,
-    setSaveModal,
-    getAssets
-  } = useStore(selector);
-  const notify = (message, status) => toast[status](message);
+  const { Models, model, getModels, deleteModels, getSidebarNode, getTemplates, setClickedItem, getAttackScenario, attackScenarios } =
+    useStore(selector);
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
@@ -110,56 +80,6 @@ const LeftSection = () => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
 
-  const CheckforChange = () => {
-    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-    if (hasChanged) {
-      setSaveModal(true);
-    }
-  };
-
-  const handleCloseSave = () => {
-    setSaveModal(false);
-    setInitialEdges(edges);
-    setInitialNodes(nodes);
-  };
-
-  const handleSaveToModel = () => {
-    // model - id,
-    //   template
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
-    const details = {
-      'model-id': model?._id,
-      template: JSON.stringify(template),
-      assetId: assets?._id
-    };
-
-    update(details)
-      .then((res) => {
-        if (!res.error) {
-          // setTimeout(() => {
-          notify('Saved Successfully', 'success');
-          setSaveModal(false);
-          setInitialEdges(edges);
-          setInitialNodes(nodes);
-          getAssets(model?._id);
-
-          // }, 500);
-        } else {
-          notify(res?.error ?? 'Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        notify('Something went wrong', 'error');
-      });
-  };
   useEffect(() => {
     getSidebarNode();
     getTemplates();
@@ -176,10 +96,6 @@ const LeftSection = () => {
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
 
   const handleTabChange = (tabName) => {
-    // console.log('tabName', tabName);
-    if (tabName !== 'Model Definition & Assets') {
-      CheckforChange();
-    }
     setActiveTab(tabName);
     const actions = {
       'Model Definition & Assets': handleModelDefinationClick,
@@ -193,7 +109,6 @@ const LeftSection = () => {
   };
 
   const handleContext = (name, event) => {
-    CheckforChange();
     if (name === 'Attack') {
       setOpenAttackModal(true);
       setSubName(name);
@@ -210,7 +125,6 @@ const LeftSection = () => {
   };
 
   const handleClick = (name) => {
-    CheckforChange();
     dispatch(setTitle(name));
     dispatch(setTableOpen(name));
   };
@@ -221,7 +135,7 @@ const LeftSection = () => {
   };
 
   const handleAttackTreeClick = async (e) => {
-    CheckforChange();
+    // CheckforChange();
     setIsLoading(true);
     setAnchorEl(e.currentTarget);
     if (model?._id) {
@@ -232,7 +146,7 @@ const LeftSection = () => {
   };
 
   const handleAttackTableClick = () => {
-    CheckforChange();
+    // CheckforChange();
     if (model?._id) {
       setClickedItem(model._id);
       dispatch(setTitle('Attack')); // Changed from 'Attack-Table' to 'Attack'
@@ -437,7 +351,6 @@ const LeftSection = () => {
           getAttackScenario={getAttackScenario}
         />
       )}
-      {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
     </Box>
   );
 };

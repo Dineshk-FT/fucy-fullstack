@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from 'react';
 import {
   Autocomplete,
@@ -9,8 +10,10 @@ import {
   FormControlLabel,
   Grid,
   InputLabel,
+  MenuItem,
   Paper,
   Popper,
+  Select,
   Tab,
   Tabs,
   TextField
@@ -28,6 +31,15 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
+const EdgeStyleoptions = [
+  { label: 'solid', value: '0' },
+  { label: 'dashed', value: '4 4' },
+  { label: 'dotted', value: '2 4' },
+  { label: 'groove', value: '8 4 2 4' },
+  { label: 'double line', value: '1 4' },
+  { label: 'unindent', value: '2 4 8 4' }
+];
+
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, edges, setEdges }) => {
@@ -35,9 +47,11 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [tabValue, setTabValue] = useState(0); // Managing tab state
+  //   console.log('details', details);
 
   //   console.log('edges', edges);
   //   console.log('selectedBlock', selectedBlock);
+  //   console.log('details', details);
   const updateElement = (updateFn) => {
     const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
     // console.log('updatedEdges', updatedEdges);
@@ -79,6 +93,23 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
     }));
   };
 
+  const onChange = (e, name) => {
+    const value = name == 'strokeDasharray' ? e.value : e.target.value;
+    if (name === 'startPoint' || name === 'endPoint') {
+      dispatch(setDetails({ ...details, [name]: value }));
+      updateElement((element) => ({
+        ...element,
+        [name === 'startPoint' ? 'markerStart' : 'markerEnd']: {
+          ...element[name === 'startPoint' ? 'markerStart' : 'markerEnd'],
+          color: value
+        }
+      }));
+    } else {
+      dispatch(setDetails({ ...details, style: { ...details.style, [name]: value } }));
+      updateElement((element) => ({ ...element, style: { ...element.style, [name]: value } }));
+    }
+  };
+
   return (
     <Popper
       open={Boolean(anchorEl)}
@@ -87,7 +118,8 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
       modifiers={[{ name: 'offset', options: { offset: [0, 20] } }]}
       sx={{
         minWidth: 250,
-        width: 'auto',
+        width: 300,
+        // maxWidth: 400,
         boxShadow: '0px 0px 4px black',
         borderRadius: '8px',
         zIndex: 1100,
@@ -171,8 +203,8 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   type="number"
                   variant="outlined"
                   sx={{ width: '100px' }}
-                  value={details?.thickness || ''}
-                  onChange={(e) => dispatch(setDetails({ ...details, thickness: e.target.value }))}
+                  value={details?.style?.strokeWidth || ''}
+                  onChange={(e) => onChange(e, 'strokeWidth')}
                 />
               </Grid>
 
@@ -183,20 +215,45 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   type="color"
                   variant="outlined"
                   sx={{ width: '50px', height: '35px' }}
-                  value={details?.color || '#000000'}
-                  onChange={(e) => dispatch(setDetails({ ...details, color: e.target.value }))}
+                  value={details?.style?.stroke || '#000000'}
+                  onChange={(e) => onChange(e, 'stroke')}
                 />
               </Grid>
 
-              {/* Another Color Input */}
-              <Grid item xs={12}>
-                <InputLabel className={classes.inputlabel}>End-point Color:</InputLabel>
-                <TextField
-                  type="color"
-                  variant="outlined"
-                  sx={{ width: '50px', height: '35px' }}
-                  value={details?.color || '#000000'}
-                  onChange={(e) => dispatch(setDetails({ ...details, color: e.target.value }))}
+              {/* End-Point Color */}
+              <Grid item xs={6} display="flex" gap={1}>
+                <Box>
+                  <InputLabel className={classes.inputlabel}>Start-Point:</InputLabel>
+                  <TextField
+                    type="color"
+                    variant="outlined"
+                    sx={{ width: '50px', height: '35px' }}
+                    value={details?.startPoint || '#000000'}
+                    onChange={(e) => onChange(e, 'startPoint')}
+                  />
+                </Box>
+                <Box>
+                  <InputLabel className={classes.inputlabel}>End-Point:</InputLabel>
+                  <TextField
+                    type="color"
+                    variant="outlined"
+                    sx={{ width: '50px', height: '35px' }}
+                    value={details?.endPoint || '#000000'}
+                    onChange={(e) => onChange(e, 'endPoint')}
+                  />
+                </Box>
+              </Grid>
+
+              {/* Line Style Autocomplete */}
+              <Grid item xs={6}>
+                <InputLabel className={classes.inputlabel}>Line Style:</InputLabel>
+                <Autocomplete
+                  options={EdgeStyleoptions}
+                  value={EdgeStyleoptions.find((option) => option.value === details?.style?.strokeDasharray) || null}
+                  onChange={(event, newValue) => onChange(newValue, 'strokeDasharray')}
+                  renderInput={(params) => <TextField {...params} variant="outlined" />}
+                  getOptionLabel={(option) => option.label}
+                  sx={{ width: 'auto' }}
                 />
               </Grid>
             </Grid>

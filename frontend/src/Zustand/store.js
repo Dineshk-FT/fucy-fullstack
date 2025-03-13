@@ -71,6 +71,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   model: {},
   clickedItem: [],
   isSaveModalOpen: false,
+  selectedElement: {},
 
   assets: {
     id: '1',
@@ -858,6 +859,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  setSelectedElement: (newNode) => {
+    set(() => ({
+      selectedElement: newNode
+    }));
+  },
   setNodes: (newNodes) => {
     set((state) => ({
       nodes: typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes

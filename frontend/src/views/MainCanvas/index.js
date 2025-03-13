@@ -25,7 +25,14 @@ import Header from '../../ui-component/Header';
 import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
-import { OpenPropertiesTab, setSelectedBlock, setDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
+import {
+  OpenPropertiesTab,
+  setSelectedBlock,
+  setDetails,
+  setEdgeDetails,
+  setAnchorEl,
+  clearAnchorEl
+} from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
 import { Button, Tooltip, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -36,6 +43,8 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditProperties from '../../ui-component/Poppers/EditProperties';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../ui-component/custom/edges/EditEdge';
+import SaveModal from '../../ui-component/Modal/SaveModal';
+import isEqual from 'lodash/isEqual';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -65,7 +74,13 @@ const selector = (state) => ({
   redoStack: state.redoStack,
   assets: state.assets,
   isNodePasted: state.isNodePasted,
-  setIsNodePasted: state.setIsNodePasted
+  setIsNodePasted: state.setIsNodePasted,
+  selectedElement: state.selectedElement,
+  setSelectedElement: state.setSelectedElement,
+  initialNodes: state.initialNodes,
+  initialEdges: state.initialEdges,
+  setSaveModal: state.setSaveModal,
+  isSaveModalOpen: state.isSaveModalOpen
 });
 
 //Edge line styling
@@ -76,21 +91,22 @@ const edgeOptions = {
     type: MarkerType.ArrowClosed,
     width: 20,
     height: 20,
-    color: 'black'
+    color: '#000000'
   },
   markerStart: {
     type: MarkerType.ArrowClosed,
     orient: 'auto-start-reverse',
     width: 20,
     height: 20,
-    color: 'black'
+    color: '#000000'
   },
   animated: false,
   style: {
     strokeWidth: 2,
-    stroke: 'grey',
+    stroke: '#808080',
     start: false,
-    end: true
+    end: true,
+    strokeDasharray: '0'
   },
   data: {
     label: 'edge'
@@ -137,7 +153,13 @@ export default function MainCanvas() {
     getAssets,
     getDamageScenarios,
     isNodePasted,
-    setIsNodePasted
+    setIsNodePasted,
+    selectedElement,
+    setSelectedElement,
+    initialNodes,
+    initialEdges,
+    setSaveModal,
+    isSaveModalOpen
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();
@@ -147,10 +169,11 @@ export default function MainCanvas() {
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
-  const [selectedElement, setSelectedElement] = useState({});
+  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
+  const { tableOpen } = useSelector((state) => state?.currentId);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen, details, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
@@ -158,6 +181,13 @@ export default function MainCanvas() {
   const notify = (message, status) => toast[status](message);
   const [isReady, setIsReady] = useState(false);
   const [isPopperFocused, setIsPopperFocused] = useState(false);
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+  }, [nodes, edges]);
   // const [details, setDetails] = useState({
   //   name: '',
   //   properties: [],
@@ -169,6 +199,16 @@ export default function MainCanvas() {
     setNodes([]);
     setEdges([]);
   };
+
+  useEffect(() => {
+    return () => {
+      // const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+      const hasChanged = !isEqual(nodesRef.current, initialNodes) || !isEqual(edgesRef.current, initialEdges);
+      if (hasChanged) {
+        setSaveModal(true);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -415,8 +455,14 @@ export default function MainCanvas() {
   );
 
   const RefreshAPI = () => {
+    console.log('refresh');
     getAssets(model?._id);
     getDamageScenarios(model?._id);
+  };
+
+  const handleCloseSave = () => {
+    console.log('discarded');
+    setSaveModal(false);
   };
 
   const handleClose = () => {
@@ -534,11 +580,14 @@ export default function MainCanvas() {
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
     dispatch(
-      setDetails({
+      setEdgeDetails({
         ...details,
         name: edge?.data?.label ?? '',
         properties: edge?.properties ?? [],
-        isAsset: edge.isAsset ?? false
+        isAsset: edge.isAsset ?? false,
+        style: edge.data.style ?? {},
+        startPoint: edge.markerStart.color ?? '#000000',
+        endPoint: edge.markerEnd?.color ?? '#000000'
       })
     );
   };
@@ -721,19 +770,17 @@ export default function MainCanvas() {
         // onClick={() => dispatch(setSelectedBlock({}))}
       >
         {/* {isHeaderOpen && ( */}
-        <Header
+        {/* <Header
           selectedElement={selectedElement}
           nodes={nodes}
           setNodes={setNodes}
           setSelectedElement={setSelectedElement}
-          // horizontal={() => onLayout({ direction: 'RIGHT' })}
-          // vertical={() => onLayout({ direction: 'DOWN' })}
           handleClear={handleClear}
           handleSave={handleSaveToModel}
           download={handleDownload}
           createGroup={createGroup}
           dispatch={dispatch}
-        />
+        /> */}
         {/* )} */}
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -856,6 +903,7 @@ export default function MainCanvas() {
             nodes={nodes}
             setNodes={setNodes}
             selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
           />
         )}
         {anchorElEdgeId && (
@@ -863,8 +911,8 @@ export default function MainCanvas() {
             anchorEl={anchorElEdgeId}
             handleSaveEdit={handleSaveEdit}
             handleClosePopper={handleClosePopper}
-            setDetails={setDetails}
-            details={details}
+            setDetails={setEdgeDetails}
+            details={edgeDetails}
             dispatch={dispatch}
             setIsPopperFocused={setIsPopperFocused}
             edges={edges}
@@ -877,6 +925,7 @@ export default function MainCanvas() {
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
+        {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
       </div>
     </>
   );

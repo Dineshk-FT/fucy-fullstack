@@ -160,27 +160,27 @@ const selector = (state) => ({
 });
 
 // Edge line styling
-const connectionLineStyle = { stroke: 'black' };
+const connectionLineStyle = { stroke: '#808080' };
 const edgeOptions = {
   type: 'step',
   markerEnd: {
     type: MarkerType.ArrowClosed,
     width: 20,
     height: 20,
-    color: 'black'
+    color: '#000000'
   },
   markerStart: {
     type: MarkerType.ArrowClosed,
     width: 20,
     height: 20,
-    color: 'black'
+    color: '#000000'
   },
   animated: false,
   style: {
-    stroke: 'gray'
+    stroke: '#808080'
   },
   data: {
-    label: 'edge'
+    label: ''
   }
 };
 
@@ -232,6 +232,8 @@ export default function AttackBlock({ attackScene, color }) {
     setNodeTypes(newNodeTypes);
     setNodes([]);
     setEdges([]);
+    setInitialEdges([]);
+    setInitialNodes([]);
     setTimeout(() => setIsReady(true), 0); // Defer rendering
   }, []);
   // Prevent rendering until ready
@@ -263,8 +265,8 @@ export default function AttackBlock({ attackScene, color }) {
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
-        // setInitialNodes(layoutedNodes);
-        // setInitialEdges(layoutedEdges);
+        setInitialNodes(layoutedNodes);
+        setInitialEdges(layoutedEdges);
         centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);

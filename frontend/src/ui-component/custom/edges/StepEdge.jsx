@@ -8,7 +8,7 @@ import './buttonedge.css';
 import ColorTheme from '../../../store/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
-import { setAnchorEl, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { setAnchorEl, setEdgeDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 
 export default function StepEdge({
   id,
@@ -36,6 +36,7 @@ export default function StepEdge({
 
   // console.log('edges', edges);
   // console.log('setEdges', setEdges);
+  // console.log('rest', rest);
 
   useEffect(() => {
     setIsMarkerVisible({
@@ -91,9 +92,21 @@ export default function StepEdge({
   };
 
   const onEditEdge = (e) => {
+    const selectedEdge = edges.find((edge) => edge.id === id);
+    const { isAsset, properties, markerStart, markerEnd } = selectedEdge;
+    console.log('selectedEdge', selectedEdge);
     dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
-    const info = { id, data };
-    dispatch(setSelectedBlock(info));
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(
+      setEdgeDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false,
+        style: style ?? {},
+        startPoint: markerStart.color ?? '#000000',
+        endPoint: markerEnd?.color ?? '#000000'
+      })
+    );
   };
   const renderButton = () => {
     const { start, end } = isMarkerVisible;
@@ -126,7 +139,7 @@ export default function StepEdge({
         id={id}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
-        style={{ ...style, stroke: color?.title }}
+        style={{ ...style }}
       />
       <EdgeLabelRenderer>
         {/* <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}> */}

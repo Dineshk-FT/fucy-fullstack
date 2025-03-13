@@ -147,7 +147,7 @@ export default function Event(props) {
           );
         }}
       />
-      <Handle type="target" position={Position.Top} />
+      <Handle id="top" type="target" position={Position.Top} />
       <Box
         // onDoubleClick={handleOpenDialog}
         display="flex"
@@ -246,7 +246,7 @@ export default function Event(props) {
         </div>
       </Box>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle id="bottom" type="source" position={Position.Bottom} />
 
       {/* Dialog for converting to Attack */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

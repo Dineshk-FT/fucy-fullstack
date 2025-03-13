@@ -55,7 +55,7 @@ const AttackTreeNode = ({ data, isConnectable, type, id }) => {
             ...data?.style
           }}
         >
-          <Handle className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
+          <Handle id="top" className="handle" type="target" position={Position.Top} isConnectable={isConnectable} />
           <div>{data?.label}</div>
         </div>
         <Box
@@ -73,7 +73,7 @@ const AttackTreeNode = ({ data, isConnectable, type, id }) => {
         >
           {id?.slice(0, 5)}
         </Box>
-        <Handle className="handle" type="range" position={Position.Bottom} isConnectable={isConnectable} />
+        <Handle id="bottom" className="handle" type="range" position={Position.Bottom} isConnectable={isConnectable} />
       </Box>
     </>
   );

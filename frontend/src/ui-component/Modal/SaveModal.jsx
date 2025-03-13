@@ -3,6 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography }
 import React from 'react';
 import { makeStyles } from '@mui/styles';
 import WarningIcon from '@mui/icons-material/Warning';
+import useStore from '../../Zustand/store';
 
 const useStyles = makeStyles((theme) => ({
   MenuItem: {
@@ -13,7 +14,13 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const selector = (state) => ({
+  nodes: state.nodes,
+  edges: state.edges
+});
+
 const SaveModal = ({ open, handleClose, handleSave }) => {
+  const { nodes, edges } = useStore(selector);
   return (
     <>
       <Dialog
@@ -41,7 +48,7 @@ const SaveModal = ({ open, handleClose, handleSave }) => {
           <Button onClick={handleClose} variant="outlined" color="error">
             Discard
           </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button onClick={() => handleSave({ nodes, edges })} variant="contained" color="primary">
             Save Changes
           </Button>
         </DialogActions>

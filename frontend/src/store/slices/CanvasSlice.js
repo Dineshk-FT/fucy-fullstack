@@ -17,6 +17,12 @@ const initialState = {
     name: '',
     properties: [],
     isAsset: false
+  },
+  edgeDetails: {
+    name: '',
+    properties: [],
+    isAsset: false,
+    style: {}
   }
 };
 
@@ -51,6 +57,13 @@ const CanvasSlice = createSlice({
         state.details = action.payload(state.details);
       } else {
         state.details = action.payload;
+      }
+    },
+    setEdgeDetails: (state, action) => {
+      if (typeof action.payload === 'function') {
+        state.edgeDetails = action.payload(state.details);
+      } else {
+        state.edgeDetails = action.payload;
       }
     },
     closeAddNodeTab: (state) => {
@@ -89,6 +102,7 @@ export const {
   setAnchorEl,
   clearAnchorEl,
   setDetails,
+  setEdgeDetails,
   openHeader,
   closeHeader,
   setSaveModal,

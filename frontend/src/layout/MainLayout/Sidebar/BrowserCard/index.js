@@ -214,13 +214,7 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
-  const handleSaveToModel = () => {
-    // model - id,
-    //   template
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
+  const handleSaveToModel = (template) => {
     nodes.forEach((node) => {
       if (node.isCopied == true) {
         node.isCopied = false;
@@ -254,8 +248,6 @@ const BrowserCard = () => {
 
   const handleCloseSave = () => {
     setSaveModal(false);
-    setInitialEdges(edges);
-    setInitialNodes(nodes);
   };
 
   const handleOpenDocumentDialog = () => {
@@ -355,12 +347,6 @@ const BrowserCard = () => {
 
   // console.log('initialNodes', initialNodes);
   const handleOpenTable = (e, id, name) => {
-    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-
-    // console.log('hasChanged', hasChanged);
-    if (hasChanged) {
-      setSaveModal(true);
-    }
     e.stopPropagation();
     setClickedItem(id);
     if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
