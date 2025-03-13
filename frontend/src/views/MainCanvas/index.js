@@ -798,6 +798,7 @@ export default function MainCanvas() {
             selectionMode="partial"
             multiSelectionKeyCode="Shift"
             onSelectionContextMenu={onSelectionClick}
+            deleteKeyCode={['Delete', 'Backspace']}
             // onPaneClick={onSelectionChange}
             onNodeDoubleClick={handleSelectNode}
             onNodeClick={handleSelectNodeSingleClick}

@@ -36,7 +36,7 @@ export default function ANDGate(props) {
           d="M105 105v302h151c148 0 148-302 0-302H105z"
         />
       </svg>
-      <Handle id="bottom" type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
+      <Handle id="bottom" type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} isConnectable={true} />
       <div
         className="delete-icon"
         role="button"

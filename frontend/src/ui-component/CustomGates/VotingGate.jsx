@@ -26,7 +26,7 @@ export default function VotingGate(props) {
       onMouseLeave={() => setIsHovered(false)}
       style={{ position: 'relative', width: '100px', height: '100px' }}
     >
-      <CustomHandle type="target" position={Position.Top} style={{ top: '28px', opacity: 0 }} isConnectable={1} />
+      <CustomHandle type="target" position={Position.Top} style={{ top: '28px', opacity: 0 }} isConnectable={100} />
       <svg width="100px" height="100px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
         <path
           fill="none"
@@ -38,7 +38,7 @@ export default function VotingGate(props) {
 
         <path fill="none" stroke={color?.stroke} strokeWidth="6" d="M105 407 L350 165" />
       </svg>
-      <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} isConnectable={true} />
       <div
         className="delete-icon"
         role="button"

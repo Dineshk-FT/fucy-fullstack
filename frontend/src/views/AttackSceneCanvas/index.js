@@ -670,6 +670,7 @@ export default function AttackBlock({ attackScene, color }) {
           onInit={setReactFlowInstance}
           edgeTypes={edgeTypes}
           onDrop={onDrop}
+          deleteKeyCode={['Delete', 'Backspace']}
           onDragOver={(event) => {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';

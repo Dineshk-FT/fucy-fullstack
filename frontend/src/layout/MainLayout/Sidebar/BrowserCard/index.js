@@ -204,7 +204,7 @@ const BrowserCard = () => {
     isSaveModalOpen,
     setSaveModal
   } = useStore(selector);
-  const { previousTab, currentTab } = useSelector((state) => state?.currentId);
+  const { currentTab, tableOpen } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
@@ -258,6 +258,8 @@ const BrowserCard = () => {
 
   const handleCloseSave = () => {
     setSaveModal(false);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
   };
 
   const handleOpenDocumentDialog = () => {

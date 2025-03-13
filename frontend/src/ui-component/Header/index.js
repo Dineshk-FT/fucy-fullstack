@@ -25,17 +25,19 @@ import { closeHeader } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   header: {
-    width: 'inherit',
-    height: '2rem',
-    borderBottom: '1px solid black',
+    // width: 300,
+    height: 'auto',
     display: 'flex',
     alignItems: 'center',
-    gap: 20,
-    padding: '0 1rem',
-    overflowX: 'auto',
-    overflowY: 'hidden',
-    scrollbarWidth: 'none'
+    // rowGap: 20,
+    // padding: '0 1rem',
+    flexWrap: 'wrap', // Ensures wrapping
+    overflowX: 'hidden', // Hides horizontal scroll
+    overflowY: 'auto', // Allows vertical scrolling if needed
+    scrollbarWidth: 'none',
+    justifyContent: 'space-between'
   },
+
   icons: {
     fontSize: '20px'
   }
@@ -209,7 +211,7 @@ export default function Header({ selectedElement, nodes, setSelectedElement, set
                 <ArrowForward color={iconColor} /> */}
         <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
         <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
-        <AddIcon />
+        {/* <AddIcon /> */}
         <FormatBoldIcon
           onClick={() => handleFontStyle('bold')}
           sx={{
