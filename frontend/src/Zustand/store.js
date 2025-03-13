@@ -1050,6 +1050,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  addNode: (newNode) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      nodes: [...state.nodes, newNode]
+    }));
+  },
   addEdge: (newEdge) => {
     // console.log('newNode', newNode);
     set((state) => ({

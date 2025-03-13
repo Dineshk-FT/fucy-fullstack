@@ -78,7 +78,7 @@ const AttackTree = () => {
               handleSize={[10, Infinity]}
             > */}
             <Grid item sx={{ flexGrow: 1, height: 'inherit' }}>
-              {!isLevelOpen ? attackScene && <AttackBlock attackScene={attackScene} color={color} /> : <Levels />}
+              <AttackBlock attackScene={attackScene} color={color} />
             </Grid>
             {/* </ResizableBox> */}
             <Grid

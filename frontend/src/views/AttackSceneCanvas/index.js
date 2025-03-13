@@ -17,6 +17,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../ui-component/custom/edges/StepEdgeAttackTree';
+import SaveModal from '../../ui-component/Modal/SaveModal';
+import { isEqual } from 'lodash';
 
 const elk = new ELK();
 
@@ -156,7 +158,11 @@ const selector = (state) => ({
   deleteCybersecurity: state.deleteCybersecurity,
   deleteAttacks: state.deleteAttacks,
   attacks: state.attackScenarios['subs'][0],
-  requirements: state.cybersecurity['subs'][1]
+  requirements: state.cybersecurity['subs'][1],
+  isSaveModalOpen: state.isSaveModalOpen,
+  setSaveModal: state.setSaveModal,
+  initialNodes: state.initialNodes,
+  initialEdges: state.initialEdges
 });
 
 // Edge line styling
@@ -188,6 +194,8 @@ export default function AttackBlock({ attackScene, color }) {
   const {
     nodes,
     edges,
+    initialEdges,
+    initialNodes,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -206,7 +214,9 @@ export default function AttackBlock({ attackScene, color }) {
     deleteCybersecurity,
     deleteAttacks,
     attacks,
-    requirements
+    requirements,
+    isSaveModalOpen,
+    setSaveModal
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -232,8 +242,8 @@ export default function AttackBlock({ attackScene, color }) {
     setNodeTypes(newNodeTypes);
     setNodes([]);
     setEdges([]);
-    setInitialEdges([]);
-    setInitialNodes([]);
+    // setInitialEdges([]);
+    // setInitialNodes([]);
     setTimeout(() => setIsReady(true), 0); // Defer rendering
   }, []);
   // Prevent rendering until ready
@@ -244,8 +254,8 @@ export default function AttackBlock({ attackScene, color }) {
       setTimeout(() => {
         setNodes(nodes);
         setEdges(edges);
-        setInitialNodes(nodes);
-        setInitialEdges(edges);
+        // setInitialNodes(nodes);
+        // setInitialEdges(edges);
       }, 300);
     }
   }, [attackScene]);
@@ -265,8 +275,8 @@ export default function AttackBlock({ attackScene, color }) {
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
-        setInitialNodes(layoutedNodes);
-        setInitialEdges(layoutedEdges);
+        // setInitialNodes(layoutedNodes);
+        // setInitialEdges(layoutedEdges);
         centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);
@@ -739,6 +749,7 @@ export default function AttackBlock({ attackScene, color }) {
         </div>
       )}
       <Toaster position="top-right" reverseOrder={false} />
+      {/* {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={() => setSaveModal(false)} handleSave={handleSave} />} */}
     </div>
   );
 }

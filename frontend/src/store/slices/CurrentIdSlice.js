@@ -8,7 +8,9 @@ const initialState = {
   levelDts: {},
   isNavbarClose: false,
   isDark: false,
-  tableOpen: ''
+  tableOpen: '',
+  previousTab: '',
+  currentTab: ''
 };
 
 const CurrentIdSlice = createSlice({
@@ -20,6 +22,13 @@ const CurrentIdSlice = createSlice({
     },
     setTableOpen: (state, action) => {
       return { ...state, tableOpen: action.payload };
+    },
+    setPreviousTab: (state, action) => {
+      return {
+        ...state,
+        previousTab: state.currentTab, // Store previous value
+        currentTab: action.payload // Update current value
+      };
     },
     setAttackScene: (state, action) => {
       return { ...state, attackScene: action.payload };
@@ -63,6 +72,15 @@ const CurrentIdSlice = createSlice({
   }
 });
 
-export const { storeCurrentId, setAttackScene, levelOpen, cyberBlockOpen, closeAll, changeMode, navbarSlide, setTableOpen } =
-  CurrentIdSlice.actions;
+export const {
+  storeCurrentId,
+  setAttackScene,
+  levelOpen,
+  cyberBlockOpen,
+  closeAll,
+  changeMode,
+  navbarSlide,
+  setTableOpen,
+  setPreviousTab
+} = CurrentIdSlice.actions;
 export default CurrentIdSlice.reducer;

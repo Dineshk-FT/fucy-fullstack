@@ -171,7 +171,6 @@ export default function MainCanvas() {
   const [nodeTypes, setNodeTypes] = useState({});
   // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
-  const { tableOpen } = useSelector((state) => state?.currentId);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl.node}"]`) || null;
@@ -188,27 +187,21 @@ export default function MainCanvas() {
     nodesRef.current = nodes;
     edgesRef.current = edges;
   }, [nodes, edges]);
-  // const [details, setDetails] = useState({
-  //   name: '',
-  //   properties: [],
-  //   isAsset: false
-  // });
-  // console.log('anchorEl', anchorEl);
 
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
   };
 
-  useEffect(() => {
-    return () => {
-      // const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-      const hasChanged = !isEqual(nodesRef.current, initialNodes) || !isEqual(edgesRef.current, initialEdges);
-      if (hasChanged) {
-        setSaveModal(true);
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     // const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+  //     const hasChanged = !isEqual(nodesRef.current, initialNodes) || !isEqual(edgesRef.current, initialEdges);
+  //     if (hasChanged) {
+  //       setSaveModal(true);
+  //     }
+  //   };
+  // }, []);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -455,13 +448,12 @@ export default function MainCanvas() {
   );
 
   const RefreshAPI = () => {
-    console.log('refresh');
+    setSaveModal(false);
     getAssets(model?._id);
     getDamageScenarios(model?._id);
   };
 
   const handleCloseSave = () => {
-    console.log('discarded');
     setSaveModal(false);
   };
 
@@ -925,7 +917,7 @@ export default function MainCanvas() {
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
-        {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
+        {/* {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />} */}
       </div>
     </>
   );

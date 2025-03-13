@@ -135,23 +135,23 @@ const AddNewNode = ({ assets }) => {
       const nodeDetail = { ...dataNode, position: updatedPosition };
       const list = [...nodes, nodeDetail];
       setNodes(list);
-      const template = { nodes: list, edges: edges };
-      const details = {
-        'model-id': model?._id,
-        template: JSON.stringify(template),
-        ...(assets && { assetId: assets?._id })
-      };
+      // const template = { nodes: list, edges: edges };
+      // const details = {
+      //   'model-id': model?._id,
+      //   template: JSON.stringify(template),
+      //   ...(assets && { assetId: assets?._id })
+      // };
 
-      update(details)
-        .then((res) => {
-          if (res.data) {
-            notify(res?.message ?? 'Node added successfully', 'success');
-            getSidebarNode();
-          }
-        })
-        .catch((err) => {
-          notify('Something went wrong', 'error');
-        });
+      // update(details)
+      //   .then((res) => {
+      //     if (res.data) {
+      //       notify(res?.message ?? 'Node added successfully', 'success');
+      //       getSidebarNode();
+      //     }
+      //   })
+      //   .catch((err) => {
+      //     notify('Something went wrong', 'error');
+      //   });
     } else {
       createNode(details)
         .then((res) => {

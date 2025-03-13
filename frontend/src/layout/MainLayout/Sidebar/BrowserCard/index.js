@@ -36,7 +36,7 @@ import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
-import { closeAll, setAttackScene, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
@@ -154,6 +154,7 @@ const selector = (state) => ({
   setClickedItem: state.setClickedItem,
   updateModelName: state.updateModelName,
   setNodes: state.setNodes,
+  setEdges: state.setEdges,
   getCatalog: state.getCatalog,
   update: state.updateAssets,
   setSaveModal: state.setSaveModal,
@@ -197,11 +198,13 @@ const BrowserCard = () => {
     setClickedItem,
     updateModelName,
     setNodes,
+    setEdges,
     getCatalog,
     update,
     isSaveModalOpen,
     setSaveModal
   } = useStore(selector);
+  const { previousTab, currentTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
@@ -214,7 +217,16 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
+  useEffect(() => {
+    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+    if (hasChanged && currentTab !== 'assets') {
+      setSaveModal(true);
+    }
+  }, [currentTab]); // Track currentTab directly
+
+  // console.log('currentTab', currentTab);
   const handleSaveToModel = (template) => {
+    // console.log('browser');
     nodes.forEach((node) => {
       if (node.isCopied == true) {
         node.isCopied = false;
@@ -225,7 +237,6 @@ const BrowserCard = () => {
       template: JSON.stringify(template),
       assetId: assets?._id
     };
-
     update(details)
       .then((res) => {
         if (!res.error) {
@@ -235,7 +246,6 @@ const BrowserCard = () => {
           setInitialEdges(edges);
           setInitialNodes(nodes);
           getAssets(model?._id);
-
           // }, 500);
         } else {
           notify(res?.error ?? 'Something went wrong', 'error');
@@ -280,6 +290,7 @@ const BrowserCard = () => {
       });
     }
   };
+
   useEffect(() => {
     getModelById(modelId);
     getAssets(modelId);
@@ -329,6 +340,7 @@ const BrowserCard = () => {
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
+      dispatch(setPreviousTab(name));
       dispatch(closeAll());
     } else {
       handleCloseItem();
@@ -353,13 +365,18 @@ const BrowserCard = () => {
       dispatch(setTableOpen(name));
       dispatch(setTitle(name));
     }
+    dispatch(setPreviousTab(name));
   };
 
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     if (name === 'Attack Trees') {
-      dispatch(setTableOpen('Attack Trees Canvas'));
-      dispatch(setAttackScene(scene));
+      setNodes([]);
+      setEdges([]);
+      setTimeout(() => {
+        dispatch(setTableOpen('Attack Trees Canvas'));
+        dispatch(setAttackScene(scene));
+      }, 500);
     }
   };
 
