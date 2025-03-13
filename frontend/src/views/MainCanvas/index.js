@@ -77,10 +77,7 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted,
   selectedElement: state.selectedElement,
   setSelectedElement: state.setSelectedElement,
-  initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges,
-  setSaveModal: state.setSaveModal,
-  isSaveModalOpen: state.isSaveModalOpen
+  setSaveModal: state.setSaveModal
 });
 
 //Edge line styling
@@ -156,10 +153,7 @@ export default function MainCanvas() {
     setIsNodePasted,
     selectedElement,
     setSelectedElement,
-    initialNodes,
-    initialEdges,
-    setSaveModal,
-    isSaveModalOpen
+    setSaveModal
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();

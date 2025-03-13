@@ -249,11 +249,11 @@ export default function AttackBlock({ attackScene, color }) {
   // Prevent rendering until ready
 
   useEffect(() => {
-    if (attackScene) {
-      const { nodes = [], edges = [] } = attackScene?.templates;
+    if (attackScene.templates) {
+      const { nodes, edges } = attackScene?.templates;
       setTimeout(() => {
-        setNodes(nodes);
-        setEdges(edges);
+        setNodes(nodes ?? []);
+        setEdges(edges ?? []);
         // setInitialNodes(nodes);
         // setInitialEdges(edges);
       }, 300);

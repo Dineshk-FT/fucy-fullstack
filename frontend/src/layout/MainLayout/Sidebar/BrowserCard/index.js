@@ -219,8 +219,9 @@ const BrowserCard = () => {
 
   useEffect(() => {
     const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-    if (hasChanged && currentTab !== 'assets') {
+    if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets')) {
       setSaveModal(true);
+      ('');
     }
   }, [currentTab]); // Track currentTab directly
 

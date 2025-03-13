@@ -41,7 +41,7 @@ import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibb
 import ColorTheme from '../../../../store/ColorTheme';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
-import { closeAll, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import PromptModal from '../../../../ui-component/Modal/PromptModal';
@@ -96,6 +96,7 @@ const LeftSection = () => {
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
 
   const handleTabChange = (tabName) => {
+    dispatch(setPreviousTab(tabName));
     setActiveTab(tabName);
     const actions = {
       'Model Definition & Assets': handleModelDefinationClick,
@@ -125,6 +126,7 @@ const LeftSection = () => {
   };
 
   const handleClick = (name) => {
+    dispatch(setPreviousTab(name));
     dispatch(setTitle(name));
     dispatch(setTableOpen(name));
   };
@@ -135,7 +137,6 @@ const LeftSection = () => {
   };
 
   const handleAttackTreeClick = async (e) => {
-    // CheckforChange();
     setIsLoading(true);
     setAnchorEl(e.currentTarget);
     if (model?._id) {
@@ -146,7 +147,7 @@ const LeftSection = () => {
   };
 
   const handleAttackTableClick = () => {
-    // CheckforChange();
+    dispatch(setPreviousTab('Attack'));
     if (model?._id) {
       setClickedItem(model._id);
       dispatch(setTitle('Attack')); // Changed from 'Attack-Table' to 'Attack'

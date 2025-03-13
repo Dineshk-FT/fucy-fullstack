@@ -43,14 +43,17 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
 
     create(newAttackTree, modelId)
       .then((res) => {
-        if (res) {
+        // console.log('res', res);
+        if (!res.error) {
           notify(res.message ?? 'Attack tree created successfully', 'success');
           getAttackScenario(modelId);
           handleClose();
           setTimeout(() => {
             dispatch(setTableOpen('Attack Trees Canvas'));
-            dispatch(setAttackScene(res?.scene?.ID));
+            dispatch(setAttackScene(res?.scene));
           }, 1000);
+        } else {
+          notify(res.error ?? 'Error while Generating the Requested Attack', 'error');
         }
       })
       .catch((err) => {
