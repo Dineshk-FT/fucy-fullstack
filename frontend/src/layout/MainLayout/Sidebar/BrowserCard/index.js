@@ -204,7 +204,7 @@ const BrowserCard = () => {
     isSaveModalOpen,
     setSaveModal
   } = useStore(selector);
-  const { currentTab, tableOpen } = useSelector((state) => state?.currentId);
+  const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
@@ -219,9 +219,8 @@ const BrowserCard = () => {
 
   useEffect(() => {
     const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-    if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets')) {
+    if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets') && previousTab !== 'Attack Trees') {
       setSaveModal(true);
-      ('');
     }
   }, [currentTab]); // Track currentTab directly
 
@@ -340,6 +339,7 @@ const BrowserCard = () => {
     setAnchorItemEl(null);
   };
   const handleClick = async (event, ModelId, name, id) => {
+    // console.log('name', name);
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
@@ -361,6 +361,8 @@ const BrowserCard = () => {
   };
 
   // console.log('initialNodes', initialNodes);
+  // console.log('nodes', nodes);
+  // console.log('previousTab', previousTab);
   const handleOpenTable = (e, id, name) => {
     e.stopPropagation();
     setClickedItem(id);
