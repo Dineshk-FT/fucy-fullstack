@@ -167,8 +167,8 @@ export default function MainCanvas() {
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
-  const anchorElNodeId = document.querySelector(`[data-id="${anchorEl.node}"]`) || null;
-  const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl.edge}"]`) || null;
+  const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
+  const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const notify = (message, status) => toast[status](message);
