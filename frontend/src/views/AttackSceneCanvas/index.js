@@ -138,15 +138,15 @@ const edgeTypes = {
 };
 
 const selector = (state) => ({
-  nodes: state.nodes,
-  edges: state.edges,
-  onNodesChange: state.onNodesChange,
-  onEdgesChange: state.onEdgesChange,
-  onConnect: state.onConnectAttack,
-  addNode: state.dragAdd,
-  addEdge: state.addEdge,
-  setNodes: state.setNodes,
-  setEdges: state.setEdges,
+  nodes: state.attackNodes,
+  edges: state.attackEdges,
+  onNodesChange: state.onAttackNodesChange,
+  onEdgesChange: state.onAttackEdgesChange,
+  onConnect: state.onAttackConnect,
+  addNode: state.addAttackNode,
+  addEdge: state.addAttackEdge,
+  setNodes: state.setAttackNodes,
+  setEdges: state.setAttackEdges,
   setInitialNodes: state.setInitialNodes,
   setInitialEdges: state.setInitialEdges,
   model: state.model,
@@ -442,7 +442,7 @@ export default function AttackBlock({ attackScene, color }) {
   }, []);
 
   const handleConnection = (draggedNode) => {
-    const { nodes, edges, setEdges, setNodes } = useStore.getState(); // Access Zustand state
+    const { attackNodes: nodes, attackEdges: edges, setAttackEdges: setEdges, setAttackNodes: setNodes } = useStore.getState(); // Access Zustand state
 
     const overlappingNode = nodes.find((node) => {
       if (node.id === draggedNode.id) return false; // Skip itself

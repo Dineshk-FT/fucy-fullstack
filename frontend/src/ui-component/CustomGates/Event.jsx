@@ -1,12 +1,11 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
+import { Handle, Position, NodeResizer } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
-import { useDispatch } from 'react-redux';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
@@ -15,13 +14,11 @@ const selector = (state) => ({
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
   addAttackScene: state.addAttackScene,
-  nodes: state.nodes
+  setAttackNodes: state.setAttackNodes
 });
 
 export default function Event(props) {
-  const dispatch = useDispatch();
-  const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
-  const { setNodes } = useReactFlow();
+  const { update, model, addAttackScene, getAttackScenario, attacks, requirements, setAttackNodes } = useStore(selector, shallow);
   const inputValueFromProps = useMemo(() => {
     const matchingAttack = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     // console.log('matchingAttack', matchingAttack);
@@ -38,12 +35,12 @@ export default function Event(props) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleDeleteFromCanvas = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
+    setAttackNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
   // console.log('nodes', nodes);
 
   const updateNodeRating = useCallback(() => {
-    setNodes((nodes) =>
+    setAttackNodes((nodes) =>
       nodes.map((node) => {
         const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
         if (attack) {
@@ -58,18 +55,12 @@ export default function Event(props) {
         return node;
       })
     );
-  }, [attacks, setNodes]);
+  }, [attacks, setAttackNodes]);
 
   // Call this function after rendering or whenever attacks data changes
   useEffect(() => {
     updateNodeRating();
   }, [updateNodeRating]);
-
-  // Open the dialog on double-click
-  const handleOpenDialog = (e) => {
-    e.preventDefault();
-    setOpenDialog(true);
-  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -107,15 +98,6 @@ export default function Event(props) {
 
   const bgColor = getBgColor();
 
-  // console.log('bgColor', bgColor);
-  // console.log('props.data.style', props.data.style);
-  // Calculate font size dynamically based on node dimensions
-  // const calculateFontSize = () => {
-  //   const baseFontSize = 14; // Base font size
-  //   return Math.max(baseFontSize, (nodeDimensions.width + nodeDimensions.height) / 15);
-  // };
-
-  // const fontSize = calculateFontSize();
   const inputPadding = 5; // Padding inside the input box
 
   return (
@@ -128,7 +110,7 @@ export default function Event(props) {
           // const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
 
           setNodeDimensions({ width: params.width, height: params.height });
-          setNodes((nodes) =>
+          setAttackNodes((nodes) =>
             nodes.map((node) =>
               node.id === props?.id
                 ? {

@@ -217,6 +217,9 @@ const BrowserCard = () => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
 
+  // console.log('initialNodes', initialNodes);
+  // console.log('nodes', nodes);
+
   useEffect(() => {
     const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
     if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets') && previousTab !== 'Attack Trees') {
@@ -376,8 +379,6 @@ const BrowserCard = () => {
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     if (name === 'Attack Trees') {
-      setNodes([]);
-      setEdges([]);
       setTimeout(() => {
         dispatch(setTableOpen('Attack Trees Canvas'));
         dispatch(setAttackScene(scene));
@@ -389,12 +390,6 @@ const BrowserCard = () => {
     e.preventDefault();
     setAnchorItemEl(e.currentTarget);
     setOpenItemRight((prev) => !prev);
-  };
-
-  const handleOpenSelectNode = (e) => {
-    e.stopPropagation();
-    setOpenNodelist(true);
-    setOpenItemRight(false);
   };
 
   const handleContext = (e, name) => {

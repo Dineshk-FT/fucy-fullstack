@@ -913,7 +913,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       attackNodes: applyNodeChanges(changes, get().attackNodes)
     });
   },
-  onAttckEdgesChange: (changes) => {
+  onAttackEdgesChange: (changes) => {
     set({
       attackEdges: applyEdgeChanges(changes, get().attackEdges)
     });
@@ -925,9 +925,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   setAttackNodes: (newNodes) => {
-    set({
-      attackNodes: newNodes
-    });
+    set((state) => ({
+      attackNodes: typeof newNodes === 'function' ? newNodes(state.attackNodes) : newNodes
+    }));
   },
 
   setAttackEdges: (newEdges) => {
@@ -1622,12 +1622,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   updateAttackNode: (nodeId, name) => {
     set((state) => {
-      let node = JSON.parse(JSON.stringify(state.nodes)).find((ite) => ite.id === nodeId);
-      const ind = state.nodes.findIndex((ite) => ite.id === nodeId);
+      let node = JSON.parse(JSON.stringify(state.attackNodes)).find((ite) => ite.id === nodeId);
+      const ind = state.attackNodes.findIndex((ite) => ite.id === nodeId);
       node.data.label = name;
-      state.nodes[ind] = node;
+      state.attackNodes[ind] = node;
       return {
-        nodes: [...state.nodes]
+        attackNodes: [...state.attackNodes]
       };
     });
   },
