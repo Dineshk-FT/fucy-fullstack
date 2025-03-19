@@ -14,6 +14,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
     width: data?.style?.width || 200,
     height: data?.style?.height || 200
   });
+  // console.log('data', data);
   const [value, setValue] = useState(data?.label || '');
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
@@ -22,7 +23,9 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
 
       // Update node dimensions in Zustand
       setNodes((nodes) =>
-        nodes.map((node) => (node.id === id ? { ...node, style: { ...node.style, width: newWidth, height: newHeight } } : node))
+        nodes.map((node) =>
+          node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, width: newWidth, height: newHeight } } } : node
+        )
       );
     });
   };
@@ -58,7 +61,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           width: dimesions?.width
         }}
       />
-      <NodeResizer minWidth={150} minHeight={150} onResize={handleResize} />
+      <NodeResizer minWidth={200} minHeight={200} onResize={handleResize} />
       <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
       <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
       <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />

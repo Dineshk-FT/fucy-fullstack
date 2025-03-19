@@ -614,8 +614,8 @@ export default function MainCanvas() {
       data: {
         label: 'group',
         style: {
-          height: '200px',
-          width: '200px'
+          height: 200,
+          width: 200
         }
       },
       height: 200,
