@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType, Background } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -17,8 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../ui-component/custom/edges/StepEdgeAttackTree';
-import SaveModal from '../../ui-component/Modal/SaveModal';
-import { isEqual } from 'lodash';
+import _ from 'lodash';
 
 const elk = new ELK();
 
@@ -147,8 +146,8 @@ const selector = (state) => ({
   addEdge: state.addAttackEdge,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
-  setInitialNodes: state.setInitialNodes,
-  setInitialEdges: state.setInitialEdges,
+  setInitialNodes: state.setInitialAttackNodes,
+  setInitialEdges: state.setInitialAttackEdges,
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
@@ -161,8 +160,8 @@ const selector = (state) => ({
   requirements: state.cybersecurity['subs'][1],
   isSaveModalOpen: state.isSaveModalOpen,
   setSaveModal: state.setSaveModal,
-  initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges
+  initialNodes: state.initialAttackNodes,
+  initialEdges: state.initialAttackEdges
 });
 
 // Edge line styling
@@ -228,6 +227,14 @@ export default function AttackBlock({ attackScene, color }) {
   const [isReady, setIsReady] = useState(false);
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
+  const prevAttackSceneRef = useRef(attackScene);
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+  }, [nodes, edges]);
 
   const getMatchingId = useCallback(() => {
     const matchingScene = attacks['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId);
@@ -237,28 +244,107 @@ export default function AttackBlock({ attackScene, color }) {
     return scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId;
   }
 
+  const handleSave = (sceneId) => {
+    const prevNodes = nodesRef.current;
+    const prevEdges = edgesRef.current;
+    if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
+      // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
+      const template = {
+        nodes: nodes,
+        edges: edges
+      };
+
+      // Extract threatId from nodes with type: "default"
+      const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
+      if (!threatNode) {
+        notify('Threat scenario is missing', 'error');
+        return;
+      }
+      const { threatId, damageId, key } = threatNode;
+
+      const details = {
+        modelId: model?._id,
+        type: 'attack_trees',
+        id: sceneId,
+        templates: JSON.stringify(template),
+        threatId: threatId,
+        damageId: damageId,
+        key: key
+      };
+
+      update(details)
+        .then((res) => {
+          if (!res.error) {
+            // console.log('res', res);
+            setTimeout(() => {
+              notify('Saved Successfully', 'success');
+              getAttackScenario(model?._id);
+              getCyberSecurityScenario(model?._id);
+              setInitialNodes(prevNodes);
+              setInitialEdges(prevEdges);
+            }, 300);
+          } else {
+            notify(res?.error ?? 'Something Went Wrong', 'error');
+          }
+        })
+        .catch((err) => {
+          if (err) {
+            notify('Something Went Wrong', 'error');
+          }
+        });
+    }
+  };
+
+  // Save before switching attackScene
+  useEffect(() => {
+    const prevSceneId = prevAttackSceneRef.current?.ID;
+
+    // console.log(`🔄 Switching from attackScene: ${prevSceneId} to ${attackScene.ID}`);
+
+    if (prevSceneId && prevSceneId !== attackScene.id) {
+      // console.log(`💾 Saving previous attackScene: ${prevSceneId}`);
+      handleSave(prevSceneId);
+    }
+
+    setNodes(attackScene.templates.nodes || []);
+    setEdges(attackScene.templates.edges || []);
+    setInitialNodes(attackScene.templates.nodes || []);
+    setInitialEdges(attackScene.templates.edges || []);
+
+    prevAttackSceneRef.current = attackScene;
+  }, [attackScene]);
+
+  // Save before unmounting
+  useEffect(() => {
+    return () => {
+      if (prevAttackSceneRef.current) {
+        handleSave(prevAttackSceneRef.current.ID);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['attackcanvas'] || {};
     setNodeTypes(newNodeTypes);
     setNodes([]);
     setEdges([]);
-    // setInitialEdges([]);
-    // setInitialNodes([]);
+    setInitialEdges([]);
+    setInitialNodes([]);
     setTimeout(() => setIsReady(true), 0); // Defer rendering
   }, []);
   // Prevent rendering until ready
 
-  useEffect(() => {
-    if (attackScene.templates) {
-      const { nodes, edges } = attackScene?.templates;
-      setTimeout(() => {
-        setNodes(nodes ?? []);
-        setEdges(edges ?? []);
-        // setInitialNodes(nodes);
-        // setInitialEdges(edges);
-      }, 300);
-    }
-  }, [attackScene]);
+  // useEffect(() => {
+  //   if (attackScene.templates) {
+  //     const { nodes, edges } = attackScene?.templates;
+  //     setTimeout(() => {
+  //       setNodes(nodes ?? []);
+  //       setEdges(edges ?? []);
+  //       setInitialNodes(nodes ?? []);
+  //       setInitialEdges(edges ?? []);
+  //     }, 300);
+  //   }
+  // }, [attackScene]);
 
   const centerLayout = () => {
     if (reactFlowInstance) {
@@ -275,8 +361,8 @@ export default function AttackBlock({ attackScene, color }) {
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
-        // setInitialNodes(layoutedNodes);
-        // setInitialEdges(layoutedEdges);
+        setInitialNodes(layoutedNodes);
+        setInitialEdges(layoutedEdges);
         centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);
@@ -598,50 +684,6 @@ export default function AttackBlock({ attackScene, color }) {
     [reactFlowInstance, nodes, addNode, addEdge]
   );
 
-  const handleSave = () => {
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-
-    // Extract threatId from nodes with type: "default"
-    const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
-    if (!threatNode) {
-      notify('Threat scenario is missing', 'error');
-      return;
-    }
-    const { threatId, damageId, key } = threatNode;
-
-    const details = {
-      modelId: model?._id,
-      type: 'attack_trees',
-      id: attackScene?.ID,
-      templates: JSON.stringify(template),
-      threatId: threatId,
-      damageId: damageId,
-      key: key
-    };
-
-    update(details)
-      .then((res) => {
-        if (!res.error) {
-          // console.log('res', res);
-          setTimeout(() => {
-            notify('Saved Successfully', 'success');
-            getAttackScenario(model?._id);
-            getCyberSecurityScenario(model?._id);
-          }, 300);
-        } else {
-          notify(res?.error ?? 'Something Went Wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) {
-          notify('Something Went Wrong', 'error');
-        }
-      });
-  };
-
   const onNodeDrag = (event, draggedNode) => {
     // Check for overlapping nodes
 
@@ -681,7 +723,7 @@ export default function AttackBlock({ attackScene, color }) {
           fitView
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
-            <Button variant="outlined" onClick={handleSave} startIcon={<SaveIcon />} sx={buttonStyle}>
+            <Button variant="outlined" onClick={() => handleSave(attackScene?.ID)} startIcon={<SaveIcon />} sx={buttonStyle}>
               {'Save'}
             </Button>
             <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>

@@ -55,6 +55,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   reactFlowInstance: null,
   attackNodes: [],
   attackEdges: [],
+  initialAttackNodes: [],
+  initialAttackEdges: [],
   cyberNodes: [],
   cyberEdges: [],
   nodes: [],
@@ -875,6 +877,13 @@ const useStore = createWithEqualityFn((set, get) => ({
       initialNodes: newNodes
     }));
   },
+
+  setInitialAttackNodes: (newNodes) => {
+    set(() => ({
+      initialAttackNodes: newNodes
+    }));
+  },
+
   setSelectedNodes: (newNodes) => {
     set((state) => ({
       selectedNodes: typeof newNodes === 'function' ? newNodes(state.selectedNodes) : newNodes
@@ -890,6 +899,12 @@ const useStore = createWithEqualityFn((set, get) => ({
   setInitialEdges: (newEdges) => {
     set({
       initialEdges: newEdges
+    });
+  },
+
+  setInitialAttackEdges: (newEdges) => {
+    set({
+      initialAttackEdges: newEdges
     });
   },
 

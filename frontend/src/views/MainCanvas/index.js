@@ -187,15 +187,47 @@ export default function MainCanvas() {
     setEdges([]);
   };
 
-  // useEffect(() => {
-  //   return () => {
-  //     // const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-  //     const hasChanged = !isEqual(nodesRef.current, initialNodes) || !isEqual(edgesRef.current, initialEdges);
-  //     if (hasChanged) {
-  //       setSaveModal(true);
-  //     }
-  //   };
-  // }, []);
+  const handleSaveToModel = () => {
+    // model - id,
+    //   template
+    const template = {
+      nodes: nodesRef.current,
+      edges: edgesRef.current
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template),
+      assetId: assets?._id
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          // setTimeout(() => {
+          notify('Saved Successfully', 'success');
+          handleClose();
+          RefreshAPI();
+          // }, 500);
+        } else {
+          notify(res.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
+  };
+
+  useEffect(() => {
+    return () => {
+      handleSaveToModel();
+    };
+  }, []);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -475,40 +507,6 @@ export default function MainCanvas() {
     },
     [reactFlowInstance, assets]
   );
-
-  const handleSaveToModel = () => {
-    // model - id,
-    //   template
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
-    setIsNodePasted(false);
-    const details = {
-      'model-id': model?._id,
-      template: JSON.stringify(template),
-      assetId: assets?._id
-    };
-
-    update(details)
-      .then((res) => {
-        if (res) {
-          // setTimeout(() => {
-          notify('Saved Successfully', 'success');
-          handleClose();
-          RefreshAPI();
-          // }, 500);
-        }
-      })
-      .catch((err) => {
-        notify('Something went wrong', 'error');
-      });
-  };
 
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
@@ -912,7 +910,6 @@ export default function MainCanvas() {
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
-        {/* {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />} */}
       </div>
     </>
   );

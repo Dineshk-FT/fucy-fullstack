@@ -220,50 +220,50 @@ const BrowserCard = () => {
   // console.log('initialNodes', initialNodes);
   // console.log('nodes', nodes);
 
-  useEffect(() => {
-    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
-    if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets') && previousTab !== 'Attack Trees') {
-      setSaveModal(true);
-    }
-  }, [currentTab]); // Track currentTab directly
+  // useEffect(() => {
+  //   const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+  //   if (hasChanged && (currentTab !== 'assets' || currentTab !== 'Model Definition & Assets') && previousTab !== 'Attack Trees') {
+  //     setSaveModal(true);
+  //   }
+  // }, [currentTab]); // Track currentTab directly
 
   // console.log('currentTab', currentTab);
-  const handleSaveToModel = (template) => {
-    // console.log('browser');
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
-    const details = {
-      'model-id': model?._id,
-      template: JSON.stringify(template),
-      assetId: assets?._id
-    };
-    update(details)
-      .then((res) => {
-        if (!res.error) {
-          // setTimeout(() => {
-          notify('Saved Successfully', 'success');
-          setSaveModal(false);
-          setInitialEdges(edges);
-          setInitialNodes(nodes);
-          getAssets(model?._id);
-          // }, 500);
-        } else {
-          notify(res?.error ?? 'Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        notify('Something went wrong', 'error');
-      });
-  };
+  // const handleSaveToModel = (template) => {
+  //   // console.log('browser');
+  //   nodes.forEach((node) => {
+  //     if (node.isCopied == true) {
+  //       node.isCopied = false;
+  //     }
+  //   });
+  //   const details = {
+  //     'model-id': model?._id,
+  //     template: JSON.stringify(template),
+  //     assetId: assets?._id
+  //   };
+  //   update(details)
+  //     .then((res) => {
+  //       if (!res.error) {
+  //         // setTimeout(() => {
+  //         notify('Saved Successfully', 'success');
+  //         setSaveModal(false);
+  //         setInitialEdges(edges);
+  //         setInitialNodes(nodes);
+  //         getAssets(model?._id);
+  //         // }, 500);
+  //       } else {
+  //         notify(res?.error ?? 'Something went wrong', 'error');
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       notify('Something went wrong', 'error');
+  //     });
+  // };
 
-  const handleCloseSave = () => {
-    setSaveModal(false);
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  };
+  // const handleCloseSave = () => {
+  //   setSaveModal(false);
+  //   setNodes(initialNodes);
+  //   setEdges(initialEdges);
+  // };
 
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
@@ -379,10 +379,10 @@ const BrowserCard = () => {
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     if (name === 'Attack Trees') {
-      setTimeout(() => {
-        dispatch(setTableOpen('Attack Trees Canvas'));
-        dispatch(setAttackScene(scene));
-      }, 500);
+      // setTimeout(() => {
+      dispatch(setTableOpen('Attack Trees Canvas'));
+      dispatch(setAttackScene(scene));
+      // }, 500);
     }
   };
 
@@ -881,7 +881,7 @@ const BrowserCard = () => {
       </CardStyle>
       <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />
       <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
-      {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
+      {/* {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />} */}
     </>
   );
 };
