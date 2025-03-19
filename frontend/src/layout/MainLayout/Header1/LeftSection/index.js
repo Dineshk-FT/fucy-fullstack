@@ -41,35 +41,63 @@ import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibb
 import ColorTheme from '../../../../store/ColorTheme';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
-import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import { closeAll, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import PromptModal from '../../../../ui-component/Modal/PromptModal';
+import SaveModal from '../../../../ui-component/Modal/SaveModal';
+import toast from 'react-hot-toast';
 
 const LeftSection = () => {
   const selector = (state) => ({
     Models: state.Models,
     model: state.model,
+    nodes: state.nodes,
+    edges: state.edges,
+    setInitialNodes: state.setInitialNodes,
+    setInitialEdges: state.setInitialEdges,
+    initialNodes: state.initialNodes,
+    initialEdges: state.initialEdges,
     getModels: state.getModels,
     deleteModels: state.deleteModels,
     getSidebarNode: state.getSidebarNode,
     getTemplates: state.getTemplates,
     setClickedItem: state.setClickedItem,
     getAttackScenario: state.getAttackScenario,
-    attackScenarios: state.attackScenarios
+    attackScenarios: state.attackScenarios,
+    setSaveModal: state.setSaveModal,
+    isSaveModalOpen: state.isSaveModalOpen,
+    getAssets: state.getAssets
   });
 
   const color = ColorTheme();
-  const { Models, model, getModels, deleteModels, getSidebarNode, getTemplates, setClickedItem, getAttackScenario, attackScenarios } =
-    useStore(selector);
+  const {
+    Models,
+    model,
+    getModels,
+    deleteModels,
+    getSidebarNode,
+    getTemplates,
+    setClickedItem,
+    getAttackScenario,
+    attackScenarios,
+    nodes,
+    edges,
+    initialNodes,
+    initialEdges,
+    setInitialNodes,
+    setInitialEdges,
+    isSaveModalOpen,
+    setSaveModal,
+    getAssets
+  } = useStore(selector);
+  const notify = (message, status) => toast[status](message);
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
     Rename: false,
     Open: false,
     Delete: false,
-    AttackModal: false,
-    AIModal: false
+    AttackModal: false
   });
   const [anchorEl, setAnchorEl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,9 +105,57 @@ const LeftSection = () => {
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
   const dispatch = useDispatch();
-  const [openAttackModal, setOpenAttackModal] = useState(false);
-  const [subName, setSubName] = useState('');
 
+  const CheckforChange = () => {
+    const hasChanged = JSON.stringify(nodes) !== JSON.stringify(initialNodes) || JSON.stringify(edges) !== JSON.stringify(initialEdges);
+    if (hasChanged) {
+      setSaveModal(true);
+    }
+  };
+
+  const handleCloseSave = () => {
+    setSaveModal(false);
+    setInitialEdges(edges);
+    setInitialNodes(nodes);
+  };
+
+  const handleSaveToModel = () => {
+    // model - id,
+    //   template
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template),
+      assetId: assets?._id
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          // setTimeout(() => {
+          notify('Saved Successfully', 'success');
+          setSaveModal(false);
+          setInitialEdges(edges);
+          setInitialNodes(nodes);
+          getAssets(model?._id);
+
+          // }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
+  };
   useEffect(() => {
     getSidebarNode();
     getTemplates();
@@ -96,7 +172,10 @@ const LeftSection = () => {
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
 
   const handleTabChange = (tabName) => {
-    dispatch(setPreviousTab(tabName));
+    // console.log('tabName', tabName);
+    if (tabName !== 'Model Definition & Assets') {
+      CheckforChange();
+    }
     setActiveTab(tabName);
     const actions = {
       'Model Definition & Assets': handleModelDefinationClick,
@@ -109,15 +188,17 @@ const LeftSection = () => {
     actions[tabName]?.();
   };
 
+  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [subName, setSubName] = useState('');
+
   const handleContext = (name, event) => {
+    CheckforChange();
     if (name === 'Attack') {
       setOpenAttackModal(true);
       setSubName(name);
     } else if (name === 'Attack Trees') {
       setOpenAttackModal(true);
       setSubName(name);
-    } else if (name === 'create with AI') {
-      setOpenModal((prev) => ({ ...prev, AIModal: true }));
     }
   };
 
@@ -126,7 +207,7 @@ const LeftSection = () => {
   };
 
   const handleClick = (name) => {
-    dispatch(setPreviousTab(name));
+    CheckforChange();
     dispatch(setTitle(name));
     dispatch(setTableOpen(name));
   };
@@ -137,6 +218,7 @@ const LeftSection = () => {
   };
 
   const handleAttackTreeClick = async (e) => {
+    CheckforChange();
     setIsLoading(true);
     setAnchorEl(e.currentTarget);
     if (model?._id) {
@@ -147,7 +229,7 @@ const LeftSection = () => {
   };
 
   const handleAttackTableClick = () => {
-    dispatch(setPreviousTab('Attack'));
+    CheckforChange();
     if (model?._id) {
       setClickedItem(model._id);
       dispatch(setTitle('Attack')); // Changed from 'Attack-Table' to 'Attack'
@@ -181,23 +263,83 @@ const LeftSection = () => {
     {
       name: 'Model Definition & Assets',
       options: [
-        { label: 'New', icon: AddIcon, action: handleAddNewNode }, // Plus for new model
-        { label: 'System', icon: BuildIcon, action: handleSystemTabClick }, // Wrench for system
-        { label: 'Components', icon: ListAltIcon, action: handleComponentsTabClick }, // List for components
-        { label: 'Group', icon: GroupIcon, action: handleGroupDrag } // List for components
+        { label: 'New',
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),  
+          action: handleAddNewNode 
+        }, // Plus for new model
+        { 
+          label: 'System', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=107141&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: handleSystemTabClick 
+        }, // Wrench for system
+        { label: 'Components', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=Vp7Zc5Nc7vav&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: handleComponentsTabClick 
+        }, // List for components
+        {
+          label: 'Group',
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: handleGroupDrag
+        }
       ]
     },
     {
       name: 'Damage Scenarios',
       options: [
-        { label: 'Derivation Table', icon: ReportIcon, action: () => handleClick('Damage Scenarios Derivations') }, // Report for derivation
-        { label: 'Impact Rating Table', icon: StarIcon, action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') } // Star for rating
+        { label: 'Derivation Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Damage Scenarios Derivations') 
+        }, // Report for derivation
+        { 
+          label: 'Impact Rating Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') 
+        } // Star for rating
       ]
     },
     {
       name: 'Threat Scenarios',
       options: [
-        { label: 'Threat Table', icon: WarningIcon, action: () => handleClick('Threat Scenarios') } // Warning for threats
+        { 
+          label: 'Threat Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Threat Scenarios') 
+        } // Warning for threats
       ]
     },
     {
@@ -206,23 +348,67 @@ const LeftSection = () => {
         { label: 'Attack Table', icon: TableIcon, action: handleAttackTableClick }, // Table for attack data
         { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) }, // Add list for attacks
         { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick }, // Tree for attack trees
-        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) }, // Playlist add for trees
-        { label: 'create with AI', icon: AddListIcon, action: (e) => handleContext('create with AI', e) } // Playlist add for trees
+        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) } // Playlist add for trees
       ]
     },
     {
       name: 'Cybersecurity',
       options: [
-        { label: 'Goals', icon: SecurityIcon, action: () => handleClick('Cybersecurity Goals') }, // Shield for goals
-        { label: 'Requirements', icon: AssignmentIcon, action: () => handleClick('Cybersecurity Requirements') }, // Document for requirements
-        { label: 'Controls', icon: ShieldIcon, action: () => handleClick('Cybersecurity Controls') }, // Stronger shield for controls
-        { label: 'Claims', icon: AssessmentIcon, action: () => handleClick('Cybersecurity Claims') } // Assessment for claims
+        { 
+          label: 'Goals', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Cybersecurity Goals') 
+        }, // Shield for goals
+        { 
+          label: 'Requirements', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Requirements') 
+        }, // Document for requirements
+        { 
+          label: 'Controls', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Controls') 
+        }, // Stronger shield for controls
+        { 
+          label: 'Claims', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Claims') 
+        } // Assessment for claims
       ]
     },
     {
       name: 'Risk Determination & Treatment',
       options: [
-        { label: 'Risk Table', icon: AssessmentIcon, action: () => handleClick('Threat Assessment & Risk Treatment') } // Assessment for risk
+        { 
+          label: 'Risk Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Threat Assessment & Risk Treatment') 
+        } // Assessment for risk
       ]
     }
   ];
@@ -336,9 +522,6 @@ const LeftSection = () => {
           getModels={getModels}
         />
       )}
-      {openModal.AIModal && (
-        <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((pre) => ({ ...pre, AIModal: false }))} />
-      )}
       <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
       <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
       {openAttackModal && <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />}
@@ -352,6 +535,7 @@ const LeftSection = () => {
           getAttackScenario={getAttackScenario}
         />
       )}
+      {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={handleCloseSave} handleSave={handleSaveToModel} />}
     </Box>
   );
 };
