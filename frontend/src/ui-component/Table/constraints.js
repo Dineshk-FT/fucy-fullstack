@@ -187,6 +187,7 @@ export const DSTableHeader = [
 ];
 
 export const DsDerivationHeader = [
+  { id: 6, name: 'SNo' },
   { id: 1, name: 'Task/Requirement' },
   { id: 2, name: 'Checked' },
   { id: 3, name: 'Losses of Cybersecurity Properties' },

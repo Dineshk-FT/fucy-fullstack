@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import {
   Autocomplete,
   Box,
@@ -96,13 +97,14 @@ const EditProperties = ({
                   sx={{
                     background: `${color?.sidebarBG} !important`,
                     color: color?.sidebarContent,
-                    '& .MuiInputBase-input': { fontSize: fontSize - 2, padding: '6px 8px' },
-                    width: '150px'
+                    '& .MuiInputBase-input': { fontSize: fontSize - 2, padding: '6px 8px', borderRadius: '0px' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderRadius: '5px' }, // Remove border radius
+                    width: '240px'
                   }}
                 />
               </Box>
 
-              <FormControlLabel
+              {/* <FormControlLabel
                 sx={{ fontSize: fontSize - 2, color: color?.sidebarContent, position: 'relative', top: '10px' }}
                 control={
                   <Checkbox
@@ -111,7 +113,7 @@ const EditProperties = ({
                   />
                 }
                 label="Asset"
-              />
+              /> */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
                 <Autocomplete

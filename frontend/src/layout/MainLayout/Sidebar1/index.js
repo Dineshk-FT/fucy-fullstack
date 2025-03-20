@@ -96,11 +96,11 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </BrowserView>
-      <MobileView>
+      {/* <MobileView>
         <Box sx={{ px: 2 }}>
           <MenuCard />
         </Box>
-      </MobileView>
+      </MobileView> */}
     </>
   );
 

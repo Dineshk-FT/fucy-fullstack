@@ -118,8 +118,9 @@ export default function DsDerivationTable() {
 
   React.useEffect(() => {
     if (damageScenarios['Derivations']) {
-      const scene = damageScenarios['Derivations']?.map((dt) => {
+      const scene = damageScenarios['Derivations']?.map((dt, i) => {
         return {
+          SNo: i + 1,
           id: dt?.id,
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,

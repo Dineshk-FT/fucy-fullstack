@@ -61,7 +61,7 @@ const CanvasSlice = createSlice({
     },
     setEdgeDetails: (state, action) => {
       if (typeof action.payload === 'function') {
-        state.edgeDetails = action.payload(state.details);
+        state.edgeDetails = action.payload(state.edgeDetails);
       } else {
         state.edgeDetails = action.payload;
       }

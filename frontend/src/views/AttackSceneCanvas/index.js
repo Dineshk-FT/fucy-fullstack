@@ -305,11 +305,12 @@ export default function AttackBlock({ attackScene, color }) {
       // console.log(`💾 Saving previous attackScene: ${prevSceneId}`);
       handleSave(prevSceneId);
     }
-
-    setNodes(attackScene.templates.nodes || []);
-    setEdges(attackScene.templates.edges || []);
-    setInitialNodes(attackScene.templates.nodes || []);
-    setInitialEdges(attackScene.templates.edges || []);
+    setTimeout(() => {
+      setNodes(attackScene.templates.nodes || []);
+      setEdges(attackScene.templates.edges || []);
+      setInitialNodes(attackScene.templates.nodes || []);
+      setInitialEdges(attackScene.templates.edges || []);
+    }, 100);
 
     prevAttackSceneRef.current = attackScene;
   }, [attackScene]);
@@ -792,7 +793,6 @@ export default function AttackBlock({ attackScene, color }) {
         </div>
       )}
       <Toaster position="top-right" reverseOrder={false} />
-      {/* {isSaveModalOpen && <SaveModal open={isSaveModalOpen} handleClose={() => setSaveModal(false)} handleSave={handleSave} />} */}
     </div>
   );
 }

@@ -73,8 +73,8 @@ iframe#webpack-dev-server-client-overlay {
 .react-flow__node-group {
   border: 3px solid darkgray !important;
   /* align-items: flex-start; */
-  min-height: 200px;
-  min-width: 200px;
+  /* min-height: 200px;
+  min-width: 200px; */
   width: auto !important;
   height: auto !important;
   /* display: flex; */

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
+import useThrottle from '../../../hooks/useThrottle';
 
 const selector = (state) => ({
   nodes: state.nodes
@@ -10,25 +11,32 @@ const selector = (state) => ({
 const CustomGroupNode = ({ data, id, isConnectable }) => {
   const { nodes } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
-  const [dimesions, setDimenstions] = useState({
+  const [dimesions, setDimensions] = useState({
     width: data?.style?.width || 200,
     height: data?.style?.height || 200
   });
   // console.log('data', data);
   const [value, setValue] = useState(data?.label || '');
 
-  const handleResize = (_, { width: newWidth, height: newHeight }) => {
-    requestAnimationFrame(() => {
-      setDimenstions({ width: newWidth, height: newHeight });
+  const throttledResize = useThrottle((newWidth, newHeight) => {
+    setDimensions({ width: newWidth, height: newHeight });
 
-      // Update node dimensions in Zustand
-      setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, width: newWidth, height: newHeight } } } : node
-        )
-      );
-    });
-  };
+    // Update node dimensions in Zustand
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, width: newWidth, height: newHeight } } } : node
+      )
+    );
+  }, 50);
+
+  const handleResize = useCallback(
+    (_, { width: newWidth, height: newHeight }) => {
+      requestAnimationFrame(() => {
+        throttledResize(newWidth, newHeight);
+      });
+    },
+    [throttledResize]
+  );
 
   // Sync value state with data.label when it changes
   useEffect(() => {
@@ -53,15 +61,18 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           alignSelf: 'flex-start',
           fontSize: '25px',
           fontWeight: 600,
-          marginTop: '1rem',
+          marginTop: '0.5rem',
           textAlign: 'center',
           border: 'none',
           background: 'transparent',
           outline: 'none',
-          width: dimesions?.width
+          minWidth: 100,
+          maxWidth: dimesions?.width - 10, // Give some padding so it doesn't stretch to edges
+          width: '100%' // This allows it to be fully contained within the node
         }}
       />
-      <NodeResizer minWidth={200} minHeight={200} onResize={handleResize} />
+
+      <NodeResizer onResize={handleResize} />
       <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
       <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
       <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />

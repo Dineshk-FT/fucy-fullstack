@@ -47,14 +47,9 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [tabValue, setTabValue] = useState(0); // Managing tab state
-  //   console.log('details', details);
 
-  //   console.log('edges', edges);
-  //   console.log('selectedBlock', selectedBlock);
-  //   console.log('details', details);
   const updateElement = (updateFn) => {
     const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
-    // console.log('updatedEdges', updatedEdges);
     setEdges(updatedEdges);
   };
 
@@ -66,17 +61,19 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   const handleStyle = (e) => {
     const { value } = e.target;
     dispatch(setDetails((state) => ({ ...state, name: value })));
+
     updateElement((element) => ({
       ...element,
       data: { ...element.data, label: value }
     }));
   };
 
-  const handleChecked = (event) => {
-    const { checked } = event.target;
-    dispatch(setDetails((state) => ({ ...state, isAsset: checked })));
-    updateElement((element) => ({ ...element, isAsset: checked }));
-  };
+  // console.log('details', details);
+  // const handleChecked = (event) => {
+  //   const { checked } = event.target;
+  //   dispatch(setDetails((state) => ({ ...state, isAsset: checked })));
+  //   updateElement((element) => ({ ...element, isAsset: checked }));
+  // };
 
   const handleDelete = (valueToDelete) => () => {
     const updatedProperties = details?.properties.filter((property) => property !== valueToDelete);
@@ -150,20 +147,21 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   <TextField
                     variant="outlined"
                     value={details?.name}
-                    onChange={(e) => handleStyle(e, 'name')}
+                    onChange={handleStyle}
                     sx={{
                       background: `${color?.sidebarBG} !important`,
                       color: color?.sidebarContent,
-                      '& .MuiInputBase-input': { fontSize: fontSize - 2, padding: '6px 8px' },
-                      width: '150px'
+                      '& .MuiInputBase-input': { fontSize: fontSize - 2, padding: '6px 8px', borderRadius: '0px' },
+                      '& .MuiOutlinedInput-notchedOutline': { borderRadius: '5px' }, // Remove border radius
+                      width: '240px'
                     }}
                   />
                 </Box>
-                <FormControlLabel
+                {/* <FormControlLabel
                   sx={{ fontSize: fontSize - 2, color: color?.sidebarContent, position: 'relative', top: '10px' }}
                   control={<Checkbox onChange={handleChecked} checked={Boolean(details?.isAsset)} />}
                   label="Asset"
-                />
+                /> */}
               </Box>
 
               {/* Properties */}
@@ -173,11 +171,11 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   multiple
                   id="tags-filled"
                   options={Properties}
-                  value={details?.properties}
+                  value={details?.properties || []} // Ensure it’s always an array
                   onChange={handleChange}
                   sx={{ minWidth: '130px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
+                    (value || []).map((option, index) => (
                       <Chip
                         sx={{ '& .MuiChip-label': { fontSize: 10 } }}
                         key={option}

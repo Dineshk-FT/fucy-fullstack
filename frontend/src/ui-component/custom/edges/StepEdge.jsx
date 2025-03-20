@@ -56,7 +56,6 @@ export default function StepEdge({
   });
 
   const updateEdges = (updatedEdge) => {
-    const edges = getEdges(); // Get current edges
     const newEdges = edges.map(
       (edge) => (edge.id === id ? updatedEdge : edge) // Modify the specific edge with the new data
     );
@@ -64,10 +63,11 @@ export default function StepEdge({
   };
 
   const onEdgeClick = () => {
-    const edges = getEdges(); // Get the current edges
-    const updated = edges.filter((edge) => edge.id !== id); // Remove the clicked edge
+    // Get the current edges
+    const updated = edges?.filter((edge) => edge.id !== id); // Remove the clicked edge
     setEdges(updated); // Update the edges globally
   };
+  // console.log('edges', edges);
 
   const handleSwap = () => {
     if (isMarkerVisible.start && isMarkerVisible.end) {
@@ -94,7 +94,7 @@ export default function StepEdge({
   const onEditEdge = (e) => {
     const selectedEdge = edges.find((edge) => edge.id === id);
     const { isAsset, properties, markerStart, markerEnd } = selectedEdge;
-    console.log('selectedEdge', selectedEdge);
+    // console.log('selectedEdge', selectedEdge);
     dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
     dispatch(setSelectedBlock({ id, data }));
     dispatch(
@@ -171,10 +171,10 @@ export default function StepEdge({
             style={{
               outline: 'none',
               cursor: 'text',
-              color: data?.label.length && selectedBlock?.id === id ? 'black' : data?.label.length ? color?.title : color?.label
+              color: data?.label?.length && selectedBlock?.id === id ? 'black' : data?.label?.length ? color?.title : color?.label
             }}
           >
-            {data?.label.length ? data?.label : 'Enter name'}
+            {data?.label?.length ? data?.label : 'Enter name'}
           </div>
           {/* Buttons as a prefix, hidden by default */}
           <Box className="edge-buttons" display="flex" gap={0.5}>

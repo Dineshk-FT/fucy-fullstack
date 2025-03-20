@@ -43,8 +43,6 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditProperties from '../../ui-component/Poppers/EditProperties';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../ui-component/custom/edges/EditEdge';
-import SaveModal from '../../ui-component/Modal/SaveModal';
-import isEqual from 'lodash/isEqual';
 
 const selector = (state) => ({
   nodes: state.nodes,

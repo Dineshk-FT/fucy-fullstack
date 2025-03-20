@@ -56,11 +56,10 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   const borderColor = RatingColor(getHighestRating(nodes));
 
   const calculateFontSize = () => {
-    const baseFontSize = 14; // Base font size
     const maxFontSize = 24; // Maximum font size
     const minFontSize = 8; // Minimum font size
     const sizeFactor = Math.min(nodeDimensions.width, nodeDimensions.height); // Factor based on the smaller dimension
-    const calculatedFontSize = sizeFactor / 9.5; // Adjust divisor to tweak scaling
+    const calculatedFontSize = sizeFactor / 8; // Adjust divisor to tweak scaling
     return Math.min(maxFontSize, Math.max(minFontSize, calculatedFontSize));
   };
 
@@ -113,8 +112,8 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   return (
     <>
       <NodeResizer
-        minWidth={180}
-        minHeight={150}
+        // minWidth={180}
+        // minHeight={150}
         onResize={(event, params) => {
           updateNodeDimensions(params.width, params.height);
         }}
