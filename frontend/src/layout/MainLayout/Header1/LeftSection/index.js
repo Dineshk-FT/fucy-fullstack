@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState, useEffect } from 'react';
-import { Box, Tooltip, Typography, IconButton } from '@mui/material';
+import { Box, Tooltip, Typography, IconButton, Collapse } from '@mui/material';
 import {
   Add as AddIcon,
   FolderOpen as FolderOpenIcon,
@@ -14,21 +14,22 @@ import {
   Deselect as DeselectIcon,
   TableChart as TableIcon,
   Edit as EditIcon,
-  // New imports for more specific icons
-  CreateNewFolder as NewFolderIcon, // For new project
-  DriveFileRenameOutline as RenameIcon, // For rename
-  Assessment as AssessmentIcon, // For analysis/risk
-  Warning as WarningIcon, // For threats/damage
-  Star as StarIcon, // For ratings
-  Security as SecurityIcon, // For cybersecurity
-  PlaylistAdd as AddListIcon, // For adding attacks
-  AccountTree as TreeIcon, // For attack trees
-  Build as BuildIcon, // For system/components
-  Assignment as AssignmentIcon, // For requirements/claims
-  Shield as ShieldIcon, // For controls
-  ReportProblem as ReportIcon, // For derivation
-  ListAlt as ListAltIcon, // For detailed tables
-  Group as GroupIcon
+  CreateNewFolder as NewFolderIcon,
+  DriveFileRenameOutline as RenameIcon,
+  Assessment as AssessmentIcon,
+  Warning as WarningIcon,
+  Star as StarIcon,
+  Security as SecurityIcon,
+  PlaylistAdd as AddListIcon,
+  AccountTree as TreeIcon,
+  Build as BuildIcon,
+  Assignment as AssignmentIcon,
+  Shield as ShieldIcon,
+  ReportProblem as ReportIcon,
+  ListAlt as ListAltIcon,
+  Group as GroupIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import TemplateList from '../../../../views/Libraries';
 import Components from '../../../../views/NodeList';
@@ -56,12 +57,26 @@ const LeftSection = () => {
     getTemplates: state.getTemplates,
     setClickedItem: state.setClickedItem,
     getAttackScenario: state.getAttackScenario,
-    attackScenarios: state.attackScenarios
+    attackScenarios: state.attackScenarios,
+    isCollapsed: state.isCollapsed,
+    setCollapsed: state.setCollapsed
   });
 
   const color = ColorTheme();
-  const { Models, model, getModels, deleteModels, getSidebarNode, getTemplates, setClickedItem, getAttackScenario, attackScenarios } =
-    useStore(selector);
+  const {
+    Models,
+    model,
+    getModels,
+    deleteModels,
+    getSidebarNode,
+    getTemplates,
+    setClickedItem,
+    getAttackScenario,
+    attackScenarios,
+    isCollapsed,
+    setCollapsed
+  } = useStore(selector);
+  useStore(selector);
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
@@ -107,6 +122,10 @@ const LeftSection = () => {
       'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment')
     };
     actions[tabName]?.();
+  };
+
+  const handleToggleCollapse = () => {
+    setCollapsed((prev) => !prev);
   };
 
   const handleContext = (name, event) => {
@@ -181,42 +200,28 @@ const LeftSection = () => {
     {
       name: 'Model Definition & Assets',
       options: [
-        { label: 'New',
+        {
+          label: 'New',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ),  
-          action: handleAddNewNode 
+            <img src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: handleAddNewNode
         }, // Plus for new model
-        { 
-          label: 'System', 
-          icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=107141&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ), 
-          action: handleSystemTabClick 
-        }, // Wrench for system
-        { label: 'Components', 
-          icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=Vp7Zc5Nc7vav&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ), 
-          action: handleComponentsTabClick 
-        }, // List for components
+        // {
+        //   label: 'System',
+        //   icon: () => <img src="https://img.icons8.com/?size=100&id=107141&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+        //   action: handleSystemTabClick
+        // }, // Wrench for system
+        // {
+        //   label: 'Components',
+        //   icon: () => (
+        //     <img src="https://img.icons8.com/?size=100&id=Vp7Zc5Nc7vav&format=png&color=000000" style={{ width: 24, height: 24 }} />
+        //   ),
+        //   action: handleComponentsTabClick
+        // }, // List for components
         {
           label: 'Group',
-          icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ),
+          icon: () => <img src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000" style={{ width: 24, height: 24 }} />,
           action: handleGroupDrag
         }
       ]
@@ -224,39 +229,31 @@ const LeftSection = () => {
     {
       name: 'Damage Scenarios',
       options: [
-        { label: 'Derivation Table', 
+        {
+          label: 'Derivation Table',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Damage Scenarios Derivations') 
+          action: () => handleClick('Damage Scenarios Derivations')
         }, // Report for derivation
-        { 
-          label: 'Impact Rating Table', 
+        {
+          label: 'Impact Rating Table',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
+            <img src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') 
+          action: () => handleClick('Damage Scenarios - Collection & Impact Ratings')
         } // Star for rating
       ]
     },
     {
       name: 'Threat Scenarios',
       options: [
-        { 
-          label: 'Threat Table', 
+        {
+          label: 'Threat Table',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Threat Scenarios') 
+          action: () => handleClick('Threat Scenarios')
         } // Warning for threats
       ]
     },
@@ -273,60 +270,41 @@ const LeftSection = () => {
     {
       name: 'Cybersecurity',
       options: [
-        { 
-          label: 'Goals', 
-          icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ),
-          action: () => handleClick('Cybersecurity Goals') 
+        {
+          label: 'Goals',
+          icon: () => <img src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+          action: () => handleClick('Cybersecurity Goals')
         }, // Shield for goals
-        { 
-          label: 'Requirements', 
+        {
+          label: 'Requirements',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ), 
-          action: () => handleClick('Cybersecurity Requirements') 
+            <img src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Cybersecurity Requirements')
         }, // Document for requirements
-        { 
-          label: 'Controls', 
+        {
+          label: 'Controls',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ), 
-          action: () => handleClick('Cybersecurity Controls') 
+            <img src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Cybersecurity Controls')
         }, // Stronger shield for controls
-        { 
-          label: 'Claims', 
-          icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
-          ), 
-          action: () => handleClick('Cybersecurity Claims') 
+        {
+          label: 'Claims',
+          icon: () => <img src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+          action: () => handleClick('Cybersecurity Claims')
         } // Assessment for claims
       ]
     },
     {
       name: 'Risk Determination & Treatment',
       options: [
-        { 
-          label: 'Risk Table', 
+        {
+          label: 'Risk Table',
           icon: () => (
-            <img
-              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
-              style={{ width: 24, height: 24 }}
-            />
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Threat Assessment & Risk Treatment') 
+          action: () => handleClick('Threat Assessment & Risk Treatment')
         } // Assessment for risk
       ]
     }
@@ -340,94 +318,190 @@ const LeftSection = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-evenly', backgroundColor: 'transparent', padding: '4px', paddingTop: '8px' }}>
-        {tabs.map((tab) => (
-          <Typography
-            key={tab.name}
-            onClick={() => handleTabChange(tab.name)}
-            sx={{
-              cursor: 'pointer',
-              fontSize: '12px',
-              color: activeTab === tab.name ? 'blue' : color.title,
-              fontWeight: activeTab === tab.name ? 'bold' : 'normal',
-              margin: '0 8px',
-              padding: '2px 4px',
-              borderBottom: activeTab === tab.name ? '2px solid blue' : 'none',
-              paddingBottom: activeTab === tab.name ? '2px' : '0px',
-              '&:hover': { color: 'blue' }
-            }}
-          >
-            {tab.name}
-          </Typography>
-        ))}
-      </Box>
-
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-evenly',
-          padding: '6px',
-          borderRadius: '10px',
-          backgroundColor: color.canvasBG,
-          border: '1px solid #ddd',
-          gap: '5px',
-          // width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
-          width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
-          height: { xs: '50px', sm: '50px', md: 'inherit', lg: 'auto' },
-          overflow: 'auto',
-          my: 0.4
+          alignItems: 'center',
+          backgroundColor: 'transparent',
+          padding: '4px',
+          paddingTop: '8px'
         }}
       >
-        {tabs
-          .find((tab) => tab.name === activeTab)
-          ?.options.map((option, index) => {
-            const Icon = option.icon;
-            return (
-              <Box
-                key={index}
+        <IconButton
+          onClick={handleToggleCollapse}
+          sx={{
+            padding: '0px',
+            color: color.title,
+            '&:hover': { backgroundColor: color.sidebarBG }
+          }}
+        >
+          {isCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+        </IconButton>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', flexGrow: 1 }}>
+          {tabs.map((tab) => (
+            <Box key={tab.name} sx={{ position: 'relative', display: 'inline-block' }}>
+              <Typography
+                onClick={() => handleTabChange(tab.name)}
                 sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  width: '100px'
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  color: activeTab === tab.name ? 'blue' : color.title,
+                  fontWeight: activeTab === tab.name ? 'bold' : 'normal',
+                  margin: '0 8px',
+                  padding: '2px 4px',
+                  borderBottom: activeTab === tab.name ? '2px solid blue' : 'none',
+                  paddingBottom: activeTab === tab.name ? '2px' : '0px',
+                  '&:hover': { color: 'blue' }
                 }}
-                draggable={option.label === 'Group'} // Make only the Group option draggable
-                onDragStart={option.label === 'Group' ? handleGroupDrag : undefined} // Handle drag start
               >
-                {option.label && (
-                  <>
-                    <Tooltip title={option.label}>
-                      <IconButton
-                        onClick={option.action}
+                {tab.name}
+              </Typography>
+
+              {isCollapsed && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    // top: '100%',
+                    top: 'calc(100% + 2px)',
+                    left: 0,
+                    zIndex: 1300,
+                    display: 'none',
+                    backgroundColor: color.canvasBG,
+                    borderRadius: '10px',
+                    border: '1px solid #ddd',
+                    padding: '6px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-evenly',
+                    gap: '5px',
+                    width: 'max-content',
+                    maxWidth: '300px',
+                    opacity: 0,
+                    transition: 'opacity 0.2s ease-in-out',
+                    '&:hover': { display: 'flex', opacity: 1 },
+                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 }
+                  }}
+                >
+                  {tab.options.map((option, index) => {
+                    const Icon = option.icon;
+                    return (
+                      <Box
+                        key={index}
                         sx={{
-                          padding: '6px',
-                          fontSize: '12px',
-                          color: color.title,
-                          backgroundColor: color?.sidebarBG,
-                          border: '1px solid #ddd',
-                          '&:hover': { backgroundColor: color.sidebarBG }
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          width: '100px'
+                        }}
+                        draggable={option.label === 'Group'}
+                        onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
+                      >
+                        {option.label && (
+                          <>
+                            <Tooltip title={option.label}>
+                              <IconButton
+                                onClick={option.action}
+                                sx={{
+                                  padding: '6px',
+                                  fontSize: '12px',
+                                  color: color.title,
+                                  backgroundColor: color?.sidebarBG,
+                                  border: '1px solid #ddd',
+                                  '&:hover': { backgroundColor: color.sidebarBG }
+                                }}
+                              >
+                                <Icon fontSize="medium" />
+                              </IconButton>
+                            </Tooltip>
+                            <Typography
+                              sx={{
+                                marginTop: '4px',
+                                fontSize: '10px',
+                                textAlign: 'center',
+                                color: color.title
+                              }}
+                            >
+                              {option.label}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+      <Collapse in={!isCollapsed}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-evenly',
+            padding: '6px',
+            borderRadius: '10px',
+            backgroundColor: color.canvasBG,
+            border: '1px solid #ddd',
+            gap: '5px',
+            width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
+            height: { xs: '50px', sm: '50px', md: 'inherit', lg: 'auto' },
+            overflow: 'auto',
+            my: 0.4
+          }}
+        >
+          {tabs
+            .find((tab) => tab.name === activeTab)
+            ?.options.map((option, index) => {
+              const Icon = option.icon;
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '100px'
+                  }}
+                  draggable={option.label === 'Group'}
+                  onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
+                >
+                  {option.label && (
+                    <>
+                      <Tooltip title={option.label}>
+                        <IconButton
+                          onClick={option.action}
+                          sx={{
+                            padding: '6px',
+                            fontSize: '12px',
+                            color: color.title,
+                            backgroundColor: color?.sidebarBG,
+                            border: '1px solid #ddd',
+                            '&:hover': { backgroundColor: color.sidebarBG }
+                          }}
+                        >
+                          <Icon fontSize="medium" />
+                        </IconButton>
+                      </Tooltip>
+                      <Typography
+                        sx={{
+                          marginTop: '4px',
+                          fontSize: '10px',
+                          textAlign: 'center',
+                          color: color.title
                         }}
                       >
-                        <Icon fontSize="medium" />
-                      </IconButton>
-                    </Tooltip>
-                    <Typography
-                      sx={{
-                        marginTop: '4px',
-                        fontSize: '10px',
-                        textAlign: 'center',
-                        color: color.title
-                      }}
-                    >
-                      {option.label}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            );
-          })}
-      </Box>
+                        {option.label}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              );
+            })}
+        </Box>
+      </Collapse>
 
       {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={handleCloseNewModal} />}
       {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={handleCloseRenameModal} Models={Models} />}
