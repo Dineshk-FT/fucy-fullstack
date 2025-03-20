@@ -4,10 +4,10 @@ export const gridSpacing = 3;
 export const drawerWidth = 400;
 export const sidebarWidth = 400;
 export const appDrawerWidth = 320;
-export const navbarHeight = 115;
+export const getNavbarHeight = (isCollapsed) => (isCollapsed ? 50 : 115);
 export const height = '93svh';
 export const fontSize = 13;
-export const tableHeight = '60vh';
+export const tableHeight = '72vh';
 //  export const ColorTheme = {
 //     navBG:'#a2a8d3' ,
 //     tabBG:'#e7eaf6',

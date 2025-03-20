@@ -74,6 +74,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   clickedItem: [],
   isSaveModalOpen: false,
   selectedElement: {},
+  isCollapsed: true,
 
   assets: {
     id: '1',
@@ -615,6 +616,13 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // Object to store filtered data for multiple tables
   filteredTableData: {},
+
+  // setter for isCollapsed
+  setCollapsed: (value) =>
+    set((state) => ({
+      isCollapsed: typeof value === 'function' ? value(state.isCollapsed) : value
+    }
+  )),
 
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
