@@ -181,23 +181,83 @@ const LeftSection = () => {
     {
       name: 'Model Definition & Assets',
       options: [
-        { label: 'New', icon: AddIcon, action: handleAddNewNode }, // Plus for new model
-        { label: 'System', icon: BuildIcon, action: handleSystemTabClick }, // Wrench for system
-        { label: 'Components', icon: ListAltIcon, action: handleComponentsTabClick }, // List for components
-        { label: 'Group', icon: GroupIcon, action: handleGroupDrag } // List for components
+        { label: 'New',
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),  
+          action: handleAddNewNode 
+        }, // Plus for new model
+        { 
+          label: 'System', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=107141&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: handleSystemTabClick 
+        }, // Wrench for system
+        { label: 'Components', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=Vp7Zc5Nc7vav&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: handleComponentsTabClick 
+        }, // List for components
+        {
+          label: 'Group',
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: handleGroupDrag
+        }
       ]
     },
     {
       name: 'Damage Scenarios',
       options: [
-        { label: 'Derivation Table', icon: ReportIcon, action: () => handleClick('Damage Scenarios Derivations') }, // Report for derivation
-        { label: 'Impact Rating Table', icon: StarIcon, action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') } // Star for rating
+        { label: 'Derivation Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Damage Scenarios Derivations') 
+        }, // Report for derivation
+        { 
+          label: 'Impact Rating Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Damage Scenarios - Collection & Impact Ratings') 
+        } // Star for rating
       ]
     },
     {
       name: 'Threat Scenarios',
       options: [
-        { label: 'Threat Table', icon: WarningIcon, action: () => handleClick('Threat Scenarios') } // Warning for threats
+        { 
+          label: 'Threat Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Threat Scenarios') 
+        } // Warning for threats
       ]
     },
     {
@@ -213,16 +273,61 @@ const LeftSection = () => {
     {
       name: 'Cybersecurity',
       options: [
-        { label: 'Goals', icon: SecurityIcon, action: () => handleClick('Cybersecurity Goals') }, // Shield for goals
-        { label: 'Requirements', icon: AssignmentIcon, action: () => handleClick('Cybersecurity Requirements') }, // Document for requirements
-        { label: 'Controls', icon: ShieldIcon, action: () => handleClick('Cybersecurity Controls') }, // Stronger shield for controls
-        { label: 'Claims', icon: AssessmentIcon, action: () => handleClick('Cybersecurity Claims') } // Assessment for claims
+        { 
+          label: 'Goals', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Cybersecurity Goals') 
+        }, // Shield for goals
+        { 
+          label: 'Requirements', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Requirements') 
+        }, // Document for requirements
+        { 
+          label: 'Controls', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Controls') 
+        }, // Stronger shield for controls
+        { 
+          label: 'Claims', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ), 
+          action: () => handleClick('Cybersecurity Claims') 
+        } // Assessment for claims
       ]
     },
     {
       name: 'Risk Determination & Treatment',
       options: [
-        { label: 'Risk Table', icon: AssessmentIcon, action: () => handleClick('Threat Assessment & Risk Treatment') } // Assessment for risk
+        { 
+          label: 'Risk Table', 
+          icon: () => (
+            <img
+              src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+              style={{ width: 24, height: 24 }}
+            />
+          ),
+          action: () => handleClick('Threat Assessment & Risk Treatment') 
+        } // Assessment for risk
       ]
     }
   ];
