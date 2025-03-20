@@ -52,7 +52,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
   };
 
   return (
-    <div style={{ height: dimesions?.height }}>
+    <div style={{ height: dimesions?.height, width: dimesions?.width }}>
       <input
         type="text"
         value={value}
@@ -67,7 +67,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           background: 'transparent',
           outline: 'none',
           minWidth: 100,
-          maxWidth: dimesions?.width - 10, // Give some padding so it doesn't stretch to edges
+          // maxWidth: dimesions?.width - 10, // Give some padding so it doesn't stretch to edges
           width: '100%' // This allows it to be fully contained within the node
         }}
       />

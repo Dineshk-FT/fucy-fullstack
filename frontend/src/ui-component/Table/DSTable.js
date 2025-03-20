@@ -531,8 +531,9 @@ export default function DsTable() {
           .then((res) => {
             // console.log('res', res);
             if (!res.error) {
-              notify(res.message ?? 'Deleted successfully', 'success');
+              notify(res.message ?? 'Updated successfully', 'success');
               getDamageScenarios(model?._id);
+              getThreatScenario(model?._id);
               handleClosePopper();
             } else {
               notify(res.error ?? 'Something went wrong', 'error');
