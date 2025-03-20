@@ -330,6 +330,7 @@ const LeftSection = () => {
       {openModal.Delete && (
         <DeleteProject
           open={openModal.Delete}
+          model={model}
           handleClose={handleCloseDeleteModal}
           Models={Models}
           deleteModels={deleteModels}
