@@ -369,7 +369,7 @@ export default function DsDerivationTable() {
             '& .MuiPaper-root': { maxHeight: '100vh' },
             borderRadius: '0px',
             padding: 0.25,
-            maxHeight: '70svh',
+            maxHeight: tableHeight,
             scrollbarWidth: 'thin'
           }}
         >
