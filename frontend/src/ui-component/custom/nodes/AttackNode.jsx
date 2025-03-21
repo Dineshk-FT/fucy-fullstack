@@ -6,7 +6,7 @@ import { RatingColor } from '../../Table/constraints';
 import { useSelector } from 'react-redux';
 
 const selector = (state) => ({
-  nodes: state.nodes,
+  nodes: state.attackNodes,
   updateOverallRating: state.updateOverallRating,
   attackId: state.attackScenarios.subs[1]['_id']
 });
@@ -24,15 +24,6 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
     setNodes((nodes) => nodes.filter((node) => node.id !== id));
   };
 
-  const handleupdate = useCallback((rating) => {
-    const details = {
-      id: attackId,
-      'scene-id': attackScene?.ID,
-      rating: rating
-    };
-    // console.log('details', details);
-    // updateOverallRating(details)
-  }, []);
   const getHighestRating = (nodes) => {
     const priorityOrder = {
       'Very Low': 1,
@@ -54,7 +45,7 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   };
 
   const borderColor = RatingColor(getHighestRating(nodes));
-
+  // console.log('borderColor', borderColor);
   const calculateFontSize = () => {
     const maxFontSize = 24; // Maximum font size
     const minFontSize = 8; // Minimum font size

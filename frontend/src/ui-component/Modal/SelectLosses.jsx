@@ -29,6 +29,8 @@ export default function SelectLosses({
   getThreatScenario
 }) {
   const color = ColorTheme();
+  // console.log('details', details);
+  // console.log('selectedRow', selectedRow);
   useEffect(() => {
     const updateDetailsWithCyberLosses = (details, cyberLosses) => {
       const updatedDetails = details.map((item) => {

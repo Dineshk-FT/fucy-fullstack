@@ -260,9 +260,9 @@ export const RiskTreatmentHeaderTable = [
   { id: 25, name: 'Risk Treatment Justification', w: 100, minW: 80 },
   { id: 26, name: 'Applied Measures', w: 100, minW: 80 },
   { id: 27, name: 'Detailed / Combained Threat Scenarios', w: 100, minW: 80 },
-  { id: 28, name: 'Cybersecurity Goals', w: 120, minW: 100 },
-  { id: 29, name: 'Contributing Requirements', w: 120, minW: 100 },
-  { id: 30, name: 'Cybersecurity Claims', w: 120, minW: 100 }
+  { id: 28, name: 'Cybersecurity Goals', w: 160, minW: 140 },
+  { id: 29, name: 'Contributing Requirements', w: 160, minW: 140 },
+  { id: 30, name: 'Cybersecurity Claims', w: 160, minW: 140 }
 ];
 
 export const VulnerbilityHeader = [

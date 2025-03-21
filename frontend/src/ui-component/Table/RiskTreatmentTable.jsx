@@ -419,23 +419,52 @@ export default function RiskTreatmentTable() {
                 <StyledTableCell
                   component="th"
                   scope="row"
-                  onClick={() => handleOpenSelect(row, item.name)}
-                  sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                  sx={{
+                    width: `${columnWidths[item.id] || 'auto'}`,
+                    textAlign: 'center', // Centers content in the table cell
+                    verticalAlign: 'middle'
+                  }}
                 >
                   {row[item.name] && row[item.name].length ? (
-                    row[item?.name]?.map((goal) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={goal?.ID}>
-                        <img
-                          src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
-                          alt="damage"
-                          height="15px"
-                          width="15px"
-                        />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{goal?.Name}</span>
-                      </span>
-                    ))
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center" // Ensures overall centering
+                      justifyContent="center"
+                      flexWrap="wrap"
+                      width="100%"
+                    >
+                      {row[item.name].map((goal, i) => (
+                        <Box
+                          key={goal?.ID || i}
+                          display="flex"
+                          alignItems="flex-start" // Ensures all items start at the same position
+                          gap={1}
+                          justifyContent="center"
+                          sx={{
+                            textAlign: 'left',
+                            width: '100%',
+                            maxWidth: '250px', // Keeps structure uniform
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            mb: 0.8
+                          }}
+                        >
+                          <img
+                            src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
+                            alt="icon"
+                            height="15px"
+                            width="15px"
+                            style={{ alignSelf: 'flex-start' }} // Aligns icon with text start position
+                          />
+                          <Box display="flex" flexDirection="column" gap="5px" minWidth="100px">
+                            {goal?.Name}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
                   ) : (
-                    <InputLabel>{item.name === 'Cybersecurity Goals' ? 'Select Goals' : 'Select Claims'}</InputLabel>
+                    <InputLabel>N/A</InputLabel>
                   )}
                 </StyledTableCell>
               );
@@ -676,10 +705,16 @@ export default function RiskTreatmentTable() {
             ))}
           </TableBody>
         </Table>
+        {!rows?.length && (
+          <Box display="flex">
+            <Typography variant="h5">Note </Typography>: drag the threat & drop in the header
+          </Box>
+        )}
       </TableContainer>
 
       <TablePagination
         sx={{
+          position: 'absolute',
           '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
           '& .MuiSelect-select': { color: color?.sidebarContent },
           '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
