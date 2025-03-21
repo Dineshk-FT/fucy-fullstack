@@ -7,7 +7,7 @@ export const appDrawerWidth = 320;
 export const getNavbarHeight = (isCollapsed) => (isCollapsed ? 50 : 115);
 export const height = '93svh';
 export const fontSize = 13;
-export const tableHeight = '72vh';
+export const tableHeight = '100vh';
 //  export const ColorTheme = {
 //     navBG:'#a2a8d3' ,
 //     tabBG:'#e7eaf6',
