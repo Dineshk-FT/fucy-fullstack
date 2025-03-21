@@ -85,21 +85,18 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
     textAlign: 'center',
+    verticalAlign: 'middle',
     '& .MuiTableCell-root': {
       transition: 'width 0.2s ease'
     }
-    // color: '#000'
   }
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  // '&:nth-of-type(odd)': {
-  //   backgroundColor: theme.palette.action.hover,
-  // },
-  // hide last border
   '&:last-child td, &:last-child th': {
     border: 0
-  }
+  },
+  height: '3.5em' // Fixed row height
 }));
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -119,12 +116,10 @@ const renderMenuItem = (option, name) => (
       title={
         <Typography
           sx={{
-            // backgroundColor: 'black',
-            // color: 'white',
             fontSize: '14px',
             fontWeight: 600,
-            padding: '8px', // Optional: Adds some padding for better spacing
-            borderRadius: '4px' // Optional: Adds rounded corners
+            padding: '8px',
+            borderRadius: '4px'
           }}
         >
           {option?.description[name]}
@@ -137,28 +132,34 @@ const renderMenuItem = (option, name) => (
 );
 
 const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impact, name, columnWidths }) => {
-  // console.log('name', name);
-  const [open, setOpen] = useState(false); // Manage open state of dropdown
+  const [open, setOpen] = useState(false);
   const selectRef = useRef(null);
+
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!open) {
-      setOpen(true); // Open dropdown on left-click only if not already open
+      setOpen(true);
     }
   };
+
   return (
     <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
       <FormControl
         sx={{
-          // width: 130,
           width: columnWidths[item?.id] ?? 'auto',
           background: 'transparent',
           '& .MuiInputBase-root': {
             backgroundColor: 'transparent'
           },
           '& .MuiSelect-select': {
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
+            padding: '0 24px 0 8px', // Remove vertical padding to fit within cell
+            fontSize: '13px', // Match font size with other cells
+            lineHeight: '1.5em', // Match line height
+            height: '1.5em', // Ensure the select fits within one line
+            display: 'flex',
+            alignItems: 'center' // Center the content vertically
           },
           '& .MuiSvgIcon-root': {
             display: 'none'
@@ -191,6 +192,7 @@ const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impa
 };
 
 const notify = (message, status) => toast[status](message);
+
 export default function DsTable() {
   const color = ColorTheme();
   const {
@@ -218,27 +220,26 @@ export default function DsTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
-  const [page, setPage] = useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = useState(25); // Add state for rows per page
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const [openFilter, setOpenFilter] = useState(false);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
-  // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+
   const Head = useMemo(() => {
     if (stakeHolder) {
       return stakeHeader;
     } else {
-      return DSTableHeader.filter((header) => visibleColumns.includes(header.name)); // Only show columns that are visible
+      return DSTableHeader.filter((header) => visibleColumns.includes(header.name));
     }
   }, [visibleColumns]);
 
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(DSTableHeader.map((col) => [col.id, col.w])));
 
-  // fn for resizing the columns
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -264,7 +265,7 @@ export default function DsTable() {
         row.id === rowId
           ? {
               ...row,
-              [item]: !value // Update checkbox state instantly
+              [item]: !value
             }
           : row
       )
@@ -284,19 +285,17 @@ export default function DsTable() {
     updateDerived(details)
       .then((res) => {
         if (res) {
-          getDamageScenarios(model?._id); // Fetch updated data from backend
+          getDamageScenarios(model?._id);
         }
       })
       .catch((err) => {
         console.error('Error updating row:', err);
-
-        // Revert UI state if backend update fails
         setFiltered((prevFiltered) =>
           prevFiltered.map((row) =>
             row.id === rowId
               ? {
                   ...row,
-                  [item]: value // Revert to previous state
+                  [item]: value
                 }
               : row
           )
@@ -304,8 +303,6 @@ export default function DsTable() {
       });
   };
 
-  // console.log('selectedRows', selectedRows);
-  // console.log('damageID', damageID);
   const handleDeleteSelected = () => {
     const details = {
       'model-id': model?._id,
@@ -333,12 +330,10 @@ export default function DsTable() {
     setSelectedRows(
       (prevSelectedRows) =>
         prevSelectedRows.includes(rowId)
-          ? prevSelectedRows.filter((id) => id !== rowId) // Unselect if already selected
-          : [...prevSelectedRows, rowId] // Select if not selected
+          ? prevSelectedRows.filter((id) => id !== rowId)
+          : [...prevSelectedRows, rowId]
     );
   };
-
-  // console.log('damageID', damageID);
 
   const handleOpenCl = (row) => {
     setSelectedRow(row);
@@ -371,7 +366,6 @@ export default function DsTable() {
     setSearchTerm(value);
   };
 
-  // console.log('damageScenarios', damageScenarios['Details']);
   useEffect(() => {
     if (damageScenarios['Details']) {
       const scene = damageScenarios['Details']?.map((ls, i) => ({
@@ -399,15 +393,13 @@ export default function DsTable() {
   }, [damageScenarios]);
 
   const refreshAPI = () => {
-    // console.log('model', model);
     getDamageScenarios(model?._id);
   };
-  // console.log('rows', rows);
 
-  // console.log('Details', Details);
   const handleOpenModalDs = () => {
     setOpenDs(true);
   };
+
   const handleCloseDs = () => {
     setOpenDs(false);
   };
@@ -415,12 +407,10 @@ export default function DsTable() {
   const handleChange = (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
-    const prevValue = row.impacts[name]; // Store previous value in case of failure
+    const prevValue = row.impacts[name];
 
-    // Optimistically update the UI
     setFiltered((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r)));
 
-    // Prepare API data
     const updatedRow = JSON.parse(JSON.stringify(row));
     updatedRow.impacts[name] = value;
 
@@ -433,13 +423,11 @@ export default function DsTable() {
     updateImpact(info)
       .then((res) => {
         if (res) {
-          refreshAPI(); // Fetch latest data if successful
+          refreshAPI();
         }
       })
       .catch((err) => {
         console.error('Error updating impact:', err);
-
-        // Revert UI if API request fails
         setFiltered((prevFiltered) =>
           prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r))
         );
@@ -482,18 +470,15 @@ export default function DsTable() {
     };
 
     const val = Object.values(impact)?.map((it) => pattern(it));
-
     const maxImpactValue = val.length ? Math.max(...val) : 0;
 
     return impactLabel(maxImpactValue);
   }, []);
 
-  // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -506,6 +491,8 @@ export default function DsTable() {
     const [anchorEl, setAnchorEl] = useState(null);
     const [isPopperFocused, setIsPopperFocused] = useState(false);
     const isSelected = selectedRows.includes(row.id);
+    const WIDTH_THRESHOLD = 250; // Threshold for switching between truncation and wrapping (in pixels)
+
     const handleEditClick = (event, fieldName, currentValue) => {
       event.stopPropagation();
       setEditingField(fieldName);
@@ -529,7 +516,6 @@ export default function DsTable() {
 
         updateName(details)
           .then((res) => {
-            // console.log('res', res);
             if (!res.error) {
               notify(res.message ?? 'Updated successfully', 'success');
               getDamageScenarios(model?._id);
@@ -565,6 +551,9 @@ export default function DsTable() {
         >
           {Head?.map((item, index) => {
             const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
+            const currentWidth = columnWidths[item.id] || item.w; // Get the current width of the column
+            const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
+
             let cellContent;
             switch (true) {
               case isEditableField:
@@ -576,18 +565,45 @@ export default function DsTable() {
                       onMouseLeave={() => {
                         if (!anchorEl) setHoveredField(null);
                       }}
-                      style={{ position: 'relative', cursor: 'pointer', width: columnWidths[item.id] ?? item?.w, minWidth: item?.minW }}
+                      style={{ width: currentWidth, minWidth: item?.minW }}
+                      sx={{
+                        // display: 'flex', // Use flex to align text and icon
+                        // alignItems: 'center', // Center vertically
+                        position: 'relative',
+                        cursor: 'pointer'
+                      }}
                     >
-                      {row[item.name] || '-'}
+                      <Box
+                        sx={{
+                          flex: 1, // Take up remaining space
+                          overflow: 'hidden', // Ensure overflow is handled
+                          ...(shouldTruncate
+                            ? {
+                              whiteSpace: 'nowrap', // Truncate text into a single line
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }
+                          : {
+                              whiteSpace: 'normal', // Wrap text into two lines
+                              overflowWrap: 'break-word',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            })
+                        }}
+                      >
+                        <Tooltip title={row[item.name]} placement="top">
+                          <span>{row[item.name] || '-'}</span>
+                        </Tooltip>
+                      </Box>
                       {(hoveredField === item.name || editingField === item.name) && (
                         <IconButton
                           size="small"
                           onClick={(e) => handleEditClick(e, item.name, row[item.name])}
                           sx={{
-                            position: 'absolute',
-                            top: '15%',
-                            right: '-2px',
-                            transform: 'translateY(-50%)'
+                            flexShrink: 0, // Prevent icon from shrinking
+                            marginLeft: '8px' // Space between text and icon
                           }}
                         >
                           <EditIcon sx={{ fontSize: 14 }} />
@@ -630,7 +646,6 @@ export default function DsTable() {
                             style={{
                               marginBottom: '5px',
                               display: 'flex',
-                              // justifyContent: 'center',
                               alignItems: 'center',
                               gap: '5px',
                               width: `${columnWidths[item.id] || 'auto'}`
@@ -737,18 +752,11 @@ export default function DsTable() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'auto' // Ensure the table takes up the full height of the parent
+        height: 'auto'
       }}
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          {/* <KeyboardBackspaceRoundedIcon
-            sx={{
-              cursor: 'pointer',
-              color: color?.title
-            }}
-            onClick={handleBack}
-          /> */}
           <Typography
             sx={{
               color: color?.title,
@@ -768,13 +776,13 @@ export default function DsTable() {
             onChange={handleSearch}
             sx={{
               justifyContent: 'center',
-              padding: 0.5, // Reduce padding
+              padding: 0.5,
               '& .MuiInputBase-input': {
-                fontSize: '0.75rem', // Smaller font size
-                padding: '0.5rem' // Adjust padding inside input
+                fontSize: '0.75rem',
+                padding: '0.5rem'
               },
               '& .MuiOutlinedInput-root': {
-                height: '30px' // Reduce overall height
+                height: '30px'
               }
             }}
           />
@@ -784,7 +792,6 @@ export default function DsTable() {
           <Button
             sx={{
               alignSelf: 'center',
-              // padding: '0px 8px',
               fontSize: '0.85rem',
               backgroundColor: '#4caf50',
               ':hover': {
@@ -810,7 +817,6 @@ export default function DsTable() {
         </Box>
       </Box>
 
-      {/* Column Filter Dialog */}
       <Dialog open={openFilter} onClose={handleCloseFilter}>
         <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
         <DialogContent>
@@ -823,7 +829,7 @@ export default function DsTable() {
                   onChange={() => toggleColumnVisibility('dmgScenTblClms', column.name)}
                 />
               }
-              label={column.name} // Display column name as label
+              label={column.name}
             />
           ))}
         </DialogContent>
@@ -837,8 +843,8 @@ export default function DsTable() {
       <TableContainer
         component={Paper}
         sx={{
-          flexGrow: 1, // Let the container grow to fill available space
-          overflowY: 'auto', // Enable vertical scrolling
+          flexGrow: 1,
+          overflowY: 'auto',
           borderRadius: '0px',
           padding: 0.25,
           '&::-webkit-scrollbar': {
@@ -873,7 +879,7 @@ export default function DsTable() {
                       width: '10px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'rgba(0, 0, 0, 0.1)' // Slight highlight on hover
+                      backgroundColor: 'rgba(0, 0, 0, 0.1)'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
@@ -882,10 +888,8 @@ export default function DsTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.map((row, rowkey) => (
-              <>
-                <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
-              </>
+            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
             ))}
           </TableBody>
         </Table>
@@ -906,7 +910,6 @@ export default function DsTable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-      {/* Modals */}
       {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses

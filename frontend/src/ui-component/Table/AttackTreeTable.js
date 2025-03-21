@@ -78,7 +78,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    verticalAlign: 'middle',
   }
 }));
 
@@ -89,7 +90,9 @@ const StyledTableRow = styled(TableRow)(() => ({
   // hide last border
   '&:last-child td, &:last-child th': {
     border: 0
-  }
+  },
+  // Set a fixed height for each row to accommodate two lines of text with extra space
+  height: '3.5em' // Fixed row height
 }));
 
 const SelectableCell = ({ item, row, handleChange, name }) => {
@@ -115,7 +118,15 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
           width: 130,
           background: 'transparent',
           '& .MuiInputBase-root': { backgroundColor: 'transparent', color: 'inherit' },
-          '& .MuiSelect-select': { backgroundColor: 'transparent' },
+          '& .MuiSelect-select': { 
+            backgroundColor: 'transparent',
+            padding: '0 24px 0 8px', // Remove vertical padding to fit within cell
+            fontSize: '13px', // Match font size with other cells
+            lineHeight: '1.5em', // Match line height
+            height: '1.5em', // Ensure the select fits within one line
+            display: 'flex',
+            alignItems: 'center' // Center the content vertically
+          },
           '& .MuiSvgIcon-root': { display: 'none' },
           '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
         }}
@@ -222,7 +233,7 @@ export default function AttackTreeTable() {
     }
   }, [attacks]);
 
-  // console.log('rows', rows);
+  // console.log('rows', rows)
   const handleChange = (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
@@ -289,7 +300,6 @@ export default function AttackTreeTable() {
   const handleSearch = (e) => {
     const { value } = e.target;
     if (value.length > 0) {
-      // console.log('rows', rows);
       const filterValue = rows.filter((rw) => {
         if (rw?.Name?.toLowerCase().includes(value) || rw?.Description?.toLowerCase().includes(value)) {
           return rw;
@@ -312,7 +322,6 @@ export default function AttackTreeTable() {
     setPage(0);
   };
 
-  // console.log('filtered', filtered);
   const checkforLabel = (item) => {
     if (
       item.name === 'Expertise' ||
@@ -329,7 +338,7 @@ export default function AttackTreeTable() {
 
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent unwanted bubbling
+    e.stopPropagation();
 
     const startX = e.clientX;
     const headerCell = e.currentTarget.parentElement;
@@ -352,6 +361,8 @@ export default function AttackTreeTable() {
   };
 
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+    const WIDTH_THRESHOLD = 250; // Threshold for switching between truncation and wrapping (in pixels)
+
     return (
       <>
         <StyledTableRow
@@ -366,9 +377,9 @@ export default function AttackTreeTable() {
         >
           {Head?.map((item, index) => {
             const bgColor = RatingColor(row['Attack Feasibilities Rating']);
-            // console.log('bgColor', bgColor);
-            const color = !bgColor?.includes('yellow') ? 'white' : 'black';
-            // console.log('color', color);
+            const textColor = !bgColor?.includes('yellow') ? 'white' : 'black';
+            const currentWidth = columnWidths[item.id] || 180; // Get the current width of the column
+            const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
 
             let cellContent;
             switch (true) {
@@ -382,16 +393,45 @@ export default function AttackTreeTable() {
                     align={'left'}
                     sx={{
                       backgroundColor: `${bgColor} !important`,
-                      color: `${color} !important`
+                      color: `${textColor} !important`
                     }}
                   >
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
                 );
                 break;
+              case item.name === 'Name' || item.name === 'Description':
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    style={{ width: currentWidth }}
+                    align={'left'}
+                    sx={{
+                      ...(shouldTruncate
+                        ? {
+                            whiteSpace: 'nowrap', // Truncate text into a single line
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }
+                        : {
+                            whiteSpace: 'normal', // Wrap text into two lines
+                            overflowWrap: 'break-word',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          })
+                    }}
+                  >
+                    <Tooltip title={row[item.name]} placement="top">
+                      <span>{row[item.name] ? row[item.name] : '-'}</span>
+                    </Tooltip>
+                  </StyledTableCell>
+                );
+                break;
               default:
                 cellContent = (
-                  <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                  <StyledTableCell key={index} style={{ width: currentWidth }} align={'left'}>
                     {row[item.name] ? row[item.name] : '-'}
                   </StyledTableCell>
                 );
@@ -404,7 +444,6 @@ export default function AttackTreeTable() {
     );
   };
 
-  // console.log('selectedRow', selectedRow)
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
@@ -438,7 +477,6 @@ export default function AttackTreeTable() {
         </Box>
       </Box>
 
-      {/* Column Filter Dialog */}
       <Dialog open={openFilter} onClose={handleCloseFilter}>
         <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
         <DialogContent>
@@ -451,7 +489,7 @@ export default function AttackTreeTable() {
                   onChange={() => toggleColumnVisibility('attackTreeTblClms', column.name)}
                 />
               }
-              label={column.name} // Display column name as label
+              label={column.name}
             />
           ))}
         </DialogContent>
@@ -515,7 +553,7 @@ export default function AttackTreeTable() {
           </TableHead>
           <TableBody>
             {filtered
-              ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Slice rows for pagination
+              ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               ?.map((row, rowKey) => (
                 <RenderTableRow key={row?.ID} row={row} rowKey={rowKey} />
               ))}
