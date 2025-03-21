@@ -44,6 +44,7 @@ import { openAddNodeTab, setAnchorEl, setDetails, setSelectedBlock } from '../..
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
+import { getNavbarHeight } from '../../../../store/constant';
 
 const imageComponents = {
   AttackIcon,
@@ -103,12 +104,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const CardStyle = styled(Card)(() => ({
+const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose }) => ({
   marginBottom: '22px',
   overflow: 'hidden',
   position: 'relative',
-  height: 'auto',
-  minHeight: '78vh',
+  height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
   border: '1px solid gray',
   borderRadius: '0px',
   '&:after': {
@@ -117,6 +117,12 @@ const CardStyle = styled(Card)(() => ({
     borderRadius: '50%',
     top: '-105px',
     right: '-96px'
+  },
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: '10px', // Reduce margin on smaller screens
+  },
+  [theme.breakpoints.down('xs')]: {
+    marginBottom: '5px', // Further reduce margin on extra small screens
   }
 }));
 
@@ -162,7 +168,7 @@ const selector = (state) => ({
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const BrowserCard = () => {
+const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -756,14 +762,19 @@ const BrowserCard = () => {
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
-      <CardStyle sx={{ overflowY: 'auto', backgroundColor: color?.sidebarInnerBG, scrollbarWidth: 'none' }}>
-        <CardContent sx={{ p: 2, color: color?.sidebarContent }}>
+      <CardStyle 
+        isCollapsed={isCollapsed}
+        isNavbarClose={isNavbarClose}
+        sx={{ backgroundColor: color?.sidebarInnerBG, scrollbarWidth: 'none' }}
+      >
+        <CardContent sx={{ p: 2, color: color?.sidebarContent, height: '100%', overflowY: 'auto' }}>
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
             onClick={handleTitleClick}
             defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
             defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
+            sx={{ height: '100%' }}
           >
             <TreeItem
               key={model?._id}

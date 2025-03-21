@@ -15,7 +15,7 @@ import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
 import LogoSection from '../LogoSection';
 import BrowserCard from '../Sidebar/BrowserCard/index';
-import { drawerWidth, navbarHeight } from '../../../store/constant';
+import { drawerWidth, getNavbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
@@ -38,14 +38,15 @@ const useStyles = makeStyles(() => ({
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
-  fetchModels: state.getModels
+  fetchModels: state.getModels,
+  isCollapsed: state.isCollapsed
 });
 
 const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, fetchModels, models } = useStore(selector);
+  const { template, fetchModels, models, isCollapsed } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -73,7 +74,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     <>
       <BrowserView>
         <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
-          <BrowserCard template={template} models={models} />
+          <BrowserCard template={template} models={models} isCollapsed={isCollapsed} isNavbarClose={isNavbarClose} />
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}
@@ -131,14 +132,16 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           />
         }
         handleSize={[8, Infinity]}
+        style={{ height: '100%' }}
       >
         <Box
           component="nav"
           sx={{
             flexShrink: { md: 0 },
             width: sidebarWidth,
+            height: '100%',
             background: color?.sidebarBG,
-            mt: !draweropen ? navbarHeight : '0px'
+            mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px'
           }}
           aria-label="mailbox folders"
         >
@@ -151,9 +154,9 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
                 padding: '0px',
                 width: '0.8em',
                 height: '0.8em',
-                left: '0px',
-                top: 0,
-                marginTop: `${navbarHeight}px`,
+                left: '5px',
+                top: 5,
+                marginTop: `${getNavbarHeight(isCollapsed)}px`,
                 color: color?.iconColor,
                 zIndex: 1400,
                 '&:hover': { transform: 'scale(1.1)' },
@@ -178,11 +181,12 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
                 background: color?.sidebarBG,
                 color: theme.palette.text.primary,
                 [theme.breakpoints.up('md')]: {
-                  top: !isNavbarClose ? navbarHeight : '0px'
+                  top: !isNavbarClose ? getNavbarHeight(isCollapsed) : '0px'
                 }
               },
               '& .MuiCardContent-root': {
-                padding: '0px'
+                padding: '0px',
+                flexGrow: 1
               }
             }}
             ModalProps={{ keepMounted: true }}
