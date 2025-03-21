@@ -104,8 +104,8 @@ export default function Event(props) {
     <>
       <NodeResizer
         lineStyle={{ backgroundColor: bgColor ?? 'gray', borderWidth: '2px' }}
-        minWidth={120}
-        minHeight={80}
+        minWidth={100}
+        minHeight={50}
         onResize={(event, params) => {
           // const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
 

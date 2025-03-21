@@ -15,11 +15,12 @@ import useStore from '../../Zustand/store';
 const selector = (state) => ({
   getAssets: state.getAssets,
   model: state.model,
-  getCyberSecurityScenario: state.getCyberSecurityScenario
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
+  isCollapsed: state.isCollapsed
 });
 const AttackTree = () => {
   const color = ColorTheme();
-  const { getAssets, model, getCyberSecurityScenario } = useStore(selector);
+  const { getAssets, model, getCyberSecurityScenario, isCollapsed } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -52,8 +53,8 @@ const AttackTree = () => {
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{attackScene?.Name}</Typography>
           </Box>
         )}
-        <Paper elevation={3} sx={{ height: 'inherit' }}>
-          <Grid container sx={{ height: 'inherit' }}>
+        <Paper elevation={3}>
+          <Grid container sx={{ height: isCollapsed ? '85svh' : '76svh' }}>
             {/* <ResizableBox
               width={sidebarWidth}
               height={Infinity}

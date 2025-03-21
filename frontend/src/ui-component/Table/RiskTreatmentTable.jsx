@@ -196,19 +196,20 @@ export default function RiskTreatmentTable() {
   };
 
   useEffect(() => {
-    const data = riskTreatment?.Details.map((item, i) => {
+    const data = riskTreatment?.Details?.map((item, i) => {
       // console.log('item', item);
       return {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
         detailId: item?.id,
-        Assets: item?.threat_scene[0]?.detail?.node ?? '',
+        Assets: item?.threat_scene ? item?.threat_scene[0]?.detail?.node : '',
         // 'Damage Scenarios': item?.damage_scenarios,
-        'Damage Scenarios':
-          `[DS${
-            item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
-          }] ${item?.threat_scene[0]?.damage_name}` ?? '-',
+        'Damage Scenarios': item?.threat_scene
+          ? `[DS${
+              item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
+            }] ${item?.threat_scene[0]?.damage_name}`
+          : '-',
         'Safety Impact': item?.impacts['Safety Impact'] ?? '',
         'Financial Impact': item?.impacts['Financial Impact'] ?? '',
         'Operational Impact': item?.impacts['Operational Impact'] ?? '',

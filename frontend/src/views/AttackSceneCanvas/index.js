@@ -664,8 +664,8 @@ export default function AttackBlock({ attackScene, color }) {
           position,
           type: parsedNode.type || parsedNode.label,
           ...parsedNode,
-          // width: 150,
-          // height: 100,
+          width: 120,
+          height: 60,
           data: {
             label: parsedNode.label,
             nodeId: parsedNode.nodeId,
@@ -673,8 +673,8 @@ export default function AttackBlock({ attackScene, color }) {
               ...style,
               backgroundColor: 'transparent',
               color: 'black',
-              width: 150,
-              height: 100
+              width: 120,
+              height: 60
             }
           }
         };
