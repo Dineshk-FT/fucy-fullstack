@@ -663,22 +663,49 @@ export default function DsTable() {
                 );
                 break;
 
-              case item.name === 'Assets':
-                cellContent = (
-                  <StyledTableCell key={index} sx={{ width: `${columnWidths[item.id] || 'auto'}` }} component="th" scope="row">
-                    <span style={{ display: 'inline-grid' }}>
-                      {row?.cyberLosses?.map((loss) => (
-                        <div
-                          key={loss?.id}
-                          style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '15px', width: 'max-content' }}
+                case item.name === 'Assets':
+                  {
+                    // Join the asset names into a comma-separated string for truncation/wrapping
+                    const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean).join(', ') || '-';
+                    cellContent = (
+                      <StyledTableCell
+                        key={index}
+                        sx={{
+                          width: `${columnWidths[item.id] || 'auto'}`,
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                        component="th"
+                        scope="row"
+                      >
+                        <Box
+                          sx={{
+                            flex: 1,
+                            overflow: 'hidden',
+                            ...(shouldTruncate
+                              ? {
+                                whiteSpace: 'nowrap', // Truncate text into a single line
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }
+                            : {
+                                whiteSpace: 'normal', // Wrap text into two lines
+                                overflowWrap: 'break-word',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              })
+                          }}
                         >
-                          <span> {loss?.node}</span>
-                        </div>
-                      ))}
-                    </span>
-                  </StyledTableCell>
-                );
-                break;
+                          <Tooltip title={assetsList} placement="top">
+                            <span>{assetsList}</span>
+                          </Tooltip>
+                        </Box>
+                      </StyledTableCell>
+                    );
+                  }
+                  break;
               case item.name === 'Overall Impact':
                 cellContent = (
                   <StyledTableCell
