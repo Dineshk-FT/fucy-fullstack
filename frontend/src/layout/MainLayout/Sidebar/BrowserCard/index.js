@@ -73,56 +73,143 @@ const iconComponents = {
   ReceiptItem
 };
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme, isDark) => ({
   labelRoot: {
     display: 'flex',
     alignItems: 'center',
-    padding: theme.spacing(0, 0),
-    marginLeft: '-7px',
-    color: 'inherit'
+    padding: theme.spacing(0.5, 1), // Reduced padding for compactness
+    marginLeft: '-2px',
+    color: 'inherit',
+    transition: 'all 0.3s ease',
+    borderRadius: '6px', // Slightly smaller border radius for a modern look
+    '&:hover': {
+      background: isDark == true 
+        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      transform: 'scale(1.02)', // Subtle scale on hover
+      boxShadow: isDark == true
+        ? '0 2px 6px rgba(0,0,0,0.4)' 
+        : '0 2px 6px rgba(0,0,0,0.1)',
+      filter: isDark == true
+        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' 
+        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+    },
+    '&:focus': { // Added focus state for accessibility
+      outline: `2px solid ${theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3'}`,
+      outlineOffset: '2px',
+    }
   },
   labelTypo: {
-    fontSize: 12,
-    fontWeight: 600,
-    fontFamily: 'Inter',
-    color: 'inherit'
+    fontSize: 13, // Slightly smaller font size for body text
+    fontWeight: 400, // Lighter weight for better hierarchy
+    fontFamily: "'Poppins', sans-serif",
+    color: 'inherit',
+    lineHeight: 1.5, // Improved readability
+    letterSpacing: '0.2px' // Subtle letter spacing for polish
+  },
+  parentLabelTypo: {
+    fontSize: 14, // Slightly larger for parent items
+    fontWeight: 500, // Medium weight for emphasis
+    fontFamily: "'Poppins', sans-serif",
+    color: 'inherit',
+    lineHeight: 1.5,
+    letterSpacing: '0.3px'
   },
   paper: {
-    background: '#E5E4E2',
-    border: '1px solid',
-    borderRadius: 0
+    background: isDark == true 
+      ? 'rgba(30,30,30,0.95)' 
+      : 'rgba(255,255,255,0.95)',
+    backdropFilter: 'blur(8px)', // Reduced blur for performance
+    border: 'none',
+    borderRadius: '10px',
+    boxShadow: isDark == true
+      ? '0 4px 12px rgba(0,0,0,0.5)' 
+      : '0 4px 12px rgba(0,0,0,0.15)',
+    transition: 'all 0.3s ease'
   },
   title: {
     display: 'flex',
-    marginLeft: '-7px',
-    padding: '5px',
-    alignItems: 'center'
+    marginLeft: '-2px',
+    marginTop: '3px',
+    padding: '8px', // Reduced padding for compactness
+    alignItems: 'center',
+    borderRadius: '6px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: isDark == true 
+        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      transform: 'scale(1.02)',
+      boxShadow: isDark == true 
+        ? '0 2px 6px rgba(0,0,0,0.4)' 
+        : '0 2px 6px rgba(0,0,0,0.1)',
+      filter: isDark == true
+        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' 
+        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+    },
+    '&:focus': {
+      outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+      outlineOffset: '2px',
+    }
   },
   treeItem: {
-    marginLeft: -10,
-    padding: 2
+    marginLeft: -6,
+    padding: '4px 0', // Reduced padding for compactness
+    '& .MuiTreeItem-content': {
+      padding: '2px 6px', // Adjusted padding
+      transition: 'all 0.3s ease'
+    },
+    '&:not(:last-child)': {
+      borderBottom: isDark == true
+        ? '1px solid rgba(255,255,255,0.05)' // Softer divider
+        : '1px solid rgba(0,0,0,0.05)'
+    }
+  },
+  lossItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px', // Reduced gap for compactness
+    paddingLeft: '12px',
+    transition: 'all 0.3s ease',
+    borderRadius: '6px',
+    '&:hover': {
+      background: isDark == true
+        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      transform: 'scale(1.02)',
+      boxShadow: isDark == true
+        ? '0 2px 6px rgba(0,0,0,0.4)' 
+        : '0 2px 6px rgba(0,0,0,0.1)',
+      filter: isDark == true 
+        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' 
+        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+    },
+    '&:focus': {
+      outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+      outlineOffset: '2px',
+    }
   }
 }));
 
-const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose }) => ({
-  marginBottom: '22px',
+const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
+  marginBottom: '16px', // Reduced margin for a tighter layout
   overflow: 'hidden',
   position: 'relative',
   height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
-  border: '1px solid gray',
-  borderRadius: '0px',
-  '&:after': {
-    content: '""',
-    position: 'absolute',
-    borderRadius: '50%',
-    top: '-105px',
-    right: '-96px'
-  },
+  border: 'none',
+  borderRadius: '12px', // Slightly smaller border radius
+  background: isDark == true 
+    ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+    : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+  backdropFilter: 'blur(12px)', // Reduced blur for performance
+  boxShadow: isDark == true
+    ? '0 6px 20px rgba(0,0,0,0.5)' 
+    : '0 6px 20px rgba(0,0,0,0.15)',
   [theme.breakpoints.down('sm')]: {
-    marginBottom: '10px', // Reduce margin on smaller screens
+    marginBottom: '8px',
   },
   [theme.breakpoints.down('xs')]: {
-    marginBottom: '5px', // Further reduce margin on extra small screens
+    marginBottom: '4px',
   }
 }));
 
@@ -166,6 +253,31 @@ const selector = (state) => ({
   isSaveModalOpen: state.isSaveModalOpen
 });
 
+// Function to shorten loss names
+const shortenLossName = (name) => {
+  const lossMap = {
+    Availability: 'Avail',
+    Integrity: 'Int',
+    Authenticity: 'Auth',
+    Authorization: 'Authz',
+    'Non Repudiation': 'Non-rep',
+    Confidentiality: 'Conf'
+  };
+  return lossMap[name] || name;
+};
+
+// Function to get full loss names for tooltip
+const getFullLossNames = (props) => {
+  return props.map((prop) => `Loss of ${prop.name}`).join(', ');
+};
+
+// Function to get shortened loss names for display
+const getShortenedLossNames = (props) => {
+  return props.length > 0
+    ? `Loss of ${props.map((prop) => shortenLossName(prop.name)).join(', ')}`
+    : 'No Losses';
+};
+
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
@@ -207,7 +319,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getCatalog,
     update,
     isSaveModalOpen,
-    setSaveModal
+    setSaveModal,
+    isDark
   } = useStore(selector);
   const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
@@ -275,7 +388,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     { name: 'threatScenarios', scene: threatScenarios },
     { name: 'attackScenarios', scene: attackScenarios },
     { name: 'cybersecurity', scene: cybersecurity },
-    // { name: 'systemDesign', scene: systemDesign },
     { name: 'catalog', scene: catalog },
     { name: 'riskTreatment', scene: riskTreatment },
     { name: 'documents', scene: documents },
@@ -298,8 +410,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setOpenItemRight(false);
     setAnchorItemEl(null);
   };
+
   const handleClick = async (event, ModelId, name, id) => {
-    // console.log('name', name);
     event.stopPropagation();
     setClickedItem(id);
     if (name === 'assets') {
@@ -320,9 +432,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
-  // console.log('initialNodes', initialNodes);
-  // console.log('nodes', nodes);
-  // console.log('previousTab', previousTab);
   const handleOpenTable = (e, id, name) => {
     e.stopPropagation();
     setClickedItem(id);
@@ -336,10 +445,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     if (name === 'Attack Trees') {
-      // setTimeout(() => {
       dispatch(setTableOpen('Attack Trees Canvas'));
       dispatch(setAttackScene(scene));
-      // }, 500);
     }
   };
 
@@ -368,11 +475,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  // const isDragged = useMemo(() => nodes?.some(dragCheck), [nodes?.length]);
-  // function dragCheck(node) {
-  //   return node?.dragged;
-  // }
-
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
@@ -386,11 +488,32 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             textOverflow: 'ellipsis',
             maxWidth: 'fit-content',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            background: clickedItem === id 
+              ? (isDark == true
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
+              : 'transparent',
+            boxShadow: clickedItem === id 
+              ? (isDark == true 
+                  ? '0 3px 8px rgba(0,0,0,0.5)' 
+                  : '0 3px 8px rgba(0,0,0,0.1)')
+              : 'none'
           }}
+          tabIndex={0} // Added for keyboard navigation
+          onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
         >
-          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
-          <Typography variant="body2" ml={0.5} mt={0.5} className={classes.labelTypo} color="inherit" fontSize={'14px !important'} noWrap>
+          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+          <Typography 
+            variant="body2" 
+            ml={1.25} 
+            className={classes.labelTypo} 
+            color="inherit" 
+            fontSize={'18px !important'} // Slightly larger for emphasis
+            fontWeight={600} 
+            noWrap
+            sx={{ letterSpacing: '0.5px' }}
+          >
             {name}
           </Typography>
         </Box>
@@ -398,7 +521,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const getImageLabel = (icon, name) => {
+  const getImageLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
@@ -410,11 +533,23 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             textOverflow: 'ellipsis',
             maxWidth: 'fit-content',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            background: clickedItem === id 
+              ? (isDark == true 
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
+              : 'transparent',
+            boxShadow: clickedItem === id 
+              ? (isDark == true 
+                  ? '0 3px 8px rgba(0,0,0,0.5)' 
+                  : '0 3px 8px rgba(0,0,0,0.1)')
+              : 'none'
           }}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
         >
-          {Image && <img src={Image} alt={name} style={{ height: '18px', width: '18px' }} />}
-          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+          <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
             {name}
           </Typography>
         </div>
@@ -422,7 +557,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const getLabel = (icon, name, index) => {
+  const getLabel = (icon, name, index, id) => {
     const IconComponent = iconComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
@@ -434,11 +569,23 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             textOverflow: 'ellipsis',
             maxWidth: 'fit-content',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            background: clickedItem === id 
+              ? (isDark == true 
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
+              : 'transparent',
+            boxShadow: clickedItem === id 
+              ? (isDark == true 
+                  ? '0 3px 8px rgba(0,0,0,0.5)' 
+                  : '0 3px 8px rgba(0,0,0,0.1)')
+              : 'none'
           }}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
         >
-          {IconComponent && <IconComponent color="inherit" sx={{ fontSize: 16 }} />}
-          <Typography variant="body2" ml={0.5} className={classes.labelTypo} noWrap>
+          {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
+          <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
             {index && `${index}. `}
             {name}
           </Typography>
@@ -451,7 +598,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     <TreeItem
       key={data.id}
       nodeId={data.id}
-      label={getImageLabel(data.icon, data.name)}
+      label={getImageLabel(data.icon, data.name, data.id)}
       onClick={onClick}
       onContextMenu={contextMenuHandler}
       className={classes.treeItem}
@@ -465,7 +612,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       <TreeItem
         key={sub.id}
         nodeId={sub.id}
-        label={getLabel('TopicIcon', sub.name)}
+        label={getLabel('TopicIcon', sub.name, null, sub.id)}
         onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
         onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
       >
@@ -484,7 +631,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
           data.Details?.map((detail, i) => {
-            // console.log('detail', detail);
             return detail?.name?.length ? (
               <DraggableTreeItem
                 key={detail.nodeId}
@@ -496,11 +642,40 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        maxWidth: 'fit-content' // Adjust width as needed
+                        maxWidth: 'fit-content',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        transition: 'all 0.3s ease',
+                        background: clickedItem === detail.nodeId 
+                          ? (isDark == true 
+                              ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                              : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
+                          : 'transparent',
+                        boxShadow: clickedItem === detail.nodeId 
+                          ? (isDark == true 
+                              ? '0 3px 8px rgba(0,0,0,0.5)' 
+                              : '0 3px 8px rgba(0,0,0,0.1)')
+                          : 'none',
+                        '&:hover': {
+                          background: isDark == true 
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                          transform: 'scale(1.02)',
+                          boxShadow: isDark == true 
+                            ? '0 2px 6px rgba(0,0,0,0.4)' 
+                            : '0 2px 6px rgba(0,0,0,0.1)',
+                          filter: isDark == true 
+                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' 
+                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                        }
                       }}
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && setClickedItem(detail.nodeId)}
                     >
-                      {i + 1}.{' '}
-                      <Typography component="span" noWrap>
+                      {`${i + 1}. `}
+                      <Typography component="span" noWrap className={classes.labelTypo}>
                         {detail.name}
                       </Typography>
                     </Box>
@@ -508,11 +683,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 }
                 onClick={(e) => {
                   e.stopPropagation();
-                  // if (!detail.nodeId.includes('edge')) {
-                  // console.log('clicked', detail);
-
                   setClickedItem(detail.nodeId);
-                  // }
                   dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                   const selected = nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
                   dispatch(
@@ -531,26 +702,34 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 }}
                 onDragStart={(e) => onDragStart(e, detail)}
                 sx={{
-                  backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit',
-                  color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
+                  background: selectedBlock?.id === detail.nodeId 
+                    ? (isDark == true 
+                        ? 'linear-gradient(90deg, rgba(100,181,246,0.35) 0%, rgba(100,181,246,0.1) 100%)'
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.25) 0%, rgba(33,150,243,0.05) 100%)')
+                    : 'inherit',
+                  color: selectedBlock?.id === detail.nodeId 
+                    ? (isDark == true ? '#fff' : '#000') 
+                    : 'inherit',
+                  borderRadius: '6px',
+                  transition: 'all 0.3s ease'
                 }}
               >
-                {detail?.props?.map((prop) => {
-                  // console.log('prop', prop);
-                  return (
-                    <DraggableTreeItem
-                      key={prop.id}
-                      nodeId={prop.id}
-                      onClick={(e) => e.stopPropagation()}
-                      label={
-                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                          <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                          {`Loss of ${prop.name}`}
+                {detail?.props?.length > 0 && (
+                  <TreeItem
+                    nodeId={`${detail.nodeId}-losses`}
+                    label={
+                      <Tooltip title={getFullLossNames(detail.props)} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                        <div className={classes.lossItem}>
+                          <CircleRoundedIcon sx={{ color: isDark == true ? '#FF6D6D' : '#FF5555', fontSize: 14 }} />
+                          <Typography variant="body2" className={classes.labelTypo}>
+                            {getShortenedLossNames(detail.props)}
+                          </Typography>
                         </div>
-                      }
-                    />
-                  );
-                })}
+                      </Tooltip>
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
               </DraggableTreeItem>
             ) : null;
           })
@@ -562,14 +741,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            // console.log('sub.Derivations.length', sub?.Derivations?.length);
             if (sub.name === 'Damage Scenarios Derivations') {
               return sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={derivation.id}
                   nodeId={derivation.id}
-                  label={getLabel('TopicIcon', derivation.name, i + 1)}
+                  label={getLabel('TopicIcon', derivation.name, i + 1, derivation.id)}
                 />
               ));
             }
@@ -579,7 +757,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   onClick={(e) => e.stopPropagation()}
                   key={detail._id}
                   nodeId={detail._id}
-                  label={getLabel('DangerousIcon', detail.Name, i + 1)}
+                  label={getLabel('DangerousIcon', detail.Name, i + 1, detail._id)}
                 />
               ));
             }
@@ -595,7 +773,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             let key = 0;
             return sub.name === 'Threat Scenarios'
               ? sub.Details?.flatMap((detail) => {
-                  // console.log('detail', detail);
                   return detail.Details?.flatMap((nodeDetail) =>
                     nodeDetail.props?.map((prop, i) => {
                       key++;
@@ -618,7 +795,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                           draggable={true}
                           key={prop.id.concat(detail.rowId)}
                           nodeId={prop.id.concat(detail.rowId)}
-                          label={getLabel('TopicIcon', label, key)}
+                          label={getLabel('TopicIcon', label, key, prop.id.concat(detail.rowId))}
                           onDragStart={(e) => onDragStart(e, Details)}
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -627,14 +804,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   );
                 })
               : sub.Details?.map((detail, i) => {
-                  // console.log('detail', detail);
                   const label = `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`;
 
                   return (
                     <TreeItem
                       key={detail.id}
                       nodeId={detail.id}
-                      label={getLabel('TopicIcon', label, i + 1)}
+                      label={getLabel('TopicIcon', label, i + 1, detail.id)}
                       onClick={(e) => e.stopPropagation()}
                     />
                   );
@@ -655,7 +831,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 <DraggableTreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
                   draggable
                   onDragStart={(e) => onDragStart(e, Details)}
                   onClick={(e) => e.stopPropagation()}
@@ -664,7 +840,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 <TreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name, i + 1)}
+                  label={getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
                   onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
                 />
               );
@@ -682,7 +858,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 onClick={(e) => e.stopPropagation()}
                 key={derivation.id}
                 nodeId={derivation.id}
-                label={getLabel('TopicIcon', derivation.name)}
+                label={getLabel('TopicIcon', derivation.name, null, derivation.id)}
               />
             ));
           })
@@ -694,7 +870,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
             return sub.scenes?.map((scene) => (
-              <TreeItem onClick={(e) => e.stopPropagation()} key={scene.ID} nodeId={scene.ID} label={getLabel('TopicIcon', scene.Name)} />
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={scene.ID}
+                nodeId={scene.ID}
+                label={getLabel('TopicIcon', scene.Name, null, scene.ID)}
+              />
             ));
           })
         );
@@ -709,15 +890,14 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               <TreeItem
                 key={scene.id}
                 nodeId={scene.id}
-                label={getLabel('TopicIcon', scene.name)}
+                label={getLabel('TopicIcon', scene.name, null, scene.id)}
                 onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
               >
-                {/* Render nested draggable TreeItems if present */}
                 {scene.item_name?.map((subScene) => (
                   <DraggableTreeItem
                     key={subScene.id}
                     nodeId={subScene.id}
-                    label={getLabel('SubTopicIcon', subScene.name)}
+                    label={getLabel('TopicIcon', subScene.name, null, subScene.id)}
                     draggable={true}
                     onClick={(e) => e.stopPropagation()}
                     onDragStart={(e) => onDragStart(e, subScene)}
@@ -750,7 +930,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 onClick={(e) => e.stopPropagation()}
                 key={detail._id}
                 nodeId={detail._id}
-                label={getLabel('DangerousIcon', detail.name)}
+                label={getLabel('DangerousIcon', detail.name, null, detail._id)}
               />
             ))
           )
@@ -765,15 +945,27 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       <CardStyle 
         isCollapsed={isCollapsed}
         isNavbarClose={isNavbarClose}
-        sx={{ backgroundColor: color?.sidebarInnerBG, scrollbarWidth: 'none' }}
+        sx={{ 
+          background: color.tabBorder,
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': {
+            width: '5px' // Thinner scrollbar
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: isDark == true 
+              ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
+              : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)',
+            borderRadius: '3px'
+          }
+        }}
       >
         <CardContent sx={{ p: 2, color: color?.sidebarContent, height: '100%', overflowY: 'auto' }}>
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}
             onClick={handleTitleClick}
-            defaultCollapseIcon={<ExpandMoreIcon sx={{ color: 'inherit' }} />}
-            defaultExpandIcon={<ChevronRightIcon sx={{ color: 'inherit' }} />}
+            defaultCollapseIcon={<ExpandMoreIcon sx={{ color: isDark == true ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }} />}
+            defaultExpandIcon={<ChevronRightIcon sx={{ color: isDark == true ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }} />}
             sx={{ height: '100%' }}
           >
             <TreeItem
@@ -790,17 +982,27 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     variant="outlined"
                     size="small"
                     sx={{
-                      my: 0.6,
-                      '& .MuiOutlinedInput-root': { fontSize: '13px' },
-                      '& .MuiInputBase-input': { padding: '4px 14px' },
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' }
+                      my: 0.5,
+                      '& .MuiOutlinedInput-root': { 
+                        fontSize: '16px', 
+                        fontFamily: "'Poppins', sans-serif",
+                        color: color?.sidebarContent, 
+                        background: isDark == true 
+                          ? 'rgba(255,255,255,0.05)' 
+                          : 'rgba(0,0,0,0.05)',
+                        borderRadius: '8px'
+                      },
+                      '& .MuiInputBase-input': { padding: '5px 10px' },
+                      '& .MuiOutlinedInput-notchedOutline': { 
+                        borderColor: isDark == true ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)' 
+                      }
                     }}
                   />
                 ) : (
                   <Box onDoubleClick={handleDoubleClick}>{getTitleLabel('ModelIcon', currentName, model?._id)}</Box>
                 )
               }
-              sx={{ '& .Mui-selected': { backgroundColor: 'none !important' } }}
+              sx={{ '& .Mui-selected': { backgroundColor: 'transparent !important' } }}
             >
               {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
             </TreeItem>
@@ -825,16 +1027,38 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   sx={{
                     marginTop: '4rem',
                     marginLeft: '3.1rem',
-                    background: `${color?.canvaSurroundsBG} !important`,
+                    background: isDark == true 
+                      ? 'rgba(30,30,30,0.95)' 
+                      : 'rgba(255,255,255,0.95)',
                     color: color?.sidebarContent,
-                    border: '1px solid #ccc !important',
-                    borderRadius: '8px !important',
-                    padding: '8px',
-                    cursor: 'pointer'
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)'
                   }}
                 >
-                  <MenuItem onClick={handleAddNewNode}>Create new</MenuItem>
-                  {/* <MenuItem onClick={handleOpenSelectNode}>Components</MenuItem> */}
+                  <MenuItem 
+                    onClick={handleAddNewNode} 
+                    sx={{ 
+                      fontSize: '13px', 
+                      fontFamily: "'Poppins', sans-serif",
+                      color: color?.sidebarContent,
+                      borderRadius: '6px',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        background: isDark == true 
+                          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+                          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.02)',
+                        boxShadow: isDark == true 
+                          ? '0 2px 6px rgba(0,0,0,0.4)' 
+                          : '0 2px 6px rgba(0,0,0,0.1)'
+                      }
+                    }}
+                  >
+                    Create new
+                  </MenuItem>
                 </Paper>
               </ClickAwayListener>
             </Popper>

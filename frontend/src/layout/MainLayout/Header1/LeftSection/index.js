@@ -41,7 +41,7 @@ import useStore from '../../../../Zustand/store';
 import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../store/ColorTheme';
 import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
@@ -61,6 +61,7 @@ const LeftSection = () => {
     isCollapsed: state.isCollapsed,
     setCollapsed: state.setCollapsed
   });
+  const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
 
   const color = ColorTheme();
   const {
@@ -169,8 +170,8 @@ const LeftSection = () => {
     dispatch(setPreviousTab('Attack'));
     if (model?._id) {
       setClickedItem(model._id);
-      dispatch(setTitle('Attack')); // Changed from 'Attack-Table' to 'Attack'
-      dispatch(setTableOpen('Attack')); // Changed from 'Attack-Table' to 'Attack'
+      dispatch(setTitle('Attack'));
+      dispatch(setTableOpen('Attack'));
     }
   };
 
@@ -184,17 +185,10 @@ const LeftSection = () => {
     {
       name: 'Project',
       options: [
-        { label: 'New', icon: NewFolderIcon, action: () => setOpenModal({ ...openModal, New: true }) }, // New folder for new project
-        { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) }, // Specific rename icon
-        { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) }, // Open folder
-        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) } // Trash bin
-        // { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') }, // Undo arrow
-        // { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') }, // Redo arrow
-        // { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') }, // Scissors
-        // { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') }, // Copy sheets
-        // { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') }, // Clipboard paste
-        // { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') }, // Check all
-        // { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') } // Uncheck all
+        { label: 'New', icon: NewFolderIcon, action: () => setOpenModal({ ...openModal, New: true }) },
+        { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) },
+        { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
+        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) }
       ]
     },
     {
@@ -317,25 +311,45 @@ const LeftSection = () => {
   const handleCloseAttackModal = () => setOpenModal((prev) => ({ ...prev, AttackModal: false }));
 
   return (
-    <Box>
+    <Box
+      sx={{
+        display: 'inline-flex', // Ensure LeftSection doesn't stretch unnecessarily
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          backgroundColor: 'transparent',
-          padding: '4px',
-          paddingTop: '8px'
+          background: color.tabBorder,
+          backdropFilter: 'blur(12px)',
+          borderRadius: '10px',
+          padding: '6px 8px',
+          boxShadow: isDark == true
+            ? '0 4px 16px rgba(0,0,0,0.5)'
+            : '0 4px 16px rgba(0,0,0,0.15)',
+          marginBottom: '6px',
         }}
       >
         <IconButton
           onClick={handleToggleCollapse}
           sx={{
-            padding: '0px',
-            color: color.title,
-            '&:hover': { backgroundColor: color.sidebarBG }
+            padding: '4px',
+            color: isDark == true ? '#64b5f6' : '#2196f3',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: isDark == true
+                ? 'rgba(100,181,246,0.15)'
+                : 'rgba(33,150,243,0.08)',
+              transform: 'scale(1.1)',
+              boxShadow: isDark == true
+                ? '0 2px 6px rgba(0,0,0,0.4)'
+                : '0 2px 6px rgba(0,0,0,0.1)',
+            },
           }}
         >
-          {isCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+          {isCollapsed ? <ExpandMoreIcon sx={{ fontSize: 22 }} /> : <ExpandLessIcon sx={{ fontSize: 22 }} />}
         </IconButton>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-evenly', flexGrow: 1 }}>
@@ -345,14 +359,44 @@ const LeftSection = () => {
                 onClick={() => handleTabChange(tab.name)}
                 sx={{
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  color: activeTab === tab.name ? 'blue' : color.title,
-                  fontWeight: activeTab === tab.name ? 'bold' : 'normal',
+                  fontSize: '13px',
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: activeTab === tab.name ? 600 : 500,
+                  color: activeTab === tab.name
+                    ? (isDark == true ? '#64b5f6' : '#2196f3')
+                    : color?.sidebarContent,
                   margin: '0 8px',
-                  padding: '2px 4px',
-                  borderBottom: activeTab === tab.name ? '2px solid blue' : 'none',
-                  paddingBottom: activeTab === tab.name ? '2px' : '0px',
-                  '&:hover': { color: 'blue' }
+                  padding: '4px 6px',
+                  borderRadius: '6px',
+                  borderBottom: activeTab === tab.name
+                    ? (isDark == true
+                        ? '2px solid #64b5f6'
+                        : '2px solid #2196f3')
+                    : 'none',
+                  background: activeTab === tab.name
+                    ? (isDark == true
+                        ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
+                    : 'transparent',
+                  boxShadow: activeTab === tab.name
+                    ? (isDark == true
+                        ? '0 3px 8px rgba(0,0,0,0.5)'
+                        : '0 3px 8px rgba(0,0,0,0.1)')
+                    : 'none',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    color: isDark == true ? '#64b5f6' : '#2196f3',
+                    background: isDark == true
+                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                    transform: 'scale(1.02)',
+                    boxShadow: isDark == true
+                      ? '0 2px 6px rgba(0,0,0,0.4)'
+                      : '0 2px 6px rgba(0,0,0,0.1)',
+                    filter: isDark == true
+                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
+                  },
                 }}
               >
                 {tab.name}
@@ -362,25 +406,27 @@ const LeftSection = () => {
                 <Box
                   sx={{
                     position: 'absolute',
-                    // top: '100%',
                     top: 'calc(100% + 2px)',
                     left: 0,
                     zIndex: 1300,
                     display: 'none',
-                    backgroundColor: color.canvasBG,
-                    borderRadius: '10px',
-                    border: '1px solid #ddd',
-                    padding: '6px',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    background: color.tabBorder,
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: '8px',
+                    border: 'none',
+                    padding: '8px',
+                    boxShadow: isDark == true
+                      ? '0 4px 12px rgba(0,0,0,0.5)'
+                      : '0 4px 12px rgba(0,0,0,0.15)',
                     flexWrap: 'wrap',
                     justifyContent: 'space-evenly',
-                    gap: '5px',
+                    gap: '4px',
                     width: 'max-content',
-                    maxWidth: '300px',
+                    maxWidth: '280px',
                     opacity: 0,
-                    transition: 'opacity 0.2s ease-in-out',
+                    transition: 'opacity 0.3s ease-in-out',
                     '&:hover': { display: 'flex', opacity: 1 },
-                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 }
+                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 },
                   }}
                 >
                   {tab.options.map((option, index) => {
@@ -392,7 +438,7 @@ const LeftSection = () => {
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          width: '100px'
+                          width: '70px',
                         }}
                         draggable={option.label === 'Group'}
                         onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
@@ -405,21 +451,37 @@ const LeftSection = () => {
                                 sx={{
                                   padding: '6px',
                                   fontSize: '12px',
-                                  color: color.title,
-                                  backgroundColor: color?.sidebarBG,
-                                  border: '1px solid #ddd',
-                                  '&:hover': { backgroundColor: color.sidebarBG }
+                                  color: isDark == true ? '#64b5f6' : '#2196f3',
+                                  background: isDark == true
+                                    ? 'rgba(255,255,255,0.03)'
+                                    : 'rgba(0,0,0,0.03)',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    background: isDark == true
+                                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                                    transform: 'scale(1.1)',
+                                    boxShadow: isDark == true
+                                      ? '0 2px 6px rgba(0,0,0,0.4)'
+                                      : '0 2px 6px rgba(0,0,0,0.1)',
+                                    filter: isDark == true
+                                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
+                                  },
                                 }}
                               >
-                                <Icon fontSize="medium" />
+                                <Icon fontSize="small" sx={{ fontSize: 20 }} />
                               </IconButton>
                             </Tooltip>
                             <Typography
                               sx={{
                                 marginTop: '4px',
                                 fontSize: '10px',
+                                fontFamily: "'Poppins', sans-serif",
                                 textAlign: 'center',
-                                color: color.title
+                                color: color?.sidebarContent,
                               }}
                             >
                               {option.label}
@@ -441,15 +503,19 @@ const LeftSection = () => {
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-evenly',
-            padding: '6px',
-            borderRadius: '10px',
-            backgroundColor: color.canvasBG,
-            border: '1px solid #ddd',
-            gap: '5px',
+            padding: '8px',
+            borderRadius: '8px',
+            background: color.tabBorder,
+            backdropFilter: 'blur(8px)',
+            border: 'none',
+            boxShadow: isDark == true
+              ? '0 4px 12px rgba(0,0,0,0.5)'
+              : '0 4px 12px rgba(0,0,0,0.15)',
+            gap: '4px',
             width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
-            height: { xs: '50px', sm: '50px', md: 'inherit', lg: 'auto' },
+            maxHeight: '80px',
             overflow: 'auto',
-            my: 0.4
+            my: 0.4,
           }}
         >
           {tabs
@@ -463,7 +529,7 @@ const LeftSection = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    width: '100px'
+                    width: '70px',
                   }}
                   draggable={option.label === 'Group'}
                   onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
@@ -476,21 +542,37 @@ const LeftSection = () => {
                           sx={{
                             padding: '6px',
                             fontSize: '12px',
-                            color: color.title,
-                            backgroundColor: color?.sidebarBG,
-                            border: '1px solid #ddd',
-                            '&:hover': { backgroundColor: color.sidebarBG }
+                            color: isDark == true ? '#64b5f6' : '#2196f3',
+                            background: isDark == true
+                              ? 'rgba(255,255,255,0.03)'
+                              : 'rgba(0,0,0,0.03)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              background: isDark == true
+                                ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                              transform: 'scale(1.1)',
+                              boxShadow: isDark == true
+                                ? '0 2px 6px rgba(0,0,0,0.4)'
+                                : '0 2px 6px rgba(0,0,0,0.1)',
+                              filter: isDark == true
+                                ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
+                            },
                           }}
                         >
-                          <Icon fontSize="medium" />
+                          <Icon fontSize="small" sx={{ fontSize: 20 }} />
                         </IconButton>
                       </Tooltip>
                       <Typography
                         sx={{
                           marginTop: '4px',
                           fontSize: '10px',
+                          fontFamily: "'Poppins', sans-serif",
                           textAlign: 'center',
-                          color: color.title
+                          color: color?.sidebarContent,
                         }}
                       >
                         {option.label}
