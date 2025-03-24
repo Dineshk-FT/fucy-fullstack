@@ -32,7 +32,7 @@ import {
   clearAnchorEl
 } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import { Button, Tooltip, Typography } from '@mui/material';
+import { Button, Tooltip, Typography, IconButton, Box, Zoom } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
@@ -42,7 +42,14 @@ import EditNode from '../../ui-component/Poppers/EditNode';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../ui-component/custom/edges/EditEdge';
 import EditProperties from '../../ui-component/Poppers/EditProperties';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import FitScreenIcon from '@mui/icons-material/FitScreen';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import DownloadIcon from '@mui/icons-material/Download';
 
+// Define the selector function for Zustand
 const selector = (state) => ({
   nodes: state.nodes,
   edges: state.edges,
@@ -79,24 +86,29 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-//Edge line styling
-const connectionLineStyle = { stroke: 'grey' };
+// Edge line styling
+const connectionLineStyle = {
+  stroke: '#64B5F6',
+  strokeWidth: 2,
+  strokeDasharray: '5,5'
+};
+
 const edgeOptions = {
   type: 'step',
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 20,
-    height: 20,
-    color: '#000000'
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
   },
   markerStart: {
     type: MarkerType.ArrowClosed,
     orient: 'auto-start-reverse',
-    width: 20,
-    height: 20,
-    color: '#000000'
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
   },
-  animated: false,
+  animated: true,
   style: {
     strokeWidth: 2,
     stroke: '#808080',
@@ -105,7 +117,15 @@ const edgeOptions = {
     strokeDasharray: '0'
   },
   data: {
-    label: 'edge'
+    label: 'edge',
+    style: {
+      background: 'rgba(255, 255, 255, 0.8)',
+      borderRadius: '4px',
+      padding: '2px 4px',
+      fontFamily: "'Poppins', sans-serif",
+      fontSize: '12px',
+      color: '#333333'
+    }
   }
 };
 
@@ -115,9 +135,9 @@ const CustomStepEdge = (props) => {
 
 const edgeTypes = {
   custom: CustomEdge,
-  // step: CurveEdge
   step: CustomStepEdge
 };
+
 const flowKey = 'example-flow';
 
 export default function MainCanvas() {
@@ -154,11 +174,11 @@ export default function MainCanvas() {
     setSelectedElement,
     setSaveModal,
     isPropertiesOpen,
-    setPropertiesOpen
+    setPropertiesOpen,
+    isDark
   } = useStore(selector, shallow);
-  const dispatch = useDispatch();
-  // const { setTransform } = useReactFlow();
 
+  const dispatch = useDispatch();
   const Color = ColorTheme();
   // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
@@ -172,13 +192,16 @@ export default function MainCanvas() {
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
+
+  // console.log('anchorEl', anchorEl);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
-  const notify = (message, status) => toast[status](message);
   const [isReady, setIsReady] = useState(false);
   const [isPopperFocused, setIsPopperFocused] = useState(false);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -188,11 +211,10 @@ export default function MainCanvas() {
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
+    notify('Canvas cleared', 'success');
   };
 
   const handleSaveToModel = () => {
-    // model - id,
-    //   template
     const template = {
       nodes: nodesRef.current,
       edges: edgesRef.current
@@ -212,11 +234,9 @@ export default function MainCanvas() {
     update(details)
       .then((res) => {
         if (!res.error) {
-          // setTimeout(() => {
           notify('Saved Successfully', 'success');
           handleClose();
           RefreshAPI();
-          // }, 500);
         } else {
           notify(res.error ?? 'Something went wrong', 'error');
         }
@@ -249,7 +269,8 @@ export default function MainCanvas() {
 
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+      setZoomLevel(reactFlowInstance.getZoom());
     }
   }, [reactFlowInstance, nodes?.length]);
 
@@ -257,24 +278,16 @@ export default function MainCanvas() {
     setReactFlowInstance(rf);
   };
 
-  // Capture Ctrl + S for saving
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Check if Ctrl or Cmd key is pressed along with S
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault(); // Prevent the default save behavior
-        handleSaveToModel(); // Trigger the save action
+        event.preventDefault();
+        handleSaveToModel();
       }
     };
-
-    // Add the event listener when the component mounts
     window.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [nodes, edges]); // Re-run this effect if nodes or edges change
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges]);
 
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
@@ -292,9 +305,7 @@ export default function MainCanvas() {
 
   const onNodeDragStop = useCallback(() => {
     getGroupedNodes();
-    // if(dragRef.current.type !== 'group'){
     checkForNodes();
-    // }
   }, []);
 
   const onNodeDrag = (event, node) => {
@@ -325,24 +336,22 @@ export default function MainCanvas() {
     setNodes(updatedNodes);
   };
 
-  //for downloading the circuit and image
   function downloadImage(dataUrl) {
     const a = document.createElement('a');
-
-    a.setAttribute('download', 'reactflow.png');
+    a.setAttribute('download', 'canvas-diagram.png');
     a.setAttribute('href', dataUrl);
     a.click();
   }
 
-  const imageWidth = 1024;
-  const imageHeight = 768;
+  const imageWidth = 1920;
+  const imageHeight = 1080;
 
   const handleDownload = () => {
     const nodesBounds = getRectOfNodes(nodes);
     const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
     toPng(document.querySelector('.react-flow__viewport'), {
-      backgroundColor: '#1a365d',
+      backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',
       width: imageWidth,
       height: imageHeight,
       style: {
@@ -353,7 +362,6 @@ export default function MainCanvas() {
     }).then(downloadImage);
   };
 
-  //fn for Drag and drop
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -407,6 +415,11 @@ export default function MainCanvas() {
             label: parsedNode.data['label'],
             style: {
               backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
               ...style
             }
           }
@@ -424,6 +437,11 @@ export default function MainCanvas() {
             nodeId: parsedNodeItem.nodeId,
             style: {
               backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
               ...style
             }
           },
@@ -445,6 +463,11 @@ export default function MainCanvas() {
               ...node?.data,
               style: {
                 backgroundColor: node.data['bgColor'],
+                borderRadius: '8px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '14px',
+                padding: '8px 12px',
                 ...style
               }
             },
@@ -478,8 +501,12 @@ export default function MainCanvas() {
 
   const RefreshAPI = () => {
     setSaveModal(false);
-    getAssets(model?._id);
-    getDamageScenarios(model?._id);
+    getAssets(model?._id).catch((err) => {
+      notify('Failed to fetch assets: ' + err.message, 'error');
+    });
+    getDamageScenarios(model?._id).catch((err) => {
+      notify('Failed to fetch damage scenarios: ' + err.message, 'error');
+    });
   };
 
   const handleCloseSave = () => {
@@ -516,9 +543,8 @@ export default function MainCanvas() {
     fitView(nodes);
   };
 
-  // console.log('selectedNodes', selectedNodes);
   const handleSelectNode = (e, node) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     if (node.type !== 'group') {
       dispatch(setAnchorEl({ type: 'node', value: node?.id }));
       dispatch(setSelectedBlock(node));
@@ -535,14 +561,11 @@ export default function MainCanvas() {
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     if (e.shiftKey) {
       setSelectedNodes((prevSelectedNodes) => {
         const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
-
-        return isAlreadySelected
-          ? prevSelectedNodes.filter((snode) => snode.id !== node.id) // Remove if already selected
-          : [...prevSelectedNodes, node]; // Add if not selected
+        return isAlreadySelected ? prevSelectedNodes.filter((snode) => snode.id !== node.id) : [...prevSelectedNodes, node];
       });
     }
     if (node.type !== 'group') {
@@ -560,7 +583,6 @@ export default function MainCanvas() {
   // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
     if (!isPopperFocused) {
-      // setAnchorEl(null);
       dispatch(clearAnchorEl());
     }
   };
@@ -568,7 +590,6 @@ export default function MainCanvas() {
   const handleSelectEdge = (e, edge) => {
     e.stopPropagation();
     e.preventDefault();
-    // setAnchorEl(e.currentTarget);
     dispatch(setAnchorEl({ type: 'edge', value: e.currentTarget.getAttribute('data-testid') }));
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
@@ -579,8 +600,8 @@ export default function MainCanvas() {
         properties: edge?.properties ?? [],
         isAsset: edge.isAsset ?? false,
         style: edge.data.style ?? {},
-        startPoint: edge.markerStart.color ?? '#000000',
-        endPoint: edge.markerEnd?.color ?? '#000000'
+        startPoint: edge.markerStart.color ?? '#64B5F6',
+        endPoint: edge.markerEnd?.color ?? '#64B5F6'
       })
     );
   };
@@ -605,8 +626,7 @@ export default function MainCanvas() {
         notify('Something went wrong', 'error');
       });
   };
-  // console.log('selectedElement', selectedElement);
-  // console.log('nodes', nodes);
+
   const createGroup = (e) => {
     if (!e.x) {
       e.preventDefault();
@@ -619,10 +639,14 @@ export default function MainCanvas() {
         y: e.y ?? e.clientY
       },
       data: {
-        label: 'group',
+        label: 'Group',
         style: {
           height: 200,
-          width: 200
+          width: 200,
+          background: isDark == true ? 'rgba(100,181,246,0.1)' : 'rgba(33,150,243,0.05)',
+          border: `1px dashed ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+          borderRadius: '8px',
+          boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
         }
       },
       height: 200,
@@ -633,9 +657,7 @@ export default function MainCanvas() {
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
-
     setCopiedNode(node);
-
     setContextMenu({
       visible: true,
       x: event.clientX,
@@ -647,9 +669,6 @@ export default function MainCanvas() {
 
   const handleCanvasContextMenu = (event) => {
     event.preventDefault();
-
-    // Check if there's a copied node
-    // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
     if (copiedNode && copiedNode.length > 0) {
       setContextMenu({
         visible: true,
@@ -665,16 +684,11 @@ export default function MainCanvas() {
   const handleMenuOptionClick = (option) => {
     if (option === 'Copy' && copiedNode) {
       const nodeToCopy = [copiedNode];
-      // localStorage.removeItem('copiedNode'); // Clear any previous data
-      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
       setCopiedNode(nodeToCopy);
       notify('Node copied!', 'success');
     }
 
     if (option === 'Paste') {
-      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
-
-      // Ensure copiedNodes is an array and contains data
       if (Array.isArray(copiedNode) && copiedNode.length > 0) {
         copiedNode.forEach((node) => {
           const newNode = {
@@ -687,12 +701,9 @@ export default function MainCanvas() {
             },
             selected: false
           };
-
           const nodetoPaste = [...nodes, newNode];
           setNodes(nodetoPaste);
         });
-
-        // localStorage.removeItem('copiedNode');
       } else {
         console.error('No valid copied node found');
       }
@@ -701,16 +712,16 @@ export default function MainCanvas() {
     setContextMenu({ visible: false, x: 0, y: 0 });
   };
 
-  const removeSelectedBlock = () => {
-    // console.log('selectedBlock', selectedBlock);
-    if (!selectedBlock?.id) return;
+  // const removeSelectedBlock = () => {
+  //   // console.log('selectedBlock', selectedBlock);
+  //   if (!selectedBlock?.id) return;
 
-    if (nodes.some((node) => node.id === selectedBlock.id)) {
-      setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedBlock.id));
-    } else if (edges.some((edge) => edge.id === selectedBlock.id)) {
-      setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedBlock.id));
-    }
-  };
+  //   if (nodes.some((node) => node.id === selectedBlock.id)) {
+  //     setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedBlock.id));
+  //   } else if (edges.some((edge) => edge.id === selectedBlock.id)) {
+  //     setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedBlock.id));
+  //   }
+  // };
   useEffect(() => {
     const handleGlobalEvents = (event) => {
       if (event.type === 'click') {
@@ -718,9 +729,10 @@ export default function MainCanvas() {
       } else if (event.type === 'keydown') {
         if (event.key === 'Escape') {
           dispatch(setSelectedBlock({})); // Deselect selected block
-        } else if (['Delete', 'Backspace'].includes(event.key)) {
-          removeSelectedBlock(); // Remove selected block
         }
+        // else if (['Delete', 'Backspace'].includes(event.key)) {
+        //   removeSelectedBlock(); // Remove selected block
+        // }
       }
     };
 
@@ -742,11 +754,10 @@ export default function MainCanvas() {
   const onSelectionClick = useCallback((e, selectedNodes) => {
     if (!selectedNodes || selectedNodes.length === 0) return;
 
-    // Calculate the bounding box of selected nodes
     const minX = Math.min(...selectedNodes.map((n) => n.position.x));
     const minY = Math.min(...selectedNodes.map((n) => n.position.y));
-    const maxX = Math.max(...selectedNodes.map((n) => n.position.x + n.width));
-    const maxY = Math.max(...selectedNodes.map((n) => n.position.y + n.height));
+    const maxX = Math.max(...selectedNodes.map((n) => n.position.x + (n.width || 100)));
+    const maxY = Math.max(...selectedNodes.map((n) => n.position.y + (n.height || 100)));
 
     const groupWidth = maxX - minX;
     const groupHeight = maxY - minY;
@@ -759,17 +770,21 @@ export default function MainCanvas() {
       width: groupWidth + additionalWidth,
       height: groupHeight + additionalHeight,
       position: {
-        x: minX - additionalWidth / 2, // Shift left by half of additionalValue
-        y: minY - additionalHeight + 20 / 2 // Shift up by half of additionalValue
+        x: minX - additionalWidth / 2,
+        y: minY - additionalHeight + 20 / 2
       },
       data: {
-        label: 'group',
+        label: 'Group',
         style: {
           width: groupWidth + additionalWidth,
-          height: groupHeight + additionalHeight
+          height: groupHeight + additionalHeight,
+          background: isDark == true ? 'rgba(100,181,246,0.1)' : 'rgba(33,150,243,0.05)',
+          border: `1px dashed ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+          borderRadius: '8px',
+          boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
         }
       },
-      children: selectedNodes.map((node) => node.id) // Optionally track children nodes
+      children: selectedNodes.map((node) => node.id)
     };
 
     dragAdd(newNode);
@@ -777,6 +792,7 @@ export default function MainCanvas() {
     setSelectedNodes([]);
   }, []);
 
+  // console.log('anchorElNodeId', anchorElNodeId);
   const renderPopper = () => {
     if (anchorElNodeId) {
       return isPropertiesOpen ? (
@@ -829,15 +845,39 @@ export default function MainCanvas() {
     return null;
   };
 
+  const handleZoomIn = () => {
+    zoomIn({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleZoomOut = () => {
+    zoomOut({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleFitView = () => {
+    fitCanvasView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 500);
+  };
+
+  const notify = (message, status) => toast[status](message);
+
   if (!isReady) return null;
 
   return (
     <>
       <div
-        style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          background:
+            isDark == true ? 'linear-gradient(145deg, #1E1E1E 0%, #121212 100%)' : 'linear-gradient(145deg, #F5F5F5 0%, #E0E0E0 100%)',
+          boxShadow: isDark == true ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
+          borderRadius: '12px',
+          overflow: 'hidden'
+        }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
-        // onClick={() => dispatch(setSelectedBlock({}))}
       >
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -857,102 +897,420 @@ export default function MainCanvas() {
             defaultEdgeOptions={edgeOptions}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            // onClick={(e) => {dispatch(setSelectedBlock({}))}}
             fitView
             connectionMode="loose"
             selectionMode="partial"
             multiSelectionKeyCode="Shift"
             onSelectionContextMenu={onSelectionClick}
             deleteKeyCode={['Delete', 'Backspace']}
-            // onPaneClick={onSelectionChange}
             onNodeDoubleClick={handleSelectNode}
             onNodeClick={handleSelectNodeSingleClick}
             onEdgeClick={handleSelectEdgeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
-            // onEdgeClick={handleSelectEdge}
-            defaultposition={[0, 0]}
-            defaultzoom={1}
+            defaultPosition={[0, 0]}
+            defaultZoom={1}
             onNodeContextMenu={handleNodeContextMenu}
+            minZoom={0.2}
+            maxZoom={2}
           >
-            <Panel position="left" style={{ display: 'flex', gap: 10 }}>
-              <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
-                Restore
-              </Button>
-              <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
-                Save
-              </Button>
-              <React.Fragment>
-                <Tooltip title="Grouping">
-                  <Typography
-                    sx={{ color: Color?.iconColor, alignSelf: 'end', cursor: 'pointer' }}
+            <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Tooltip title="Restore">
+                  <IconButton
+                    onClick={() => onRestore(assets?.template)}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Restore canvas"
+                  >
+                    <RestoreIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Save">
+                  <IconButton
+                    onClick={handleSaveToModel}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Save canvas"
+                  >
+                    <SaveIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Group Selected Nodes">
+                  <IconButton
                     onClick={(e) => onSelectionClick(e, selectedNodes)}
                     onDragStart={(e) => handleGroupDrag(e)}
                     draggable={true}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Group selected nodes"
                   >
-                    <GridOnIcon />
-                  </Typography>
+                    <GridOnIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
                 </Tooltip>
-              </React.Fragment>
-              {/* <button onClick={undo} disabled={undoStack.length === 0}>
-                Undo
-              </button>
-              <button onClick={redo} disabled={redoStack.length === 0}>
-                Redo
-              </button> */}
+                <Tooltip title="Undo">
+                  <IconButton
+                    onClick={undo}
+                    disabled={undoStack.length === 0}
+                    sx={{
+                      color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          undoStack.length === 0
+                            ? 'transparent'
+                            : isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
+                        boxShadow:
+                          undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          undoStack.length === 0
+                            ? 'none'
+                            : isDark == true
+                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Undo action"
+                  >
+                    <UndoIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Redo">
+                  <IconButton
+                    onClick={redo}
+                    disabled={redoStack.length === 0}
+                    sx={{
+                      color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          redoStack.length === 0
+                            ? 'transparent'
+                            : isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
+                        boxShadow:
+                          redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          redoStack.length === 0
+                            ? 'none'
+                            : isDark == true
+                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Redo action"
+                  >
+                    <RedoIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Download as PNG">
+                  <IconButton
+                    onClick={handleDownload}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Download canvas as PNG"
+                  >
+                    <DownloadIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Panel>
-            <Controls />
-            <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
-            <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
-            {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
+            <Panel position="bottom-right" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                  alignItems: 'center'
+                }}
+              >
+                <Tooltip title="Zoom In">
+                  <IconButton
+                    onClick={handleZoomIn}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom in"
+                  >
+                    <ZoomInIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Zoom Out">
+                  <IconButton
+                    onClick={handleZoomOut}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOutIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Fit View">
+                  <IconButton
+                    onClick={handleFitView}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Fit view"
+                  >
+                    <FitScreenIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Typography
+                  sx={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: isDark == true ? '#E0E0E0' : '#333333',
+                    alignSelf: 'center',
+                    padding: '0 6px'
+                  }}
+                >
+                  {Math.round(zoomLevel * 100)}%
+                </Typography>
+              </Box>
+            </Panel>
+            <MiniMap
+              zoomable
+              pannable
+              style={{
+                width: 150,
+                height: 100,
+                background: Color.tabBorder,
+                borderRadius: '6px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                border: `1px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`
+              }}
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case 'group':
+                    return isDark == true ? 'rgba(100,181,246,0.3)' : 'rgba(33,150,243,0.2)';
+                  default:
+                    return isDark == true ? '#64B5F6' : '#2196F3';
+                }
+              }}
+            />
+            <Background
+              variant="dots"
+              gap={16}
+              size={1}
+              style={{
+                backgroundColor: Color?.canvasBG
+              }}
+              color={isDark == true ? '#424242' : '#B0BEC5'}
+            />
             {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
         {contextMenu.visible && (
-          <div
-            style={{
-              position: 'absolute',
-              top: contextMenu.y,
-              left: contextMenu.x,
-              background: 'white',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
-              zIndex: 1000,
-              width: '90px', // Defined width for consistency
-              padding: '8px 0',
-              fontFamily: 'Arial, sans-serif',
-              fontSize: '12px'
-            }}
-          >
-            {contextMenu.options.map((option) => (
-              <div
-                key={option}
-                style={{
-                  padding: '4px 8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
-                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
-                }}
-                onClick={() => handleMenuOptionClick(option)}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
-                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
-              >
-                <span style={{ marginRight: '8px' }}>
-                  {option === 'Copy' && <ContentCopyIcon />}
-                  {option === 'Paste' && <ContentPasteIcon />}
-                </span>
-                {option}
-              </div>
-            ))}
-          </div>
+          <Zoom in={contextMenu.visible}>
+            <div
+              style={{
+                position: 'absolute',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                background: isDark == true ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
+                backdropFilter: 'blur(4px)',
+                border: 'none',
+                borderRadius: '6px',
+                boxShadow: isDark == true ? '0 3px 10px rgba(0,0,0,0.5)' : '0 3px 10px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                width: '120px',
+                padding: '6px 0',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '13px',
+                color: isDark == true ? '#E0E0E0' : '#333333'
+              }}
+            >
+              {contextMenu.options.map((option) => (
+                <div
+                  key={option}
+                  style={{
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderBottom:
+                      contextMenu.options.length > 1
+                        ? `1px solid ${isDark == true ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                        : 'none',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background:
+                        isDark == true
+                          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                      transform: 'scale(1.02)',
+                      boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                    }
+                  }}
+                  onClick={() => handleMenuOptionClick(option)}
+                  onMouseEnter={(e) =>
+                    (e.target.style.backgroundColor = isDark == true ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)')
+                  }
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
+                >
+                  <span style={{ marginRight: '8px', color: isDark == true ? '#64B5F6' : '#2196F3' }}>
+                    {option === 'Copy' && <ContentCopyIcon sx={{ fontSize: 16 }} />}
+                    {option === 'Paste' && <ContentPasteIcon sx={{ fontSize: 16 }} />}
+                  </span>
+                  {option}
+                </div>
+              ))}
+            </div>
+          </Zoom>
         )}
         <>{renderPopper()}</>;
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
       </div>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );
 }
