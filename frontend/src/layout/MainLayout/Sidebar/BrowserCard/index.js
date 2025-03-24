@@ -119,10 +119,10 @@ const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose }) => ({
     right: '-96px'
   },
   [theme.breakpoints.down('sm')]: {
-    marginBottom: '10px', // Reduce margin on smaller screens
+    marginBottom: '10px' // Reduce margin on smaller screens
   },
   [theme.breakpoints.down('xs')]: {
-    marginBottom: '5px', // Further reduce margin on extra small screens
+    marginBottom: '5px' // Further reduce margin on extra small screens
   }
 }));
 
@@ -221,6 +221,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  // console.log('assets', assets);
 
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
@@ -478,84 +479,174 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     if (!data) return null;
 
     switch (type) {
-      case 'assets':
+      case 'assets': {
+        const edges = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
+        const nodes = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge')) || [];
+        // console.log('edges', edges);
+
         return renderTreeItem(
           data,
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
-          data.Details?.map((detail, i) => {
-            // console.log('detail', detail);
-            return detail?.name?.length ? (
+          <>
+            {/* Nodes Section */}
+            {nodes.length > 0 && (
               <DraggableTreeItem
-                key={detail.nodeId}
-                nodeId={detail.nodeId}
-                label={
-                  <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                    <Box
-                      sx={{
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: 'fit-content' // Adjust width as needed
-                      }}
-                    >
-                      {i + 1}.{' '}
-                      <Typography component="span" noWrap>
-                        {detail.name}
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                }
+                nodeId="nodes_section"
+                label="Nodes"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // if (!detail.nodeId.includes('edge')) {
-                  // console.log('clicked', detail);
-
-                  setClickedItem(detail.nodeId);
-                  // }
-                  dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                  const selected = nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
-                  dispatch(
-                    setAnchorEl({
-                      type: selected?.target ? 'edge' : 'node',
-                      value: selected?.target ? `rf__edge-${selected.id}` : selected?.id
-                    })
-                  );
-                  dispatch(
-                    setDetails({
-                      name: selected?.data?.label ?? '',
-                      properties: selected?.properties ?? [],
-                      isAsset: selected?.isAsset ?? false
-                    })
-                  );
-                }}
-                onDragStart={(e) => onDragStart(e, detail)}
-                sx={{
-                  backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit',
-                  color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
+                  setClickedItem('nodes_section');
                 }}
               >
-                {detail?.props?.map((prop) => {
-                  // console.log('prop', prop);
-                  return (
+                {nodes?.map((detail, i) =>
+                  detail?.name?.length ? (
                     <DraggableTreeItem
-                      key={prop.id}
-                      nodeId={prop.id}
-                      onClick={(e) => e.stopPropagation()}
+                      key={detail.nodeId}
+                      nodeId={detail.nodeId}
                       label={
-                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
-                          <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
-                          {`Loss of ${prop.name}`}
-                        </div>
+                        <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                          <Box
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'fit-content'
+                            }}
+                          >
+                            {i + 1}.{' '}
+                            <Typography component="span" noWrap>
+                              {detail.name}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
                       }
-                    />
-                  );
-                })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setClickedItem(detail.nodeId);
+                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                        const selected =
+                          nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
+                        dispatch(
+                          setAnchorEl({
+                            type: selected?.target ? 'edge' : 'node',
+                            value: selected?.target ? `rf__edge-${selected.id}` : selected?.id
+                          })
+                        );
+                        dispatch(
+                          setDetails({
+                            name: selected?.data?.label ?? '',
+                            properties: selected?.properties ?? [],
+                            isAsset: selected?.isAsset ?? false
+                          })
+                        );
+                      }}
+                      onDragStart={(e) => onDragStart(e, detail)}
+                      sx={{
+                        backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit',
+                        color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
+                      }}
+                    >
+                      {detail?.props?.map((prop) => (
+                        <DraggableTreeItem
+                          key={prop.id}
+                          nodeId={prop.id}
+                          onClick={(e) => e.stopPropagation()}
+                          label={
+                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                              <CircleRoundedIcon sx={{ color: 'red', fontSize: 13 }} />
+                              {`Loss of ${prop.name}`}
+                            </div>
+                          }
+                        />
+                      ))}
+                    </DraggableTreeItem>
+                  ) : null
+                )}
               </DraggableTreeItem>
-            ) : null;
-          })
-        );
+            )}
 
+            {/* Edges/Connectors Section */}
+            {/* Edges/Connectors Section */}
+            {edges.length > 0 && (
+              <DraggableTreeItem
+                nodeId="edges_section"
+                label="Edges/Connectors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setClickedItem('edges_section');
+                }}
+              >
+                {edges.map((detail, i) =>
+                  detail?.name?.length ? (
+                    <DraggableTreeItem
+                      key={detail.nodeId}
+                      nodeId={detail.nodeId}
+                      label={
+                        <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                          <Box
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'fit-content'
+                            }}
+                          >
+                            {i + 1}.{' '}
+                            <Typography component="span" noWrap>
+                              {detail.name}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setClickedItem(detail.nodeId);
+                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                        const selected =
+                          nodes.find((node) => node.id === detail?.nodeId) || edges.find((edge) => edge.id === detail?.nodeId);
+                        dispatch(
+                          setAnchorEl({
+                            type: selected?.target ? 'edge' : 'node',
+                            value: selected?.target ? `rf__edge-${selected.id}` : selected?.id
+                          })
+                        );
+                        dispatch(
+                          setDetails({
+                            name: selected?.data?.label ?? '',
+                            properties: selected?.properties ?? [],
+                            isAsset: selected?.isAsset ?? false
+                          })
+                        );
+                      }}
+                      onDragStart={(e) => onDragStart(e, detail)}
+                      sx={{
+                        backgroundColor: selectedBlock?.id === detail.nodeId ? 'wheat' : 'inherit',
+                        color: selectedBlock?.id === detail.nodeId ? '#000' : 'inherit'
+                      }}
+                    >
+                      {/* Render Edge Props */}
+                      {detail?.props?.map((prop) => (
+                        <DraggableTreeItem
+                          key={prop.id}
+                          nodeId={prop.id}
+                          onClick={(e) => e.stopPropagation()}
+                          label={
+                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
+                              <CircleRoundedIcon sx={{ color: 'blue', fontSize: 13 }} />
+                              {`Edge Property: ${prop.name}`}
+                            </div>
+                          }
+                        />
+                      ))}
+                    </DraggableTreeItem>
+                  ) : null
+                )}
+              </DraggableTreeItem>
+            )}
+          </>
+        );
+      }
       case 'damageScenarios':
         return renderTreeItem(
           data,
@@ -762,7 +853,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
-      <CardStyle 
+      <CardStyle
         isCollapsed={isCollapsed}
         isNavbarClose={isNavbarClose}
         sx={{ backgroundColor: color?.sidebarInnerBG, scrollbarWidth: 'none' }}

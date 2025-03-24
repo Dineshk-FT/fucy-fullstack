@@ -124,7 +124,8 @@ export default function DsDerivationTable() {
           id: dt?.id,
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
-          Assets: dt?.asset,
+          // Assets: dt?.asset,
+          Assets: true,
           'Damage Scenarios': dt?.damageScene,
           Checked: dt?.is_checked === 'true' ? true : false
         };

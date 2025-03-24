@@ -21,8 +21,6 @@ import { toPng } from 'html-to-image';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import Header from '../../ui-component/Header';
-import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import {
@@ -40,9 +38,10 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
-import EditProperties from '../../ui-component/Poppers/EditProperties';
+import EditNode from '../../ui-component/Poppers/EditNode';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../ui-component/custom/edges/EditEdge';
+import EditProperties from '../../ui-component/Poppers/EditProperties';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -75,7 +74,9 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted,
   selectedElement: state.selectedElement,
   setSelectedElement: state.setSelectedElement,
-  setSaveModal: state.setSaveModal
+  setSaveModal: state.setSaveModal,
+  isPropertiesOpen: state.isPropertiesOpen,
+  setPropertiesOpen: state.setPropertiesOpen
 });
 
 //Edge line styling
@@ -151,7 +152,9 @@ export default function MainCanvas() {
     setIsNodePasted,
     selectedElement,
     setSelectedElement,
-    setSaveModal
+    setSaveModal,
+    isPropertiesOpen,
+    setPropertiesOpen
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   // const { setTransform } = useReactFlow();
@@ -164,7 +167,9 @@ export default function MainCanvas() {
   // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
+    (state) => state?.canvas
+  );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
@@ -545,6 +550,12 @@ export default function MainCanvas() {
       setSelectedElement(node);
     }
   };
+
+  const handleSelectEdgeSingleClick = (e, edge) => {
+    e.stopPropagation(); // Prevent event bubbling
+    dispatch(setSelectedBlock(edge));
+    setSelectedElement(edge);
+  };
   // console.log('nodes', nodes);
   // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
@@ -690,10 +701,36 @@ export default function MainCanvas() {
     setContextMenu({ visible: false, x: 0, y: 0 });
   };
 
+  const removeSelectedBlock = () => {
+    // console.log('selectedBlock', selectedBlock);
+    if (!selectedBlock?.id) return;
+
+    if (nodes.some((node) => node.id === selectedBlock.id)) {
+      setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedBlock.id));
+    } else if (edges.some((edge) => edge.id === selectedBlock.id)) {
+      setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedBlock.id));
+    }
+  };
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    const handleGlobalEvents = (event) => {
+      if (event.type === 'click') {
+        setContextMenu({ visible: false, x: 0, y: 0 });
+      } else if (event.type === 'keydown') {
+        if (event.key === 'Escape') {
+          dispatch(setSelectedBlock({})); // Deselect selected block
+        } else if (['Delete', 'Backspace'].includes(event.key)) {
+          removeSelectedBlock(); // Remove selected block
+        }
+      }
+    };
+
+    document.addEventListener('click', handleGlobalEvents);
+    document.addEventListener('keydown', handleGlobalEvents);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalEvents);
+      document.removeEventListener('keydown', handleGlobalEvents);
+    };
   }, []);
 
   const handleGroupDrag = (event) => {
@@ -739,8 +776,59 @@ export default function MainCanvas() {
     checkForNodes();
     setSelectedNodes([]);
   }, []);
-  // console.log('edges', edges);
-  // console.log('anchorElId', anchorElId);
+
+  const renderPopper = () => {
+    if (anchorElNodeId) {
+      return isPropertiesOpen ? (
+        <EditProperties
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={() => {
+            handleClosePopper();
+            setPropertiesOpen(false);
+          }}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
+      ) : (
+        <EditNode
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
+      );
+    }
+
+    if (anchorElEdgeId) {
+      return (
+        <EditEdge
+          anchorEl={anchorElEdgeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setEdgeDetails}
+          details={edgeDetails}
+          dispatch={dispatch}
+          edges={edges}
+          setEdges={setEdges}
+        />
+      );
+    }
+
+    return null;
+  };
+
   if (!isReady) return null;
 
   return (
@@ -751,19 +839,6 @@ export default function MainCanvas() {
         onContextMenu={handleCanvasContextMenu}
         // onClick={() => dispatch(setSelectedBlock({}))}
       >
-        {/* {isHeaderOpen && ( */}
-        {/* <Header
-          selectedElement={selectedElement}
-          nodes={nodes}
-          setNodes={setNodes}
-          setSelectedElement={setSelectedElement}
-          handleClear={handleClear}
-          handleSave={handleSaveToModel}
-          download={handleDownload}
-          createGroup={createGroup}
-          dispatch={dispatch}
-        /> */}
-        {/* )} */}
         <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}
@@ -792,6 +867,7 @@ export default function MainCanvas() {
             // onPaneClick={onSelectionChange}
             onNodeDoubleClick={handleSelectNode}
             onNodeClick={handleSelectNodeSingleClick}
+            onEdgeClick={handleSelectEdgeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
             // onEdgeClick={handleSelectEdge}
             defaultposition={[0, 0]}
@@ -872,39 +948,7 @@ export default function MainCanvas() {
             ))}
           </div>
         )}
-        {anchorElNodeId && (
-          <EditProperties
-            anchorEl={anchorElNodeId}
-            handleSaveEdit={handleSaveEdit}
-            handleClosePopper={handleClosePopper}
-            setDetails={setDetails}
-            details={details}
-            dispatch={dispatch}
-            setIsPopperFocused={setIsPopperFocused}
-            edges={edges}
-            setEdges={setEdges}
-            nodes={nodes}
-            setNodes={setNodes}
-            selectedElement={selectedElement}
-            setSelectedElement={setSelectedElement}
-          />
-        )}
-        {anchorElEdgeId && (
-          <EditEdge
-            anchorEl={anchorElEdgeId}
-            handleSaveEdit={handleSaveEdit}
-            handleClosePopper={handleClosePopper}
-            setDetails={setEdgeDetails}
-            details={edgeDetails}
-            dispatch={dispatch}
-            setIsPopperFocused={setIsPopperFocused}
-            edges={edges}
-            setEdges={setEdges}
-            nodes={nodes}
-            setNodes={setNodes}
-            selectedElement={selectedElement}
-          />
-        )}
+        <>{renderPopper()}</>;
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}

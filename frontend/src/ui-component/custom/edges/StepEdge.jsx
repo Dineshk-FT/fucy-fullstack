@@ -139,7 +139,7 @@ export default function StepEdge({
         id={id}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
-        style={{ ...style }}
+        style={{ ...style, filter: selectedBlock?.id === id ? 'drop-shadow(0px 0px 8px #BF00FF' : 'none' }}
       />
       <EdgeLabelRenderer>
         {/* <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}> */}

@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../store/constant';
+import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -16,12 +17,13 @@ const selector = (state) => ({
   assets: state.assets,
   originalNodes: state.originalNodes,
   selectedNodes: state.selectedNodes,
-  setSelectedElement: state.setSelectedElement
+  setSelectedElement: state.setSelectedElement,
+  setPropertiesOpen: state.setPropertiesOpen
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement } =
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
@@ -64,6 +66,23 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   // console.log('nodes', nodes);
 
   const handleInfoClick = () => {
+    setPropertiesOpen(false);
+    const selectedNode = nodes.find((node) => node.id === id);
+    const { isAsset, properties } = selectedNode;
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl({ type: 'node', value: id }));
+    setSelectedElement(selectedNode);
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
+  };
+
+  const handleDetailClick = () => {
+    setPropertiesOpen(true);
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
@@ -159,7 +178,16 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             }}
             style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
-            <EditIcon sx={{ fontSize: '0.9rem' }} />
+            <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDetailClick();
+            }}
+            style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+          >
+            <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
           <div
             className="delete-icon"

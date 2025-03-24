@@ -73,6 +73,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   model: {},
   clickedItem: [],
   isSaveModalOpen: false,
+  isPropertiesOpen: false,
   selectedElement: {},
   isCollapsed: true,
 
@@ -617,12 +618,17 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Object to store filtered data for multiple tables
   filteredTableData: {},
 
+  // setter for propertiesPopper
+  setPropertiesOpen: (value) => {
+    set((state) => ({
+      isPropertiesOpen: typeof value === 'function' ? value(state.isPropertiesOpen) : value
+    }));
+  },
   // setter for isCollapsed
   setCollapsed: (value) =>
     set((state) => ({
       isCollapsed: typeof value === 'function' ? value(state.isCollapsed) : value
-    }
-  )),
+    })),
 
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
@@ -899,9 +905,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   setEdges: (newEdges) => {
-    set({
-      edges: newEdges
-    });
+    set((state) => ({
+      edges: typeof newEdges === 'function' ? newEdges(state.edges) : newEdges
+    }));
   },
 
   setInitialEdges: (newEdges) => {
