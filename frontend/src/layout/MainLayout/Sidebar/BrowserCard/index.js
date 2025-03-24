@@ -634,7 +634,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                           label={
                             <div style={{ display: 'flex', alignItems: 'center', marginLeft: '-31px', gap: 2 }}>
                               <CircleRoundedIcon sx={{ color: 'blue', fontSize: 13 }} />
-                              {`Edge Property: ${prop.name}`}
+                              {prop.name}
                             </div>
                           }
                         />
