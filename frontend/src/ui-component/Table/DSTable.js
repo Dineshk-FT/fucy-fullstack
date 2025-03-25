@@ -672,7 +672,7 @@ export default function DsTable() {
                         key={index}
                         sx={{
                           width: `${columnWidths[item.id] || 'auto'}`,
-                          display: 'flex',
+                          display: 'table-cell',
                           alignItems: 'center'
                         }}
                         component="th"
@@ -684,7 +684,7 @@ export default function DsTable() {
                             overflow: 'hidden',
                             ...(shouldTruncate
                               ? {
-                                whiteSpace: 'nowrap', // Truncate text into a single line
+                                whiteSpace: 'normal', 
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                               }
