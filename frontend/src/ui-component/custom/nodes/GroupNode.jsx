@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, { useCallback, useEffect, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
@@ -8,7 +9,7 @@ const selector = (state) => ({
   nodes: state.nodes
 });
 
-const CustomGroupNode = ({ data, id, isConnectable }) => {
+const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
   const { nodes } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const [dimesions, setDimensions] = useState({
@@ -16,6 +17,8 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
     height: data?.style?.height || 200
   });
   // console.log('data', data);
+  // console.log('nodes', nodes);
+  // console.log('rest', data.label, rest);
   const [value, setValue] = useState(data?.label || '');
 
   const throttledResize = useThrottle((newWidth, newHeight) => {

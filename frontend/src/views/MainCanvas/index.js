@@ -309,29 +309,38 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDrag = (event, node) => {
+    const deltaX = node.position.x - nodes.find((n) => n.id === node.id)?.position.x;
+    const deltaY = node.position.y - nodes.find((n) => n.id === node.id)?.position.y;
+
+    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
+
+    const moveChildren = (parentId, dx, dy) => {
+      nodes.forEach((child) => {
+        if (child.parentId === parentId) {
+          // Update child's position
+          child.position = {
+            x: child.position.x + dx,
+            y: child.position.y + dy
+          };
+
+          // Recursively move nested children
+          moveChildren(child.id, dx, dy);
+        }
+      });
+    };
+
     const updatedNodes = nodes.map((n) => {
       if (n.id === node.id) {
-        const deltaX = node.position.x - n.position.x;
-        const deltaY = node.position.y - n.position.y;
-
-        const updatedChildNodes = nodes.filter((child) => child.parentId === node.id);
-        updatedChildNodes.forEach((child) => {
-          child.position = {
-            x: child.position.x + deltaX,
-            y: child.position.y + deltaY
-          };
-        });
-
         return {
           ...n,
-          position: {
-            x: node.position.x,
-            y: node.position.y
-          }
+          position: { x: node.position.x, y: node.position.y }
         };
       }
       return n;
     });
+
+    // Move all children recursively
+    moveChildren(node.id, deltaX, deltaY);
 
     setNodes(updatedNodes);
   };

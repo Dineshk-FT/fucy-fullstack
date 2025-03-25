@@ -64,11 +64,13 @@ iframe#webpack-dev-server-client-overlay {
   /* height: initial; */
   /* width: auto !important; */
   /* width: initial; */
-  z-index: 1 !important;
   box-shadow: none !important;
 }
+.react-flow__node-default {
+  z-index: 10000 !important;
+}
 .react-flow__edge {
-  z-index: 1 !important;
+  z-index: 10000 !important;
 }
 .react-flow__node-group {
   border: 3px solid darkgray !important;
@@ -78,7 +80,7 @@ iframe#webpack-dev-server-client-overlay {
   width: auto !important;
   height: auto !important;
   /* display: flex; */
-  z-index: 0 !important;
+  /* z-index: 0 !important; */
   &.selected {
     border: 3px solid #5fbdff !important;
     /* z-index: 0 !important; */
@@ -104,6 +106,7 @@ iframe#webpack-dev-server-client-overlay {
   /* border: 1px solid black; */
   border-radius: 3px;
   padding: 10px 15px;
+
   /* box-shadow: none !important; */
 }
 

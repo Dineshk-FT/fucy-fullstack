@@ -1001,21 +1001,18 @@ const useStore = createWithEqualityFn((set, get) => ({
     function calculateOverlapArea(nodeA, nodeB) {
       const xOverlap = Math.max(0, Math.min(nodeA.x + nodeA.width, nodeB.x + nodeB.width) - Math.max(nodeA.x, nodeB.x));
       const yOverlap = Math.max(0, Math.min(nodeA.y + nodeA.height, nodeB.y + nodeB.height) - Math.max(nodeA.y, nodeB.y));
-
       return xOverlap * yOverlap;
     }
 
-    function isAtLeastHalfInside(nodeA, nodeB) {
-      const overlapArea = calculateOverlapArea(nodeA, nodeB);
-      const nodeBArea = nodeB.width * nodeB.height;
-
-      // Check if the overlap area is at least half of node B's area
-      return overlapArea >= nodeBArea / 2;
+    function isAtLeastHalfInside(container, node) {
+      const overlapArea = calculateOverlapArea(container, node);
+      const nodeArea = node.width * node.height;
+      return overlapArea >= nodeArea / 2;
     }
 
     if (groups) {
       groups.forEach((group) => {
-        const area = {
+        const groupArea = {
           x: group?.position?.x,
           y: group?.position?.y,
           width: group?.width,
@@ -1024,50 +1021,79 @@ const useStore = createWithEqualityFn((set, get) => ({
 
         const intersectingNodes = nodes
           .filter((node) => {
-            // Avoid grouping group nodes with another group node
-            if (node.id !== group.id && node.type !== 'group') {
+            if (node.id !== group.id) {
               const nodeRect = {
                 x: node.position.x,
                 y: node.position.y,
                 width: node.width,
                 height: node.height
               };
-              return isAtLeastHalfInside(area, nodeRect);
+              return isAtLeastHalfInside(groupArea, nodeRect);
             }
             return false;
           })
           .map((node) => ({
             ...node,
-            parentId: group.id,
-            extent: 'parent'
+            parentId: group.id // Assign parentId to the enclosing group
           }));
 
         intersectingNodesMap[group.id] = intersectingNodes;
 
-        // Add nodeCount to the group's data
         group.data = {
           ...group.data,
           nodeCount: intersectingNodes.length
         };
       });
 
-      // Remove parentId and extent from nodes that are not inside any group
+      // Ensure nested groups have the correct parentId
+      groups.forEach((group) => {
+        const enclosingGroup = groups.find((outerGroup) => {
+          if (outerGroup.id === group.id) return false;
+          const outerRect = {
+            x: outerGroup.position.x,
+            y: outerGroup.position.y,
+            width: outerGroup.width,
+            height: outerGroup.height
+          };
+          const groupRect = {
+            x: group.position.x,
+            y: group.position.y,
+            width: group.width,
+            height: group.height
+          };
+          return isAtLeastHalfInside(outerRect, groupRect);
+        });
+
+        if (enclosingGroup) {
+          group.parentId = enclosingGroup.id;
+        }
+      });
+
+      // Assign zIndex based on depth
+      function getGroupDepth(groupId, depth = 0) {
+        const parentGroup = groups.find((g) => g.id === nodes.find((n) => n.id === groupId)?.parentId);
+        return parentGroup ? getGroupDepth(parentGroup.id, depth + 1) : depth;
+      }
+
+      groups.forEach((group) => {
+        group.zIndex = getGroupDepth(group.id);
+      });
+
+      // Remove parentId from nodes not inside any group
       nodes = nodes.map((node) => {
         const isInGroup = Object.values(intersectingNodesMap)
           .flat()
           .some((n) => n.id === node.id);
 
-        if (!isInGroup && node.parentId && node.extent) {
-          const { parentId, extent, ...rest } = node;
+        if (!isInGroup && node.parentId) {
+          const { parentId, ...rest } = node;
           return rest;
         }
         return node;
       });
     }
 
-    set({
-      nodes: nodes
-    });
+    set({ nodes });
 
     return [intersectingNodesMap, nodes];
   },
