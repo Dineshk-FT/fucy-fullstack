@@ -1004,10 +1004,13 @@ const useStore = createWithEqualityFn((set, get) => ({
       return xOverlap * yOverlap;
     }
 
-    function isAtLeastHalfInside(container, node) {
-      const overlapArea = calculateOverlapArea(container, node);
-      const nodeArea = node.width * node.height;
-      return overlapArea >= nodeArea / 2;
+    function isFullyInside(container, node) {
+      return (
+        node.x >= container.x &&
+        node.y >= container.y &&
+        node.x + node.width <= container.x + container.width &&
+        node.y + node.height <= container.y + container.height
+      );
     }
 
     if (groups) {
@@ -1028,7 +1031,7 @@ const useStore = createWithEqualityFn((set, get) => ({
                 width: node.width,
                 height: node.height
               };
-              return isAtLeastHalfInside(groupArea, nodeRect);
+              return calculateOverlapArea(groupArea, nodeRect) >= (node.width * node.height) / 2;
             }
             return false;
           })
@@ -1045,7 +1048,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         };
       });
 
-      // Ensure nested groups have the correct parentId
+      // **Assign parentId only if a group is fully enclosed inside another**
       groups.forEach((group) => {
         const enclosingGroup = groups.find((outerGroup) => {
           if (outerGroup.id === group.id) return false;
@@ -1061,23 +1064,36 @@ const useStore = createWithEqualityFn((set, get) => ({
             width: group.width,
             height: group.height
           };
-          return isAtLeastHalfInside(outerRect, groupRect);
+          return isFullyInside(outerRect, groupRect);
         });
 
         if (enclosingGroup) {
           group.parentId = enclosingGroup.id;
+        } else {
+          group.parentId = null; // Ensure top-level groups have no parent
         }
       });
 
-      // Assign zIndex based on depth
-      function getGroupDepth(groupId, depth = 0) {
-        const parentGroup = groups.find((g) => g.id === nodes.find((n) => n.id === groupId)?.parentId);
-        return parentGroup ? getGroupDepth(parentGroup.id, depth + 1) : depth;
+      // **Sort groups by depth so outer groups get lowest zIndex**
+      function computeZIndex() {
+        const depthMap = new Map();
+
+        function getDepth(group) {
+          if (!group.parentId) return 0; // Top-level groups have zIndex = 0
+          if (depthMap.has(group.id)) return depthMap.get(group.id); // Return cached depth
+
+          const parentGroup = groups.find((g) => g.id === group.parentId);
+          const depth = parentGroup ? getDepth(parentGroup) + 1 : 0;
+          depthMap.set(group.id, depth);
+          return depth;
+        }
+
+        groups.forEach((group) => {
+          group.zIndex = getDepth(group);
+        });
       }
 
-      groups.forEach((group) => {
-        group.zIndex = getGroupDepth(group.id);
-      });
+      computeZIndex(); // Call function to update zIndex
 
       // Remove parentId from nodes not inside any group
       nodes = nodes.map((node) => {

@@ -199,6 +199,7 @@ export default function MainCanvas() {
   const [isReady, setIsReady] = useState(false);
   const [isPopperFocused, setIsPopperFocused] = useState(false);
   const nodesRef = useRef(nodes);
+  const nodesRefer = useRef(nodes);
   const edgesRef = useRef(edges);
   const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -303,48 +304,42 @@ export default function MainCanvas() {
     dragRef.current = node;
   }, []);
 
-  const onNodeDragStop = useCallback(() => {
-    getGroupedNodes();
-    checkForNodes();
-  }, []);
+  const onNodeDrag = useCallback((event, node) => {
+    const prevNode = nodesRefer.current.find((n) => n.id === node.id);
+    if (!prevNode) return;
 
-  const onNodeDrag = (event, node) => {
-    const deltaX = node.position.x - nodes.find((n) => n.id === node.id)?.position.x;
-    const deltaY = node.position.y - nodes.find((n) => n.id === node.id)?.position.y;
+    const deltaX = node.position.x - prevNode.position.x;
+    const deltaY = node.position.y - prevNode.position.y;
 
     if (deltaX === 0 && deltaY === 0) return; // No movement, return early
 
+    // Use a Map to track updated positions
+    const updatedPositions = new Map();
+
     const moveChildren = (parentId, dx, dy) => {
-      nodes.forEach((child) => {
+      nodesRefer.current.forEach((child) => {
         if (child.parentId === parentId) {
-          // Update child's position
-          child.position = {
+          const newPos = {
             x: child.position.x + dx,
             y: child.position.y + dy
           };
-
-          // Recursively move nested children
+          updatedPositions.set(child.id, newPos);
           moveChildren(child.id, dx, dy);
         }
       });
     };
 
-    const updatedNodes = nodes.map((n) => {
-      if (n.id === node.id) {
-        return {
-          ...n,
-          position: { x: node.position.x, y: node.position.y }
-        };
-      }
-      return n;
-    });
-
-    // Move all children recursively
+    updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
     moveChildren(node.id, deltaX, deltaY);
 
-    setNodes(updatedNodes);
-  };
+    setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
+  }, []);
 
+  const onNodeDragStop = useCallback(() => {
+    nodesRefer.current = [...nodes]; // Update ref after drag stops
+    getGroupedNodes();
+    checkForNodes();
+  }, [nodes]);
   function downloadImage(dataUrl) {
     const a = document.createElement('a');
     a.setAttribute('download', 'canvas-diagram.png');
@@ -570,14 +565,18 @@ export default function MainCanvas() {
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
-    e.stopPropagation();
+    // console.log('Clicked Node:', node);
+    e.stopPropagation(); // Prevent bubbling up
+
     if (e.shiftKey) {
       setSelectedNodes((prevSelectedNodes) => {
         const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
         return isAlreadySelected ? prevSelectedNodes.filter((snode) => snode.id !== node.id) : [...prevSelectedNodes, node];
       });
     }
-    if (node.type !== 'group') {
+
+    if (node.type === 'group') {
+      // Ensure nested group selection
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
     }
