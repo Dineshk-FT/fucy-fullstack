@@ -657,14 +657,26 @@ export default function MainCanvas() {
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
-    setCopiedNode(node);
-    setContextMenu({
-      visible: true,
-      x: event.clientX,
-      y: event.clientY,
-      options: ['Copy', 'Paste'],
-      node
-    });
+    if (node.type === 'group') {
+      // If it's a group, don’t set it as the copied node; prepare for pasting inside
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: copiedNode && copiedNode.length > 0 ? ['Copy', 'Paste'] : ['Copy'],
+        targetGroup: node // Pass the group as the target for pasting
+      });
+    } else {
+      // Regular node: set it as the copied node
+      setCopiedNode([node]);
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: ['Copy', 'Paste'],
+        node
+      });
+    }
   };
 
   const handleCanvasContextMenu = (event) => {
@@ -682,34 +694,62 @@ export default function MainCanvas() {
   };
 
   const handleMenuOptionClick = (option) => {
-    if (option === 'Copy' && copiedNode) {
-      const nodeToCopy = [copiedNode];
-      setCopiedNode(nodeToCopy);
+    if (option === 'Copy' && contextMenu.node && contextMenu.node.type !== 'group') {
+      setCopiedNode([contextMenu.node]);
       notify('Node copied!', 'success');
     }
-
+  
     if (option === 'Paste') {
-      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
-        copiedNode.forEach((node) => {
-          const newNode = {
-            ...node,
-            id: uid(),
-            isCopied: true,
-            position: {
-              x: contextMenu.x - 100,
-              y: contextMenu.y - 50
-            },
-            selected: false
-          };
-          const nodetoPaste = [...nodes, newNode];
-          setNodes(nodetoPaste);
-        });
-      } else {
+      if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
         console.error('No valid copied node found');
+        return;
       }
+  
+      const pastePosition = reactFlowInstance.screenToFlowPosition({
+        x: contextMenu.x,
+        y: contextMenu.y
+      });
+  
+      const targetGroup = contextMenu.targetGroup || nodes.find((node) => {
+        if (node.type !== 'group') return false;
+        const groupX = contextMenu.x;
+        const groupY = contextMenu.y;
+        const groupWidth = node.width || 200;
+        const groupHeight = node.height || 200;
+        return (
+          pastePosition.x >= groupX &&
+          pastePosition.x <= groupX + groupWidth &&
+          pastePosition.y >= groupY &&
+          pastePosition.y <= groupY + groupHeight
+        );
+      });
+  
+      copiedNode.forEach((node) => {
+        const newNode = {
+          ...node,
+          id: uid(),
+          isCopied: true,
+          position: targetGroup
+            ? {
+                x: pastePosition.x - (targetGroup.positionAbsolute?.x ?? targetGroup.position.x),
+                y: pastePosition.y - (targetGroup.positionAbsolute?.y ?? targetGroup.position.y)
+              }
+            : {
+                x: pastePosition.x,
+                y: pastePosition.y
+              },
+          parentId: targetGroup ? targetGroup.id : undefined,
+          extent: targetGroup ? 'parent' : undefined,
+          selected: false
+        };
+  
+        setNodes((nds) => [...nds, newNode]);
+      });
+  
+      checkForNodes();
     }
-
-    setContextMenu({ visible: false, x: 0, y: 0 });
+  
+    setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
   };
 
   // const removeSelectedBlock = () => {
