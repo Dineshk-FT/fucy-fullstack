@@ -11,16 +11,18 @@ import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import ColorTheme from '../../store/ColorTheme';
 import useStore from '../../Zustand/store';
+import GlobalAttackTreeList from './GlobalAttackTreeList';
 
 const selector = (state) => ({
   getAssets: state.getAssets,
   model: state.model,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
-  isCollapsed: state.isCollapsed
+  isCollapsed: state.isCollapsed,
+  globalAttackTrees: state.globalAttackTrees
 });
 const AttackTree = () => {
   const color = ColorTheme();
-  const { getAssets, model, getCyberSecurityScenario, isCollapsed } = useStore(selector);
+  const { getAssets, model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -87,6 +89,7 @@ const AttackTree = () => {
               sx={{ borderLeft: '1px solid black', height: '100%', backgroundColor: color?.canvasBG, color: color?.title }} // Fill the ResizableBox
             >
               <Properties color={color} />
+              {/* <GlobalAttackTreeList globalAttackTrees={globalAttackTrees} /> */}
             </Grid>
           </Grid>
         </Paper>

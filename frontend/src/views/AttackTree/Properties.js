@@ -52,7 +52,7 @@ const Properties = () => {
       >
         <TreeItem
           nodeId="Attack Tree"
-          label={<span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Attack Tree</span>}
+          label={<span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Attack Tree Library</span>}
           style={{ paddingTop: 6 }}
         >
           {gates.map((item) => (

@@ -9,7 +9,8 @@ import {
   DialogContentText,
   DialogTitle,
   Slide,
-  TextField,
+  Select,
+  MenuItem,
   Typography
 } from '@mui/material';
 import React, { useState } from 'react';
@@ -26,22 +27,30 @@ const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
   create: state.createPropmt,
   modelId: state.model?._id,
-  getAttackScenario: state.getAttackScenario
+  getAttackScenario: state.getAttackScenario,
+  globalAttackTrees: state.globalAttackTrees,
+  addAIAttackTree: state.addAIAttackTree
 });
 const PromptModal = ({ handleClose, open, refreshAPI }) => {
-  const { create, modelId, getAttackScenario } = useStore(selector);
+  const { create, modelId, getAttackScenario, globalAttackTrees, addAIAttackTree } = useStore(selector);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const [templateDetails, setTemplateDetails] = useState({ name: '' });
+  const [selectedAttackTree, setSelectedAttackTree] = useState(null);
+  // console.log('selectedAttackTree', selectedAttackTree);
 
   const handleCreate = () => {
+    if (!selectedAttackTree) {
+      notify('Please select an attack tree', 'error');
+      return;
+    }
+
     setLoading(true);
     const newAttackTree = {
       modelId: modelId,
-      promptKey: templateDetails?.name
+      aiAttackId: selectedAttackTree.id
     };
 
-    create(newAttackTree, modelId)
+    addAIAttackTree(newAttackTree)
       .then((res) => {
         // console.log('res', res);
         if (!res.error) {
@@ -50,7 +59,7 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
           handleClose();
           setTimeout(() => {
             dispatch(setTableOpen('Attack Trees Canvas'));
-            dispatch(setAttackScene(res?.scene));
+            dispatch(setAttackScene(res?.scene[0]));
           }, 1000);
         } else {
           notify(res.error ?? 'Error while Generating the Requested Attack', 'error');
@@ -64,7 +73,7 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
         setLoading(false);
       });
 
-    setTemplateDetails({ name: '' });
+    setSelectedAttackTree(null);
   };
 
   return (
@@ -85,18 +94,28 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
           </Box>
         ) : (
           <>
-            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Give Name for the Attack Tree'}</DialogTitle>
+            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Select an Attack Tree'}</DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-slide-description">
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-                  <TextField
-                    value={templateDetails?.name}
-                    id="outlined-basic"
-                    label="Name"
-                    variant="outlined"
-                    onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
+                  <Select
+                    value={selectedAttackTree ? selectedAttackTree.id : ''}
+                    onChange={(e) => {
+                      const selectedTree = globalAttackTrees.find((tree) => tree.id === e.target.value);
+                      setSelectedAttackTree(selectedTree ? { id: selectedTree.id, attackTreeName: selectedTree.attackTreeName } : null);
+                    }}
+                    displayEmpty
                     sx={{ width: '300px' }}
-                  />
+                  >
+                    <MenuItem value="" disabled>
+                      Select Attack Tree
+                    </MenuItem>
+                    {globalAttackTrees.map((tree) => (
+                      <MenuItem key={tree.id} value={tree.id}>
+                        {tree.attackTreeName}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Box>
               </DialogContentText>
             </DialogContent>

@@ -76,6 +76,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   isPropertiesOpen: false,
   selectedElement: {},
   isCollapsed: true,
+  globalAttackTrees: [],
 
   assets: {
     id: '1',
@@ -1595,6 +1596,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  getGlobalAttackTrees: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get/globalAttackTrees`;
+    const res = await GET_CALL(modelId, url);
+    // console.log('res', res);
+    set({
+      globalAttackTrees: res ?? []
+    });
+  },
   //Update Section
   updateModelName: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/model-name`;
@@ -1732,6 +1741,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     const url = `${configuration.apiBaseUrl}v1/add/riskDetAndTreat`;
     const res = await ADD_CALL(details, url);
     // console.log('res', res);
+    return res;
+  },
+
+  addAIAttackTree: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/aiAttackTrees`;
+    const res = await ADD_CALL(details, url);
     return res;
   },
 

@@ -257,7 +257,8 @@ const selector = (state) => ({
   getCatalog: state.getCatalog,
   update: state.updateAssets,
   setSaveModal: state.setSaveModal,
-  isSaveModalOpen: state.isSaveModalOpen
+  isSaveModalOpen: state.isSaveModalOpen,
+  getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 
 // Function to shorten loss names
@@ -325,7 +326,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     update,
     isSaveModalOpen,
     setSaveModal,
-    isDark
+    isDark,
+    getGlobalAttackTrees
   } = useStore(selector);
   const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
@@ -382,6 +384,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getCyberSecurityScenario(modelId);
     getCatalog(modelId);
     setClickedItem(modelId);
+    getGlobalAttackTrees(modelId);
   }, [modelId]);
 
   useEffect(() => {
