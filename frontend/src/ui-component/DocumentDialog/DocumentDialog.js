@@ -274,12 +274,12 @@ const DocumentDialog = ({ open, onClose }) => {
   const items = [
     {
       id: 1,
-      name: 'Item Model & Assets',
+      name: 'Item Definition',
       icon: 'ItemIcon'
     },
     {
       id: 2,
-      name: 'Damage Scenarios Identification and Impact Ratings',
+      name: 'Damage Scenarios and Impact Ratings',
       icon: 'DamageIcon',
       subs: [
         // { id: 21, name: 'Damage Scenarios Derivations' },
@@ -288,7 +288,7 @@ const DocumentDialog = ({ open, onClose }) => {
     },
     {
       id: 3,
-      name: 'Threat Scenarios Identification',
+      name: 'Threat Scenarios',
       icon: 'ThreatIcon',
       subs: [
         // { id: 31, name: 'Threat Scenarios' },

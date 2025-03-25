@@ -327,11 +327,8 @@ export default function DsTable() {
   };
 
   const toggleRowSelection = (rowId) => {
-    setSelectedRows(
-      (prevSelectedRows) =>
-        prevSelectedRows.includes(rowId)
-          ? prevSelectedRows.filter((id) => id !== rowId)
-          : [...prevSelectedRows, rowId]
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(rowId) ? prevSelectedRows.filter((id) => id !== rowId) : [...prevSelectedRows, rowId]
     );
   };
 
@@ -579,18 +576,18 @@ export default function DsTable() {
                           overflow: 'hidden', // Ensure overflow is handled
                           ...(shouldTruncate
                             ? {
-                              whiteSpace: 'nowrap', // Truncate text into a single line
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }
-                          : {
-                              whiteSpace: 'normal', // Wrap text into two lines
-                              overflowWrap: 'break-word',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            })
+                                whiteSpace: 'nowrap', // Truncate text into a single line
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }
+                            : {
+                                whiteSpace: 'normal', // Wrap text into two lines
+                                overflowWrap: 'break-word',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              })
                         }}
                       >
                         <Tooltip title={row[item.name]} placement="top">
@@ -663,49 +660,42 @@ export default function DsTable() {
                 );
                 break;
 
-                case item.name === 'Assets':
-                  {
-                    // Join the asset names into a comma-separated string for truncation/wrapping
-                    const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean).join(', ') || '-';
-                    cellContent = (
-                      <StyledTableCell
-                        key={index}
-                        sx={{
-                          width: `${columnWidths[item.id] || 'auto'}`,
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                        component="th"
-                        scope="row"
-                      >
-                        <Box
-                          sx={{
-                            flex: 1,
-                            overflow: 'hidden',
-                            ...(shouldTruncate
-                              ? {
-                                whiteSpace: 'nowrap', // Truncate text into a single line
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }
-                            : {
-                                whiteSpace: 'normal', // Wrap text into two lines
-                                overflowWrap: 'break-word',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              })
-                          }}
-                        >
-                          <Tooltip title={assetsList} placement="top">
-                            <span>{assetsList}</span>
-                          </Tooltip>
+              case item.name === 'Assets':
+                const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean) || ['-'];
+                cellContent = (
+                  <StyledTableCell
+                    key={index}
+                    sx={{
+                      width: `${columnWidths[item.id] || 'auto'}`,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    component="th"
+                    scope="row"
+                  >
+                    <Box
+                      sx={{
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column', // Stack items vertically
+                        gap: 1 // Add some spacing between items
+                      }}
+                    >
+                      <Tooltip title={assetsList.join(', ')} placement="top">
+                        <Box>
+                          {assetsList.map((asset, idx) => (
+                            <Typography key={idx} variant="body2" noWrap={!shouldTruncate}>
+                              {asset}
+                            </Typography>
+                          ))}
                         </Box>
-                      </StyledTableCell>
-                    );
-                  }
-                  break;
+                      </Tooltip>
+                    </Box>
+                  </StyledTableCell>
+                );
+
+                break;
               case item.name === 'Overall Impact':
                 cellContent = (
                   <StyledTableCell

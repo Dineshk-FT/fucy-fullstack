@@ -169,7 +169,7 @@ const BrowserCard = ({ models }) => {
   }
 
   const handleNodes = (e, name) => {
-    if (name === 'Item Model & Assets') {
+    if (name === 'Item Definition') {
       e.preventDefault();
       // console.log('name', name);
       setAnchorItemEl(e.currentTarget);
@@ -528,7 +528,7 @@ const BrowserCard = ({ models }) => {
                           })}
                       </TreeItem>
                     ))}
-                  {scene?.name === 'Item Model & Assets' &&
+                  {scene?.name === 'Item Definition' &&
                     scene?.Details?.map((value, i) => (
                       <DraggableTreeItem
                         key={`1${i}`}
@@ -567,7 +567,7 @@ const BrowserCard = ({ models }) => {
                         })}
                       </DraggableTreeItem>
                     ))}
-                  {scene?.name === 'Attack Path Analysis and Attack Feasability Rating' &&
+                  {scene?.name === 'Attack Path Analysis' &&
                     scene?.subs?.map((sub) => {
                       // console.log('sub', sub.scenes);
                       return (

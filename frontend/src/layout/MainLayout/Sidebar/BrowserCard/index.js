@@ -638,7 +638,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               <DraggableTreeItem
                 nodeId="nodes_section"
                 // label="Nodes"
-                label={getLabel('TopicIcon', 'Nodes', null, 'nodes_section')}
+                label={getLabel('TopicIcon', 'Components', null, 'nodes_section')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setClickedItem('nodes_section');
@@ -717,7 +717,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               <DraggableTreeItem
                 nodeId="edges_section"
                 // label="Edges/Connectors"
-                label={getLabel('TopicIcon', 'Edges/Connectors', null, 'edges_section')}
+                label={getLabel('TopicIcon', 'Connectors', null, 'edges_section')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setClickedItem('edges_section');

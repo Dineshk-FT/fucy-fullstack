@@ -79,12 +79,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   assets: {
     id: '1',
-    name: 'Item Model & Assets',
+    name: 'Item Definition',
     icon: 'ItemIcon'
   },
   damageScenarios: {
     id: '2',
-    name: 'Damage Scenarios Identification and Impact Ratings',
+    name: 'Damage Scenarios and Impact Ratings',
     icon: 'DamageIcon',
     subs: [
       {
@@ -99,7 +99,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   threatScenarios: {
     id: '3',
-    name: 'Threat Scenarios Identification',
+    name: 'Threat Scenarios',
     icon: 'ThreatIcon',
     subs: [
       {
@@ -114,7 +114,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   attackScenarios: {
     id: '4',
-    name: 'Attack Path Analysis and Attack Feasability Rating',
+    name: 'Attack Path Analysis',
     icon: 'AttackIcon',
     subs: [
       {
@@ -133,7 +133,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   cybersecurity: {
     id: '5',
-    name: 'Cybersecurity Goals, Claims and Requirements',
+    name: 'Goals, Claims and Requirements',
     icon: 'CybersecurityIcon',
     subs: [
       {
@@ -587,7 +587,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   documents: {
     id: '9',
-    name: 'Documents',
+    name: 'Reporting',
     icon: 'DocumentIcon'
   },
   // reports: {
@@ -1217,12 +1217,12 @@ const useStore = createWithEqualityFn((set, get) => ({
       model: res,
       assets: {
         id: '1',
-        name: 'Item Model & Assets',
+        name: 'Item Definition',
         icon: 'ItemIcon'
       },
       damageScenarios: {
         id: '2',
-        name: 'Damage Scenarios Identification and Impact Ratings',
+        name: 'Damage Scenarios and Impact Ratings',
         icon: 'DamageIcon',
         subs: [
           {
@@ -1237,7 +1237,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       threatScenarios: {
         id: '3',
-        name: 'Threat Scenarios Identification',
+        name: 'Threat Scenarios',
         icon: 'ThreatIcon',
         subs: [
           {
@@ -1252,7 +1252,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       attackScenarios: {
         id: '4',
-        name: 'Attack Path Analysis and Attack Feasability Rating',
+        name: 'Attack Path Analysis',
         icon: 'AttackIcon',
         subs: [
           {
@@ -1283,7 +1283,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       cybersecurity: {
         id: '5',
-        name: 'Cybersecurity Goals, Claims and Requirements',
+        name: 'Goals, Claims and Requirements',
         icon: 'CybersecurityIcon',
         subs: [
           {
