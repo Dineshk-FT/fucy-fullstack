@@ -1,8 +1,8 @@
 /*eslint-disable*/
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,15 +31,20 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
-  const textRef = useRef(null);
+  const labelRef = useRef(null);
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
+  const [isEditing, setIsEditing] = useState(false);
+  const [labelValue, setLabelValue] = useState(data?.label || '');
+
+  useEffect(() => {
+    setLabelValue(data?.label || '');
+  }, [data?.label]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
     requestAnimationFrame(() => {
       const updatedWidth = newWidth;
       const updatedHeight = newHeight;
 
-      // Update state
       setWidth(updatedWidth);
       setHeight(updatedHeight);
 
@@ -63,7 +68,73 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     });
   };
 
-  // console.log('nodes', nodes);
+  const updateNodeLabel = (newLabel) => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                label: newLabel
+              }
+            }
+          : node
+      )
+    );
+  };
+
+  const handleLabelDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleLabelRightClick = (e) => {
+    e.preventDefault();
+    setIsEditing(true);
+  };
+
+  const handleLabelBlur = () => {
+    setIsEditing(false);
+    const newLabel = labelRef.current?.textContent || '';
+    setLabelValue(newLabel);
+    updateNodeLabel(newLabel);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLabelBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      if (labelRef.current) {
+        labelRef.current.textContent = labelValue;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'F3' && selectedBlock?.id === id) {
+        setIsEditing(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [id, selectedBlock]);
+
+  useEffect(() => {
+    if (isEditing && labelRef.current) {
+      labelRef.current.focus();
+      const range = document.createRange();
+      range.selectNodeContents(labelRef.current);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }, [isEditing]);
 
   const handleInfoClick = () => {
     setPropertiesOpen(false);
@@ -121,7 +192,6 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const handleUnsavedDialogClose = () => setIsUnsavedDialogVisible(false);
   const handleUnsavedDialogContinue = () => handleDelete();
 
-  // console.log('nodes', nodes);
   const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
@@ -136,7 +206,12 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           zIndex: 10
         }}
       />
-      <ClickAwayListener onClickAway={() => setIsVisible(false)}>
+      <ClickAwayListener
+        onClickAway={() => {
+          setIsVisible(false);
+          if (isEditing) handleLabelBlur();
+        }}
+      >
         <div
           role="button"
           tabIndex={0}
@@ -151,24 +226,46 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               ? '0px 0px 7px 3px violet'
               : 'none',
             width: width,
-            height: height, // Apply dynamic height
-            // minHeight: height ,
+            height: height,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
             padding: '5px',
             wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap' // Allow text to wrap properly
+            whiteSpace: 'pre-wrap'
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           <Handle className="handle" id="top" position={Position.Top} isConnectable={true} />
           <Handle className="handle" id="left" position={Position.Left} isConnectable={true} />
-          <div ref={textRef} style={{ maxWidth: width - 10, textAlign: 'center' }}>
-            {data?.label}
-          </div>
+          <Box
+            ref={labelRef}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onClick={handleLabelDoubleClick}
+            onContextMenu={handleLabelRightClick}
+            onBlur={handleLabelBlur}
+            onKeyDown={handleKeyDown}
+            style={{
+              maxWidth: width - 10,
+              textAlign: 'center',
+              outline: 'none',
+              cursor: 'text',
+
+              ...(isEditing && {
+                // backgroundColor: 'white',
+                color: 'black',
+                padding: '0 4px',
+                borderRadius: '4px',
+                minWidth: '60px',
+                cursor: 'text'
+              })
+            }}
+          >
+            {labelValue}
+          </Box>
           <Handle className="handle" id="bottom" position={Position.Bottom} isConnectable={true} />
           <Handle className="handle" id="right" position={Position.Right} isConnectable={true} />
           <div

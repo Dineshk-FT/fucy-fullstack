@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useEdgesState, useReactFlow } from 'reactflow';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
@@ -23,7 +23,6 @@ export default function StepEdge({
   markerStart,
   data
 }) {
-  // const [setEdges] = useEdgesState([]);
   const dispatch = useDispatch();
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { getEdges, setEdges } = useReactFlow();
@@ -33,10 +32,9 @@ export default function StepEdge({
     start: true,
     end: true
   });
-
-  // console.log('edges', edges);
-  // console.log('setEdges', setEdges);
-  // console.log('rest', rest);
+  const [isEditing, setIsEditing] = useState(false);
+  const [labelValue, setLabelValue] = useState(data?.label || '');
+  const editableRef = useRef(null);
 
   useEffect(() => {
     setIsMarkerVisible({
@@ -44,6 +42,10 @@ export default function StepEdge({
       end: style?.end
     });
   }, [style.start, style.end]);
+
+  useEffect(() => {
+    setLabelValue(data?.label || '');
+  }, [data?.label]);
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -56,18 +58,14 @@ export default function StepEdge({
   });
 
   const updateEdges = (updatedEdge) => {
-    const newEdges = edges.map(
-      (edge) => (edge.id === id ? updatedEdge : edge) // Modify the specific edge with the new data
-    );
-    setEdges(newEdges); // Update edges globally
+    const newEdges = edges.map((edge) => (edge.id === id ? updatedEdge : edge));
+    setEdges(newEdges);
   };
 
   const onEdgeClick = () => {
-    // Get the current edges
-    const updated = edges?.filter((edge) => edge.id !== id); // Remove the clicked edge
-    setEdges(updated); // Update the edges globally
+    const updated = edges?.filter((edge) => edge.id !== id);
+    setEdges(updated);
   };
-  // console.log('edges', edges);
 
   const handleSwap = () => {
     if (isMarkerVisible.start && isMarkerVisible.end) {
@@ -94,7 +92,6 @@ export default function StepEdge({
   const onEditEdge = (e) => {
     const selectedEdge = edges.find((edge) => edge.id === id);
     const { isAsset, properties, markerStart, markerEnd } = selectedEdge;
-    // console.log('selectedEdge', selectedEdge);
     dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
     dispatch(setSelectedBlock({ id, data }));
     dispatch(
@@ -108,12 +105,55 @@ export default function StepEdge({
       })
     );
   };
+
+  const handleLabelDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleLabelRightClick = (e) => {
+    e.preventDefault();
+    setIsEditing(true);
+  };
+
+  const handleLabelBlur = () => {
+    setIsEditing(false);
+    const newLabel = editableRef.current?.textContent || '';
+    setLabelValue(newLabel);
+    updateEdges({
+      ...getEdges().find((edge) => edge.id === id),
+      data: { ...data, label: newLabel }
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLabelBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      if (editableRef.current) {
+        editableRef.current.textContent = labelValue;
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isEditing && editableRef.current) {
+      editableRef.current.focus();
+      // Select all text when editing starts
+      const range = document.createRange();
+      range.selectNodeContents(editableRef.current);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }, [isEditing]);
+
   const renderButton = () => {
     const { start, end } = isMarkerVisible;
 
     let Icon = ArrowSwapHorizontal;
     let iconProps = { className: 'icons' };
-    // If not, use `size` prop
     iconProps.size = 15;
 
     if (start && end) {
@@ -142,11 +182,10 @@ export default function StepEdge({
         style={{ ...style, filter: selectedBlock?.id === id ? 'drop-shadow(0px 0px 8px #BF00FF' : 'none' }}
       />
       <EdgeLabelRenderer>
-        {/* <ClickAwayListener onClickAway={() => setIsButtonVisible(false)}> */}
-        <div
+        <Box
           role="button"
           tabIndex={0}
-          style={{
+          sx={{
             position: 'absolute',
             top: '-10px',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -155,7 +194,7 @@ export default function StepEdge({
             display: 'flex',
             alignItems: 'center',
             height: 'auto',
-            gap: 5,
+            gap: 1,
             borderRadius: '20px',
             zIndex: 1,
             cursor: 'pointer',
@@ -165,18 +204,32 @@ export default function StepEdge({
           }}
           className="nodrag nopan edge-container"
         >
-          {/* Edge Label */}
-          <div
-            className="edge-label"
-            style={{
-              outline: 'none',
-              cursor: 'text',
-              color: data?.label?.length && selectedBlock?.id === id ? 'black' : data?.label?.length ? color?.title : color?.label
-            }}
-          >
-            {data?.label?.length ? data?.label : 'Enter name'}
-          </div>
-          {/* Buttons as a prefix, hidden by default */}
+          <ClickAwayListener onClickAway={handleLabelBlur}>
+            <Box
+              ref={editableRef}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onClick={handleLabelDoubleClick}
+              onContextMenu={handleLabelRightClick}
+              onBlur={handleLabelBlur}
+              onKeyDown={handleKeyDown}
+              sx={{
+                outline: 'none',
+                cursor: 'text',
+                color: data?.label?.length && selectedBlock?.id === id ? 'black' : data?.label?.length ? color?.title : color?.label,
+                // minWidth: '60px',
+                whiteSpace: 'nowrap',
+                ...(isEditing && {
+                  // backgroundColor: 'white',
+                  color: 'black',
+                  // padding: '0 4px',
+                  borderRadius: '4px'
+                })
+              }}
+            >
+              {labelValue || 'Enter name'}
+            </Box>
+          </ClickAwayListener>
           <Box className="edge-buttons" display="flex" gap={0.5}>
             <Box onClick={handleSwap}>{renderButton()}</Box>
             <Box className="edgebutton" onClick={onEditEdge}>
@@ -186,11 +239,7 @@ export default function StepEdge({
               X
             </button>
           </Box>
-
-          {/* Popper for Editing */}
-        </div>
-
-        {/* </ClickAwayListener> */}
+        </Box>
       </EdgeLabelRenderer>
     </>
   );
