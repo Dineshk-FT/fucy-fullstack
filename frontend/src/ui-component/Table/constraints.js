@@ -171,7 +171,7 @@ export const DSTableHeader = [
   { id: 2, name: 'Name', w: 100, minW: 90 },
   // { id: 3, name: 'Damage Scenario' },
   { id: 4, name: 'Description/Scalability', w: 100, minW: 90 },
-  { id: 5, name: 'Losses of Cybersecurity Properties', w: 200, minW: 150 },
+  { id: 5, name: 'Losses of Cybersecurity Properties', w: 220, minW: 150 },
   { id: 6, name: 'Assets', w: 70, minW: 60 },
   { id: 7, name: 'Component/Message', w: 100, minW: 70 },
   { id: 13, name: 'Safety Impact', w: 160, minW: 140 },
