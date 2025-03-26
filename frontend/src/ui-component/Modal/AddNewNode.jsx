@@ -60,9 +60,9 @@ const AddNewNode = ({ assets }) => {
   const notify = (message, status) => toast[status](message);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
   const [newNode, setNewNode] = useState({
-    nodeName: '',
+    nodeName: 'New Node',
     type: '',
-    properties: [],
+    properties: [names[0]],
     bgColor: ''
   });
 
@@ -84,9 +84,9 @@ const AddNewNode = ({ assets }) => {
     dispatch(closeAddNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
-      nodeName: '',
+      nodeName: 'New Node',
       type: '',
-      properties: [],
+      properties: [names[0]],
       bgColor: '#dadada'
     });
   };
@@ -169,9 +169,9 @@ const AddNewNode = ({ assets }) => {
     // Reset only the nodeName, keeping properties intact
     setNewNode((prev) => ({
       ...prev,
-      nodeName: '',
+      nodeName: 'New Node',
       type: '',
-      // properties: [],
+      properties: [names[0]],
       bgColor: '#dadada'
     }));
   };
