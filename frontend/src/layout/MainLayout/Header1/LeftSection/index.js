@@ -235,7 +235,7 @@ const LeftSection = () => {
           icon: () => (
             <img src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Damage Scenarios - Collection & Impact Ratings')
+          action: () => handleClick('Damage Scenarios - Impact Ratings')
         } // Star for rating
       ]
     },
@@ -315,7 +315,7 @@ const LeftSection = () => {
       sx={{
         display: 'inline-flex', // Ensure LeftSection doesn't stretch unnecessarily
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'center'
       }}
     >
       <Box
@@ -326,10 +326,8 @@ const LeftSection = () => {
           backdropFilter: 'blur(12px)',
           borderRadius: '10px',
           padding: '6px 8px',
-          boxShadow: isDark == true
-            ? '0 4px 16px rgba(0,0,0,0.5)'
-            : '0 4px 16px rgba(0,0,0,0.15)',
-          marginBottom: '6px',
+          boxShadow: isDark == true ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
+          marginBottom: '6px'
         }}
       >
         <IconButton
@@ -339,14 +337,10 @@ const LeftSection = () => {
             color: isDark == true ? '#64b5f6' : '#2196f3',
             transition: 'all 0.3s ease',
             '&:hover': {
-              background: isDark == true
-                ? 'rgba(100,181,246,0.15)'
-                : 'rgba(33,150,243,0.08)',
+              background: isDark == true ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)',
               transform: 'scale(1.1)',
-              boxShadow: isDark == true
-                ? '0 2px 6px rgba(0,0,0,0.4)'
-                : '0 2px 6px rgba(0,0,0,0.1)',
-            },
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+            }
           }}
         >
           {isCollapsed ? <ExpandMoreIcon sx={{ fontSize: 22 }} /> : <ExpandLessIcon sx={{ fontSize: 22 }} />}
@@ -362,41 +356,29 @@ const LeftSection = () => {
                   fontSize: '13px',
                   fontFamily: "'Poppins', sans-serif",
                   fontWeight: activeTab === tab.name ? 600 : 500,
-                  color: activeTab === tab.name
-                    ? (isDark == true ? '#64b5f6' : '#2196f3')
-                    : color?.sidebarContent,
+                  color: activeTab === tab.name ? (isDark == true ? '#64b5f6' : '#2196f3') : color?.sidebarContent,
                   margin: '0 8px',
                   padding: '4px 6px',
                   borderRadius: '6px',
-                  borderBottom: activeTab === tab.name
-                    ? (isDark == true
-                        ? '2px solid #64b5f6'
-                        : '2px solid #2196f3')
-                    : 'none',
-                  background: activeTab === tab.name
-                    ? (isDark == true
+                  borderBottom: activeTab === tab.name ? (isDark == true ? '2px solid #64b5f6' : '2px solid #2196f3') : 'none',
+                  background:
+                    activeTab === tab.name
+                      ? isDark == true
                         ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                        : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)')
-                    : 'transparent',
-                  boxShadow: activeTab === tab.name
-                    ? (isDark == true
-                        ? '0 3px 8px rgba(0,0,0,0.5)'
-                        : '0 3px 8px rgba(0,0,0,0.1)')
-                    : 'none',
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                      : 'transparent',
+                  boxShadow: activeTab === tab.name ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none',
                   transition: 'all 0.3s ease',
                   '&:hover': {
                     color: isDark == true ? '#64b5f6' : '#2196f3',
-                    background: isDark == true
-                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                    background:
+                      isDark == true
+                        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
                     transform: 'scale(1.02)',
-                    boxShadow: isDark == true
-                      ? '0 2px 6px rgba(0,0,0,0.4)'
-                      : '0 2px 6px rgba(0,0,0,0.1)',
-                    filter: isDark == true
-                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
-                  },
+                    boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                    filter: isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                  }
                 }}
               >
                 {tab.name}
@@ -415,9 +397,7 @@ const LeftSection = () => {
                     borderRadius: '8px',
                     border: 'none',
                     padding: '8px',
-                    boxShadow: isDark == true
-                      ? '0 4px 12px rgba(0,0,0,0.5)'
-                      : '0 4px 12px rgba(0,0,0,0.15)',
+                    boxShadow: isDark == true ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
                     flexWrap: 'wrap',
                     justifyContent: 'space-evenly',
                     gap: '4px',
@@ -426,7 +406,7 @@ const LeftSection = () => {
                     opacity: 0,
                     transition: 'opacity 0.3s ease-in-out',
                     '&:hover': { display: 'flex', opacity: 1 },
-                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 },
+                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 }
                   }}
                 >
                   {tab.options.map((option, index) => {
@@ -438,7 +418,7 @@ const LeftSection = () => {
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          width: '70px',
+                          width: '70px'
                         }}
                         draggable={option.label === 'Group'}
                         onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
@@ -452,24 +432,22 @@ const LeftSection = () => {
                                   padding: '6px',
                                   fontSize: '12px',
                                   color: isDark == true ? '#64b5f6' : '#2196f3',
-                                  background: isDark == true
-                                    ? 'rgba(255,255,255,0.03)'
-                                    : 'rgba(0,0,0,0.03)',
+                                  background: isDark == true ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
                                   border: 'none',
                                   borderRadius: '6px',
                                   transition: 'all 0.3s ease',
                                   '&:hover': {
-                                    background: isDark == true
-                                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                                    background:
+                                      isDark == true
+                                        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
                                     transform: 'scale(1.1)',
-                                    boxShadow: isDark == true
-                                      ? '0 2px 6px rgba(0,0,0,0.4)'
-                                      : '0 2px 6px rgba(0,0,0,0.1)',
-                                    filter: isDark == true
-                                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
-                                  },
+                                    boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                                    filter:
+                                      isDark == true
+                                        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                                  }
                                 }}
                               >
                                 <Icon fontSize="small" sx={{ fontSize: 20 }} />
@@ -481,7 +459,7 @@ const LeftSection = () => {
                                 fontSize: '10px',
                                 fontFamily: "'Poppins', sans-serif",
                                 textAlign: 'center',
-                                color: color?.sidebarContent,
+                                color: color?.sidebarContent
                               }}
                             >
                               {option.label}
@@ -508,14 +486,12 @@ const LeftSection = () => {
             background: color.tabBorder,
             backdropFilter: 'blur(8px)',
             border: 'none',
-            boxShadow: isDark == true
-              ? '0 4px 12px rgba(0,0,0,0.5)'
-              : '0 4px 12px rgba(0,0,0,0.15)',
+            boxShadow: isDark == true ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
             gap: '4px',
             width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
             maxHeight: '80px',
             overflow: 'auto',
-            my: 0.4,
+            my: 0.4
           }}
         >
           {tabs
@@ -529,7 +505,7 @@ const LeftSection = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    width: '70px',
+                    width: '70px'
                   }}
                   draggable={option.label === 'Group'}
                   onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
@@ -543,24 +519,22 @@ const LeftSection = () => {
                             padding: '6px',
                             fontSize: '12px',
                             color: isDark == true ? '#64b5f6' : '#2196f3',
-                            background: isDark == true
-                              ? 'rgba(255,255,255,0.03)'
-                              : 'rgba(0,0,0,0.03)',
+                            background: isDark == true ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
                             border: 'none',
                             borderRadius: '6px',
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              background: isDark == true
-                                ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                                : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                              background:
+                                isDark == true
+                                  ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                  : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
                               transform: 'scale(1.1)',
-                              boxShadow: isDark == true
-                                ? '0 2px 6px rgba(0,0,0,0.4)'
-                                : '0 2px 6px rgba(0,0,0,0.1)',
-                              filter: isDark == true
-                                ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                                : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))',
-                            },
+                              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                              filter:
+                                isDark == true
+                                  ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                  : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                            }
                           }}
                         >
                           <Icon fontSize="small" sx={{ fontSize: 20 }} />
@@ -572,7 +546,7 @@ const LeftSection = () => {
                           fontSize: '10px',
                           fontFamily: "'Poppins', sans-serif",
                           textAlign: 'center',
-                          color: color?.sidebarContent,
+                          color: color?.sidebarContent
                         }}
                       >
                         {option.label}

@@ -23,7 +23,7 @@ export default function MainPage() {
   const commonTables = ['Cybersecurity Requirements', 'Cybersecurity Controls', 'Cybersecurity Goals', 'Cybersecurity Claims'];
   const componentMap = {
     'Damage Scenarios Derivations': <DsDerivationTable />,
-    'Damage Scenarios - Collection & Impact Ratings': <DsTable />,
+    'Damage Scenarios - Impact Ratings': <DsTable />,
     'Threat Scenarios': <Tstable />,
     'Derived Threat Scenarios': <Tstable />,
     Attack: <AttackTreeTable />,

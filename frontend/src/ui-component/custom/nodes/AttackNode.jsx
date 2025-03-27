@@ -10,12 +10,13 @@ const selector = (state) => ({
   updateOverallRating: state.updateOverallRating,
   attackId: state.attackScenarios.subs[1]['_id']
 });
-const AttackNode = ({ data, isConnectable, type, id }) => {
+const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
   const { nodes, updateOverallRating, attackId } = useStore(selector);
   const { setNodes } = useReactFlow();
   const { attackScene } = useSelector((state) => state?.currentId);
 
+  // console.log('data', rst);
   const [isHovered, setIsHovered] = useState(false);
   // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
@@ -141,7 +142,8 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: isSmallNode ? 'flex-start' : 'center',
-            alignItems: 'flex-start'
+            alignItems: 'flex-start',
+            color: 'gray'
           }}
         >
           {data?.label}

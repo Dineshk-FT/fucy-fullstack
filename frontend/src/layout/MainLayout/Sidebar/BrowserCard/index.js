@@ -628,7 +628,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       case 'assets': {
         const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
         const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge')) || [];
-        // console.log('edges', edges);
+        // console.log('nodesDetail', nodesDetail);
 
         return renderTreeItem(
           data,
@@ -653,6 +653,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     <DraggableTreeItem
                       key={detail.nodeId}
                       nodeId={detail.nodeId}
+                      sx={{
+                        background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
+                      }}
                       label={
                         <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
                           <Box
@@ -692,23 +695,25 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       }}
                       onDragStart={(e) => onDragStart(e, detail)}
                     >
-                      {detail?.props?.map((prop) => (
-                        <DraggableTreeItem
-                          key={prop.id}
-                          nodeId={prop.id}
-                          onClick={(e) => e.stopPropagation()}
-                          label={
-                            <Tooltip title={getFullLossNames(detail.props)} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                              <div className={classes.lossItem}>
-                                <CircleRoundedIcon sx={{ color: isDark == true ? '#FF6D6D' : '#FF5555', fontSize: 14 }} />
-                                <Typography variant="body2" className={classes.labelTypo}>
-                                  {getShortenedLossNames(detail.props)}
-                                </Typography>
-                              </div>
-                            </Tooltip>
-                          }
-                        />
-                      ))}
+                      {/* {detail?.props?.map((prop) => */}
+
+                      {/* <DraggableTreeItem
+                        key={i}
+                        nodeId={i}
+                        onClick={(e) => e.stopPropagation()}
+                        label={
+                          <Tooltip title={getFullLossNames(detail.props)} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                            <div className={classes.lossItem}>
+                              <CircleRoundedIcon sx={{ color: isDark == true ? '#FF6D6D' : '#FF5555', fontSize: 14 }} />
+                              <Typography variant="body2" className={classes.labelTypo}>
+                                {getShortenedLossNames(detail.props)}
+                              </Typography>
+                            </div>
+                          </Tooltip>
+                        }
+                      /> */}
+
+                      {/* )} */}
                     </DraggableTreeItem>
                   ) : null
                 )}
@@ -720,6 +725,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               <DraggableTreeItem
                 nodeId="edges_section"
                 // label="Edges/Connectors"
+
                 label={getLabel('TopicIcon', 'Connectors', null, 'edges_section')}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -732,6 +738,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     <DraggableTreeItem
                       key={detail.nodeId}
                       nodeId={detail.nodeId}
+                      sx={{
+                        background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
+                      }}
                       label={
                         <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
                           <Box
@@ -777,7 +786,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       }}
                       onDragStart={(e) => onDragStart(e, detail)}
                     >
-                      {detail?.props?.map((prop) => (
+                      {/* {detail?.props?.map((prop) => (
                         <DraggableTreeItem
                           key={prop.id}
                           nodeId={prop.id}
@@ -793,7 +802,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                             </Tooltip>
                           }
                         />
-                      ))}
+                      ))} */}
                     </DraggableTreeItem>
                   ) : null
                 )}
@@ -818,7 +827,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 />
               ));
             }
-            if (sub.name === 'Damage Scenarios - Collection & Impact Ratings') {
+            if (sub.name === 'Damage Scenarios - Impact Ratings') {
               return sub.Details?.map((detail, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}

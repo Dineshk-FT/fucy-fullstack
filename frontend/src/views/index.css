@@ -38,7 +38,7 @@ iframe#webpack-dev-server-client-overlay {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #784be8;
+  /* background-color: #784be8; */
 }
 
 /* .handleX {
@@ -68,6 +68,17 @@ iframe#webpack-dev-server-client-overlay {
 }
 .react-flow__node-default {
   z-index: 10000 !important;
+  & .react-flow__resize-control {
+    border-color: transparent !important;
+    cursor: nesw-resize;
+    padding: 6px; /* Increases the clickable area */
+
+    &.handle {
+      background-color: transparent !important;
+      width: 12px; /* Adjust width */
+      height: 12px; /* Adjust height */
+    }
+  }
 }
 .react-flow__edge {
   z-index: 10000 !important;

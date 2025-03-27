@@ -9,8 +9,7 @@ import {
   DialogContentText,
   DialogTitle,
   Slide,
-  Select,
-  MenuItem,
+  TextField,
   Typography
 } from '@mui/material';
 import React, { useState } from 'react';
@@ -28,39 +27,33 @@ const selector = (state) => ({
   create: state.createPropmt,
   modelId: state.model?._id,
   getAttackScenario: state.getAttackScenario,
-  globalAttackTrees: state.globalAttackTrees,
-  addAIAttackTree: state.addAIAttackTree
+  getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 const PromptModal = ({ handleClose, open, refreshAPI }) => {
-  const { create, modelId, getAttackScenario, globalAttackTrees, addAIAttackTree } = useStore(selector);
+  const { create, modelId, getAttackScenario, getGlobalAttackTrees } = useStore(selector);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const [selectedAttackTree, setSelectedAttackTree] = useState(null);
-  // console.log('selectedAttackTree', selectedAttackTree);
+  const [templateDetails, setTemplateDetails] = useState({ name: '' });
 
   const handleCreate = () => {
-    if (!selectedAttackTree) {
-      notify('Please select an attack tree', 'error');
-      return;
-    }
-
     setLoading(true);
     const newAttackTree = {
       modelId: modelId,
-      aiAttackId: selectedAttackTree.id
+      promptKey: templateDetails?.name
     };
 
-    addAIAttackTree(newAttackTree)
+    create(newAttackTree, modelId)
       .then((res) => {
         // console.log('res', res);
         if (!res.error) {
           notify(res.message ?? 'Attack tree created successfully', 'success');
           getAttackScenario(modelId);
+          getGlobalAttackTrees(modelId);
           handleClose();
-          setTimeout(() => {
-            dispatch(setTableOpen('Attack Trees Canvas'));
-            dispatch(setAttackScene(res?.scene[0]));
-          }, 1000);
+          // setTimeout(() => {
+          //   dispatch(setTableOpen('Attack Trees Canvas'));
+          //   dispatch(setAttackScene(res?.scene));
+          // }, 1000);
         } else {
           notify(res.error ?? 'Error while Generating the Requested Attack', 'error');
         }
@@ -73,7 +66,7 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
         setLoading(false);
       });
 
-    setSelectedAttackTree(null);
+    setTemplateDetails({ name: '' });
   };
 
   return (
@@ -94,28 +87,18 @@ const PromptModal = ({ handleClose, open, refreshAPI }) => {
           </Box>
         ) : (
           <>
-            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Select an Attack Tree'}</DialogTitle>
+            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Create Attack Tree'}</DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-slide-description">
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-                  <Select
-                    value={selectedAttackTree ? selectedAttackTree.id : ''}
-                    onChange={(e) => {
-                      const selectedTree = globalAttackTrees.find((tree) => tree.id === e.target.value);
-                      setSelectedAttackTree(selectedTree ? { id: selectedTree.id, attackTreeName: selectedTree.attackTreeName } : null);
-                    }}
-                    displayEmpty
+                  <TextField
+                    value={templateDetails?.name}
+                    id="outlined-basic"
+                    label="Name"
+                    variant="outlined"
+                    onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
                     sx={{ width: '300px' }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select Attack Tree
-                    </MenuItem>
-                    {globalAttackTrees.map((tree) => (
-                      <MenuItem key={tree.id} value={tree.id}>
-                        {tree.attackTreeName}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  />
                 </Box>
               </DialogContentText>
             </DialogContent>

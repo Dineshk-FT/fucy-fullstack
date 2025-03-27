@@ -706,32 +706,34 @@ export default function MainCanvas() {
       setCopiedNode([contextMenu.node]);
       notify('Node copied!', 'success');
     }
-  
+
     if (option === 'Paste') {
       if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
         console.error('No valid copied node found');
         return;
       }
-  
+
       const pastePosition = reactFlowInstance.screenToFlowPosition({
         x: contextMenu.x,
         y: contextMenu.y
       });
-  
-      const targetGroup = contextMenu.targetGroup || nodes.find((node) => {
-        if (node.type !== 'group') return false;
-        const groupX = contextMenu.x;
-        const groupY = contextMenu.y;
-        const groupWidth = node.width || 200;
-        const groupHeight = node.height || 200;
-        return (
-          pastePosition.x >= groupX &&
-          pastePosition.x <= groupX + groupWidth &&
-          pastePosition.y >= groupY &&
-          pastePosition.y <= groupY + groupHeight
-        );
-      });
-  
+
+      const targetGroup =
+        contextMenu.targetGroup ||
+        nodes.find((node) => {
+          if (node.type !== 'group') return false;
+          const groupX = contextMenu.x;
+          const groupY = contextMenu.y;
+          const groupWidth = node.width || 200;
+          const groupHeight = node.height || 200;
+          return (
+            pastePosition.x >= groupX &&
+            pastePosition.x <= groupX + groupWidth &&
+            pastePosition.y >= groupY &&
+            pastePosition.y <= groupY + groupHeight
+          );
+        });
+
       copiedNode.forEach((node) => {
         const newNode = {
           ...node,
@@ -750,13 +752,13 @@ export default function MainCanvas() {
           extent: targetGroup ? 'parent' : undefined,
           selected: false
         };
-  
+
         setNodes((nds) => [...nds, newNode]);
       });
-  
+
       checkForNodes();
     }
-  
+
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
   };
 
@@ -936,6 +938,11 @@ export default function MainCanvas() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              dispatch(setSelectedBlock({}));
+            }}
             onInit={onInit}
             onLoad={onLoad}
             onNodeDrag={onNodeDrag}
@@ -1092,39 +1099,41 @@ export default function MainCanvas() {
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Redo">
-                  <IconButton
-                    onClick={redo}
-                    disabled={redoStack.length === 0}
-                    sx={{
-                      color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          redoStack.length === 0
-                            ? 'transparent'
-                            : isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
-                        boxShadow:
-                          redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          redoStack.length === 0
-                            ? 'none'
-                            : isDark == true
-                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Redo action"
-                  >
-                    <RedoIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      onClick={redo}
+                      disabled={redoStack.length === 0}
+                      sx={{
+                        color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                        padding: '4px',
+                        '&:hover': {
+                          background:
+                            redoStack.length === 0
+                              ? 'transparent'
+                              : isDark == true
+                              ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                              : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                          transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
+                          boxShadow:
+                            redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                          filter:
+                            redoStack.length === 0
+                              ? 'none'
+                              : isDark == true
+                              ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                              : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                        },
+                        '&:focus': {
+                          outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                          outlineOffset: '2px'
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label="Redo action"
+                    >
+                      <RedoIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </span>
                 </Tooltip>
                 <Tooltip title="Download as PNG">
                   <IconButton

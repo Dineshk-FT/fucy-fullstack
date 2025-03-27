@@ -437,7 +437,7 @@ const BrowserCard = ({ models }) => {
                               }}
                             ></TreeItem>
                           ))}
-                        {sub?.name === 'Damage Scenarios - Collection & Impact Ratings' &&
+                        {sub?.name === 'Damage Scenarios - Impact Ratings' &&
                           sub?.scenes?.map((dm_scene) => {
                             // console.log('dm_scene', dm_scene)
                             return (

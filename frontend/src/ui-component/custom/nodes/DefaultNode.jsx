@@ -36,6 +36,12 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
 
+  const checkSelection = () => selectedBlock?.id === id;
+  const isSelected = checkSelection();
+
+  // console.log('isSelected', isSelected);
+
+  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   useEffect(() => {
     setLabelValue(data?.label || '');
   }, [data?.label]);
@@ -86,6 +92,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
 
   const handleLabelDoubleClick = () => {
     setIsEditing(true);
+    dispatch(setSelectedBlock({ id, data }));
   };
 
   const handleLabelRightClick = (e) => {
@@ -114,7 +121,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
 
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'F3' && selectedBlock?.id === id) {
+      if (e.key === 'F3' && isSelected) {
         setIsEditing(true);
       }
     };
@@ -222,7 +229,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
             overflow: 'visible',
             boxShadow: selectedNodes.some((node) => node.id === id)
               ? '0px 0px 7px 3px #32ed0f'
-              : selectedBlock?.id === id
+              : isSelected
               ? '0px 0px 7px 3px violet'
               : 'none',
             width: width,
@@ -238,8 +245,8 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Handle className="handle" id="top" position={Position.Top} isConnectable={true} />
-          <Handle className="handle" id="left" position={Position.Left} isConnectable={true} />
+          <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
+          <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
           <Box
             ref={labelRef}
             contentEditable={isEditing}
@@ -266,8 +273,8 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           >
             {labelValue}
           </Box>
-          <Handle className="handle" id="bottom" position={Position.Bottom} isConnectable={true} />
-          <Handle className="handle" id="right" position={Position.Right} isConnectable={true} />
+          <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
+          <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
           <div
             onClick={(e) => {
               e.stopPropagation();

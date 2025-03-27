@@ -108,6 +108,7 @@ export default function StepEdge({
 
   const handleLabelDoubleClick = () => {
     setIsEditing(true);
+    dispatch(setSelectedBlock({ id, data }));
   };
 
   const handleLabelRightClick = (e) => {
@@ -129,6 +130,7 @@ export default function StepEdge({
     if (e.key === 'Enter') {
       e.preventDefault();
       handleLabelBlur();
+      dispatch(setSelectedBlock({}));
     } else if (e.key === 'Escape') {
       setIsEditing(false);
       if (editableRef.current) {

@@ -80,16 +80,17 @@ const AttackTree = () => {
               }
               handleSize={[10, Infinity]}
             > */}
-            <Grid item sx={{ flexGrow: 1, height: 'inherit' }}>
+            <Grid item xs={8} sx={{ flexGrow: 1, height: 'inherit' }}>
               <AttackBlock attackScene={attackScene} color={color} />
             </Grid>
             {/* </ResizableBox> */}
             <Grid
               item
+              xs={4}
               sx={{ borderLeft: '1px solid black', height: '100%', backgroundColor: color?.canvasBG, color: color?.title }} // Fill the ResizableBox
             >
               <Properties color={color} />
-              {/* <GlobalAttackTreeList globalAttackTrees={globalAttackTrees} /> */}
+              <GlobalAttackTreeList globalAttackTrees={globalAttackTrees} />
             </Grid>
           </Grid>
         </Paper>

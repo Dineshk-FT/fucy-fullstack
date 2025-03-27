@@ -12,7 +12,7 @@ import {
   Divider,
   Box,
   CircularProgress,
-  Tooltip,
+  Tooltip
 } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { useSelector } from 'react-redux';
@@ -22,7 +22,7 @@ const selector = (state) => ({
   template: state.assets.template,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
-  edges: state.edges,
+  edges: state.edges
 });
 
 const DocumentDialog = ({ open, onClose }) => {
@@ -158,7 +158,7 @@ const DocumentDialog = ({ open, onClose }) => {
       id: 2,
       name: 'Damage Scenarios and Impact Ratings',
       icon: 'DamageIcon',
-      subs: [{ id: 22, name: 'Damage Scenarios - Collection & Impact Ratings' }]
+      subs: [{ id: 22, name: 'Damage Scenarios - Impact Ratings' }]
     },
     {
       id: 3,
@@ -228,7 +228,7 @@ const DocumentDialog = ({ open, onClose }) => {
           width: '100%',
           maxWidth: '450px', // Slightly wider for better readability
           minWidth: '320px',
-          backdropFilter: 'blur(4px)', // Subtle blur for modern feel
+          backdropFilter: 'blur(4px)' // Subtle blur for modern feel
         }
       }}
     >
@@ -241,7 +241,7 @@ const DocumentDialog = ({ open, onClose }) => {
           color: isDark ? '#64B5F6' : '#2196F3', // Theme-aware accent color
           padding: '12px 16px',
           borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-          fontFamily: "'Poppins', sans-serif",
+          fontFamily: "'Poppins', sans-serif"
         }}
       >
         Document Report
@@ -251,7 +251,7 @@ const DocumentDialog = ({ open, onClose }) => {
           padding: '16px',
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           maxHeight: '60vh',
-          overflowY: 'auto',
+          overflowY: 'auto'
         }}
       >
         <Typography
@@ -263,7 +263,7 @@ const DocumentDialog = ({ open, onClose }) => {
             color: isDark ? '#B0BEC5' : '#616161',
             backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
             marginBottom: '12px',
-            fontFamily: "'Poppins', sans-serif",
+            fontFamily: "'Poppins', sans-serif"
           }}
         >
           Select items to add in the report and click on download:
@@ -280,7 +280,7 @@ const DocumentDialog = ({ open, onClose }) => {
                     fontSize: '1rem',
                     color: isDark ? '#E0E0E0' : '#333333',
                     mb: 0.5,
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Poppins', sans-serif"
                   }}
                 >
                   {item.name}
@@ -297,9 +297,9 @@ const DocumentDialog = ({ open, onClose }) => {
                         sx={{
                           color: isDark ? '#64B5F6' : '#2196F3',
                           '&.Mui-checked': {
-                            color: isDark ? '#64B5F6' : '#2196F3',
+                            color: isDark ? '#64B5F6' : '#2196F3'
                           },
-                          padding: '4px',
+                          padding: '4px'
                         }}
                       />
                     }
@@ -308,7 +308,7 @@ const DocumentDialog = ({ open, onClose }) => {
                         sx={{
                           fontSize: '0.9rem',
                           color: isDark ? '#E0E0E0' : '#333333',
-                          fontFamily: "'Poppins', sans-serif",
+                          fontFamily: "'Poppins', sans-serif"
                         }}
                       >
                         {item.name}
@@ -331,9 +331,9 @@ const DocumentDialog = ({ open, onClose }) => {
                             sx={{
                               color: isDark ? '#64B5F6' : '#2196F3',
                               '&.Mui-checked': {
-                                color: isDark ? '#64B5F6' : '#2196F3',
+                                color: isDark ? '#64B5F6' : '#2196F3'
                               },
-                              padding: '4px',
+                              padding: '4px'
                             }}
                           />
                         }
@@ -342,7 +342,7 @@ const DocumentDialog = ({ open, onClose }) => {
                             sx={{
                               fontSize: '0.85rem',
                               color: isDark ? '#E0E0E0' : '#333333',
-                              fontFamily: "'Poppins', sans-serif",
+                              fontFamily: "'Poppins', sans-serif"
                             }}
                           >
                             {sub.name}
@@ -364,7 +364,7 @@ const DocumentDialog = ({ open, onClose }) => {
           padding: '12px 16px',
           borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-          justifyContent: 'space-between',
+          justifyContent: 'space-between'
         }}
       >
         <Button
@@ -378,19 +378,19 @@ const DocumentDialog = ({ open, onClose }) => {
             borderRadius: '6px',
             fontFamily: "'Poppins', sans-serif",
             textTransform: 'none',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.2s ease'
           }}
           onClick={onClose}
           disabled={isGeneratingImage} // Disable Close button during image generation
           sx={{
             '&:hover': {
               background: isDark ? 'rgba(100,181,246,0.2)' : 'rgba(33,150,243,0.2)',
-              transform: 'scale(1.03)',
+              transform: 'scale(1.03)'
             },
             '&:disabled': {
               opacity: 0.6,
-              cursor: 'not-allowed',
-            },
+              cursor: 'not-allowed'
+            }
           }}
         >
           Cancel
@@ -406,20 +406,20 @@ const DocumentDialog = ({ open, onClose }) => {
             borderRadius: '6px',
             fontFamily: "'Poppins', sans-serif",
             textTransform: 'none',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.2s ease'
           }}
           onClick={handleDownload}
           disabled={isGeneratingImage || selectedItems.length === 0} // Disable if no items selected
           sx={{
             '&:hover': {
               background: isDark ? '#42A5F5' : '#1976D2',
-              transform: 'scale(1.03)',
+              transform: 'scale(1.03)'
             },
             '&:disabled': {
               opacity: 0.6,
               background: isDark ? '#616161' : '#B0BEC5',
-              borderColor: isDark ? '#616161' : '#B0BEC5',
-            },
+              borderColor: isDark ? '#616161' : '#B0BEC5'
+            }
           }}
         >
           {isGeneratingImage ? (

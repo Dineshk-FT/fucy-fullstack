@@ -8,7 +8,7 @@ import { shallow } from 'zustand/shallow';
 import { CustomEdge } from '../../ui-component/custom';
 import { Button, Checkbox } from '@mui/material';
 import { v4 as uid } from 'uuid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import { pageNodeTypes, style } from '../../utils/Constraints';
@@ -144,6 +144,7 @@ const selector = (state) => ({
   onConnect: state.onAttackConnect,
   addNode: state.addAttackNode,
   addEdge: state.addAttackEdge,
+  dragAdd: state.dragAddAttackTemplate,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
   setInitialNodes: state.setInitialAttackNodes,
@@ -200,6 +201,7 @@ export default function AttackBlock({ attackScene, color }) {
     onConnect,
     addNode,
     addEdge,
+    dragAdd,
     setNodes,
     setInitialNodes,
     setInitialEdges,
@@ -225,6 +227,7 @@ export default function AttackBlock({ attackScene, color }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState({});
   const [isReady, setIsReady] = useState(false);
+  const { isDark } = useSelector((state) => state?.currentId);
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
   const prevAttackSceneRef = useRef(attackScene);
@@ -247,52 +250,50 @@ export default function AttackBlock({ attackScene, color }) {
   const handleSave = (sceneId) => {
     const prevNodes = nodesRef.current;
     const prevEdges = edgesRef.current;
-    if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
-      // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
-      const template = {
-        nodes: nodes,
-        edges: edges
-      };
+    // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
 
-      // Extract threatId from nodes with type: "default"
-      const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
-      if (!threatNode) {
-        notify('Threat scenario is missing', 'error');
-        return;
-      }
-      const { threatId, damageId, key } = threatNode;
-
-      const details = {
-        modelId: model?._id,
-        type: 'attack_trees',
-        id: sceneId,
-        templates: JSON.stringify(template),
-        threatId: threatId,
-        damageId: damageId,
-        key: key
-      };
-
-      update(details)
-        .then((res) => {
-          if (!res.error) {
-            // console.log('res', res);
-            setTimeout(() => {
-              notify('Saved Successfully', 'success');
-              getAttackScenario(model?._id);
-              getCyberSecurityScenario(model?._id);
-              setInitialNodes(prevNodes);
-              setInitialEdges(prevEdges);
-            }, 300);
-          } else {
-            notify(res?.error ?? 'Something Went Wrong', 'error');
-          }
-        })
-        .catch((err) => {
-          if (err) {
-            notify('Something Went Wrong', 'error');
-          }
-        });
+    // Extract threatId from nodes with type: "default"
+    const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
+    if (!threatNode) {
+      notify('Threat scenario is missing', 'error');
+      return;
     }
+    const { threatId, damageId, key } = threatNode;
+
+    const details = {
+      modelId: model?._id,
+      type: 'attack_trees',
+      id: sceneId,
+      templates: JSON.stringify(template),
+      threatId: threatId,
+      damageId: damageId,
+      key: key
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          // console.log('res', res);
+          setTimeout(() => {
+            notify('Saved Successfully', 'success');
+            getAttackScenario(model?._id);
+            getCyberSecurityScenario(model?._id);
+            setInitialNodes(prevNodes);
+            setInitialEdges(prevEdges);
+          }, 300);
+        } else {
+          notify(res?.error ?? 'Something Went Wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) {
+          notify('Something Went Wrong', 'error');
+        }
+      });
   };
 
   // Save before switching attackScene
@@ -310,7 +311,7 @@ export default function AttackBlock({ attackScene, color }) {
       setEdges(attackScene.templates.edges || []);
       setInitialNodes(attackScene.templates.nodes || []);
       setInitialEdges(attackScene.templates.edges || []);
-    }, 100);
+    }, 0);
 
     prevAttackSceneRef.current = attackScene;
   }, [attackScene]);
@@ -318,8 +319,10 @@ export default function AttackBlock({ attackScene, color }) {
   // Save before unmounting
   useEffect(() => {
     return () => {
-      if (prevAttackSceneRef.current) {
-        handleSave(prevAttackSceneRef.current.ID);
+      const prevNodes = nodesRef.current;
+      const prevEdges = edgesRef.current;
+      if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
+        handleSave(prevAttackSceneRef.current?.ID);
       }
     };
   }, []);
@@ -379,6 +382,7 @@ export default function AttackBlock({ attackScene, color }) {
     onLayout({ direction: 'DOWN', useInitialNodes: true });
   }, []);
 
+  // console.log('nodes', nodes);
   const handleNodeContextMenu = (event, node) => {
     if (node.type !== 'default') {
       event.preventDefault();
@@ -637,11 +641,19 @@ export default function AttackBlock({ attackScene, color }) {
     (event) => {
       event.preventDefault();
       const cyber = event.dataTransfer.getData('application/cyber');
+      const Library = event.dataTransfer.getData('application/Library');
       let parsedNode;
-
+      let parsedTemplate;
       if (cyber) {
         try {
           parsedNode = JSON.parse(cyber); // Ensure it's properly parsed
+        } catch (err) {
+          console.error('Failed to parse dropped data:', err);
+        }
+      }
+      if (Library) {
+        try {
+          parsedTemplate = JSON.parse(Library); // Ensure it's properly parsed
         } catch (err) {
           console.error('Failed to parse dropped data:', err);
         }
@@ -681,8 +693,53 @@ export default function AttackBlock({ attackScene, color }) {
         addNode(newNode);
         handleConnection(newNode);
       }
+      if (parsedTemplate) {
+        let newNodes = [];
+        let newEdges = [];
+        const randomId = Math.floor(Math.random() * 1000);
+        const randomPos = Math.floor(Math.random() * 500);
+
+        parsedTemplate?.templates?.['nodes']?.map((node) => {
+          newNodes.push({
+            id: `${node.id + randomId}`,
+            data: {
+              ...node?.data,
+              style: {
+                backgroundColor: node.data['bgColor'],
+                borderRadius: '8px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '14px',
+                padding: '8px 12px',
+                ...style
+              }
+            },
+            type: node.type,
+            isAsset: false,
+            position: {
+              x: node['position']['x'] + randomPos,
+              y: node['position']['y'] + randomPos
+            },
+            properties: node.properties
+            // parentId: node.parentId ? `${node.parentId + randomId}` : null,
+            // extent: node?.extent ? node?.extent : null
+          });
+        });
+
+        parsedTemplate?.templates?.['edges'].map((edge) =>
+          newEdges.push({
+            id: uid(),
+            source: `${edge.source + randomId}`,
+            target: `${edge.target + randomId}`,
+            ...edgeOptions
+          })
+        );
+
+        dragAdd(newNodes, newEdges);
+        centerLayout();
+      }
     },
-    [reactFlowInstance, nodes, addNode, addEdge]
+    [reactFlowInstance, nodes, addNode, addEdge, dragAdd]
   );
 
   const onNodeDrag = (event, draggedNode) => {

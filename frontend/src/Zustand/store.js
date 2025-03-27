@@ -94,7 +94,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       {
         id: '22',
-        name: 'Damage Scenarios - Collection & Impact Ratings'
+        name: 'Damage Scenarios - Impact Ratings'
       }
     ]
   },
@@ -125,11 +125,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       {
         id: '42',
         name: 'Attack Trees'
-      },
-      {
-        id: '43',
-        name: 'Vulnerability Analysis'
       }
+      // {
+      //   id: '43',
+      //   name: 'Vulnerability Analysis'
+      // }
     ]
   },
   cybersecurity: {
@@ -1195,6 +1195,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  dragAddAttackTemplate: (newNode, newEdge) => {
+    // console.log("store",newNode);
+    set((state) => ({
+      attackNodes: state.attackNodes.concat(newNode),
+      attackEdges: state.attackEdges.concat(newEdge)
+    }));
+  },
+
   // API section
   //fetch or GET section
   getTemplates: async () => {
@@ -1274,7 +1282,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           },
           {
             id: '22',
-            name: 'Damage Scenarios - Collection & Impact Ratings'
+            name: 'Damage Scenarios - Impact Ratings'
           }
         ]
       },
@@ -1305,11 +1313,11 @@ const useStore = createWithEqualityFn((set, get) => ({
           {
             id: '42',
             name: 'Attack Trees'
-          },
-          {
-            id: '43',
-            name: 'Vulnerability Analysis'
           }
+          // {
+          //   id: '43',
+          //   name: 'Vulnerability Analysis'
+          // }
         ]
       },
       riskTreatment: {
@@ -1404,7 +1412,7 @@ const useStore = createWithEqualityFn((set, get) => ({
             },
             {
               id: '22',
-              name: 'Damage Scenarios - Collection & Impact Ratings'
+              name: 'Damage Scenarios - Impact Ratings'
             }
           ]
         }
@@ -1462,7 +1470,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     if (!res?.error) {
       const attacks = res?.find((item) => item?.type === 'attack');
       const attackTrees = res?.find((item) => item?.type === 'attack_trees');
-      const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
+      // const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
       set((state) => ({
         attackScenarios: {
           ...state.attackScenarios,
@@ -1474,11 +1482,11 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               ...state.attackScenarios.subs[1],
               ...attackTrees
-            },
-            {
-              ...state.attackScenarios.subs[2],
-              ...Vulnerability
             }
+            // {
+            //   ...state.attackScenarios.subs[2],
+            //   ...Vulnerability
+            // }
           ]
         }
       }));
@@ -1494,11 +1502,11 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               id: '42',
               name: 'Attack Trees'
-            },
-            {
-              id: '43',
-              name: 'Vulnerability Analysis'
             }
+            // {
+            //   id: '43',
+            //   name: 'Vulnerability Analysis'
+            // }
           ]
         }
       }));
