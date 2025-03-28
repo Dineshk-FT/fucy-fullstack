@@ -7,6 +7,7 @@ const initialState = {
   initialDialogOpen: false,
   propertiesTabOpen: false,
   addNodeTabOpen: false,
+  addDataNodeTab: false,
   anchorEl: {
     node: null,
     edge: null
@@ -32,6 +33,9 @@ const CanvasSlice = createSlice({
   reducers: {
     openAddNodeTab: (state) => {
       return { ...state, addNodeTabOpen: true };
+    },
+    openAddDataNodeTab: (state) => {
+      return {...state, addDataNodeTab: true };
     },
     openHeader: (state) => {
       return { ...state, isHeaderOpen: true };
@@ -69,6 +73,9 @@ const CanvasSlice = createSlice({
     closeAddNodeTab: (state) => {
       return { ...state, addNodeTabOpen: false };
     },
+    closeAddDataNodeTab: (state) => {
+      return { ...state, addDataNodeTab: false };
+    },
     changeCanvasPage: (state, action) => {
       return { ...state, isCanvasPage: action.payload };
     },
@@ -98,7 +105,9 @@ export const {
   OpenPropertiesTab,
   ClosePropertiesTab,
   openAddNodeTab,
+  openAddDataNodeTab,
   closeAddNodeTab,
+  closeAddDataNodeTab,
   setAnchorEl,
   clearAnchorEl,
   setDetails,
