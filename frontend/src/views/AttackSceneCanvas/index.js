@@ -27,8 +27,8 @@ const getLayoutedElements = async (nodes, edges) => {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN', // Layout direction (DOWN, UP, LEFT, RIGHT)
-      'elk.spacing.nodeNode': 50, // Spacing between nodes in the same layer
-      'elk.spacing.nodeNodeBetweenLayers': 70, // Spacing between layers
+      'elk.spacing.nodeNode': 80,
+      'elk.spacing.nodeNodeBetweenLayers': 100,
       'elk.edgeRouting': 'ORTHOGONAL', // Edge routing style
       'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', // Node placement strategy
       'elk.layered.considerModelOrder': true, // Respect input order
@@ -121,7 +121,8 @@ const getLayoutedElements = async (nodes, edges) => {
     // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id),
-      points: edge.sections?.[0]?.bendPoints || [] // Use bend points for smooth edges
+      points: edge.sections?.flatMap((section) => section.bendPoints || []) || []
+      // Use bend points for smooth edges
     }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
@@ -257,21 +258,21 @@ export default function AttackBlock({ attackScene, color }) {
     };
 
     // Extract threatId from nodes with type: "default"
-    const threatNode = nodes.find((node) => node.type === 'default' && node.threatId);
-    if (!threatNode) {
-      notify('Threat scenario is missing', 'error');
-      return;
-    }
-    const { threatId, damageId, key } = threatNode;
+    const threatNode = nodes?.find((node) => node?.type === 'default' && node?.threatId) ?? {};
+    // if (!threatNode) {
+    //   notify('Threat scenario is missing', 'error');
+    //   return;
+    // }
+    const { threatId = '', damageId = '', key = '' } = threatNode;
 
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
       id: sceneId,
       templates: JSON.stringify(template),
-      threatId: threatId,
-      damageId: damageId,
-      key: key
+      threatId: threatId ?? '',
+      damageId: damageId ?? '',
+      key: key ?? ''
     };
 
     update(details)

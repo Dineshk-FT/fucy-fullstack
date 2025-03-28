@@ -11,6 +11,7 @@ import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import {
   ItemIcon,
   AttackIcon,
@@ -341,6 +342,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  const [hovered, setHovered] = useState({
+    asset: false,
+    attack: false,
+    attack_rees: false
+  });
+
   // console.log('assets', assets);
 
   const handleOpenDocumentDialog = () => {
@@ -608,17 +615,49 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   );
 
   const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
-    return subs?.map((sub) => (
-      <TreeItem
-        key={sub.id}
-        nodeId={sub.id}
-        label={getLabel('TopicIcon', sub.name, null, sub.id)}
-        onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
-        onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
-      >
-        {additionalMapping && additionalMapping(sub)}
-      </TreeItem>
-    ));
+    return subs?.map((sub) =>
+      sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
+        <TreeItem
+          key={sub.id}
+          nodeId={sub.id}
+          label={
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
+              onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
+            >
+              <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
+              {hovered[sub.type] && (
+                <Box
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    contextMenuHandler(e, sub.name);
+                  }}
+                >
+                  <ControlPointIcon color="primary" sx={{ fontSize: 19 }} />
+                </Box>
+              )}
+            </Box>
+          }
+          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+        >
+          {additionalMapping && additionalMapping(sub)}
+        </TreeItem>
+      ) : (
+        <TreeItem
+          key={sub.id}
+          nodeId={sub.id}
+          label={getLabel('TopicIcon', sub.name, null, sub.id)}
+          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+        >
+          {additionalMapping && additionalMapping(sub)}
+        </TreeItem>
+      )
+    );
   };
 
   const renderTreeItems = (data, type) => {
@@ -641,7 +680,22 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               <DraggableTreeItem
                 nodeId="nodes_section"
                 // label="Nodes"
-                label={getLabel('TopicIcon', 'Components', null, 'nodes_section')}
+                label={
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    onMouseEnter={() => setHovered((state) => ({ ...state, asset: true }))}
+                    onMouseLeave={() => setHovered((state) => ({ ...state, asset: false }))}
+                  >
+                    <Box>{getLabel('TopicIcon', 'Components', null, 'nodes_section')}</Box>
+                    {hovered.asset && (
+                      <Box onClick={handleAddNewNode}>
+                        <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
+                      </Box>
+                    )}
+                  </Box>
+                }
                 onClick={(e) => {
                   e.stopPropagation();
                   setClickedItem('nodes_section');

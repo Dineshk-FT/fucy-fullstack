@@ -83,7 +83,9 @@ const selector = (state) => ({
   setSelectedElement: state.setSelectedElement,
   setSaveModal: state.setSaveModal,
   isPropertiesOpen: state.isPropertiesOpen,
-  setPropertiesOpen: state.setPropertiesOpen
+  setPropertiesOpen: state.setPropertiesOpen,
+  initialNodes: state.initialNodes,
+  initialEdges: state.initialEdges
 });
 
 // Edge line styling
@@ -175,7 +177,9 @@ export default function MainCanvas() {
     setSaveModal,
     isPropertiesOpen,
     setPropertiesOpen,
-    isDark
+    isDark,
+    initialNodes,
+    initialEdges
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -247,11 +251,9 @@ export default function MainCanvas() {
       });
   };
 
-  useEffect(() => {
-    return () => {
-      handleSaveToModel();
-    };
-  }, []);
+  // useEffect(() => {
+
+  // }, []);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -259,6 +261,11 @@ export default function MainCanvas() {
     setNodes([]);
     setEdges([]);
     setTimeout(() => setIsReady(true), 0);
+    return () => {
+      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+        handleSaveToModel();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -576,9 +583,9 @@ export default function MainCanvas() {
     }
 
     // if (node.type === 'group') {
-      // Ensure nested group selection
-      dispatch(setSelectedBlock(node));
-      setSelectedElement(node);
+    // Ensure nested group selection
+    dispatch(setSelectedBlock(node));
+    setSelectedElement(node);
     // }
   };
 
