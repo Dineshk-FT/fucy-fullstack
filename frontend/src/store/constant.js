@@ -4,7 +4,7 @@ export const gridSpacing = 3;
 export const drawerWidth = 400;
 export const sidebarWidth = 400;
 export const appDrawerWidth = 320;
-export const getNavbarHeight = (isCollapsed) => (isCollapsed ? 50 : 135);
+export const getNavbarHeight = (isCollapsed) => (isCollapsed ? 50 : 145);
 export const height = '93svh';
 export const fontSize = 13;
 export const tableHeight = '100vh';

@@ -191,7 +191,7 @@ export default function MainCanvas() {
   // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
+  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
@@ -1308,7 +1308,7 @@ export default function MainCanvas() {
               }}
               color={isDark == true ? '#424242' : '#B0BEC5'}
             />
-            {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
+            {(propertiesTabOpen || addNodeTabOpen || addDataNodeTab) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
         {contextMenu.visible && (

@@ -40,7 +40,7 @@ import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
 import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../store/ColorTheme';
-import { openAddNodeTab } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab, openAddDataNodeTab  } from '../../../../store/slices/CanvasSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
@@ -108,6 +108,10 @@ const LeftSection = () => {
     dispatch(openAddNodeTab());
   };
 
+  const handleAddDataNode = () => {
+    dispatch(openAddDataNodeTab());
+  }
+
   const handleSystemTabClick = () => setOpenTemplateDialog(true);
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
 
@@ -115,7 +119,7 @@ const LeftSection = () => {
     dispatch(setPreviousTab(tabName));
     setActiveTab(tabName);
     const actions = {
-      'Model Definition & Assets': handleModelDefinationClick,
+      'Item Definition': handleModelDefinationClick,
       'Threat Scenarios': () => handleClick('Threat Scenarios'),
       'Damage Scenarios': () => handleClick('Damage Scenarios Derivations'),
       'Attack Path': handleAttackTableClick,
@@ -152,7 +156,7 @@ const LeftSection = () => {
   };
 
   const handleModelDefinationClick = () => {
-    setClickedItem(model?._id);
+    setClickedItem('1');
     dispatch(closeAll());
   };
 
@@ -169,7 +173,7 @@ const LeftSection = () => {
   const handleAttackTableClick = () => {
     dispatch(setPreviousTab('Attack'));
     if (model?._id) {
-      setClickedItem(model._id);
+      setClickedItem('4');
       dispatch(setTitle('Attack'));
       dispatch(setTableOpen('Attack'));
     }
@@ -192,10 +196,11 @@ const LeftSection = () => {
       ]
     },
     {
-      name: 'Model Definition & Assets',
+      name: 'Item Definition',
       options: [
+        { label: 'New Data', icon: NewFolderIcon, action: handleAddDataNode },
         {
-          label: 'New',
+          label: 'New Component',
           icon: () => (
             <img src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
@@ -489,7 +494,7 @@ const LeftSection = () => {
             boxShadow: isDark == true ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
             gap: '4px',
             width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
-            maxHeight: '80px',
+            maxHeight: '85px',
             overflow: 'auto',
             my: 0.4
           }}
