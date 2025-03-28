@@ -575,11 +575,11 @@ export default function MainCanvas() {
       });
     }
 
-    if (node.type === 'group') {
+    // if (node.type === 'group') {
       // Ensure nested group selection
       dispatch(setSelectedBlock(node));
       setSelectedElement(node);
-    }
+    // }
   };
 
   const handleSelectEdgeSingleClick = (e, edge) => {

@@ -4,6 +4,7 @@ import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import useThrottle from '../../../hooks/useThrottle';
+import { useSelector } from 'react-redux';
 
 const selector = (state) => ({
   nodes: state.nodes
@@ -12,10 +13,15 @@ const selector = (state) => ({
 const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
   const { nodes } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
+  const { selectedBlock } = useSelector((state) => state?.canvas);
   const [dimesions, setDimensions] = useState({
     width: data?.style?.width || 200,
     height: data?.style?.height || 200
   });
+
+  const checkSelection = () => selectedBlock?.id === id;
+  const isSelected = checkSelection();
+  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   // console.log('data', data);
   // console.log('nodes', nodes);
   // console.log('rest', data.label, rest);
@@ -76,10 +82,10 @@ const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
       />
 
       <NodeResizer onResize={handleResize} />
-      <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
-      <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
-      <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
-      <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
 
       <div
         className="my-group-node"

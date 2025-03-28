@@ -677,6 +677,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         e.stopPropagation();
                         setClickedItem(detail.nodeId);
                         dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                      }}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        setClickedItem(detail.nodeId);
+                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                         const selected = nodes.find((node) => node.id === detail?.nodeId);
                         // console.log('selected', selected);
                         dispatch(
@@ -762,6 +767,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       }
                       onClick={(e) => {
                         // console.log('detail', detail);
+                        e.stopPropagation();
+                        setClickedItem(detail?.nodeId);
+                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                      }}
+                      onDoubleClick={(e) => {
                         e.stopPropagation();
                         setClickedItem(detail?.nodeId);
                         dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
