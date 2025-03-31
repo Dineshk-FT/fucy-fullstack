@@ -666,215 +666,100 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     switch (type) {
       case 'assets': {
         const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
-        const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge')) || [];
-        // console.log('nodesDetail', nodesDetail);
+        const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
+        const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
+        // console.log('edgesDetail', edgesDetail);
+        const renderSection = (nodeId, label, details, type) => {
+          if (!details.length) return null;
+          return (
+            <DraggableTreeItem
+              nodeId={nodeId}
+              label={getLabel('TopicIcon', label, null, nodeId)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setClickedItem(nodeId);
+              }}
+              className={classes.template}
+            >
+              {details?.map((detail, i) => {
+                // console.log('detail', detail);
+                return detail?.props?.length > 0 ? (
+                  <DraggableTreeItem
+                    key={detail.nodeId}
+                    nodeId={detail.nodeId}
+                    sx={{
+                      background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
+                    }}
+                    label={
+                      <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                        <Box
+                          sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: 'fit-content'
+                          }}
+                        >
+                          {i + 1}.{' '}
+                          <Typography component="span" noWrap>
+                            {detail.name}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                    }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                      const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
+                      dispatch(
+                        setAnchorEl({
+                          type: type,
+                          value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
+                        })
+                      );
+                      dispatch(
+                        type === 'edge'
+                          ? setEdgeDetails({
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false,
+                              style: selected?.style ?? {},
+                              startPoint: selected?.markerStart?.color ?? '#000000',
+                              endPoint: selected?.markerEnd?.color ?? '#000000'
+                            })
+                          : setDetails({
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false
+                            })
+                      );
+                    }}
+                    onDragStart={(e) => onDragStart(e, detail)}
+                  ></DraggableTreeItem>
+                ) : null;
+              })}
+            </DraggableTreeItem>
+          );
+        };
 
         return renderTreeItem(
           data,
           (e) => handleClick(e, model?._id, 'assets', data.id),
           handleNodes,
-
           <>
-            {/* Nodes Section */}
-            {nodesDetail?.length > 0 && (
-              <DraggableTreeItem
-                nodeId="nodes_section"
-                // label="Nodes"
-                label={
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    onMouseEnter={() => setHovered((state) => ({ ...state, asset: true }))}
-                    onMouseLeave={() => setHovered((state) => ({ ...state, asset: false }))}
-                  >
-                    <Box>{getLabel('TopicIcon', 'Components', null, 'nodes_section')}</Box>
-                    {hovered.asset && (
-                      <Box onClick={handleAddNewNode}>
-                        <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
-                      </Box>
-                    )}
-                  </Box>
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setClickedItem('nodes_section');
-                }}
-                className={classes.template}
-              >
-                {nodesDetail?.map((detail, i) =>
-                  detail?.name?.length ? (
-                    <DraggableTreeItem
-                      key={detail.nodeId}
-                      nodeId={detail.nodeId}
-                      sx={{
-                        background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
-                      }}
-                      label={
-                        <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                          <Box
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 'fit-content'
-                            }}
-                          >
-                            {i + 1}.{' '}
-                            <Typography component="span" noWrap>
-                              {detail.name}
-                            </Typography>
-                          </Box>
-                        </Tooltip>
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setClickedItem(detail.nodeId);
-                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        setClickedItem(detail.nodeId);
-                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                        const selected = nodes.find((node) => node.id === detail?.nodeId);
-                        // console.log('selected', selected);
-                        dispatch(
-                          setAnchorEl({
-                            type: 'node',
-                            value: selected?.id
-                          })
-                        );
-                        dispatch(
-                          setDetails({
-                            name: selected?.data?.label ?? '',
-                            properties: selected?.properties ?? [],
-                            isAsset: selected?.isAsset ?? false
-                          })
-                        );
-                      }}
-                      onDragStart={(e) => onDragStart(e, detail)}
-                    >
-                      {/* {detail?.props?.map((prop) => */}
-
-                      {/* <DraggableTreeItem
-                        key={i}
-                        nodeId={i}
-                        onClick={(e) => e.stopPropagation()}
-                        label={
-                          <Tooltip title={getFullLossNames(detail.props)} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                            <div className={classes.lossItem}>
-                              <CircleRoundedIcon sx={{ color: isDark == true ? '#FF6D6D' : '#FF5555', fontSize: 14 }} />
-                              <Typography variant="body2" className={classes.labelTypo}>
-                                {getShortenedLossNames(detail.props)}
-                              </Typography>
-                            </div>
-                          </Tooltip>
-                        }
-                      /> */}
-
-                      {/* )} */}
-                    </DraggableTreeItem>
-                  ) : null
-                )}
-              </DraggableTreeItem>
-            )}
-
-            {/* Edges Section */}
-            {edgesDetail?.length > 0 && (
-              <DraggableTreeItem
-                nodeId="edges_section"
-                // label="Edges/Connectors"
-
-                label={getLabel('TopicIcon', 'Connectors', null, 'edges_section')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setClickedItem('edges_section');
-                }}
-                className={classes.template}
-              >
-                {edgesDetail?.map((detail, i) =>
-                  detail?.name?.length ? (
-                    <DraggableTreeItem
-                      key={detail.nodeId}
-                      nodeId={detail.nodeId}
-                      sx={{
-                        background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
-                      }}
-                      label={
-                        <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                          <Box
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 'fit-content',
-                              display: 'flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            {i + 1}.{' '}
-                            <Typography component="span" noWrap>
-                              {detail.name}
-                            </Typography>
-                          </Box>
-                        </Tooltip>
-                      }
-                      onClick={(e) => {
-                        // console.log('detail', detail);
-                        e.stopPropagation();
-                        setClickedItem(detail?.nodeId);
-                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        setClickedItem(detail?.nodeId);
-                        dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                        const selected = edges.find((edge) => edge.id === detail?.nodeId);
-                        // console.log('selected', selected);
-                        dispatch(
-                          setAnchorEl({
-                            type: 'edge',
-                            value: `rf__edge-${selected.id}`
-                          })
-                        );
-                        dispatch(
-                          setEdgeDetails({
-                            name: selected?.data?.label ?? '',
-                            properties: selected?.properties ?? [],
-                            isAsset: selected?.isAsset ?? false,
-                            style: selected?.style ?? {},
-                            startPoint: selected?.markerStart.color ?? '#000000',
-                            endPoint: selected?.markerEnd?.color ?? '#000000'
-                          })
-                        );
-                      }}
-                      onDragStart={(e) => onDragStart(e, detail)}
-                    >
-                      {/* {detail?.props?.map((prop) => (
-                        <DraggableTreeItem
-                          key={prop.id}
-                          nodeId={prop.id}
-                          onClick={(e) => e.stopPropagation()}
-                          label={
-                            <Tooltip title={getFullLossNames(detail.props)} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                              <div className={classes.lossItem}>
-                                <CircleRoundedIcon sx={{ color: isDark == true ? '#FF6D6D' : '#FF5555', fontSize: 14 }} />
-                                <Typography variant="body2" className={classes.labelTypo}>
-                                  {getShortenedLossNames(detail.props)}
-                                </Typography>
-                              </div>
-                            </Tooltip>
-                          }
-                        />
-                      ))} */}
-                    </DraggableTreeItem>
-                  ) : null
-                )}
-              </DraggableTreeItem>
-            )}
+            {renderSection('nodes_section', 'Components', nodesDetail, 'node')}
+            {renderSection('data_section', 'Data', dataDetail, 'data')}
+            {renderSection('edges_section', 'Connectors', edgesDetail, 'edge')}
           </>
         );
       }
+
       case 'damageScenarios':
         return renderTreeItem(
           data,

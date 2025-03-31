@@ -13,6 +13,7 @@ import {
 } from '../ui-component/custom';
 import AttackNode from '../ui-component/custom/nodes/AttackNode';
 import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../ui-component/CustomGates';
+import DataNode from '../ui-component/custom/nodes/DataNode';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);
@@ -66,6 +67,7 @@ export const pageNodeTypes = {
     input: InputNode,
     output: OutputNode,
     default: DefaultNode,
+    data: DataNode,
     receiver: CustomNode,
     signal: CustomNode,
     custom: CustomNode,
