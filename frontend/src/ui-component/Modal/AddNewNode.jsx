@@ -34,7 +34,7 @@ const MenuProps = {
   getContentAnchorEl: null
 };
 
-const names = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
+const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
   updateModel: state.updateModel,
@@ -58,11 +58,12 @@ const AddNewNode = ({ assets }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
+  const [count, setCount] = useState(1);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
   const [newNode, setNewNode] = useState({
-    nodeName: 'New Node',
+    nodeName: `New Node ${count}`,
     type: '',
-    properties: [names[0]],
+    properties: [properties[0]],
     bgColor: ''
   });
 
@@ -84,9 +85,9 @@ const AddNewNode = ({ assets }) => {
     dispatch(closeAddNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
-      nodeName: 'New Node',
+      nodeName: `New Node 1`,
       type: '',
-      properties: [names[0]],
+      properties: [properties[0]],
       bgColor: '#dadada'
     });
   };
@@ -167,11 +168,12 @@ const AddNewNode = ({ assets }) => {
     }
 
     // Reset only the nodeName, keeping properties intact
+    setCount((prev) => prev + 1);
     setNewNode((prev) => ({
       ...prev,
-      nodeName: 'New Node',
+      nodeName: `New Node ${count + 1}`,
       type: '',
-      properties: [names[0]],
+      properties: [properties[0]],
       bgColor: '#dadada'
     }));
   };
@@ -230,7 +232,7 @@ const AddNewNode = ({ assets }) => {
                 )}
                 MenuProps={MenuProps}
               >
-                {names.map((name) => (
+                {properties?.map((name) => (
                   <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
                     {name}
                   </MenuItem>

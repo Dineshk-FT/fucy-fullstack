@@ -3,7 +3,6 @@ import React, { useMemo } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
-import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
 import ColorTheme from '../../../../store/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
 import useStore from '../../../../Zustand/store';
@@ -41,7 +40,14 @@ import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../..
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
-import { openAddNodeTab, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import {
+  openAddDataNodeTab,
+  openAddNodeTab,
+  setAnchorEl,
+  setDetails,
+  setEdgeDetails,
+  setSelectedBlock
+} from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
@@ -262,29 +268,6 @@ const selector = (state) => ({
   getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 
-// Function to shorten loss names
-const shortenLossName = (name) => {
-  const lossMap = {
-    Availability: 'Avail',
-    Integrity: 'Int',
-    Authenticity: 'Auth',
-    Authorization: 'Authz',
-    'Non Repudiation': 'Non-rep',
-    Confidentiality: 'Conf'
-  };
-  return lossMap[name] || name;
-};
-
-// Function to get full loss names for tooltip
-const getFullLossNames = (props) => {
-  return props.map((prop) => `Loss of ${prop.name}`).join(', ');
-};
-
-// Function to get shortened loss names for display
-const getShortenedLossNames = (props) => {
-  return props.length > 0 ? `Loss of ${props.map((prop) => shortenLossName(prop.name)).join(', ')}` : 'No Losses';
-};
-
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
@@ -334,8 +317,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
-  const [anchorItemEl, setAnchorItemEl] = useState(null);
-  const [openItemRight, setOpenItemRight] = useState(false);
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
@@ -343,7 +324,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
   const [hovered, setHovered] = useState({
-    asset: false,
+    node: false,
+    data: false,
     attack: false,
     attack_rees: false
   });
@@ -419,12 +401,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleAddNewNode = (e) => {
     e.stopPropagation();
     dispatch(openAddNodeTab());
-    setOpenItemRight(false);
   };
 
-  const handleCloseItem = () => {
-    setOpenItemRight(false);
-    setAnchorItemEl(null);
+  const handleAddDataNode = (e) => {
+    e.stopPropagation();
+    dispatch(openAddDataNodeTab());
   };
 
   const handleClick = async (event, ModelId, name, id) => {
@@ -433,8 +414,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     if (name === 'assets') {
       dispatch(setPreviousTab(name));
       dispatch(closeAll());
-    } else {
-      handleCloseItem();
     }
     const get_api = {
       assets: getAssets,
@@ -468,8 +447,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   const handleNodes = (e) => {
     e.preventDefault();
-    setAnchorItemEl(e.currentTarget);
-    setOpenItemRight((prev) => !prev);
   };
 
   const handleContext = (e, name) => {
@@ -642,7 +619,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             </Box>
           }
           onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
-          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+          // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
@@ -668,22 +645,52 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
         const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
         const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
-        // console.log('edgesDetail', edgesDetail);
+
         const renderSection = (nodeId, label, details, type) => {
           if (!details.length) return null;
           return (
             <DraggableTreeItem
               nodeId={nodeId}
-              label={getLabel('TopicIcon', label, null, nodeId)}
+              label={
+                nodeId === 'nodes_section' || nodeId === 'data_section' ? (
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    onMouseEnter={() =>
+                      setHovered((state) => ({
+                        ...state,
+                        node: nodeId === 'nodes_section' ? true : state.node,
+                        data: nodeId === 'data_section' ? true : state.data
+                      }))
+                    }
+                    onMouseLeave={() =>
+                      setHovered((state) => ({
+                        ...state,
+                        node: nodeId === 'nodes_section' ? false : state.node,
+                        data: nodeId === 'data_section' ? false : state.data
+                      }))
+                    }
+                  >
+                    <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
+                    {(nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data) ? (
+                      <Box onClick={nodeId === 'nodes_section' ? handleAddNewNode : handleAddDataNode}>
+                        <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
+                      </Box>
+                    ) : null}
+                  </Box>
+                ) : (
+                  getLabel('TopicIcon', label, null, nodeId)
+                )
+              }
               onClick={(e) => {
                 e.stopPropagation();
                 setClickedItem(nodeId);
               }}
               className={classes.template}
             >
-              {details?.map((detail, i) => {
-                // console.log('detail', detail);
-                return detail?.props?.length > 0 ? (
+              {details?.map((detail, i) =>
+                detail?.props?.length > 0 ? (
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}
@@ -741,9 +748,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       );
                     }}
                     onDragStart={(e) => onDragStart(e, detail)}
-                  ></DraggableTreeItem>
-                ) : null;
-              })}
+                  />
+                ) : null
+              )}
             </DraggableTreeItem>
           );
         };
@@ -1034,59 +1041,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             >
               {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
             </TreeItem>
-            <Popper
-              id="basic-popper"
-              open={openItemRight}
-              anchorEl={anchorItemEl}
-              placement="right"
-              sx={{ zIndex: 1400 }}
-              modifiers={[
-                {
-                  name: 'offset',
-                  options: {
-                    offset: [-10, -50]
-                  }
-                }
-              ]}
-            >
-              <ClickAwayListener onClickAway={handleCloseItem}>
-                <Paper
-                  className={classes.paper}
-                  sx={{
-                    marginTop: '4rem',
-                    marginLeft: '3.1rem',
-                    background: isDark == true ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
-                    color: color?.sidebarContent,
-                    border: 'none',
-                    borderRadius: '10px',
-                    padding: '10px',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(8px)'
-                  }}
-                >
-                  <MenuItem
-                    onClick={handleAddNewNode}
-                    sx={{
-                      fontSize: '13px',
-                      fontFamily: "'Poppins', sans-serif",
-                      color: color?.sidebarContent,
-                      borderRadius: '6px',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.02)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  >
-                    Create new
-                  </MenuItem>
-                </Paper>
-              </ClickAwayListener>
-            </Popper>
           </TreeView>
         </CardContent>
       </CardStyle>
