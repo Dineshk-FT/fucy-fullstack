@@ -697,7 +697,7 @@ export default function DsTable() {
                       </Tooltip>
                     </Box>
                   </StyledTableCell>
-                );
+                );  
 
                 break;
               case item.name === 'Overall Impact':
