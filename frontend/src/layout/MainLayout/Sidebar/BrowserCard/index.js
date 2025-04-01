@@ -40,6 +40,7 @@ import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../..
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
+import { v4 as uid } from 'uuid';
 import {
   openAddDataNodeTab,
   openAddNodeTab,
@@ -52,6 +53,7 @@ import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
 import { getNavbarHeight } from '../../../../store/constant';
+import { getNodeDetails } from '../../../../utils/Constraints';
 
 const imageComponents = {
   AttackIcon,
@@ -315,6 +317,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   } = useStore(selector);
   const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
+  const [count, setCount] = useState({
+    node: 1,
+    data: 1
+  });
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const [openNodelist, setOpenNodelist] = useState(false);
@@ -400,12 +406,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   const handleAddNewNode = (e) => {
     e.stopPropagation();
-    dispatch(openAddNodeTab());
+    const nodeDetail = getNodeDetails('default', 'Node', count.node);
+    const list = [...nodes, nodeDetail];
+    setNodes(list);
+    setCount((prev) => ({ ...prev, node: prev.node + 1 }));
+    // dispatch(openAddNodeTab());
   };
 
   const handleAddDataNode = (e) => {
     e.stopPropagation();
-    dispatch(openAddDataNodeTab());
+    const nodeDetail = getNodeDetails('data', 'Data', count.data);
+    const list = [...nodes, nodeDetail];
+    setNodes(list);
+    setCount((prev) => ({ ...prev, data: prev.data + 1 }));
+    // dispatch(openAddDataNodeTab());
   };
 
   const handleClick = async (event, ModelId, name, id) => {

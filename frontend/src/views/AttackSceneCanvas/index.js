@@ -22,24 +22,29 @@ import _ from 'lodash';
 const elk = new ELK();
 
 const getLayoutedElements = async (nodes, edges) => {
+  const nodeIds = new Set(nodes.map((n) => n.id));
+
+  // Filter out invalid edges that reference non-existent nodes
+  const validEdges = edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+
   const graph = {
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
-      'elk.direction': 'DOWN', // Layout direction (DOWN, UP, LEFT, RIGHT)
+      'elk.direction': 'DOWN',
       'elk.spacing.nodeNode': 80,
       'elk.spacing.nodeNodeBetweenLayers': 100,
-      'elk.edgeRouting': 'ORTHOGONAL', // Edge routing style
-      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', // Node placement strategy
-      'elk.layered.considerModelOrder': true, // Respect input order
-      'elk.layered.mergeEdges': true // Merge edges for clarity
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.considerModelOrder': true,
+      'elk.layered.mergeEdges': true
     },
     children: nodes.map((node) => ({
       id: node.id,
-      width: node.width || 150, // Default width if not provided
-      height: node.height || 50 // Default height if not provided
+      width: node.width || 150,
+      height: node.height || 50
     })),
-    edges: edges.map((edge) => ({
+    edges: validEdges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target
@@ -49,14 +54,13 @@ const getLayoutedElements = async (nodes, edges) => {
   try {
     const elkGraph = await elk.layout(graph);
 
-    // Update node positions based on ELK layout
     let layoutedNodes = elkGraph.children.map((node) => {
       const originalNode = nodes.find((n) => n.id === node.id);
       return {
         ...originalNode,
         position: {
           x: node.x || 0,
-          y: (node.y || 0) + 30 // Add extra 30 units to y-axis for spacing
+          y: (node.y || 0) + 30
         }
       };
     });
@@ -64,24 +68,20 @@ const getLayoutedElements = async (nodes, edges) => {
     // Function to check if two nodes overlap
     const nodesOverlap = (nodeA, nodeB) => {
       return (
-        Math.abs(nodeA.position.x - nodeB.position.x) < (nodeA.width + nodeB.width) / 2 + 20 && // Add buffer
-        Math.abs(nodeA.position.y - nodeB.position.y) < (nodeA.height + nodeB.height) / 2 + 20 // Add buffer
+        Math.abs(nodeA.position.x - nodeB.position.x) < (nodeA.width + nodeB.width) / 2 + 20 &&
+        Math.abs(nodeA.position.y - nodeB.position.y) < (nodeA.height + nodeB.height) / 2 + 20
       );
     };
 
     // Function to resolve overlaps with minimal displacement
     const resolveOverlap = (nodeA, nodeB) => {
-      const xSpacing = (nodeA.width + nodeB.width) / 2 + 20; // Add buffer
-      const ySpacing = (nodeA.height + nodeB.height) / 2 + 20; // Add buffer
-
-      // Calculate overlap in x and y directions
+      const xSpacing = (nodeA.width + nodeB.width) / 2 + 20;
+      const ySpacing = (nodeA.height + nodeB.height) / 2 + 20;
       const xOverlap = xSpacing - Math.abs(nodeA.position.x - nodeB.position.x);
       const yOverlap = ySpacing - Math.abs(nodeA.position.y - nodeB.position.y);
 
       if (xOverlap > 0 && yOverlap > 0) {
-        // Move nodes apart minimally in the direction of least resistance
         if (xOverlap < yOverlap) {
-          // Adjust x positions
           if (nodeA.position.x < nodeB.position.x) {
             nodeA.position.x -= xOverlap / 2;
             nodeB.position.x += xOverlap / 2;
@@ -90,7 +90,6 @@ const getLayoutedElements = async (nodes, edges) => {
             nodeB.position.x -= xOverlap / 2;
           }
         } else {
-          // Adjust y positions
           if (nodeA.position.y < nodeB.position.y) {
             nodeA.position.y -= yOverlap / 2;
             nodeB.position.y += yOverlap / 2;
@@ -104,7 +103,7 @@ const getLayoutedElements = async (nodes, edges) => {
 
     // Iterate multiple times to resolve all overlaps
     let hasOverlaps = true;
-    let maxIterations = 100; // Prevent infinite loops
+    let maxIterations = 100;
     while (hasOverlaps && maxIterations > 0) {
       hasOverlaps = false;
       layoutedNodes.forEach((nodeA, indexA) => {
@@ -118,17 +117,15 @@ const getLayoutedElements = async (nodes, edges) => {
       maxIterations--;
     }
 
-    // Update edges with bend points for smooth routing
     const layoutedEdges = elkGraph.edges.map((edge) => ({
       ...edges.find((e) => e.id === edge.id),
       points: edge.sections?.flatMap((section) => section.bendPoints || []) || []
-      // Use bend points for smooth edges
     }));
 
     return { nodes: layoutedNodes, edges: layoutedEdges };
   } catch (error) {
     console.error('Error in dynamic layout:', error);
-    return { nodes, edges }; // Return original if layout fails
+    return { nodes, edges };
   }
 };
 // Define edge types outside and pass edges, setEdges as props

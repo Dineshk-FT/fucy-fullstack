@@ -229,7 +229,7 @@ export default function StepEdge({
                 })
               }}
             >
-              {labelValue || 'Enter name'}
+              {labelValue || 'connect'}
             </Box>
           </ClickAwayListener>
           <Box className="edge-buttons" display="flex" gap={0.5}>

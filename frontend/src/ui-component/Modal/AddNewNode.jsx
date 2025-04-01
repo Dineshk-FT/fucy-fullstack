@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography, Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../Zustand/store';
-import { updatedModelState } from '../../utils/Constraints';
+import { getNodeDetails, updatedModelState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
 import { CloseCircle } from 'iconsax-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -94,78 +94,26 @@ const AddNewNode = ({ assets }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const dataNode = {
-      id: uid(),
-      data: {
-        label: newNode.nodeName,
-        style: {
-          backgroundColor: '#dadada',
-          fontSize: '12px',
-          fontFamily: 'Inter',
-          fontStyle: 'normal',
-          textAlign: 'center',
-          color: 'black',
-          fontWeight: 500,
-          textDecoration: 'none',
-          borderColor: 'gray',
-          borderWidth: '2px',
-          borderStyle: 'solid',
-          width: 150,
-          height: 50
-        }
-      },
-      type: 'default',
-      properties: newNode.properties,
-      width: 150,
-      height: 50,
-      isAsset: false
-    };
-
-    const details = { id: selectedNodeGroupId, new_node: dataNode };
-
-    const updatePositionWithinRange = (position, range) => {
-      const getRandomOffset = (range) => Math.random() * range * 2 - range;
-      return { x: position.x + getRandomOffset(range), y: position.y + getRandomOffset(range) };
-    };
-
-    const position = { x: 495, y: 250 };
-    const range = 50;
-    const updatedPosition = updatePositionWithinRange(position, range);
+    // const details = { id: selectedNodeGroupId, new_node: dataNode };
 
     if (!selectedNodeGroupId) {
-      const nodeDetail = { ...dataNode, position: updatedPosition };
+      const nodeDetail = getNodeDetails('default', 'Node', count);
       const list = [...nodes, nodeDetail];
       setNodes(list);
-      // const template = { nodes: list, edges: edges };
-      // const details = {
-      //   'model-id': model?._id,
-      //   template: JSON.stringify(template),
-      //   ...(assets && { assetId: assets?._id })
-      // };
-
-      // update(details)
-      //   .then((res) => {
-      //     if (res.data) {
-      //       notify(res?.message ?? 'Node added successfully', 'success');
-      //       getSidebarNode();
-      //     }
-      //   })
-      //   .catch((err) => {
-      //     notify('Something went wrong', 'error');
-      //   });
-    } else {
-      createNode(details)
-        .then((res) => {
-          if (res.data) {
-            notify(res?.data?.message ?? 'Node added successfully', 'success');
-            getSidebarNode();
-            setSelectedNodeGroupId({});
-          }
-        })
-        .catch((err) => {
-          notify('Something went wrong', 'error');
-        });
     }
+    // else {
+    //   createNode(details)
+    //     .then((res) => {
+    //       if (res.data) {
+    //         notify(res?.data?.message ?? 'Node added successfully', 'success');
+    //         getSidebarNode();
+    //         setSelectedNodeGroupId({});
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       notify('Something went wrong', 'error');
+    //     });
+    // }
 
     // Reset only the nodeName, keeping properties intact
     setCount((prev) => prev + 1);

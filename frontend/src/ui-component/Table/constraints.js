@@ -173,17 +173,17 @@ export const DSTableHeader = [
   { id: 4, name: 'Description/Scalability', w: 100, minW: 90 },
   { id: 5, name: 'Losses of Cybersecurity Properties', w: 220, minW: 150 },
   { id: 6, name: 'Assets', w: 70, minW: 60 },
-  { id: 7, name: 'Component/Message', w: 100, minW: 70 },
+  // { id: 7, name: 'Component/Message', w: 100, minW: 70 },
   { id: 13, name: 'Safety Impact', w: 160, minW: 140 },
   { id: 14, name: 'Financial Impact', w: 160, minW: 140 },
   { id: 15, name: 'Operational Impact', w: 160, minW: 140 },
   { id: 16, name: 'Privacy Impact', w: 160, minW: 140 },
   { id: 17, name: 'Impact Justification', w: 120, minW: 60 },
   { id: 18, name: 'Associated Threat Scenarios', w: 100, minW: 60 },
-  { id: 19, name: 'Overall Impact', w: 100, minW: 60 },
-  { id: 20, name: 'Asset is Evaluated', w: 80, minW: 60 },
-  { id: 21, name: 'Cybersecurity Properties are Evaluated', w: 120, minW: 100 },
-  { id: 22, name: 'Unevaluated Cybersecurity Properties', w: 120, minW: 100 }
+  { id: 19, name: 'Overall Impact', w: 100, minW: 60 }
+  // { id: 20, name: 'Asset is Evaluated', w: 80, minW: 60 },
+  // { id: 21, name: 'Cybersecurity Properties are Evaluated', w: 120, minW: 100 },
+  // { id: 22, name: 'Unevaluated Cybersecurity Properties', w: 120, minW: 100 }
 ];
 
 export const DsDerivationHeader = [
@@ -205,10 +205,10 @@ export const TsTableHeader = [
   { id: 7, name: 'Losses of Cybersecurity Properties' },
   { id: 8, name: 'Assets' },
   { id: 9, name: 'Related Attack Trees' },
-  { id: 10, name: 'Related Attack Path Models' },
-  { id: 11, name: 'Assessment References' },
-  { id: 12, name: 'To be Assessed' },
-  { id: 13, name: 'Assessment Jurification' }
+  { id: 10, name: 'Related Attack Path Models' }
+  // { id: 11, name: 'Assessment References' },
+  // { id: 12, name: 'To be Assessed' },
+  // { id: 13, name: 'Assessment Jurification' }
 ];
 
 export const AttackTableHeader = [

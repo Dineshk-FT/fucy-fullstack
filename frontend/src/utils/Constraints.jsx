@@ -95,3 +95,40 @@ export const pageNodeTypes = {
     [`Voting Gate`]: VotingGate
   }
 };
+
+export const getNodeDetails = (type, name, count) => {
+  const dataNode = {
+    id: uid(),
+    data: {
+      label: `New ${name} ${count}`,
+      style: {
+        backgroundColor: '#dadada',
+        fontSize: '12px',
+        fontFamily: 'Inter',
+        fontStyle: 'normal',
+        textAlign: 'center',
+        color: 'black',
+        fontWeight: 500,
+        textDecoration: 'none',
+        borderColor: 'gray',
+        borderWidth: '2px',
+        borderStyle: 'solid',
+        width: 150,
+        height: 50
+      }
+    },
+    type: type,
+    properties: ['Confidentiality'],
+    width: 150,
+    height: 50,
+    isAsset: false
+  };
+  const updatePositionWithinRange = (position, range) => {
+    const getRandomOffset = (range) => Math.random() * range * 2 - range;
+    return { x: position.x + getRandomOffset(range), y: position.y + getRandomOffset(range) };
+  };
+  const position = { x: 495, y: 250 };
+  const range = 50;
+  const updatedPosition = updatePositionWithinRange(position, range);
+  return { ...dataNode, position: updatedPosition };
+};

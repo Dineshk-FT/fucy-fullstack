@@ -118,6 +118,7 @@ const edgeOptions = {
     end: true,
     strokeDasharray: '0'
   },
+  properties: ['Confidentiality'],
   data: {
     label: 'edge',
     style: {

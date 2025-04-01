@@ -47,7 +47,7 @@ const AttackTree = () => {
   const handleResize = (event, { size }) => {
     const containerWidth = event.currentTarget.parentElement.offsetWidth;
     const newPercentage = (size.width / containerWidth) * 100;
-    setSplitPercentage(Math.min(Math.max(newPercentage, 20), 80)); // Keep between 25% and 75%
+    setSplitPercentage(Math.min(Math.max(newPercentage, 0), 100)); // Keep between 25% and 75%
   };
 
   const handleResizeStop = () => {
@@ -124,7 +124,7 @@ const AttackTree = () => {
                     const containerRect = container.getBoundingClientRect();
                     const newWidth = e.clientX - containerRect.left;
                     const newPercentage = (newWidth / containerRect.width) * 100;
-                    setSplitPercentage(Math.min(Math.max(newPercentage, 20), 80));
+                    setSplitPercentage(Math.min(Math.max(newPercentage, 0), 100));
                   }
                 }}
                 onMouseUp={handleResizeStop}
