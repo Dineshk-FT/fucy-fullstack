@@ -377,7 +377,7 @@ export default function Tstable() {
         key={row.name}
         data={row}
         sx={{
-          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          backgroundColor: isSelected ? '#9FE2BF' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }
@@ -576,6 +576,16 @@ export default function Tstable() {
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
+          {/* <Button
+            sx={{ fontSize: '0.85rem' }}
+            variant="contained"
+            color="primary"
+            startIcon={<CircleIcon />} // Or any appropriate icon
+            // onClick={handleDeriveSelected}
+            disabled={selectedRows.length === 0}
+          >
+            Derive
+          </Button> */}
           <Button
             sx={{ fontSize: '0.85rem' }}
             variant="outlined"
