@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -81,7 +81,6 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted,
   selectedElement: state.selectedElement,
   setSelectedElement: state.setSelectedElement,
-  setSaveModal: state.setSaveModal,
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
@@ -175,7 +174,6 @@ export default function MainCanvas() {
     setIsNodePasted,
     selectedElement,
     setSelectedElement,
-    setSaveModal,
     isPropertiesOpen,
     setPropertiesOpen,
     isDark,
@@ -217,7 +215,7 @@ export default function MainCanvas() {
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
-    notify('Canvas cleared', 'success');
+    // notify('Canvas cleared', 'success');
   };
 
   const handleSaveToModel = () => {
@@ -255,6 +253,13 @@ export default function MainCanvas() {
   // useEffect(() => {
 
   // }, []);
+  const handleCheckForChange = () => {
+    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+      return true;
+    }
+    return false;
+  };
+  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -512,17 +517,12 @@ export default function MainCanvas() {
   );
 
   const RefreshAPI = () => {
-    setSaveModal(false);
     getAssets(model?._id).catch((err) => {
       notify('Failed to fetch assets: ' + err.message, 'error');
     });
     getDamageScenarios(model?._id).catch((err) => {
       notify('Failed to fetch damage scenarios: ' + err.message, 'error');
     });
-  };
-
-  const handleCloseSave = () => {
-    setSaveModal(false);
   };
 
   const handleClose = () => {
@@ -770,16 +770,6 @@ export default function MainCanvas() {
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
   };
 
-  // const removeSelectedBlock = () => {
-  //   // console.log('selectedBlock', selectedBlock);
-  //   if (!selectedBlock?.id) return;
-
-  //   if (nodes.some((node) => node.id === selectedBlock.id)) {
-  //     setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedBlock.id));
-  //   } else if (edges.some((edge) => edge.id === selectedBlock.id)) {
-  //     setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedBlock.id));
-  //   }
-  // };
   useEffect(() => {
     const handleGlobalEvents = (event) => {
       if (event.type === 'click') {
@@ -1019,7 +1009,8 @@ export default function MainCanvas() {
                   <IconButton
                     onClick={handleSaveToModel}
                     sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      // color: isDark == true ? '#64B5F6' : '#2196F3',
+                      color: isChanged ? '#FF3131' : '#32CD32',
                       padding: '4px',
                       '&:hover': {
                         background:
@@ -1039,7 +1030,7 @@ export default function MainCanvas() {
                     tabIndex={0}
                     aria-label="Save canvas"
                   >
-                    <SaveIcon sx={{ fontSize: 18 }} />
+                    <SaveIcon sx={{ fontSize: 19 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Group Selected Nodes">

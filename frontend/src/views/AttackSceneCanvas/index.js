@@ -294,36 +294,48 @@ export default function AttackBlock({ attackScene, color }) {
       });
   };
 
+  const handleCheckForChange = () => {
+    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+      return true;
+    }
+    return false;
+  };
+  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
+
   // Save before switching attackScene
   useEffect(() => {
-    const prevSceneId = prevAttackSceneRef.current?.ID;
+    // const prevSceneId = prevAttackSceneRef.current?.ID;
 
-    // console.log(`🔄 Switching from attackScene: ${prevSceneId} to ${attackScene.ID}`);
+    // Only save if the previous scene ID exists and has different nodes or edges
+    // if (
+    //   prevSceneId &&
+    //   prevSceneId !== attackScene.ID &&
+    //   (JSON.stringify(prevAttackSceneRef.current?.templates.nodes) !== JSON.stringify(attackScene.templates.nodes) ||
+    //     JSON.stringify(prevAttackSceneRef.current?.templates.edges) !== JSON.stringify(attackScene.templates.edges))
+    // ) {
+    //   handleSave(prevSceneId);
+    // }
 
-    if (prevSceneId && prevSceneId !== attackScene.id) {
-      // console.log(`💾 Saving previous attackScene: ${prevSceneId}`);
-      handleSave(prevSceneId);
-    }
-    setTimeout(() => {
-      setNodes(attackScene.templates.nodes || []);
-      setEdges(attackScene.templates.edges || []);
-      setInitialNodes(attackScene.templates.nodes || []);
-      setInitialEdges(attackScene.templates.edges || []);
-    }, 0);
+    setNodes(attackScene.templates.nodes || []);
+    setEdges(attackScene.templates.edges || []);
+    setInitialNodes(attackScene.templates.nodes || []);
+    setInitialEdges(attackScene.templates.edges || []);
 
-    prevAttackSceneRef.current = attackScene;
+    // prevAttackSceneRef.current = attackScene;
   }, [attackScene]);
 
   // Save before unmounting
-  useEffect(() => {
-    return () => {
-      const prevNodes = nodesRef.current;
-      const prevEdges = edgesRef.current;
-      if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
-        handleSave(prevAttackSceneRef.current?.ID);
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     const prevNodes = nodesRef.current;
+  //     const prevEdges = edgesRef.current;
+  //     if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
+  //       handleSave(prevAttackSceneRef.current?.ID);
+  //     }
+  //   };
+  // }, []);
+
+  // console.log('attackScene', attackScene);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['attackcanvas'] || {};
@@ -779,7 +791,17 @@ export default function AttackBlock({ attackScene, color }) {
           fitView
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
-            <Button variant="outlined" onClick={() => handleSave(attackScene?.ID)} startIcon={<SaveIcon />} sx={buttonStyle}>
+            <Button
+              variant="outlined"
+              onClick={() => handleSave(attackScene?.ID)}
+              startIcon={<SaveIcon sx={{ color: isChanged ? '#FF3131' : '#32CD32' }} />}
+              sx={{
+                ...buttonStyle,
+                color: isChanged ? '#FF3131' : '#32CD32',
+                borderColor: isChanged ? '#FF3131' : '#32CD32',
+                transition: 'color 1.5s'
+              }}
+            >
               {'Save'}
             </Button>
             <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
