@@ -662,6 +662,10 @@ export default function DsTable() {
 
               case item.name === 'Assets':
                 const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean) || ['-'];
+              
+                // Remove duplicates from the assetsList by converting it into a Set and back into an array
+                const uniqueAssetsList = [...new Set(assetsList)];
+              
                 cellContent = (
                   <StyledTableCell
                     key={index}
@@ -682,9 +686,9 @@ export default function DsTable() {
                         gap: 1 // Add some spacing between items
                       }}
                     >
-                      <Tooltip title={assetsList.join(', ')} placement="top">
+                      <Tooltip title={uniqueAssetsList.join(', ')} placement="top">
                         <Box>
-                          {assetsList.map((asset, idx) => (
+                          {uniqueAssetsList.map((asset, idx) => (
                             <Typography key={idx} variant="body2" noWrap={!shouldTruncate}>
                               {asset}
                             </Typography>
@@ -693,7 +697,7 @@ export default function DsTable() {
                       </Tooltip>
                     </Box>
                   </StyledTableCell>
-                );
+                );  
 
                 break;
               case item.name === 'Overall Impact':
