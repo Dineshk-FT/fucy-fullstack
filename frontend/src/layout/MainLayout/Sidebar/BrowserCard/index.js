@@ -11,6 +11,7 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {
   ItemIcon,
   AttackIcon,
@@ -267,7 +268,8 @@ const selector = (state) => ({
   update: state.updateAssets,
   setSaveModal: state.setSaveModal,
   isSaveModalOpen: state.isSaveModalOpen,
-  getGlobalAttackTrees: state.getGlobalAttackTrees
+  getGlobalAttackTrees: state.getGlobalAttackTrees,
+  deleteAttacks: state.deleteAttacks
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -313,7 +315,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     isSaveModalOpen,
     setSaveModal,
     isDark,
-    getGlobalAttackTrees
+    getGlobalAttackTrees,
+    deleteAttacks
   } = useStore(selector);
   const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
@@ -333,7 +336,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     node: false,
     data: false,
     attack: false,
-    attack_rees: false
+    attack_rees: false,
+    id: ''
   });
 
   // console.log('assets', assets);
@@ -369,6 +373,26 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
+  const handleDeleteAttack = (e, type, scene) => {
+    const details = {
+      'model-id': model?._id,
+      type: type,
+      id: scene?.ID
+    };
+    deleteAttacks(details)
+      .then((res) => {
+        if (!res.error) {
+          notify(res?.message ?? 'Deleted Successfully', 'success');
+          getAttackScenario(model?._id);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+        notify('Something went wrong', 'error');
+      });
+  };
   useEffect(() => {
     getModelById(modelId);
     getAssets(modelId);
@@ -877,7 +901,27 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 <DraggableTreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
+                  label={
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
+                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
+                    >
+                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
+                      {hovered.id === at_scene?.ID && (
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAttack(e, sub?.type, at_scene);
+                          }}
+                        >
+                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
+                        </Box>
+                      )}
+                    </Box>
+                  }
                   draggable
                   onDragStart={(e) => onDragStart(e, Details)}
                   onClick={(e) => e.stopPropagation()}
@@ -886,7 +930,27 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 <TreeItem
                   key={at_scene.ID}
                   nodeId={at_scene.ID}
-                  label={getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
+                  label={
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
+                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
+                    >
+                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
+                      {hovered.id === at_scene?.ID && (
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAttack(e, sub?.type, at_scene);
+                          }}
+                        >
+                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
+                        </Box>
+                      )}
+                    </Box>
+                  }
                   onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
                 />
               );

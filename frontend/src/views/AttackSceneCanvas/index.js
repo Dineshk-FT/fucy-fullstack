@@ -154,7 +154,7 @@ const selector = (state) => ({
   addAttackScene: state.addAttackScene,
   addcybersecurityScene: state.addcybersecurityScene,
   deleteCybersecurity: state.deleteCybersecurity,
-  deleteAttacks: state.deleteAttacks,
+  removeAttacks: state.removeAttacks,
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
   isSaveModalOpen: state.isSaveModalOpen,
@@ -211,7 +211,7 @@ export default function AttackBlock({ attackScene, color }) {
     addAttackScene,
     addcybersecurityScene,
     deleteCybersecurity,
-    deleteAttacks,
+    removeAttacks,
     attacks,
     requirements,
     isSaveModalOpen,
@@ -462,7 +462,7 @@ export default function AttackBlock({ attackScene, color }) {
           id: attacks?._id,
           rowId: [matchingId]
         };
-        deleteAttacks(removeDetails).then((res) => {
+        removeAttacks(removeDetails).then((res) => {
           if (!res.error) {
             getAttackScenario(model?._id);
             notify(res.message ?? 'Removed Attack', 'success');

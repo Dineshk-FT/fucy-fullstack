@@ -1882,9 +1882,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
+  removeAttacks: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/remove/attacks`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
   deleteAttacks: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
-    const res = await DELETE_CALL(details, url);
+    const res = await ADD_CALL(details, url);
     return res;
   },
   deleteRiskTreatment: async (details) => {
