@@ -237,10 +237,6 @@ const selector = (state) => ({
   getModelById: state.getModelById,
   nodes: state.nodes,
   edges: state.edges,
-  initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges,
-  setInitialNodes: state.setInitialNodes,
-  setInitialEdges: state.setInitialEdges,
   attackNodes: state.attackNodes,
   attackEdges: state.attackEdges,
   initialAttackNodes: state.initialAttackNodes,
@@ -270,8 +266,6 @@ const selector = (state) => ({
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
   updateAttack: state.updateAttackScenario,
-  setSaveModal: state.setSaveModal,
-  isSaveModalOpen: state.isSaveModalOpen,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks
 });
@@ -295,10 +289,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getModels,
     nodes,
     edges,
-    initialNodes,
-    initialEdges,
-    setInitialNodes,
-    setInitialEdges,
     attackNodes,
     attackEdges,
     initialAttackNodes,
@@ -329,8 +319,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setEdges,
     getCatalog,
     updateAttack,
-    isSaveModalOpen,
-    setSaveModal,
     isDark,
     getGlobalAttackTrees,
     deleteAttacks
@@ -356,7 +344,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     attack_rees: false,
     id: ''
   });
-  const prevAttackSceneRef = useRef(attackScene);
 
   // console.log('assets', assets);
 
@@ -497,7 +484,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
-    const prevSceneId = prevAttackSceneRef.current?.ID;
+    const prevSceneId = attackScene?.ID;
     if (name === 'Attack Trees') {
       if (
         JSON.stringify(attackNodes) !== JSON.stringify(initialAttackNodes) ||
@@ -786,13 +773,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               arrow
             >
-              <AvatarGroup max={2} spacing="small">
+              <AvatarGroup max={2} spacing="small" sx={{ height: 20, width: 20 }}>
                 {displayedProperties?.map((name, index) => (
                   <Avatar key={index} sx={{ width: 20, height: 20 }}>
                     <img src={Properties[name]} alt={name} width="100%" />
                   </Avatar>
                 ))}
-                {remainingCount > 0 && <Avatar sx={{ width: 24, height: 24, fontSize: 12, bgcolor: 'gray' }}>+{remainingCount}</Avatar>}
+                {remainingCount > 0 && <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'gray' }}>+{remainingCount}</Avatar>}
               </AvatarGroup>
             </Tooltip>
           );

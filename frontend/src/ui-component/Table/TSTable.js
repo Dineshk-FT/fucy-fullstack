@@ -42,6 +42,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CreateDerivedThreatModal from '../Modal/CreateDerivedThreatModal';
 
 const selector = (state) => ({
   model: state.model,
@@ -96,8 +97,11 @@ export default function Tstable() {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [openTs, setOpenTs] = useState(false);
-  const [openSelect, setOpenSelect] = useState(false);
+  const [openModal, setOpenModal] = useState({
+    threat: false,
+    select: false,
+    derived: false
+  });
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
 
@@ -148,11 +152,11 @@ export default function Tstable() {
 
   const handleOpenSelect = (row) => {
     setSelectedRow(row);
-    setOpenSelect(true);
+    setOpenModal((state) => ({ ...state, select: true }));
   };
 
   const handleCloseSelect = () => {
-    setOpenSelect(false);
+    setOpenModal((state) => ({ ...state, select: false }));
     setSelectedRow({});
   };
   const refreshAPI = () => {
@@ -217,11 +221,11 @@ export default function Tstable() {
   }, [derived, userDefined, damageScenarios]);
 
   const handleOpenModalTs = () => {
-    setOpenTs(true);
+    setOpenModal((state) => ({ ...state, threat: true }));
   };
 
   const handleCloseTs = () => {
-    setOpenTs(false);
+    setOpenModal((state) => ({ ...state, threat: false }));
   };
 
   const handleBack = () => {
@@ -277,6 +281,12 @@ export default function Tstable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleOpenDerived = () => {
+    setOpenModal((state) => ({ ...state, derived: true }));
+  };
+  const handleCloseDerived = () => {
+    setOpenModal((state) => ({ ...state, derived: false }));
+  };
   const handleDeleteSelected = () => {
     const details = {
       'model-id': model?._id,
@@ -579,16 +589,16 @@ export default function Tstable() {
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
-          {/* <Button
+          <Button
             sx={{ fontSize: '0.85rem' }}
             variant="contained"
             color="primary"
             startIcon={<CircleIcon />} // Or any appropriate icon
-            // onClick={handleDeriveSelected}
+            onClick={handleOpenDerived}
             disabled={selectedRows.length === 0}
           >
             Derive
-          </Button> */}
+          </Button>
           <Button
             sx={{ fontSize: '0.85rem' }}
             variant="outlined"
@@ -682,10 +692,10 @@ export default function Tstable() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
-      {openSelect && (
+      <AddThreatScenarios open={openModal?.threat} handleClose={handleCloseTs} id={model._id} />
+      {openModal?.select && (
         <SelectDamageScenes
-          open={openSelect}
+          open={openModal?.select}
           handleClose={handleCloseSelect}
           details={details}
           selectedRow={selectedRow}
@@ -695,6 +705,15 @@ export default function Tstable() {
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />
+      {openModal?.derived && (
+        <CreateDerivedThreatModal
+          open={openModal?.derived}
+          handleClose={handleCloseDerived}
+          id={model?._id}
+          selectedRows={selectedRows}
+          notify={notify}
+        />
+      )}
     </Box>
   );
 }

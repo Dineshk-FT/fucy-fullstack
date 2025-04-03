@@ -790,7 +790,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     })),
 
   onNodesChange: (changes) => {
-    const currentNodes = get().nodes; // get current nodes
+    const currentNodes = get()?.nodes; // get current nodes
     const updatedNodes = applyNodeChanges(changes, currentNodes); // apply changes
 
     set((state) => ({

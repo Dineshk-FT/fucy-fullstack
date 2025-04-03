@@ -330,7 +330,7 @@ export default function AttackBlock({ attackScene, color }) {
   //     const prevNodes = nodesRef.current;
   //     const prevEdges = edgesRef.current;
   //     if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
-  //       handleSave(prevAttackSceneRef.current?.ID);
+  //       handleSave(prevAttackSceneRef?.current?.ID);
   //     }
   //   };
   // }, []);
@@ -375,8 +375,6 @@ export default function AttackBlock({ attackScene, color }) {
         const { nodes: layoutedNodes, edges: layoutedEdges } = await getLayoutedElements(nodes, edges, opts);
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
-        setInitialNodes(layoutedNodes);
-        setInitialEdges(layoutedEdges);
         centerLayout();
       } catch (error) {
         console.error('Error during layout:', error);
