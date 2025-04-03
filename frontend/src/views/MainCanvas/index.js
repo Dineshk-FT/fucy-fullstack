@@ -936,6 +936,7 @@ export default function MainCanvas() {
         }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
+        onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -948,7 +949,7 @@ export default function MainCanvas() {
             edgeTypes={edgeTypes}
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
+              // e.stopPropagation();
               dispatch(setSelectedBlock({}));
             }}
             onInit={onInit}
