@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -24,7 +24,13 @@ import {
   DocumentIcon,
   ReportIcon,
   LayoutIcon,
-  ModelIcon
+  ModelIcon,
+  ConfidentialityIcon,
+  IntegrityIcon,
+  AuthenticityIcon,
+  AuthorizationIcon,
+  Non_repudiationIcon,
+  AvailabilityIcon
 } from '../../../../assets/icons';
 import { makeStyles } from '@mui/styles';
 import { ReceiptItem } from 'iconsax-react';
@@ -42,19 +48,13 @@ import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { v4 as uid } from 'uuid';
-import {
-  openAddDataNodeTab,
-  openAddNodeTab,
-  setAnchorEl,
-  setDetails,
-  setEdgeDetails,
-  setSelectedBlock
-} from '../../../../store/slices/CanvasSlice';
+import { setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
 import { getNavbarHeight } from '../../../../store/constant';
 import { getNodeDetails } from '../../../../utils/Constraints';
+import { Avatar, AvatarGroup } from '@mui/material';
 
 const imageComponents = {
   AttackIcon,
@@ -241,6 +241,10 @@ const selector = (state) => ({
   initialEdges: state.initialEdges,
   setInitialNodes: state.setInitialNodes,
   setInitialEdges: state.setInitialEdges,
+  attackNodes: state.attackNodes,
+  attackEdges: state.attackEdges,
+  initialAttackNodes: state.initialAttackNodes,
+  initialAttackEdges: state.initialAttackEdges,
   model: state.model,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
@@ -265,12 +269,21 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
-  update: state.updateAssets,
+  updateAttack: state.updateAttackScenario,
   setSaveModal: state.setSaveModal,
   isSaveModalOpen: state.isSaveModalOpen,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks
 });
+
+const Properties = {
+  Confidentiality: ConfidentialityIcon,
+  Integrity: IntegrityIcon,
+  Authenticity: AuthenticityIcon,
+  Authorization: AuthorizationIcon,
+  'Non-repudiation': Non_repudiationIcon,
+  Availability: AvailabilityIcon
+};
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
@@ -286,6 +299,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     initialEdges,
     setInitialNodes,
     setInitialEdges,
+    attackNodes,
+    attackEdges,
+    initialAttackNodes,
+    initialAttackEdges,
     model,
     getModelById,
     assets,
@@ -311,14 +328,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setNodes,
     setEdges,
     getCatalog,
-    update,
+    updateAttack,
     isSaveModalOpen,
     setSaveModal,
     isDark,
     getGlobalAttackTrees,
     deleteAttacks
   } = useStore(selector);
-  const { currentTab, tableOpen, previousTab } = useSelector((state) => state?.currentId);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
     node: 1,
@@ -326,6 +342,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   });
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
+  const { attackScene } = useSelector((state) => state?.currentId);
   const [openNodelist, setOpenNodelist] = useState(false);
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
@@ -339,6 +356,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     attack_rees: false,
     id: ''
   });
+  const prevAttackSceneRef = useRef(attackScene);
 
   // console.log('assets', assets);
 
@@ -475,11 +493,67 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     dispatch(setPreviousTab(name));
   };
 
+  // console.log('attackNodes', attackNodes);
+  // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
+    const prevSceneId = prevAttackSceneRef.current?.ID;
     if (name === 'Attack Trees') {
+      if (
+        JSON.stringify(attackNodes) !== JSON.stringify(initialAttackNodes) ||
+        JSON.stringify(attackEdges) !== JSON.stringify(initialAttackEdges)
+      ) {
+        // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
+        const template = {
+          nodes: attackNodes,
+          edges: attackEdges
+        };
+
+        // console.log('template', template);
+        // Extract threatId from nodes with type: "default"
+        const threatNode = attackNodes?.find((node) => node?.type === 'default' && node?.threatId) ?? {};
+        // if (!threatNode) {
+        //   notify('Threat scenario is missing', 'error');
+        //   return;
+        // }
+        const { threatId = '', damageId = '', key = '' } = threatNode;
+
+        const details = {
+          modelId: model?._id,
+          type: 'attack_trees',
+          id: prevSceneId,
+          templates: JSON.stringify(template),
+          threatId: threatId ?? '',
+          damageId: damageId ?? '',
+          key: key ?? ''
+        };
+
+        updateAttack(details)
+          .then((res) => {
+            if (!res.error) {
+              // console.log('res', res);
+              notify('Saved Successfully', 'success');
+              getAttackScenario(model?._id);
+              getCyberSecurityScenario(model?._id);
+              setTimeout(() => {
+                dispatch(setAttackScene(scene));
+              }, 300);
+            } else {
+              notify(res?.error ?? 'Something Went Wrong', 'error');
+            }
+          })
+          .catch((err) => {
+            if (err) {
+              notify('Something Went Wrong', 'error');
+            }
+          });
+
+        // handleSave(prevSceneId);
+      } else {
+        dispatch(setAttackScene(scene));
+      }
+      // console.log('later');
       dispatch(setTableOpen('Attack Trees Canvas'));
-      dispatch(setAttackScene(scene));
     }
   };
 
@@ -684,6 +758,46 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
         const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
 
+        const renderProperties = (properties) => {
+          // console.log('properties', properties);
+          if (!properties || properties.length === 0) return null;
+
+          // Extract names for processing
+          const propertyNames = properties.map((prop) => prop.name);
+
+          const displayedProperties = propertyNames.slice(0, 2);
+          const remainingCount = propertyNames.length - 2;
+
+          return (
+            <Tooltip
+              title={
+                <Box display="flex" flexDirection="column" alignItems="start">
+                  {propertyNames?.map((name, index) => (
+                    <Box key={index} display="flex" alignItems="center" gap={1}>
+                      <Avatar sx={{ width: 18, height: 18 }}>
+                        <img src={Properties[name]} alt={name} width="100%" />
+                      </Avatar>
+                      <Typography variant="body2" sx={{ color: 'white' }}>
+                        {name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              }
+              arrow
+            >
+              <AvatarGroup max={2} spacing="small">
+                {displayedProperties?.map((name, index) => (
+                  <Avatar key={index} sx={{ width: 20, height: 20 }}>
+                    <img src={Properties[name]} alt={name} width="100%" />
+                  </Avatar>
+                ))}
+                {remainingCount > 0 && <Avatar sx={{ width: 24, height: 24, fontSize: 12, bgcolor: 'gray' }}>+{remainingCount}</Avatar>}
+              </AvatarGroup>
+            </Tooltip>
+          );
+        };
+
         const renderSection = (nodeId, label, details, type) => {
           if (!details.length) return null;
           return (
@@ -727,8 +841,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }}
               className={classes.template}
             >
-              {details?.map((detail, i) =>
-                detail?.props?.length > 0 ? (
+              {details?.map((detail, i) => {
+                // console.log('detail', detail);
+                return detail?.props?.length > 0 ? (
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}
@@ -736,21 +851,24 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
                     }}
                     label={
-                      <Tooltip title={detail.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                        <Box
-                          sx={{
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: 'fit-content'
-                          }}
-                        >
-                          {i + 1}.{' '}
-                          <Typography component="span" noWrap>
-                            {detail.name}
-                          </Typography>
-                        </Box>
-                      </Tooltip>
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                          <Box
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'fit-content'
+                            }}
+                          >
+                            {i + 1}.{' '}
+                            <Typography component="span" noWrap>
+                              {detail.name}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                        {renderProperties(detail?.props)}
+                      </Box>
                     }
                     onClick={(e) => {
                       e.stopPropagation();
@@ -787,8 +905,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                     onDragStart={(e) => onDragStart(e, detail)}
                   />
-                ) : null
-              )}
+                ) : null;
+              })}
             </DraggableTreeItem>
           );
         };

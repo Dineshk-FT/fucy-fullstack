@@ -758,7 +758,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       const boxHeight = maxY - minY;
 
       // Access the current dimensions of the viewport
-      const { width: viewportWidth, height: viewportHeight } = state.reactFlowInstance.getViewport();
+      const { width: viewportWidth, height: viewportHeight } = state?.reactFlowInstance?.getViewport();
 
       // Calculate the zoom level to fit the nodes within the viewport (with padding)
       const zoom = Math.min(viewportWidth / (boxWidth + 50), viewportHeight / (boxHeight + 50));

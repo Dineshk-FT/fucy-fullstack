@@ -283,8 +283,8 @@ export default function MainCanvas() {
 
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
-      setZoomLevel(reactFlowInstance.getZoom());
+      reactFlowInstance?.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+      setZoomLevel(reactFlowInstance?.getZoom());
     }
   }, [reactFlowInstance, nodes?.length]);
 

@@ -45,7 +45,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 const selector = (state) => ({
   model: state.model,
-  addThreatScene: state.addThreatScene,
   derived: state.threatScenarios.subs[0],
   userDefined: state.threatScenarios.subs[1],
   derivedId: state.threatScenarios['subs'][0]['_id'],
@@ -92,7 +91,7 @@ const StyledTableRow = styled(TableRow)(() => ({
   }
 }));
 
-export default function Tstable() {
+export default function TsDerivedTable() {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -113,8 +112,7 @@ export default function Tstable() {
     derivedId,
     UserDefinedId,
     deleteThreatScenario,
-    getRiskTreatment,
-    addThreatScene
+    getRiskTreatment
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,13 +123,9 @@ export default function Tstable() {
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
+    const col = [...column];
+    col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+    return col.filter((header) => visibleColumns.includes(header.name));
   }, [title, visibleColumns]);
 
   // Pagination state
@@ -167,32 +161,6 @@ export default function Tstable() {
   useEffect(() => {
     if (derived['Details']) {
       let id = 0;
-      const mod1 = derived['Details']
-        ?.map((detail) => {
-          return detail?.Details?.map((nodedetail) => {
-            return nodedetail?.props?.map((prop) => {
-              id++;
-              return {
-                SNo: `TS${id.toString().padStart(3, '0')}`,
-                ID: prop?.id,
-                rowId: detail?.rowId,
-                nodeId: nodedetail?.nodeId,
-                Assets: nodedetail?.node,
-                Name: `${threatType(prop?.name)} of ${nodedetail?.node} leads to  ${detail?.damage_name}`,
-                Description: prop?.description ?? `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} `,
-                losses: [],
-                'Damage Scenarios':
-                  `[DS${detail?.damage_key ? detail?.damage_key.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${
-                    detail?.damage_name
-                  }` ?? '-',
-                'Losses of Cybersecurity Properties': prop?.name,
-                type: 'derived'
-              };
-            });
-          });
-        })
-        .flat(2);
-
       const mappedDetails = Array.isArray(userDefined['Details'])
         ? userDefined['Details'].map((detail, i) =>
             detail && typeof detail === 'object'
@@ -209,9 +177,8 @@ export default function Tstable() {
           )
         : [];
 
-      const combined = mod1.concat(mappedDetails);
-      setRows(combined);
-      setFiltered(combined);
+      setRows(mappedDetails);
+      setFiltered(mappedDetails);
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import {
   Autocomplete,
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -22,6 +23,14 @@ import { makeStyles } from '@mui/styles';
 import { useSelector } from 'react-redux';
 import ColorTheme from '../../../store/ColorTheme';
 import { fontSize } from '../../../store/constant';
+import {
+  ConfidentialityIcon,
+  IntegrityIcon,
+  AuthenticityIcon,
+  AuthorizationIcon,
+  Non_repudiationIcon,
+  AvailabilityIcon
+} from '../../../assets/icons';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -40,8 +49,14 @@ const EdgeStyleoptions = [
   { label: 'unindent', value: '2 4 8 4' }
 ];
 
-const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
-
+const Properties = [
+  { name: 'Confidentiality', image: ConfidentialityIcon },
+  { name: 'Integrity', image: IntegrityIcon },
+  { name: 'Authenticity', image: AuthenticityIcon },
+  { name: 'Authorization', image: AuthorizationIcon },
+  { name: 'Non-repudiation', image: Non_repudiationIcon },
+  { name: 'Availability', image: AvailabilityIcon }
+];
 const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, edges, setEdges }) => {
   const color = ColorTheme();
   const classes = useStyles();
@@ -52,10 +67,11 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
     const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
     setEdges(updatedEdges);
   };
-
   const handleChange = (event, newValue) => {
-    dispatch(setDetails({ ...details, properties: newValue }));
-    updateElement((element) => ({ ...element, properties: newValue }));
+    const updatedProperties = newValue.map((prop) => prop.name);
+    // console.log('updatedProperties', updatedProperties);
+    dispatch(setDetails({ ...details, properties: updatedProperties }));
+    updateElement((element) => ({ ...element, properties: updatedProperties }));
   };
 
   const handleStyle = (e) => {
@@ -65,28 +81,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
     updateElement((element) => ({
       ...element,
       data: { ...element.data, label: value }
-    }));
-  };
-
-  // console.log('details', details);
-  // const handleChecked = (event) => {
-  //   const { checked } = event.target;
-  //   dispatch(setDetails((state) => ({ ...state, isAsset: checked })));
-  //   updateElement((element) => ({ ...element, isAsset: checked }));
-  // };
-
-  const handleDelete = (valueToDelete) => () => {
-    const updatedProperties = details?.properties.filter((property) => property !== valueToDelete);
-    dispatch(
-      setDetails((prevDetails) => ({
-        ...prevDetails,
-        properties: updatedProperties
-      }))
-    );
-    updateElement((element) => ({
-      ...element,
-      properties: updatedProperties,
-      isAsset: updatedProperties.length > 0
     }));
   };
 
@@ -169,20 +163,27 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                 <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
                 <Autocomplete
                   multiple
-                  id="tags-filled"
                   options={Properties}
-                  value={details?.properties || []} // Ensure it’s always an array
+                  getOptionLabel={(option) => option.name}
+                  value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
                   onChange={handleChange}
+                  isOptionEqualToValue={(option, value) => option?.name === value?.name}
                   sx={{ minWidth: '130px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1, padding: '4px' }}>
+                      <Avatar src={option?.image} alt={option?.name} sx={{ width: 24, height: 24 }} />
+                      {option?.name}
+                    </Box>
+                  )}
                   renderTags={(value, getTagProps) =>
-                    (value || []).map((option, index) => (
+                    value.map((option, index) => (
                       <Chip
-                        sx={{ '& .MuiChip-label': { fontSize: 10 } }}
-                        key={option}
+                        key={option?.name}
+                        avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />}
                         variant="outlined"
-                        label={option}
+                        label={option?.name}
                         {...getTagProps({ index })}
-                        onDelete={handleDelete(option)}
+                        sx={{ '& .MuiChip-label': { fontSize: 10 } }}
                       />
                     ))
                   }

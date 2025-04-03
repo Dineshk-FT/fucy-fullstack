@@ -87,7 +87,7 @@ const EditNode = ({
           </Tabs>
 
           {tabIndex === 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, flex: 1 }}>
                 <InputLabel className={classes.inputlabel}>Name :</InputLabel>
                 <TextField
@@ -114,7 +114,7 @@ const EditNode = ({
                 }
                 label="Asset"
               /> */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {/* <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
                 <Autocomplete
                   multiple
@@ -135,7 +135,7 @@ const EditNode = ({
                   }
                   renderInput={(params) => <TextField {...params} variant="outlined" />}
                 />
-              </Box>
+              </Box> */}
             </Box>
           )}
 
