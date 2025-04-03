@@ -46,7 +46,6 @@ import DraggableTreeItem from './DraggableItem';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
-import SelectNodeList from '../../../../ui-component/Modal/SelectNodeList';
 import { v4 as uid } from 'uuid';
 import { setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
@@ -55,6 +54,7 @@ import toast from 'react-hot-toast';
 import { getNavbarHeight } from '../../../../store/constant';
 import { getNodeDetails } from '../../../../utils/Constraints';
 import { Avatar, AvatarGroup } from '@mui/material';
+import ConfirmDeleteDialog from '../../../../ui-component/Modal/ConfirmDeleteDialog';
 
 const imageComponents = {
   AttackIcon,
@@ -331,8 +331,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const drawerwidth = 370;
   const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
-  const [openNodelist, setOpenNodelist] = useState(false);
-  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [openModal, setOpenModal] = useState({
+    attack: false,
+    delete: false
+  });
   const [subName, setSubName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
@@ -342,6 +344,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     data: false,
     attack: false,
     attack_rees: false,
+    id: ''
+  });
+
+  const [deleteScene, setDeleteScene] = useState({
+    type: '',
     id: ''
   });
 
@@ -378,17 +385,32 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
-  const handleDeleteAttack = (e, type, scene) => {
-    const details = {
-      'model-id': model?._id,
+  const handleOpenDeleteModal = (type, scene) => {
+    setDeleteScene({
       type: type,
       id: scene?.ID
+    });
+    setOpenModal((state) => ({ ...state, delete: true }));
+  };
+
+  const handleCloseDeleteModal = () => {
+    setOpenModal((state) => ({ ...state, delete: false }));
+    setDeleteScene({
+      type: '',
+      id: ''
+    });
+  };
+  const handleDeleteAttack = () => {
+    const details = {
+      'model-id': model?._id,
+      ...deleteScene
     };
     deleteAttacks(details)
       .then((res) => {
         if (!res.error) {
           notify(res?.message ?? 'Deleted Successfully', 'success');
           getAttackScenario(model?._id);
+          handleCloseDeleteModal();
         } else {
           notify(res?.error ?? 'Something went wrong', 'error');
         }
@@ -551,13 +573,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleContext = (e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
-      setOpenAttackModal(true);
+      setOpenModal((state) => ({ ...state, attack: true }));
       setSubName(name);
     }
   };
 
   const handleAttackTreeClose = () => {
-    setOpenAttackModal(false);
+    setOpenModal((state) => ({ ...state, attack: false }));
   };
 
   const onDragStart = (event, item) => {
@@ -773,13 +795,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               arrow
             >
-              <AvatarGroup max={2} spacing="small" sx={{ height: 20, width: 20 }}>
+              <AvatarGroup max={3} spacing="medium">
                 {displayedProperties?.map((name, index) => (
                   <Avatar key={index} sx={{ width: 20, height: 20 }}>
                     <img src={Properties[name]} alt={name} width="100%" />
                   </Avatar>
                 ))}
-                {remainingCount > 0 && <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'gray' }}>+{remainingCount}</Avatar>}
+                {remainingCount > 0 && (
+                  <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'transparent' }}>+{remainingCount}</Avatar>
+                )}
               </AvatarGroup>
             </Tooltip>
           );
@@ -1010,7 +1034,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         <Box
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteAttack(e, sub?.type, at_scene);
+                            handleOpenDeleteModal(sub?.type, at_scene);
                           }}
                         >
                           <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
@@ -1039,7 +1063,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         <Box
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteAttack(e, sub?.type, at_scene);
+                            handleOpenDeleteModal(sub?.type, at_scene);
                           }}
                         >
                           <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
@@ -1218,8 +1242,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           </TreeView>
         </CardContent>
       </CardStyle>
-      <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />
-      <SelectNodeList open={openNodelist} handleClose={() => setOpenNodelist(false)} />
+      <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />
+      <ConfirmDeleteDialog
+        open={openModal?.delete}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleDeleteAttack}
+        type={deleteScene?.type}
+      />
     </>
   );
 };
