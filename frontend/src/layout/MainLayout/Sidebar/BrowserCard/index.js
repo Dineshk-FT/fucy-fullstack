@@ -944,52 +944,43 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           data,
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+          renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
             let key = 0;
-            return sub.name === 'Threat Scenarios'
-              ? sub.Details?.flatMap((detail) => {
-                  return detail.Details?.flatMap((nodeDetail) =>
-                    nodeDetail.props?.map((prop, i) => {
+            return sub.Details?.flatMap((detail, i) =>
+              (sub.name === 'Threat Scenarios'
+                ? detail?.Details?.flatMap((nodeDetail) =>
+                    nodeDetail?.props?.map((prop) => {
                       key++;
-                      const label = `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to  ${
-                        detail?.damage_name
-                      } [${detail?.id}]`;
-
-                      const Details = {
-                        label,
-                        type: 'default',
-                        dragged: true,
-                        nodeId: nodeDetail.nodeId,
-                        threatId: prop.id,
-                        damageId: detail?.rowId,
-                        key: `TS${key.toString().padStart(3, '0')}`
+                      return {
+                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                          detail?.damage_name
+                        } [${detail?.id}]`,
+                        nodeId: prop.id.concat(detail?.rowId),
+                        extraProps: {
+                          threatId: prop?.id,
+                          damageId: detail?.rowId
+                        }
                       };
-
-                      return (
-                        <DraggableTreeItem
-                          draggable={true}
-                          key={prop.id.concat(detail.rowId)}
-                          nodeId={prop.id.concat(detail.rowId)}
-                          label={getLabel('TopicIcon', label, key, prop.id.concat(detail.rowId))}
-                          onDragStart={(e) => onDragStart(e, Details)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      );
                     })
-                  );
-                })
-              : sub.Details?.map((detail, i) => {
-                  const label = `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`;
-
-                  return (
-                    <TreeItem
-                      key={detail.id}
-                      nodeId={detail.id}
-                      label={getLabel('TopicIcon', label, i + 1, detail.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  );
-                });
+                  )
+                : [
+                    {
+                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                      nodeId: detail?.id,
+                      extraProps: {}
+                    }
+                  ]
+              ).map(({ label, nodeId, extraProps }) => (
+                <DraggableTreeItem
+                  draggable={true}
+                  key={nodeId}
+                  nodeId={nodeId}
+                  label={getLabel('TopicIcon', label, key || i + 1, nodeId)}
+                  onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ))
+            );
           })
         );
 
