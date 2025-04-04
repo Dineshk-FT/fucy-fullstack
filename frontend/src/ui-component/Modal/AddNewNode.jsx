@@ -97,7 +97,7 @@ const AddNewNode = ({ assets }) => {
     // const details = { id: selectedNodeGroupId, new_node: dataNode };
 
     if (!selectedNodeGroupId) {
-      const nodeDetail = getNodeDetails('default', 'Node', count);
+      const nodeDetail = getNodeDetails('default', 'Node', count, newNode);
       const list = [...nodes, nodeDetail];
       setNodes(list);
     }

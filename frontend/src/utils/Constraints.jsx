@@ -96,11 +96,11 @@ export const pageNodeTypes = {
   }
 };
 
-export const getNodeDetails = (type, name, count) => {
+export const getNodeDetails = (type, name, count, newNode) => {
   const dataNode = {
     id: uid(),
     data: {
-      label: `New ${name} ${count}`,
+      label: newNode?.nodeName ?? `New ${name} ${count}`,
       style: {
         backgroundColor: '#dadada',
         fontSize: '12px',
@@ -118,7 +118,7 @@ export const getNodeDetails = (type, name, count) => {
       }
     },
     type: type,
-    properties: ['Confidentiality'],
+    properties: newNode?.properties ?? ['Confidentiality'],
     width: 150,
     height: 50,
     isAsset: false
