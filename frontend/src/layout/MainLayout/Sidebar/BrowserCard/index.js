@@ -239,6 +239,10 @@ const selector = (state) => ({
   edges: state.edges,
   attackNodes: state.attackNodes,
   attackEdges: state.attackEdges,
+  setAttackNodes: state.setAttackNodes,
+  setAttackEdges: state.setAttackEdges,
+  setInitialAttackNodes: state.setInitialAttackNodes,
+  setInitialAttackEdges: state.setInitialAttackEdges,
   initialAttackNodes: state.initialAttackNodes,
   initialAttackEdges: state.initialAttackEdges,
   model: state.model,
@@ -321,7 +325,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     updateAttack,
     isDark,
     getGlobalAttackTrees,
-    deleteAttacks
+    deleteAttacks,
+    setAttackNodes,
+    setAttackEdges,
+    setInitialAttackNodes,
+    setInitialAttackEdges
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -560,6 +568,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         // handleSave(prevSceneId);
       } else {
         dispatch(setAttackScene(scene));
+        setInitialAttackEdges(scene?.templates?.edges ?? []);
+        setInitialAttackNodes(scene?.templates?.nodes ?? []);
+        setAttackEdges(scene?.templates?.edges ?? []);
+        setAttackNodes(scene?.templates?.nodes ?? []);
       }
       // console.log('later');
       dispatch(setTableOpen('Attack Trees Canvas'));
@@ -854,7 +866,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             >
               {details?.map((detail, i) => {
                 // console.log('detail', detail);
-                return detail.name.length && detail?.props?.length > 0 ? (
+                return detail?.name?.length && detail?.props?.length > 0 ? (
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}

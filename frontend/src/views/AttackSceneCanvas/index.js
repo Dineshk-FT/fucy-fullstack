@@ -232,6 +232,7 @@ export default function AttackBlock({ attackScene, color }) {
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
 
+  // console.log('nodes', nodes);
   useEffect(() => {
     nodesRef.current = nodes;
     edgesRef.current = edges;

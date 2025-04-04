@@ -1,20 +1,16 @@
 /*eslint-disable*/
 import React, { useEffect, useState } from 'react';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import AttackBlock from '../AttackSceneCanvas';
 import Properties from './Properties';
 import Levels from '../AttackSceneCanvas/Levels';
-import { Resizable } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import ColorTheme from '../../store/ColorTheme';
 import useStore from '../../Zustand/store';
 import GlobalAttackTreeList from './GlobalAttackTreeList';
 
 const selector = (state) => ({
-  getAssets: state.getAssets,
   model: state.model,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   isCollapsed: state.isCollapsed,
@@ -23,7 +19,7 @@ const selector = (state) => ({
 
 const AttackTree = () => {
   const color = ColorTheme();
-  const { getAssets, model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector);
+  const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 
@@ -31,23 +27,12 @@ const AttackTree = () => {
   const [splitPercentage, setSplitPercentage] = useState(75); // Initial 75% for left panel
   const [isResizing, setIsResizing] = useState(false);
 
-  const handleBack = () => {
-    dispatch(closeAll());
-    getAssets(model?._id);
-  };
-
   useEffect(() => {
     getCyberSecurityScenario(model?._id);
   }, []);
 
   const handleResizeStart = () => {
     setIsResizing(true);
-  };
-
-  const handleResize = (event, { size }) => {
-    const containerWidth = event.currentTarget.parentElement.offsetWidth;
-    const newPercentage = (size.width / containerWidth) * 100;
-    setSplitPercentage(Math.min(Math.max(newPercentage, 0), 100)); // Keep between 25% and 75%
   };
 
   const handleResizeStop = () => {
