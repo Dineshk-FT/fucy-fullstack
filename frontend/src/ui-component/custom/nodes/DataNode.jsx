@@ -225,6 +225,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
           className={`my-custom-node cylinder-node ${type}`}
           style={{
             ...data?.style,
+            background: `linear-gradient(180deg, #ddd, ${data?.style?.backgroundColor})`,
             position: 'relative',
             overflow: 'visible',
             boxShadow: selectedNodes.some((node) => node.id === id)
