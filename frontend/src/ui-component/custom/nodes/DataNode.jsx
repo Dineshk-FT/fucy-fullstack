@@ -222,7 +222,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
         <div
           role="button"
           tabIndex={0}
-          className={`my-custom-node ${type}`}
+          className={`my-custom-node cylinder-node ${type}`}
           style={{
             ...data?.style,
             position: 'relative',

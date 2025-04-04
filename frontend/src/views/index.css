@@ -207,6 +207,16 @@ iframe#webpack-dev-server-client-overlay {
   align-items: center;
 }
 
+.cylinder-node {
+  width: inherit;
+  height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% / 25%;
+  background: linear-gradient(to bottom, #ddd, #bbb);
+  padding: 10px 15px;
+}
 /* 
 .modal {
     position: absolute;
