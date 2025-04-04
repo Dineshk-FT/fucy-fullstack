@@ -854,7 +854,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             >
               {details?.map((detail, i) => {
                 // console.log('detail', detail);
-                return detail?.props?.length > 0 ? (
+                return detail.name.length && detail?.props?.length > 0 ? (
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}
