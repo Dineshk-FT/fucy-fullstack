@@ -77,6 +77,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedElement: {},
   isCollapsed: true,
   globalAttackTrees: [],
+  canvasRef: null,
+  canvasImage: null,
 
   assets: {
     id: '1',
@@ -618,6 +620,10 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // Object to store filtered data for multiple tables
   filteredTableData: {},
+
+  // Setter for canvasRef and canvasImage
+  setCanvasRef: (ref) => set({ canvasRef: ref }),
+  setCanvasImage: (image) => set({ canvasImage: image }),
 
   // setter for propertiesPopper
   setPropertiesOpen: (value) => {

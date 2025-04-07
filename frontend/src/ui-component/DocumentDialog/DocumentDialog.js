@@ -22,11 +22,13 @@ const selector = (state) => ({
   template: state.assets.template,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
-  edges: state.edges
+  edges: state.edges,
+  canvasRef: state.canvasRef,
+  canvasImage: state.canvasImage,
 });
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, edges } = useStore(selector);
+  const { template, generateDocument, nodes, edges, canvasRef, canvasImage } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -53,9 +55,18 @@ const DocumentDialog = ({ open, onClose }) => {
   const generateImageFromNodesAndEdges = useCallback(async () => {
     setIsGeneratingImage(true);
     try {
-      const reactFlowViewport = document.querySelector('.react-flow__viewport');
+      if (canvasImage) {
+        // Use stored image if available
+        return canvasImage;
+      }
+
+      if (!canvasRef?.current) {
+        throw new Error('Canvas reference is not available.');
+      }
+
+      const reactFlowViewport = canvasRef.current.querySelector('.react-flow__viewport');
       if (!reactFlowViewport || !nodes || nodes.length === 0) {
-        throw new Error('Canvas or nodes not available');
+        throw new Error('Canvas viewport or nodes not available');
       }
 
       const imageWidth = 1920;
@@ -105,7 +116,7 @@ const DocumentDialog = ({ open, onClose }) => {
     } finally {
       setIsGeneratingImage(false);
     }
-  }, [nodes, edges, isDark]);
+  }, [nodes, edges, isDark, canvasRef, canvasImage]);
 
   const handleDownload = async () => {
     const formData = new FormData();
