@@ -1,6 +1,7 @@
 /*eslint-disable*/
 import {
   Autocomplete,
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -20,6 +21,14 @@ import ColorTheme from '../../store/ColorTheme';
 import { fontSize } from '../../store/constant';
 import { useSelector } from 'react-redux';
 import Header from '../Header';
+import {
+  ConfidentialityIcon,
+  IntegrityIcon,
+  AuthenticityIcon,
+  AuthorizationIcon,
+  Non_repudiationIcon,
+  AvailabilityIcon
+} from '../../assets/icons';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -29,8 +38,14 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
-
+const Properties = [
+  { name: 'Confidentiality', image: ConfidentialityIcon },
+  { name: 'Integrity', image: IntegrityIcon },
+  { name: 'Authenticity', image: AuthenticityIcon },
+  { name: 'Authorization', image: AuthorizationIcon },
+  { name: 'Non-repudiation', image: Non_repudiationIcon },
+  { name: 'Availability', image: AvailabilityIcon }
+];
 const EditNode = ({
   anchorEl,
   handleClosePopper,
@@ -48,7 +63,6 @@ const EditNode = ({
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [tabIndex, setTabIndex] = useState(0);
   // console.log('selectedElement', selectedElement);
-
   const updateElement = (updateFn) => {
     const updatedNodes = nodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node));
     setNodes(updatedNodes);
@@ -59,8 +73,10 @@ const EditNode = ({
   };
 
   const handleChange = (event, newValue) => {
-    dispatch(setDetails({ ...details, properties: newValue }));
-    updateElement((element) => ({ ...element, properties: newValue }));
+    const updatedProperties = newValue.map((prop) => prop.name);
+    // console.log('updatedProperties', updatedProperties);
+    dispatch(setDetails({ ...details, properties: updatedProperties }));
+    updateElement((element) => ({ ...element, properties: updatedProperties }));
   };
 
   const handleStyle = (e) => {
@@ -114,28 +130,39 @@ const EditNode = ({
                 }
                 label="Asset"
               /> */}
-              {/* <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
-                <Autocomplete
-                  multiple
-                  options={Properties}
-                  value={details?.properties}
-                  onChange={handleChange}
-                  sx={{ minWidth: '130px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        sx={{ '& .MuiChip-label': { fontSize: 10 } }}
-                        key={option}
-                        variant="outlined"
-                        label={option}
-                        {...getTagProps({ index })}
-                      />
-                    ))
-                  }
-                  renderInput={(params) => <TextField {...params} variant="outlined" />}
-                />
-              </Box> */}
+              {selectedBlock?.type === 'group' && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
+                  <Autocomplete
+                    multiple
+                    options={Properties}
+                    getOptionLabel={(option) => option.name}
+                    value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
+                    onChange={handleChange}
+                    isOptionEqualToValue={(option, value) => option?.name === value?.name}
+                    sx={{ minWidth: '180px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1, padding: '4px' }}>
+                        <Avatar src={option?.image} alt={option?.name} sx={{ width: 24, height: 24 }} />
+                        {option?.name}
+                      </Box>
+                    )}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          key={option?.name}
+                          avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />}
+                          variant="outlined"
+                          label={option?.name}
+                          {...getTagProps({ index })}
+                          sx={{ '& .MuiChip-label': { fontSize: 10 } }}
+                        />
+                      ))
+                    }
+                    renderInput={(params) => <TextField {...params} variant="outlined" />}
+                  />
+                </Box>
+              )}
             </Box>
           )}
 
