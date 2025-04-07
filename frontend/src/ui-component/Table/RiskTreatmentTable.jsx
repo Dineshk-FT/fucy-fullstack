@@ -68,7 +68,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important'
+    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '5px',
+    fontSize: 13,
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
@@ -120,9 +123,41 @@ export default function RiskTreatmentTable() {
   const visibleColumns = useStore((state) => state.riskTreatmentTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
+  const Head = useMemo(() => {
+    if (title.includes('Derived')) {
+      const col = [...column];
+      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
+      return col.filter((header) => visibleColumns.includes(header.name));
+    } else {
+      return column.filter((header) => visibleColumns.includes(header.name));
+    }
+  }, [title, visibleColumns]);
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(RiskTreatmentHeaderTable?.map((col) => [col.id, col.w])));
+
+  const handleResizeStart = (e, columnId) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = columnWidths[columnId];
+
+    const handleMouseMove = (event) => {
+      const newWidth = Math.max(
+        startWidth + (event.clientX - startX),
+        RiskTreatmentHeaderTable?.find((col) => col.id === columnId)?.minW || 50
+      );
+      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   const handleOpenSelect = (row, name) => {
     setSelectedRow(row);
@@ -161,19 +196,20 @@ export default function RiskTreatmentTable() {
   };
 
   useEffect(() => {
-    const data = riskTreatment?.Details.map((item, i) => {
+    const data = riskTreatment?.Details?.map((item, i) => {
       // console.log('item', item);
       return {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
         detailId: item?.id,
-        Assets: item?.threat_scene[0]?.detail?.node,
+        Assets: item?.threat_scene ? item?.threat_scene[0]?.detail?.node : '',
         // 'Damage Scenarios': item?.damage_scenarios,
-        'Damage Scenarios':
-          `[DS${
-            item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
-          }] ${item?.threat_scene[0]?.damage_name}` ?? '-',
+        'Damage Scenarios': item?.threat_scene
+          ? `[DS${
+              item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
+            }] ${item?.threat_scene[0]?.damage_name}`
+          : '-',
         'Safety Impact': item?.impacts['Safety Impact'] ?? '',
         'Financial Impact': item?.impacts['Financial Impact'] ?? '',
         'Operational Impact': item?.impacts['Operational Impact'] ?? '',
@@ -202,15 +238,6 @@ export default function RiskTreatmentTable() {
 
   // console.log('details', details);
   // console.log('rows', rows);
-  const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
-  }, [title, visibleColumns]);
 
   const handleOpenModalTs = () => {
     setOpenTs(true);
@@ -247,7 +274,7 @@ export default function RiskTreatmentTable() {
     addRiskTreatment(details)
       .then((res) => {
         if (!res.error) {
-          console.log('res', res);
+          // console.log('res', res);
           notify(res.message ?? 'Threat scene added', 'success');
           getRiskTreatment(model?._id);
         } else {
@@ -336,7 +363,7 @@ export default function RiskTreatmentTable() {
         data={row}
         sx={{
           '&:last-child td, &:last-child th': { border: 0 },
-          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          backgroundColor: isSelected ? '#B2BEB5' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }
@@ -347,7 +374,7 @@ export default function RiskTreatmentTable() {
           switch (true) {
             case item.name === 'Losses of Cybersecurity Properties':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
@@ -361,7 +388,7 @@ export default function RiskTreatmentTable() {
               cellContent = (
                 <StyledTableCell
                   key={index}
-                  style={{ width: 'auto', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
                   align="left"
                   onClick={() => toggleRowSelection(row)}
                 >
@@ -373,7 +400,7 @@ export default function RiskTreatmentTable() {
             case item.name === 'Attack Tree or Attack Path(s)':
               cellContent = (
                 // onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name] !== null ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <img src={AttackIcon} alt="damage" height="10px" width="10px" />
@@ -390,31 +417,70 @@ export default function RiskTreatmentTable() {
               break;
             case item.name.includes('Cybersecurity'):
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row, item.name)} sx={{ cursor: 'pointer' }}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  sx={{
+                    width: `${columnWidths[item.id] || 'auto'}`,
+                    textAlign: 'center', // Centers content in the table cell
+                    verticalAlign: 'middle'
+                  }}
+                >
                   {row[item.name] && row[item.name].length ? (
-                    row[item?.name]?.map((goal) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={goal?.ID}>
-                        <img
-                          src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
-                          alt="damage"
-                          height="15px"
-                          width="15px"
-                        />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{goal?.Name}</span>
-                      </span>
-                    ))
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center" // Ensures overall centering
+                      justifyContent="center"
+                      flexWrap="wrap"
+                      width="100%"
+                    >
+                      {row[item.name].map((goal, i) => (
+                        <Box
+                          key={goal?.ID || i}
+                          display="flex"
+                          alignItems="flex-start" // Ensures all items start at the same position
+                          gap={1}
+                          justifyContent="center"
+                          sx={{
+                            textAlign: 'left',
+                            width: '100%',
+                            maxWidth: '250px', // Keeps structure uniform
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            mb: 0.8
+                          }}
+                        >
+                          <img
+                            src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
+                            alt="icon"
+                            height="15px"
+                            width="15px"
+                            style={{ alignSelf: 'flex-start' }} // Aligns icon with text start position
+                          />
+                          <Box display="flex" flexDirection="column" gap="5px" minWidth="100px">
+                            {goal?.Name}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
                   ) : (
-                    <InputLabel>{item.name === 'Cybersecurity Goals' ? 'Select Goals' : 'Select Claims'}</InputLabel>
+                    <InputLabel>N/A</InputLabel>
                   )}
                 </StyledTableCell>
               );
               break;
             case item.name === 'Related UNECE Threats or Vulns':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenCatalog(row)} sx={{ cursor: 'pointer' }}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  onClick={() => handleOpenCatalog(row)}
+                  sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item.name] && row[item.name].length ? (
                     row[item?.name]?.map((catalog) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={catalog}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }} key={catalog}>
                         <img src={CatalogIcon} alt="damage" height="15px" width="15px" />
                         <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{catalog}</span>
                       </span>
@@ -428,11 +494,11 @@ export default function RiskTreatmentTable() {
 
             case item.name === 'Damage Scenarios':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {
                     // row[item.name] && row[item.name].length ? (
                     // row[item.name].map((damage, i) => (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
                       <img src={DamageIcon} alt="damage" height="10px" width="10px" />
                       <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item?.name]}</span>
                     </span>
@@ -446,7 +512,7 @@ export default function RiskTreatmentTable() {
               break;
             case item.name === 'Contributing Requirements':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name]?.map((require, i) => (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={require?.ID}>
                       <img src={CyberRequireIcon} alt="damage" height="10px" width="10px" />
@@ -462,14 +528,22 @@ export default function RiskTreatmentTable() {
               const impact = colorPickerTab(row[item?.name]);
 
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: impact, color: '#000' }}>
+                <StyledTableCell
+                  key={index}
+                  align={'left'}
+                  sx={{ backgroundColor: impact, color: '#000', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item?.name]}
                 </StyledTableCell>
               );
             case item.name === 'Attack Feasibility Rating':
               const bgColor = RatingColor(row[item?.name]);
               return (
-                <StyledTableCell key={index} align={'left'} sx={{ backgroundColor: bgColor, color: '#000' }}>
+                <StyledTableCell
+                  key={index}
+                  align={'left'}
+                  sx={{ backgroundColor: bgColor, color: '#000', width: `${columnWidths[item.id] || 'auto'}` }}
+                >
                   {row[item?.name]}
                 </StyledTableCell>
               );
@@ -511,9 +585,9 @@ export default function RiskTreatmentTable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} />
+          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>
@@ -590,17 +664,39 @@ export default function RiskTreatmentTable() {
       </Dialog>
 
       <TableContainer
-        stickyHeader
         component={Paper}
         sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
       >
-        <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id}>{hd?.name}</StyledTableCell>
+                <StyledTableCell
+                  key={hd.id}
+                  style={{
+                    width: columnWidths[hd.id] ?? hd?.w,
+                    minWidth: hd?.minW,
+                    position: 'relative',
+                    overflowWrap: 'break-word'
+                  }}
+                >
+                  {hd.name}
+                  <div
+                    className="resize-handle"
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '5px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                  />
+                </StyledTableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -610,10 +706,16 @@ export default function RiskTreatmentTable() {
             ))}
           </TableBody>
         </Table>
+        {!rows?.length && (
+          <Box display="flex">
+            <Typography variant="h5">Note </Typography>: drag the threat & drop in the header
+          </Box>
+        )}
       </TableContainer>
 
       <TablePagination
         sx={{
+          position: 'absolute',
           '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
           '& .MuiSelect-select': { color: color?.sidebarContent },
           '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }

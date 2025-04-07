@@ -1,95 +1,55 @@
 /* eslint-disable */
-import React, { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
   Background,
   ReactFlowProvider,
-  // Panel,
   getRectOfNodes,
   getTransformForBounds,
   MarkerType,
-  useReactFlow,
-  Panel
+  Panel,
+  useReactFlow
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
-import {
-  CustomNode,
-  DefaultNode,
-  InputNode,
-  OutputNode,
-  CircularNode,
-  DiagonalNode,
-  MicroController,
-  CustomGroupNode,
-  CustomEdge,
-  MultiHandleNode
-} from '../../ui-component/custom';
+import { CustomEdge } from '../../ui-component/custom';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
-// import { Button } from '@mui/material';
 import AddLibrary from '../../ui-component/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
-import ELK from 'elkjs/lib/elk.bundled';
-import Memory from '../../ui-component/custom/Memory';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import AlertMessage from '../../ui-component/Alert';
-import Header from '../../ui-component/Header';
-import { setProperties } from '../../store/slices/PageSectionSlice';
 import ColorTheme from '../../store/ColorTheme';
-import { style } from '../../utils/Constraints';
-import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
+import { pageNodeTypes, style } from '../../utils/Constraints';
+import {
+  OpenPropertiesTab,
+  setSelectedBlock,
+  setDetails,
+  setEdgeDetails,
+  setAnchorEl,
+  clearAnchorEl
+} from '../../store/slices/CanvasSlice';
 import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import CurveEdge from '../../ui-component/custom/edges/CurveEdge';
-import { Button } from '@mui/material';
+import { Button, Tooltip, Typography, IconButton, Box, Zoom } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import EditNode from '../../ui-component/Poppers/EditNode';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import EditEdge from '../../ui-component/custom/edges/EditEdge';
+import EditProperties from '../../ui-component/Poppers/EditProperties';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import FitScreenIcon from '@mui/icons-material/FitScreen';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import DownloadIcon from '@mui/icons-material/Download';
 
-const elk = new ELK();
-
-const elkOptions = {
-  'elk.algorithm': 'layered',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-  'elk.spacing.nodeNode': '80'
-};
-const getLayoutedElements = (nodes, edges, options = {}) => {
-  const isHorizontal = options?.['elk.direction'] === 'RIGHT';
-  const graph = {
-    id: 'root',
-    layoutOptions: options,
-    children: nodes.map((node) => ({
-      ...node,
-      // Adjust the target and source handle positions based on the layout
-      // direction.
-      targetPosition: isHorizontal ? 'left' : 'top',
-      sourcePosition: isHorizontal ? 'right' : 'bottom',
-
-      // Hardcode a width and height for elk to use when layouting.
-      width: 150,
-      height: 50
-    })),
-    edges: edges
-  };
-
-  return elk
-    .layout(graph)
-    .then((layoutedGraph) => ({
-      nodes: layoutedGraph.children.map((node) => ({
-        ...node,
-        position: { x: node.x, y: node.y }
-      })),
-
-      edges: layoutedGraph.edges
-    }))
-    .catch(console.error);
-};
-
+// Define the selector function for Zustand
 const selector = (state) => ({
   nodes: state.nodes,
   edges: state.edges,
@@ -100,9 +60,14 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
+  setInitialNodes: state.setInitialNodes,
+  setInitialEdges: state.setInitialEdges,
+  selectedNodes: state.selectedNodes,
+  setSelectedNodes: state.setSelectedNodes,
   model: state.model,
   update: state.updateAssets,
   getAssets: state.getAssets,
+  getDamageScenarios: state.getDamageScenarios,
   getGroupedNodes: state.getGroupedNodes,
   reactFlowInstance: state.reactFlowInstance,
   setReactFlowInstance: state.setReactFlowInstance,
@@ -113,50 +78,57 @@ const selector = (state) => ({
   redoStack: state.redoStack,
   assets: state.assets,
   isNodePasted: state.isNodePasted,
-  setIsNodePasted: state.setIsNodePasted
+  setIsNodePasted: state.setIsNodePasted,
+  selectedElement: state.selectedElement,
+  setSelectedElement: state.setSelectedElement,
+  isPropertiesOpen: state.isPropertiesOpen,
+  setPropertiesOpen: state.setPropertiesOpen,
+  initialNodes: state.initialNodes,
+  initialEdges: state.initialEdges
 });
 
-//Edge line styling
-const connectionLineStyle = { stroke: 'grey' };
+// Edge line styling
+const connectionLineStyle = {
+  stroke: '#64B5F6',
+  strokeWidth: 2,
+  strokeDasharray: '5,5'
+};
+
 const edgeOptions = {
   type: 'step',
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 20,
-    height: 20,
-    color: 'black'
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
   },
   markerStart: {
     type: MarkerType.ArrowClosed,
     orient: 'auto-start-reverse',
-    width: 20,
-    height: 20,
-    color: 'black'
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
   },
-  animated: false,
+  animated: true,
   style: {
-    stroke: 'grey',
+    strokeWidth: 2,
+    stroke: '#808080',
     start: false,
-    end: true
+    end: true,
+    strokeDasharray: '0'
   },
+  properties: ['Confidentiality'],
   data: {
-    label: 'edge'
+    label: 'edge',
+    style: {
+      background: 'rgba(255, 255, 255, 0.8)',
+      borderRadius: '4px',
+      padding: '2px 4px',
+      fontFamily: "'Poppins', sans-serif",
+      fontSize: '12px',
+      color: '#333333'
+    }
   }
-};
-
-const nodetypes = {
-  input: InputNode,
-  output: OutputNode,
-  default: DefaultNode,
-  receiver: CustomNode,
-  signal: CustomNode,
-  custom: CustomNode,
-  transmitter: CircularNode,
-  transceiver: DiagonalNode,
-  mcu: MicroController,
-  memory: Memory,
-  group: CustomGroupNode,
-  multihandle: MultiHandleNode
 };
 
 const CustomStepEdge = (props) => {
@@ -165,9 +137,9 @@ const CustomStepEdge = (props) => {
 
 const edgeTypes = {
   custom: CustomEdge,
-  // step: CurveEdge
   step: CustomStepEdge
 };
+
 const flowKey = 'example-flow';
 
 export default function MainCanvas() {
@@ -181,6 +153,10 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
+    setInitialNodes,
+    setInitialEdges,
+    selectedNodes,
+    setSelectedNodes,
     model,
     getGroupedNodes,
     reactFlowInstance,
@@ -193,35 +169,110 @@ export default function MainCanvas() {
     assets,
     update,
     getAssets,
+    getDamageScenarios,
     isNodePasted,
-    setIsNodePasted
+    setIsNodePasted,
+    selectedElement,
+    setSelectedElement,
+    isPropertiesOpen,
+    setPropertiesOpen,
+    isDark,
+    initialNodes,
+    initialEdges
   } = useStore(selector, shallow);
+
   const dispatch = useDispatch();
-  // const { setTransform } = useReactFlow();
   const Color = ColorTheme();
   // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
-  const [selectedElement, setSelectedElement] = useState({});
-  const [open, setOpen] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [message, setMessage] = useState('');
+  const [nodeTypes, setNodeTypes] = useState({});
+  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
-  const [groupList, setGroupList] = useState([]);
   const reactFlowWrapper = useRef(null);
-  const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
+    (state) => state?.canvas
+  );
+  const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
+  const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
+
+  // console.log('anchorEl', anchorEl);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
-  const notify = (message, status) => toast[status](message);
+  const [isReady, setIsReady] = useState(false);
+  const [isPopperFocused, setIsPopperFocused] = useState(false);
+  const nodesRef = useRef(nodes);
+  const nodesRefer = useRef(nodes);
+  const edgesRef = useRef(edges);
+  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+  }, [nodes, edges]);
 
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
+    // notify('Canvas cleared', 'success');
+  };
+
+  const handleSaveToModel = () => {
+    const template = {
+      nodes: nodesRef.current,
+      edges: edgesRef.current
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template),
+      assetId: assets?._id
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          notify('Saved Successfully', 'success');
+          handleClose();
+          RefreshAPI();
+        } else {
+          notify(res.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
   };
 
   // useEffect(() => {
-  //   handleClear();
+
   // }, []);
+  const handleCheckForChange = () => {
+    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+      return true;
+    }
+    return false;
+  };
+  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
+
+  useEffect(() => {
+    const newNodeTypes = pageNodeTypes['maincanvas'] || {};
+    setNodeTypes(newNodeTypes);
+    setNodes([]);
+    setEdges([]);
+    setTimeout(() => setIsReady(true), 0);
+    return () => {
+      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+        handleSaveToModel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const template = assets?.template;
@@ -232,7 +283,8 @@ export default function MainCanvas() {
 
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 1.5, duration: 500 });
+      reactFlowInstance?.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+      setZoomLevel(reactFlowInstance?.getZoom());
     }
   }, [reactFlowInstance, nodes?.length]);
 
@@ -240,39 +292,16 @@ export default function MainCanvas() {
     setReactFlowInstance(rf);
   };
 
-  // Capture Ctrl + S for saving
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Check if Ctrl or Cmd key is pressed along with S
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault(); // Prevent the default save behavior
-        handleSaveToModel(); // Trigger the save action
+        event.preventDefault();
+        handleSaveToModel();
       }
     };
-
-    // Add the event listener when the component mounts
     window.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [nodes, edges]); // Re-run this effect if nodes or edges change
-
-  const onLayout = useCallback(
-    ({ direction, useInitialNodes = false }) => {
-      const opts = { 'elk.direction': direction, ...elkOptions };
-      const ns = useInitialNodes ? nodes : nodes;
-      const es = useInitialNodes ? nodes : edges;
-      getLayoutedElements(ns, es, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
-
-        // window.requestAnimationFrame(() => fitView());
-      });
-    },
-    [nodes, edges]
-  );
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges]);
 
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
@@ -284,67 +313,62 @@ export default function MainCanvas() {
     setNodes(updated);
   };
 
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
-
   const onNodeDragStart = useCallback((_, node) => {
     dragRef.current = node;
   }, []);
 
-  const onNodeDragStop = useCallback(() => {
-    getGroupedNodes();
-    // if(dragRef.current.type !== 'group'){
-    checkForNodes();
-    // }
+  const onNodeDrag = useCallback((event, node) => {
+    const prevNode = nodesRefer.current.find((n) => n.id === node.id);
+    if (!prevNode) return;
+
+    const deltaX = node.position.x - prevNode.position.x;
+    const deltaY = node.position.y - prevNode.position.y;
+
+    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
+
+    // Use a Map to track updated positions
+    const updatedPositions = new Map();
+
+    const moveChildren = (parentId, dx, dy) => {
+      nodesRefer.current.forEach((child) => {
+        if (child.parentId === parentId) {
+          const newPos = {
+            x: child.position.x + dx,
+            y: child.position.y + dy
+          };
+          updatedPositions.set(child.id, newPos);
+          moveChildren(child.id, dx, dy);
+        }
+      });
+    };
+
+    updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
+    moveChildren(node.id, deltaX, deltaY);
+
+    setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
   }, []);
 
-  const onNodeDrag = (event, node) => {
-    const updatedNodes = nodes.map((n) => {
-      if (n.id === node.id) {
-        const deltaX = node.position.x - n.position.x;
-        const deltaY = node.position.y - n.position.y;
-
-        const updatedChildNodes = nodes.filter((child) => child.parentId === node.id);
-        updatedChildNodes.forEach((child) => {
-          child.position = {
-            x: child.position.x + deltaX,
-            y: child.position.y + deltaY
-          };
-        });
-
-        return {
-          ...n,
-          position: {
-            x: node.position.x,
-            y: node.position.y
-          }
-        };
-      }
-      return n;
-    });
-
-    setNodes(updatedNodes);
-  };
-
-  //for downloading the circuit and image
+  const onNodeDragStop = useCallback(() => {
+    nodesRefer.current = [...nodes]; // Update ref after drag stops
+    getGroupedNodes();
+    checkForNodes();
+  }, [nodes]);
   function downloadImage(dataUrl) {
     const a = document.createElement('a');
-
-    a.setAttribute('download', 'reactflow.png');
+    a.setAttribute('download', 'canvas-diagram.png');
     a.setAttribute('href', dataUrl);
     a.click();
   }
 
-  const imageWidth = 1024;
-  const imageHeight = 768;
+  const imageWidth = 1920;
+  const imageHeight = 1080;
 
   const handleDownload = () => {
     const nodesBounds = getRectOfNodes(nodes);
     const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
     toPng(document.querySelector('.react-flow__viewport'), {
-      backgroundColor: '#1a365d',
+      backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',
       width: imageWidth,
       height: imageHeight,
       style: {
@@ -355,7 +379,6 @@ export default function MainCanvas() {
     }).then(downloadImage);
   };
 
-  //fn for Drag and drop
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -409,6 +432,11 @@ export default function MainCanvas() {
             label: parsedNode.data['label'],
             style: {
               backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
               ...style
             }
           }
@@ -426,6 +454,11 @@ export default function MainCanvas() {
             nodeId: parsedNodeItem.nodeId,
             style: {
               backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
               ...style
             }
           },
@@ -447,6 +480,11 @@ export default function MainCanvas() {
               ...node?.data,
               style: {
                 backgroundColor: node.data['bgColor'],
+                borderRadius: '8px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '14px',
+                padding: '8px 12px',
                 ...style
               }
             },
@@ -479,7 +517,12 @@ export default function MainCanvas() {
   );
 
   const RefreshAPI = () => {
-    getAssets(model?._id);
+    getAssets(model?._id).catch((err) => {
+      notify('Failed to fetch assets: ' + err.message, 'error');
+    });
+    getDamageScenarios(model?._id).catch((err) => {
+      notify('Failed to fetch damage scenarios: ' + err.message, 'error');
+    });
   };
 
   const handleClose = () => {
@@ -498,92 +541,106 @@ export default function MainCanvas() {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
+        setInitialNodes(temp.nodes);
+        setInitialEdges(temp.edges);
       } else {
         handleClear();
       }
     },
-    [reactFlowInstance]
+    [reactFlowInstance, assets]
   );
 
-  const handleSaveToModel = () => {
-    // model - id,
-    //   template
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
-    setIsNodePasted(false);
-    const details = {
-      'model-id': model?._id,
-      template: JSON.stringify(template),
-      assetId: assets?._id
-    };
-
-    update(details)
-      .then((res) => {
-        if (res) {
-          // setTimeout(() => {
-          setOpen(true);
-          setMessage('Saved Successfully');
-          setSuccess(true);
-          handleClose();
-          RefreshAPI();
-          // }, 500);
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        setOpen(true);
-        setSuccess(false);
-        setMessage('Something went wrong');
-      });
-  };
-
-  // const toggleDrawerOpen = (tab) => dispatch(draweropen(tab));
-  // const toggleDrawerClose = () => dispatch(drawerClose());
-  // const toggleLeftDrawerOpen = () => dispatch(leftDrawerOpen());
-  // const toggleLeftDrawerClose = () => dispatch(leftDrawerClose());
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
     fitView(nodes);
   };
-  const handleSidebarOpen = (e, node) => {
-    e.preventDefault();
+
+  const handleSelectNode = (e, node) => {
+    e.stopPropagation();
     if (node.type !== 'group') {
-      dispatch(OpenPropertiesTab());
-      setSelectedElement(node);
+      dispatch(setAnchorEl({ type: 'node', value: node?.id }));
       dispatch(setSelectedBlock(node));
-      // toggleDrawerOpen('MainCanvasTab');
-      dispatch(setProperties(node?.properties));
+      setSelectedElement(node);
+      dispatch(
+        setDetails({
+          ...details,
+          name: node?.data?.label ?? '',
+          properties: node?.properties ?? [],
+          isAsset: node.isAsset ?? false
+        })
+      );
     }
   };
 
-  const handleSelectNode = (e, node) => {
-    let grp = [...groupList];
-    function addNodeToArray(node) {
-      const existingNode = grp.find((obj) => obj.id === node.id);
+  const handleSelectNodeSingleClick = (e, node) => {
+    // console.log('Clicked Node:', node);
+    e.stopPropagation(); // Prevent bubbling up
 
-      if (!existingNode) {
-        grp.push(node);
-      }
+    if (e.shiftKey) {
+      setSelectedNodes((prevSelectedNodes) => {
+        const isAlreadySelected = prevSelectedNodes.some((snode) => snode.id === node.id);
+        return isAlreadySelected ? prevSelectedNodes.filter((snode) => snode.id !== node.id) : [...prevSelectedNodes, node];
+      });
     }
-    if (node.type !== 'group') {
-      setSelectedElement(node);
-      dispatch(setSelectedBlock(node));
-      dispatch(setProperties(node?.properties));
 
-      if (!grp.length) {
-        grp.push(node);
-      } else {
-        addNodeToArray(node);
-      }
-      setGroupList(grp);
+    // if (node.type === 'group') {
+    // Ensure nested group selection
+    dispatch(setSelectedBlock(node));
+    setSelectedElement(node);
+    // }
+  };
+
+  const handleSelectEdgeSingleClick = (e, edge) => {
+    e.stopPropagation(); // Prevent event bubbling
+    dispatch(setSelectedBlock(edge));
+    setSelectedElement(edge);
+  };
+  // console.log('nodes', nodes);
+  // console.log('selectedNodes', selectedNodes);
+  const handleClosePopper = () => {
+    if (!isPopperFocused) {
+      dispatch(clearAnchorEl());
     }
+  };
+
+  const handleSelectEdge = (e, edge) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dispatch(setAnchorEl({ type: 'edge', value: e.currentTarget.getAttribute('data-testid') }));
+    dispatch(setSelectedBlock(edge));
+    setSelectedElement(edge);
+    dispatch(
+      setEdgeDetails({
+        ...details,
+        name: edge?.data?.label ?? '',
+        properties: edge?.properties ?? [],
+        isAsset: edge.isAsset ?? false,
+        style: edge.data.style ?? {},
+        startPoint: edge.markerStart.color ?? '#64B5F6',
+        endPoint: edge.markerEnd?.color ?? '#64B5F6'
+      })
+    );
+  };
+
+  const handleSaveEdit = (e) => {
+    e.stopPropagation();
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    const details = {
+      assetId: assets?._id,
+      'model-id': model?._id,
+      template: JSON.stringify(template)
+    };
+    update(details)
+      .then(() => {
+        notify('Updated Successfully', 'success');
+        RefreshAPI();
+      })
+      .catch(() => {
+        notify('Something went wrong', 'error');
+      });
   };
 
   const createGroup = (e) => {
@@ -593,42 +650,53 @@ export default function MainCanvas() {
     const newNode = {
       id: uid(),
       type: 'group',
-      height: 300,
-      width: 300,
       position: {
         x: e.x ?? e.clientX,
         y: e.y ?? e.clientY
       },
       data: {
-        label: 'group',
+        label: 'Group',
         style: {
-          height: 300,
-          width: 300
+          height: 200,
+          width: 200,
+          background: isDark == true ? 'rgba(100,181,246,0.1)' : 'rgba(33,150,243,0.05)',
+          border: `1px dashed ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+          borderRadius: '8px',
+          boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
         }
-      }
+      },
+      height: 200,
+      width: 200
     };
     dragAdd(newNode);
   };
 
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
-
-    setCopiedNode(node);
-
-    setContextMenu({
-      visible: true,
-      x: event.clientX,
-      y: event.clientY,
-      options: ['Copy', 'Paste'],
-      node
-    });
+    if (node.type === 'group') {
+      // If it's a group, don’t set it as the copied node; prepare for pasting inside
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: copiedNode && copiedNode.length > 0 ? ['Copy', 'Paste'] : ['Copy'],
+        targetGroup: node // Pass the group as the target for pasting
+      });
+    } else {
+      // Regular node: set it as the copied node
+      setCopiedNode([node]);
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        options: ['Copy', 'Paste'],
+        node
+      });
+    }
   };
 
   const handleCanvasContextMenu = (event) => {
     event.preventDefault();
-
-    // Check if there's a copied node
-    // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
     if (copiedNode && copiedNode.length > 0) {
       setContextMenu({
         visible: true,
@@ -642,71 +710,224 @@ export default function MainCanvas() {
   };
 
   const handleMenuOptionClick = (option) => {
-    if (option === 'Copy' && copiedNode) {
-      const nodeToCopy = [copiedNode];
-      // localStorage.removeItem('copiedNode'); // Clear any previous data
-      // localStorage.setItem('copiedNode', JSON.stringify(nodeToCopy));
-      setCopiedNode(nodeToCopy);
+    if (option === 'Copy' && contextMenu.node && contextMenu.node.type !== 'group') {
+      setCopiedNode([contextMenu.node]);
       notify('Node copied!', 'success');
     }
 
     if (option === 'Paste') {
-      // const copiedNodes = JSON.parse(localStorage.getItem('copiedNode'));
+      if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
+        console.error('No valid copied node found');
+        return;
+      }
 
-      // Ensure copiedNodes is an array and contains data
-      if (Array.isArray(copiedNode) && copiedNode.length > 0) {
-        copiedNode.forEach((node) => {
-          const newNode = {
-            ...node,
-            id: uid(),
-            isCopied: true,
-            position: {
-              x: contextMenu.x - 100,
-              y: contextMenu.y - 50
-            },
-            selected: false
-          };
+      const pastePosition = reactFlowInstance.screenToFlowPosition({
+        x: contextMenu.x,
+        y: contextMenu.y
+      });
 
-          const nodetoPaste = [...nodes, newNode];
-          setNodes(nodetoPaste);
+      const targetGroup =
+        contextMenu.targetGroup ||
+        nodes.find((node) => {
+          if (node.type !== 'group') return false;
+          const groupX = contextMenu.x;
+          const groupY = contextMenu.y;
+          const groupWidth = node.width || 200;
+          const groupHeight = node.height || 200;
+          return (
+            pastePosition.x >= groupX &&
+            pastePosition.x <= groupX + groupWidth &&
+            pastePosition.y >= groupY &&
+            pastePosition.y <= groupY + groupHeight
+          );
         });
 
-        // localStorage.removeItem('copiedNode');
-      } else {
-        console.error('No valid copied node found');
-      }
+      copiedNode.forEach((node) => {
+        const newNode = {
+          ...node,
+          id: uid(),
+          isCopied: true,
+          position: targetGroup
+            ? {
+                x: pastePosition.x - (targetGroup.positionAbsolute?.x ?? targetGroup.position.x),
+                y: pastePosition.y - (targetGroup.positionAbsolute?.y ?? targetGroup.position.y)
+              }
+            : {
+                x: pastePosition.x,
+                y: pastePosition.y
+              },
+          parentId: targetGroup ? targetGroup.id : undefined,
+          extent: targetGroup ? 'parent' : undefined,
+          selected: false
+        };
+
+        setNodes((nds) => [...nds, newNode]);
+      });
+
+      checkForNodes();
     }
 
-    setContextMenu({ visible: false, x: 0, y: 0 });
+    setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
   };
 
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    const handleGlobalEvents = (event) => {
+      if (event.type === 'click') {
+        setContextMenu({ visible: false, x: 0, y: 0 });
+      } else if (event.type === 'keydown') {
+        if (event.key === 'Escape') {
+          dispatch(setSelectedBlock({})); // Deselect selected block
+        }
+        // else if (['Delete', 'Backspace'].includes(event.key)) {
+        //   removeSelectedBlock(); // Remove selected block
+        // }
+      }
+    };
+
+    document.addEventListener('click', handleGlobalEvents);
+    document.addEventListener('keydown', handleGlobalEvents);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalEvents);
+      document.removeEventListener('keydown', handleGlobalEvents);
+    };
   }, []);
+
+  const handleGroupDrag = (event) => {
+    const parseFile = JSON.stringify('');
+    event.dataTransfer.setData('application/group', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onSelectionClick = useCallback((e, selectedNodes) => {
+    if (!selectedNodes || selectedNodes.length === 0) return;
+
+    const minX = Math.min(...selectedNodes.map((n) => n.position.x));
+    const minY = Math.min(...selectedNodes.map((n) => n.position.y));
+    const maxX = Math.max(...selectedNodes.map((n) => n.position.x + (n.width || 100)));
+    const maxY = Math.max(...selectedNodes.map((n) => n.position.y + (n.height || 100)));
+
+    const groupWidth = maxX - minX;
+    const groupHeight = maxY - minY;
+    const additionalWidth = 50;
+    const additionalHeight = 70;
+
+    const newNode = {
+      id: uid(),
+      type: 'group',
+      width: groupWidth + additionalWidth,
+      height: groupHeight + additionalHeight,
+      position: {
+        x: minX - additionalWidth / 2,
+        y: minY - additionalHeight + 20 / 2
+      },
+      data: {
+        label: 'Group',
+        style: {
+          width: groupWidth + additionalWidth,
+          height: groupHeight + additionalHeight,
+          background: isDark == true ? 'rgba(100,181,246,0.1)' : 'rgba(33,150,243,0.05)',
+          border: `1px dashed ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+          borderRadius: '8px',
+          boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+        }
+      },
+      children: selectedNodes.map((node) => node.id)
+    };
+
+    dragAdd(newNode);
+    checkForNodes();
+    setSelectedNodes([]);
+  }, []);
+
+  // console.log('anchorElNodeId', anchorElNodeId);
+  const renderPopper = () => {
+    if (anchorElNodeId) {
+      return isPropertiesOpen ? (
+        <EditProperties
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={() => {
+            handleClosePopper();
+            setPropertiesOpen(false);
+          }}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
+      ) : (
+        <EditNode
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
+      );
+    }
+
+    if (anchorElEdgeId) {
+      return (
+        <EditEdge
+          anchorEl={anchorElEdgeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setEdgeDetails}
+          details={edgeDetails}
+          dispatch={dispatch}
+          edges={edges}
+          setEdges={setEdges}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const handleZoomIn = () => {
+    zoomIn({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleZoomOut = () => {
+    zoomOut({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleFitView = () => {
+    fitCanvasView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 500);
+  };
+
+  const notify = (message, status) => toast[status](message);
+
+  if (!isReady) return null;
 
   return (
     <>
       <div
-        style={{ width: '100%', height: '100%', boxShadow: '0px 0px 5px gray', background: 'white' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          background:
+            isDark == true ? 'linear-gradient(145deg, #1E1E1E 0%, #121212 100%)' : 'linear-gradient(145deg, #F5F5F5 0%, #E0E0E0 100%)',
+          boxShadow: isDark == true ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
+          borderRadius: '12px',
+          overflow: 'hidden'
+        }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
+        onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
-        {propertiesTabOpen && (
-          <Header
-            selectedElement={selectedElement}
-            nodes={nodes}
-            setNodes={setNodes}
-            setSelectedElement={setSelectedElement}
-            horizontal={() => onLayout({ direction: 'RIGHT' })}
-            vertical={() => onLayout({ direction: 'DOWN' })}
-            handleClear={handleClear}
-            handleSave={handleSaveToModel}
-            download={handleDownload}
-            createGroup={createGroup}
-          />
-        )}
         <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}
@@ -714,8 +935,13 @@ export default function MainCanvas() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            nodeTypes={nodetypes}
+            nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            onClick={(e) => {
+              e.preventDefault();
+              // e.stopPropagation();
+              dispatch(setSelectedBlock({}));
+            }}
             onInit={onInit}
             onLoad={onLoad}
             onNodeDrag={onNodeDrag}
@@ -727,82 +953,421 @@ export default function MainCanvas() {
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
-            onNodeDoubleClick={handleSidebarOpen}
-            onNodeClick={handleSelectNode}
-            defaultposition={[0, 0]}
-            defaultzoom={1}
+            selectionMode="partial"
+            multiSelectionKeyCode="Shift"
+            onSelectionContextMenu={onSelectionClick}
+            deleteKeyCode={['Delete', 'Backspace']}
+            onNodeDoubleClick={handleSelectNode}
+            onNodeClick={handleSelectNodeSingleClick}
+            onEdgeClick={handleSelectEdgeSingleClick}
+            onEdgeContextMenu={handleSelectEdge}
+            defaultPosition={[0, 0]}
+            defaultZoom={1}
             onNodeContextMenu={handleNodeContextMenu}
-            // onContextMenu={createGroup}
-            // onNodeContextMenu={handleSidebarOpen}
-            // onEdgeContextMenu={handleSidebarOpen}
+            minZoom={0.2}
+            maxZoom={2}
           >
-            <Panel position="left" style={{ display: 'flex', gap: 10 }}>
-              <Button variant="outlined" onClick={() => onRestore(assets?.template)} startIcon={<RestoreIcon />}>
-                Restore
-              </Button>
-              <Button variant="outlined" startIcon={<SaveIcon />} onClick={handleSaveToModel}>
-                Save
-              </Button>
-              {/* <button onClick={undo} disabled={undoStack.length === 0}>
-                Undo
-              </button>
-              <button onClick={redo} disabled={redoStack.length === 0}>
-                Redo
-              </button> */}
+            <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Tooltip title="Restore">
+                  <IconButton
+                    onClick={() => onRestore(assets?.template)}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Restore canvas"
+                  >
+                    <RestoreIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Save">
+                  <IconButton
+                    onClick={handleSaveToModel}
+                    sx={{
+                      // color: isDark == true ? '#64B5F6' : '#2196F3',
+                      color: isChanged ? '#FF3131' : '#32CD32',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Save canvas"
+                  >
+                    <SaveIcon sx={{ fontSize: 19 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Group Selected Nodes">
+                  <IconButton
+                    onClick={(e) => onSelectionClick(e, selectedNodes)}
+                    onDragStart={(e) => handleGroupDrag(e)}
+                    draggable={true}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Group selected nodes"
+                  >
+                    <GridOnIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Undo">
+                  <IconButton
+                    onClick={undo}
+                    disabled={undoStack.length === 0}
+                    sx={{
+                      color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          undoStack.length === 0
+                            ? 'transparent'
+                            : isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
+                        boxShadow:
+                          undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          undoStack.length === 0
+                            ? 'none'
+                            : isDark == true
+                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Undo action"
+                  >
+                    <UndoIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Redo">
+                  <span>
+                    <IconButton
+                      onClick={redo}
+                      disabled={redoStack.length === 0}
+                      sx={{
+                        color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                        padding: '4px',
+                        '&:hover': {
+                          background:
+                            redoStack.length === 0
+                              ? 'transparent'
+                              : isDark == true
+                              ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                              : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                          transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
+                          boxShadow:
+                            redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                          filter:
+                            redoStack.length === 0
+                              ? 'none'
+                              : isDark == true
+                              ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                              : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                        },
+                        '&:focus': {
+                          outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                          outlineOffset: '2px'
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label="Redo action"
+                    >
+                      <RedoIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Download as PNG">
+                  <IconButton
+                    onClick={handleDownload}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Download canvas as PNG"
+                  >
+                    <DownloadIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Panel>
-            <Controls />
-            <MiniMap zoomable pannable style={{ background: Color.canvasBG }} />
-            <Background variant="dots" gap={12} size={1} style={{ backgroundColor: Color?.canvasBG }} />
-            {/* <LeftDrawer state={isLeftDrawerOpen} draweropen={toggleLeftDrawerOpen} drawerClose={toggleLeftDrawerClose} /> */}
-            {(propertiesTabOpen || addNodeTabOpen) && <RightDrawer />}
+            <Panel position="bottom-right" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                  alignItems: 'center'
+                }}
+              >
+                <Tooltip title="Zoom In">
+                  <IconButton
+                    onClick={handleZoomIn}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom in"
+                  >
+                    <ZoomInIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Zoom Out">
+                  <IconButton
+                    onClick={handleZoomOut}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOutIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Fit View">
+                  <IconButton
+                    onClick={handleFitView}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Fit view"
+                  >
+                    <FitScreenIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Typography
+                  sx={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: isDark == true ? '#E0E0E0' : '#333333',
+                    alignSelf: 'center',
+                    padding: '0 6px'
+                  }}
+                >
+                  {Math.round(zoomLevel * 100)}%
+                </Typography>
+              </Box>
+            </Panel>
+            <MiniMap
+              zoomable
+              pannable
+              style={{
+                width: 150,
+                height: 100,
+                background: Color.tabBorder,
+                borderRadius: '6px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                border: `1px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`
+              }}
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case 'group':
+                    return isDark == true ? 'rgba(100,181,246,0.3)' : 'rgba(33,150,243,0.2)';
+                  default:
+                    return isDark == true ? '#64B5F6' : '#2196F3';
+                }
+              }}
+            />
+            <Background
+              variant="dots"
+              gap={16}
+              size={1}
+              style={{
+                backgroundColor: Color?.canvasBG
+              }}
+              color={isDark == true ? '#424242' : '#B0BEC5'}
+            />
+            {(propertiesTabOpen || addNodeTabOpen || addDataNodeTab) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
         {contextMenu.visible && (
-          <div
-            style={{
-              position: 'absolute',
-              top: contextMenu.y,
-              left: contextMenu.x,
-              background: 'white',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
-              zIndex: 1000,
-              width: '90px', // Defined width for consistency
-              padding: '8px 0',
-              fontFamily: 'Arial, sans-serif',
-              fontSize: '12px'
-            }}
-          >
-            {contextMenu.options.map((option) => (
-              <div
-                key={option}
-                style={{
-                  padding: '4px 8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
-                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
-                }}
-                onClick={() => handleMenuOptionClick(option)}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
-                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
-              >
-                <span style={{ marginRight: '8px' }}>
-                  {option === 'Copy' && <ContentCopyIcon />}
-                  {option === 'Paste' && <ContentPasteIcon />}
-                </span>
-                {option}
-              </div>
-            ))}
-          </div>
+          <Zoom in={contextMenu.visible}>
+            <div
+              style={{
+                position: 'absolute',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                background: isDark == true ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
+                backdropFilter: 'blur(4px)',
+                border: 'none',
+                borderRadius: '6px',
+                boxShadow: isDark == true ? '0 3px 10px rgba(0,0,0,0.5)' : '0 3px 10px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                width: '120px',
+                padding: '6px 0',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '13px',
+                color: isDark == true ? '#E0E0E0' : '#333333'
+              }}
+            >
+              {contextMenu.options.map((option) => (
+                <div
+                  key={option}
+                  style={{
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderBottom:
+                      contextMenu.options.length > 1
+                        ? `1px solid ${isDark == true ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                        : 'none',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background:
+                        isDark == true
+                          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                      transform: 'scale(1.02)',
+                      boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                    }
+                  }}
+                  onClick={() => handleMenuOptionClick(option)}
+                  onMouseEnter={(e) =>
+                    (e.target.style.backgroundColor = isDark == true ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)')
+                  }
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
+                >
+                  <span style={{ marginRight: '8px', color: isDark == true ? '#64B5F6' : '#2196F3' }}>
+                    {option === 'Copy' && <ContentCopyIcon sx={{ fontSize: 16 }} />}
+                    {option === 'Paste' && <ContentPasteIcon sx={{ fontSize: 16 }} />}
+                  </span>
+                  {option}
+                </div>
+              ))}
+            </div>
+          </Zoom>
         )}
+        <>{renderPopper()}</>;
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
-        <AlertMessage open={open} message={message} setOpen={setOpen} success={success} />
       </div>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );
 }

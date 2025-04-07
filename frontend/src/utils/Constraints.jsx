@@ -1,4 +1,19 @@
 import { v4 as uid } from 'uuid';
+import {
+  CircularNode,
+  CustomGroupNode,
+  CustomNode,
+  DefaultNode,
+  DiagonalNode,
+  InputNode,
+  Memory,
+  MicroController,
+  MultiHandleNode,
+  OutputNode
+} from '../ui-component/custom';
+import AttackNode from '../ui-component/custom/nodes/AttackNode';
+import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../ui-component/CustomGates';
+import DataNode from '../ui-component/custom/nodes/DataNode';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);
@@ -46,4 +61,75 @@ export const style = {
   borderColor: 'black',
   borderWidth: '2px',
   borderStyle: 'solid'
+};
+
+export const pageNodeTypes = {
+  maincanvas: {
+    input: InputNode,
+    output: OutputNode,
+    default: DefaultNode,
+    data: DataNode,
+    receiver: CustomNode,
+    signal: CustomNode,
+    custom: CustomNode,
+    transmitter: CircularNode,
+    transceiver: DiagonalNode,
+    mcu: MicroController,
+    memory: Memory,
+    group: CustomGroupNode,
+    multihandle: MultiHandleNode
+  },
+  attackcanvas: {
+    input: InputNode,
+    output: OutputNode,
+    default: AttackNode,
+    receiver: CustomNode,
+    custom: CustomNode,
+    signal: CustomNode,
+    transmitter: CircularNode,
+    transceiver: DiagonalNode,
+    attack_tree_node: AttackTreeNode,
+    Event: Event,
+    [`OR Gate`]: ORGate,
+    [`AND Gate`]: ANDGate,
+    [`Transfer Gate`]: TransferGate,
+    [`Voting Gate`]: VotingGate
+  }
+};
+
+export const getNodeDetails = (type, name, count, newNode) => {
+  const dataNode = {
+    id: uid(),
+    data: {
+      label: newNode?.nodeName ?? `New ${name} ${count}`,
+      style: {
+        backgroundColor: '#dadada',
+        fontSize: '12px',
+        fontFamily: 'Inter',
+        fontStyle: 'normal',
+        textAlign: 'center',
+        color: 'black',
+        fontWeight: 500,
+        textDecoration: 'none',
+        borderColor: 'gray',
+        borderWidth: '2px',
+        borderStyle: 'solid',
+        width: 150,
+        height: 50
+      }
+    },
+    type: type,
+    properties: newNode?.properties ?? ['Confidentiality'],
+    width: 150,
+    height: 50,
+    isAsset: false
+  };
+  const updatePositionWithinRange = (position, range) => {
+    const getRandomOffset = (range) => Math.random() * range * 2 - range;
+    return { x: position.x + getRandomOffset(range), y: position.y + getRandomOffset(range) };
+  };
+  const position = { x: 495, y: 250 };
+  const range = 50;
+  const updatedPosition = updatePositionWithinRange(position, range);
+  return { ...dataNode, position: updatedPosition };
 };

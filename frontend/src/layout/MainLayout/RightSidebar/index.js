@@ -1,11 +1,12 @@
 import React from 'react';
 import AddNewNode from '../../../ui-component/Modal/AddNewNode';
+import AddDataNode from '../../../ui-component/Modal/AddDataNode';
 import { Box } from '@mui/material';
 import MenuCard from '../Sidebar/MenuCard/index1';
 import { useSelector } from 'react-redux';
 
 export default function RightDrawer() {
-  const { propertiesTabOpen, addNodeTabOpen } = useSelector((state) => state?.canvas);
+  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab } = useSelector((state) => state?.canvas);
 
   const drawerStyles = {
     backgroundColor: '#f5f5f5',
@@ -27,6 +28,7 @@ export default function RightDrawer() {
       <Box sx={drawerStyles}>
         {propertiesTabOpen && <MenuCard />}
         {addNodeTabOpen && <AddNewNode />}
+        {addDataNodeTab && <AddDataNode />}
       </Box>
     </React.Fragment>
   );

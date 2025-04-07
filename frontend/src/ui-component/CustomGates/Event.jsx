@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
+import { Handle, Position, NodeResizer } from 'reactflow';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
@@ -14,12 +14,11 @@ const selector = (state) => ({
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
   addAttackScene: state.addAttackScene,
-  nodes: state.nodes
+  setAttackNodes: state.setAttackNodes
 });
 
 export default function Event(props) {
-  const { nodes, update, model, addAttackScene, getAttackScenario, attacks, requirements } = useStore(selector, shallow);
-  const { setNodes } = useReactFlow();
+  const { update, model, addAttackScene, getAttackScenario, attacks, requirements, setAttackNodes } = useStore(selector, shallow);
   const inputValueFromProps = useMemo(() => {
     const matchingAttack = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     // console.log('matchingAttack', matchingAttack);
@@ -29,16 +28,19 @@ export default function Event(props) {
   const [inputValue, setInputValue] = useState(inputValueFromProps);
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [nodeDimensions, setNodeDimensions] = useState({ width: 150, height: 60 }); // Default node dimensions
+  const [nodeDimensions, setNodeDimensions] = useState({
+    width: props?.data?.style?.width ?? 150,
+    height: props?.data?.style?.height ?? 60
+  }); // Default node dimensions
   const [isHovered, setIsHovered] = useState(false);
 
   const handleDeleteFromCanvas = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== props.id));
+    setAttackNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
   // console.log('nodes', nodes);
 
   const updateNodeRating = useCallback(() => {
-    setNodes((nodes) =>
+    setAttackNodes((nodes) =>
       nodes.map((node) => {
         const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
         if (attack) {
@@ -53,18 +55,12 @@ export default function Event(props) {
         return node;
       })
     );
-  }, [attacks, setNodes]);
+  }, [attacks, setAttackNodes]);
 
   // Call this function after rendering or whenever attacks data changes
   useEffect(() => {
     updateNodeRating();
   }, [updateNodeRating]);
-
-  // Open the dialog on double-click
-  const handleOpenDialog = (e) => {
-    e.preventDefault();
-    setOpenDialog(true);
-  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -102,15 +98,6 @@ export default function Event(props) {
 
   const bgColor = getBgColor();
 
-  // console.log('bgColor', bgColor);
-  // console.log('props.data.style', props.data.style);
-  // Calculate font size dynamically based on node dimensions
-  const calculateFontSize = () => {
-    const baseFontSize = 14; // Base font size
-    return Math.max(baseFontSize, (nodeDimensions.width + nodeDimensions.height) / 15);
-  };
-
-  const fontSize = calculateFontSize();
   const inputPadding = 5; // Padding inside the input box
 
   return (
@@ -118,12 +105,31 @@ export default function Event(props) {
       <NodeResizer
         lineStyle={{ backgroundColor: bgColor ?? 'gray', borderWidth: '2px' }}
         minWidth={100}
-        minHeight={60}
+        minHeight={50}
         onResize={(event, params) => {
+          // const newSize = Math.max(10, (params.width + params.height) / 15); // Remove upper limit
+
           setNodeDimensions({ width: params.width, height: params.height });
+          setAttackNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === props?.id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      style: {
+                        ...node.data.style,
+                        width: params.width,
+                        height: params.height
+                      }
+                    }
+                  }
+                : node
+            )
+          );
         }}
       />
-      <Handle type="target" position={Position.Top} />
+      <Handle id="top" type="target" position={Position.Top} isConnectable={true} />
       <Box
         // onDoubleClick={handleOpenDialog}
         display="flex"
@@ -144,22 +150,6 @@ export default function Event(props) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* <Typography
-          variant="body2"
-          sx={{
-            position: 'absolute',
-            top: 4,
-            left: 4,
-            backgroundColor: '#000',
-            color: '#fff',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '10px',
-            fontWeight: 600
-          }}
-        >
-          {props?.id?.slice(0, 5)}
-        </Typography> */}
         <Box
           sx={{
             position: 'absolute',
@@ -176,28 +166,29 @@ export default function Event(props) {
           onChange={(e) => {
             setInputValue(e.target.value);
             update(props?.id, e.target.value);
-
-            // Dynamically adjust the height
-            const target = e.target;
-            target.style.height = 'auto'; // Reset height to calculate new height
-            target.style.height = `${target.scrollHeight}px`; // Set height based on content
+          }}
+          onInput={(e) => {
+            e.target.style.height = 'auto'; // Reset height
+            e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height dynamically
           }}
           style={{
+            height: inputValue.length > 20 ? nodeDimensions?.height : 'auto',
             marginRight: '10px',
-            width: `${nodeDimensions.width - 20}px`, // Adjust width relative to node size
+            width: 'fit-content',
             backgroundColor: 'inherit',
             borderRadius: '4px',
             textAlign: 'center',
             outline: 'none',
-            fontSize: `${fontSize}px`, // Dynamically adjust font size
+            fontSize: `${props?.data?.style?.fontSize}px`,
             color: 'inherit',
-            padding: `${inputPadding}px`, // Consistent padding
+            padding: `${inputPadding}px`,
             border: 'none',
-            resize: 'none', // Prevent manual resizing by user
-            overflowWrap: 'break-word', // Enable word wrapping
-            whiteSpace: 'pre-wrap', // Preserve whitespace and enable wrapping
-            overflow: 'hidden', // Prevent scrollbars
-            fontFamily: 'inherit'
+            resize: 'none',
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflow: 'hidden',
+            fontFamily: 'inherit',
+            minHeight: '20px' // Prevents collapsing
           }}
           rows={1} // Start with a single row
         />
@@ -237,7 +228,7 @@ export default function Event(props) {
         </div>
       </Box>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle id="bottom" type="source" position={Position.Bottom} isConnectable={true} />
 
       {/* Dialog for converting to Attack */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
@@ -264,4 +255,5 @@ export default function Event(props) {
       </Dialog>
     </>
   );
+  x;
 }

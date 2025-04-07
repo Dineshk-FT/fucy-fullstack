@@ -52,8 +52,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '0px 8px',
-    textAlign: 'center'
+    padding: '0px 15px',
+    textAlign: 'left'
   }
 }));
 
@@ -94,14 +94,38 @@ export default function DsDerivationTable() {
     return DsDerivationHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
+  const handleSelectAll = (event) => {
+    const isChecked = event.target.checked;
+    const updatedRows = filtered.map((row) => ({
+      ...row,
+      Checked: isChecked
+    }));
+
+    // Update the state with the new rows
+    setFiltered(updatedRows);
+    const details = {
+      id: damageScenarios?._id,
+      isAllChecked: isChecked
+    };
+    update(details)
+      .then((res) => {
+        if (res) {
+          getDamageScenarios(modelId);
+        }
+      })
+      .catch((err) => console.log('err', err));
+  };
+
   React.useEffect(() => {
     if (damageScenarios['Derivations']) {
-      const scene = damageScenarios['Derivations']?.map((dt) => {
+      const scene = damageScenarios['Derivations']?.map((dt, i) => {
         return {
+          SNo: i + 1,
           id: dt?.id,
           'Task/Requirement': dt?.task,
           'Losses of Cybersecurity Properties': dt?.loss,
-          Assets: dt?.asset,
+          // Assets: dt?.asset,
+          Assets: true,
           'Damage Scenarios': dt?.damageScene,
           Checked: dt?.is_checked === 'true' ? true : false
         };
@@ -112,20 +136,28 @@ export default function DsDerivationTable() {
   }, [damageScenarios]);
 
   const handleChange = (value, rowId) => {
+    setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: !value } : row)));
+
     const details = {
       id: damageScenarios?._id,
       isChecked: !value,
       'detail-id': rowId
     };
-    // console.log('details', details);
+
     update(details)
       .then((res) => {
         if (res) {
-          getDamageScenarios(modelId);
+          getDamageScenarios(modelId); // Fetch updated data from backend
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.error('Error updating row:', err);
+
+        // Revert UI state if backend update fails
+        setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: value } : row)));
+      });
   };
+
   const handleSearch = (e) => {
     const { value } = e.target;
     // console.log('value', value);
@@ -231,7 +263,7 @@ export default function DsDerivationTable() {
             case typeof row[item.name] === 'object':
               cellContent = (
                 <StyledTableCell key={index} align={'left'}>
-                  {row[item.name].length ? row[item.name].join() : '-'}
+                  {row[item.name]?.length ? row[item.name].join() : '-'}
                 </StyledTableCell>
               );
               break;
@@ -266,9 +298,9 @@ export default function DsDerivationTable() {
           }
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mr={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
           <Box display="flex" justifyContent="center" gap={1}>
@@ -338,7 +370,7 @@ export default function DsDerivationTable() {
             '& .MuiPaper-root': { maxHeight: '100vh' },
             borderRadius: '0px',
             padding: 0.25,
-            maxHeight: '70svh',
+            maxHeight: tableHeight,
             scrollbarWidth: 'thin'
           }}
         >
@@ -347,27 +379,41 @@ export default function DsDerivationTable() {
               <TableRow>
                 {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                    {hd?.name}
-                    <div
-                      className="resize-handle"
-                      style={{
-                        position: 'absolute',
-                        right: 0,
-                        top: 0,
-                        width: '5px',
-                        height: '100%',
-                        cursor: 'col-resize',
-                        backgroundColor: 'transparent'
-                      }}
-                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                    />
+                    {hd?.name === 'Checked' ? (
+                      <Box display="flex" alignItems="center">
+                        <Checkbox
+                          {...label}
+                          checked={filtered.length > 0 && filtered.every((row) => row.Checked)}
+                          indeterminate={filtered.some((row) => row.Checked) && !filtered.every((row) => row.Checked)}
+                          onChange={handleSelectAll}
+                        />
+                        {hd?.name}
+                      </Box>
+                    ) : (
+                      hd?.name
+                    )}
+                    {
+                      <div
+                        className="resize-handle"
+                        style={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 0,
+                          width: '5px',
+                          height: '100%',
+                          cursor: 'col-resize',
+                          backgroundColor: 'transparent'
+                        }}
+                        onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                      />
+                    }
                   </StyledTableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-                <RenderTableRow row={row} rowKey={rowkey} />
+                <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
           </Table>

@@ -1,21 +1,14 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  InputLabel,
-  Box,
-  TextField,
-  Slide
-} from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 // import { v4 as uid } from 'uuid';
 import toast, { Toaster } from 'react-hot-toast';
+import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
+import { CyberClaimsIcon, CyberControlsIcon, CyberGoalIcon, CyberRequireIcon, CybersecurityIcon } from '../../assets/icons';
+import DialogCommonTitle from './DialogCommonTitle';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -29,11 +22,22 @@ const selector = (state) => ({
 
 const notify = (message, status) => toast[status](message);
 export default function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
+  const color = ColorTheme();
   const { addScene, model, getCyberSecurityScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
     Name: '',
     Description: ''
   });
+
+  const CommonIcon = useMemo(() => {
+    const getIcon = {
+      'Cybersecurity Goals': CyberGoalIcon,
+      'Cybersecurity Requirements': CyberRequireIcon,
+      'Cybersecurity Controls': CyberControlsIcon,
+      'Cybersecurity Claims': CyberClaimsIcon
+    };
+    return getIcon[name];
+  }, [name]);
 
   // console.log('name', name);
   const handleCreate = () => {
@@ -52,7 +56,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
           // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
           notify(res.message ?? 'Deleted successfully', 'success');
-          handleClose();
+          // handleClose();
           setTemplateDetails({
             name: '',
             Description: ''
@@ -72,22 +76,22 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
         open={open}
         TransitionComponent={Transition}
         keepMounted
+        PaperComponent={PaperComponent}
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="draggable-dialog-title"
+        aria-describedby="draggable-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
-            // background:'#999999',
+            background: color?.modalBg,
             width: 475
           }
         }}
       >
-        <DialogTitle variant="h4" color="primary">
-          Add {name}
-        </DialogTitle>
+        <DialogCommonTitle icon={CommonIcon} title={` Add ${name}`} />
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Name :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -96,7 +100,7 @@ export default function AddCyberSecurityModal({ open, handleClose, name, id, typ
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel sx={{ fontWeight: 600, color: '#000' }}>Description :</InputLabel>
+              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"

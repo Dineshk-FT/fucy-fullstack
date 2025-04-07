@@ -11,7 +11,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import ColorTheme from '../../store/ColorTheme';
+import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
 
 export default function SelectLosses({
   details,
@@ -25,6 +28,9 @@ export default function SelectLosses({
   update,
   getThreatScenario
 }) {
+  const color = ColorTheme();
+  // console.log('details', details);
+  // console.log('selectedRow', selectedRow);
   useEffect(() => {
     const updateDetailsWithCyberLosses = (details, cyberLosses) => {
       const updatedDetails = details.map((item) => {
@@ -58,13 +64,14 @@ export default function SelectLosses({
 
     if (index !== -1) {
       updatedDetails[index].props.forEach((prop) => {
-        prop.isSelected = isChecked;
+        if (!prop?.is_risk_added) {
+          prop.isSelected = isChecked;
+        }
       });
     }
 
     setDetails(updatedDetails);
   };
-
   const handleChildChange = (e, prop, item) => {
     const updatedDetails = JSON.parse(JSON.stringify(details));
     const parentIndex = updatedDetails.findIndex((ind) => ind?.nodeId === item?.nodeId);
@@ -144,7 +151,8 @@ export default function SelectLosses({
         sx={{
           '& .MuiPaper-root': {
             minWidth: 350,
-            width: 'fit-content'
+            width: 'fit-content',
+            background: color?.tabBG
           }
         }}
       >
@@ -174,7 +182,11 @@ export default function SelectLosses({
                                 onClick={(e) => e.stopPropagation()}
                               />
                             }
-                            label={item?.name}
+                            label={
+                              <Typography variant="h5" sx={{ color: color?.title }}>
+                                {item?.name}
+                              </Typography>
+                            }
                           />
                         </FormGroup>
                       </div>
@@ -190,11 +202,21 @@ export default function SelectLosses({
                               control={
                                 <Checkbox
                                   size="small"
+                                  disabled={pr?.is_risk_added}
                                   checked={pr?.isSelected} // Set based on isSelected
                                   onChange={(e) => handleChildChange(e, pr, item)}
                                 />
                               }
-                              label={`Loss of ${pr.name}`}
+                              label={
+                                <Typography variant="p" sx={{ color: color?.title, display: 'flex', gap: 1, alignItems: 'center' }}>
+                                  {`Loss of ${pr.name}`}
+                                  {pr?.is_risk_added && (
+                                    <Tooltip title="This risk has already been added and cannot be changed">
+                                      <InfoIcon fontSize="small" sx={{ marginLeft: 0.5 }} />
+                                    </Tooltip>
+                                  )}
+                                </Typography>
+                              }
                             />
                           </FormGroup>
                         }

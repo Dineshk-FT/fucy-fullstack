@@ -2,8 +2,15 @@
 import React, { useState, useRef } from 'react';
 import { List, ListItemButton, ListItemText, Button, CircularProgress, Box, Typography, Popper, Paper } from '@mui/material';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router';
+import { useDispatch } from 'react-redux';
+import { setModelId } from '../../store/slices/PageSectionSlice';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
 
-export default function DeleteProject({ open, handleClose, Models, deleteModels, isLoading, getModels }) {
+export default function DeleteProject({ open, handleClose, Models, deleteModels, isLoading, getModels, model }) {
+  const userId = sessionStorage.getItem('user-id');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [selectedModels, setSelectedModels] = useState([]);
   const notify = (message, status) => toast[status](message);
 
@@ -16,13 +23,20 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
   };
 
   const handleDelete = () => {
-    deleteModels({ 'model-ids': selectedModels })
+    deleteModels({ 'model-ids': selectedModels, 'user-id': userId })
       .then((res) => {
-        console.log('res', res);
-        if (res) {
+        // console.log('res', res);
+        if (!res.error) {
           notify(res.message ?? 'Models deleted successfully', 'success');
+          if (selectedModels.includes(model?._id)) {
+            navigate(`/Models/${res?.next_model_id}`);
+            dispatch(setModelId(res?.next_model_id));
+            dispatch(closeAll());
+          }
           getModels();
           handleClose();
+        } else {
+          notify(res.error ?? 'Something Went Wrong', 'error');
         }
       })
       .catch((err) => {
@@ -39,7 +53,7 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
         anchorEl={anchorRef.current}
         placement="bottom-end"
         disablePortal={false}
-        style={{ zIndex: 1500, top: 90, left: 150 }}
+        style={{ zIndex: 1500, top: 100, left: 940 }}
       >
         <Paper
           sx={{

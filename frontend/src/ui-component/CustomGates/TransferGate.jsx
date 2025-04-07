@@ -76,7 +76,7 @@ export default function TransferGate(props) {
         onMouseLeave={() => setIsHovered(false)}
         style={{ position: 'relative', width: '100px', height: '100px' }}
       >
-        <CustomHandle type="target" position={Position.Top} style={{ top: '0px', opacity: 0 }} isConnectable={1} />
+        <CustomHandle type="target" position={Position.Top} style={{ top: '0px', opacity: 0 }} isConnectable={100} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <input
             type="text"
@@ -97,11 +97,11 @@ export default function TransferGate(props) {
               //eslint-disable-next-line
               strokeWidth="6"
               transform="rotate(-90 256 256)"
-              d="M 105,111.3 V 400.7 L 365.5,256 Z M 16,247 v "
+              d="M 105,111.3 V 400.7 L 365.5,256 Z M 16,247"
             />
           </svg>
         </div>
-        <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} />
+        <Handle type="source" position={Position.Bottom} style={{ bottom: '20px', opacity: 0 }} isConnectable={true} />
       </div>
       {/* {isLevelOpen && <Levels label={data?.label} id={id}/>} */}
       {open && <AddPropertiesGate open={open} handleClose={handleClose} updateNode={props} />}

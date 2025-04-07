@@ -42,15 +42,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CreateDerivedThreatModal from '../Modal/CreateDerivedThreatModal';
 
 const selector = (state) => ({
   model: state.model,
+  addThreatScene: state.addThreatScene,
   derived: state.threatScenarios.subs[0],
   userDefined: state.threatScenarios.subs[1],
   derivedId: state.threatScenarios['subs'][0]['_id'],
   UserDefinedId: state.threatScenarios['subs'][1]['_id'],
   getDamageScenarios: state.getDamageScenarios,
   getThreatScenario: state.getThreatScenario,
+  getRiskTreatment: state.getRiskTreatment,
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
@@ -72,14 +75,14 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    padding: '5px',
     fontSize: 13,
-    padding: '2px 8px',
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
+    fontSize: 14,
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '2px 8px',
+    padding: '10px 8px',
     textAlign: 'center'
   }
 }));
@@ -94,8 +97,11 @@ export default function Tstable() {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [openTs, setOpenTs] = useState(false);
-  const [openSelect, setOpenSelect] = useState(false);
+  const [openModal, setOpenModal] = useState({
+    threat: false,
+    select: false,
+    derived: false
+  });
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
 
@@ -110,42 +116,17 @@ export default function Tstable() {
     updateName,
     derivedId,
     UserDefinedId,
-    deleteThreatScenario
+    deleteThreatScenario,
+    getRiskTreatment,
+    addThreatScene
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
-
-  // console.log('damageScenarios', damageScenarios);
-  // console.log('threatID', threatID);
-
-  // Pagination state
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [columnWidths, setColumnWidths] = useState({});
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.threatScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
-  const [selectedRows, setSelectedRows] = useState([]);
-
-  // Open/Close the filter modal
-  const handleOpenFilter = () => setOpenFilter(true);
-  const handleCloseFilter = () => setOpenFilter(false);
-
-  const handleOpenSelect = (row) => {
-    setSelectedRow(row);
-    setOpenSelect(true);
-  };
-
-  const handleCloseSelect = () => {
-    setOpenSelect(false);
-    setSelectedRow({});
-  };
-  const refreshAPI = () => {
-    getThreatScenario(model?._id);
-    handleCloseSelect();
-  };
 
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
@@ -157,6 +138,32 @@ export default function Tstable() {
     }
   }, [title, visibleColumns]);
 
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [columnWidths, setColumnWidths] = useState(
+    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
+  );
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
+
+  const handleOpenSelect = (row) => {
+    setSelectedRow(row);
+    setOpenModal((state) => ({ ...state, select: true }));
+  };
+
+  const handleCloseSelect = () => {
+    setOpenModal((state) => ({ ...state, select: false }));
+    setSelectedRow({});
+  };
+  const refreshAPI = () => {
+    getThreatScenario(model?._id);
+    handleCloseSelect();
+  };
+
   useEffect(() => {
     getDamageScenarios(model?._id);
   }, []);
@@ -166,7 +173,6 @@ export default function Tstable() {
       let id = 0;
       const mod1 = derived['Details']
         ?.map((detail) => {
-          // console.log('detail', detail);
           return detail?.Details?.map((nodedetail) => {
             return nodedetail?.props?.map((prop) => {
               id++;
@@ -175,6 +181,7 @@ export default function Tstable() {
                 ID: prop?.id,
                 rowId: detail?.rowId,
                 nodeId: nodedetail?.nodeId,
+                Assets: nodedetail?.node,
                 Name: `${threatType(prop?.name)} of ${nodedetail?.node} leads to  ${detail?.damage_name}`,
                 Description: prop?.description ?? `${threatType(prop?.name)} occured due to ${prop?.name} in ${nodedetail?.node} `,
                 losses: [],
@@ -209,21 +216,16 @@ export default function Tstable() {
       const combined = mod1.concat(mappedDetails);
       setRows(combined);
       setFiltered(combined);
-      // const data = {
-      //   name: damageScenarios?.name,
-      //   scenes: damageScenarios?.Details
-      // };
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);
-  // console.log('filtered', filtered);
 
   const handleOpenModalTs = () => {
-    setOpenTs(true);
+    setOpenModal((state) => ({ ...state, threat: true }));
   };
 
   const handleCloseTs = () => {
-    setOpenTs(false);
+    setOpenModal((state) => ({ ...state, threat: false }));
   };
 
   const handleBack = () => {
@@ -256,15 +258,16 @@ export default function Tstable() {
   };
 
   const handleResizeStart = (e, columnId) => {
-    const startX = e.clientX;
+    e.preventDefault();
+    e.stopPropagation(); // Prevent unwanted bubbling
 
-    // Use the actual width of the column if no width is set in state
-    const headerCell = e.target.parentNode;
+    const startX = e.clientX;
+    const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
     const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX; // Calculate movement direction
-      const newWidth = Math.max(50, startWidth + delta); // Resize based on delta
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + delta);
 
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
@@ -278,6 +281,12 @@ export default function Tstable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleOpenDerived = () => {
+    setOpenModal((state) => ({ ...state, derived: true }));
+  };
+  const handleCloseDerived = () => {
+    setOpenModal((state) => ({ ...state, derived: false }));
+  };
   const handleDeleteSelected = () => {
     const details = {
       'model-id': model?._id,
@@ -289,6 +298,7 @@ export default function Tstable() {
           notify(res.message ?? 'Deleted successfully', 'success');
           getDamageScenarios(model?._id);
           getThreatScenario(model?._id);
+          getRiskTreatment(model?._id);
           setSelectedRows([]);
         } else {
           notify('Something went wrong', 'error');
@@ -320,10 +330,7 @@ export default function Tstable() {
     });
   };
 
-  // console.log('selectedRows', selectedRows);
-
   const RenderTableRow = ({ row, rowKey, isChild = false }) => {
-    // console.log('row', row);
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -358,7 +365,6 @@ export default function Tstable() {
 
         updateName(details)
           .then((res) => {
-            // console.log('res', res);
             if (!res.error) {
               handleClosePopper();
               notify(res.message ?? 'Deleted successfully', 'success');
@@ -370,10 +376,8 @@ export default function Tstable() {
           .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
       }
     };
-    // console.log('isPopperFocused', isPopperFocused);
 
     const handleClosePopper = () => {
-      // console.log('closed');
       if (!isPopperFocused) {
         setEditingField(null);
         setEditValue('');
@@ -386,7 +390,7 @@ export default function Tstable() {
         key={row.name}
         data={row}
         sx={{
-          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          backgroundColor: isSelected ? '#9FE2BF' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }
@@ -489,7 +493,6 @@ export default function Tstable() {
                           <img src={DamageIcon} alt="damage" height="10px" width="10px" />
                           <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
                             {`[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`}
-                            {/* {damage?.name} */}
                           </span>
                         </span>
                       ))
@@ -554,9 +557,9 @@ export default function Tstable() {
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} />
+          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
         </Box>
         <Box display="flex" gap={3}>
@@ -585,6 +588,16 @@ export default function Tstable() {
           >
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
+          </Button>
+          <Button
+            sx={{ fontSize: '0.85rem' }}
+            variant="contained"
+            color="primary"
+            startIcon={<CircleIcon />} // Or any appropriate icon
+            onClick={handleOpenDerived}
+            disabled={selectedRows.length === 0}
+          >
+            Derive
           </Button>
           <Button
             sx={{ fontSize: '0.85rem' }}
@@ -624,15 +637,22 @@ export default function Tstable() {
       </Dialog>
 
       <TableContainer
-        stickyHeader
         component={Paper}
         sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+        onDragOver={(e) => e.preventDefault()}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {Head?.map((hd) => (
-                <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                <StyledTableCell
+                  key={hd.id}
+                  style={{
+                    width: `${columnWidths[hd.id]}px`,
+                    position: 'relative',
+                    overflowWrap: 'break-word'
+                  }}
+                >
                   {hd?.name}
                   <div
                     className="resize-handle"
@@ -643,10 +663,7 @@ export default function Tstable() {
                       width: '5px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent',
-                      '& .MuiTableCell-root': {
-                        transition: 'width 0.2s ease'
-                      }
+                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
@@ -656,7 +673,7 @@ export default function Tstable() {
           </TableHead>
           <TableBody>
             {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} />
+              <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
             ))}
           </TableBody>
         </Table>
@@ -675,10 +692,10 @@ export default function Tstable() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
-      {openSelect && (
+      <AddThreatScenarios open={openModal?.threat} handleClose={handleCloseTs} id={model._id} />
+      {openModal?.select && (
         <SelectDamageScenes
-          open={openSelect}
+          open={openModal?.select}
           handleClose={handleCloseSelect}
           details={details}
           selectedRow={selectedRow}
@@ -688,6 +705,15 @@ export default function Tstable() {
         />
       )}
       <Toaster position="top-right" reverseOrder={false} />
+      {openModal?.derived && (
+        <CreateDerivedThreatModal
+          open={openModal?.derived}
+          handleClose={handleCloseDerived}
+          id={model?._id}
+          selectedRows={selectedRows}
+          notify={notify}
+        />
+      )}
     </Box>
   );
 }

@@ -167,26 +167,27 @@ export const stakeHeader = [
 ];
 
 export const DSTableHeader = [
-  { id: 1, name: 'ID' },
-  { id: 2, name: 'Name' },
+  { id: 1, name: 'ID', w: 70, minW: 60 },
+  { id: 2, name: 'Name', w: 100, minW: 90 },
   // { id: 3, name: 'Damage Scenario' },
-  { id: 4, name: 'Description/Scalability' },
-  { id: 5, name: 'Losses of Cybersecurity Properties' },
-  { id: 6, name: 'Assets' },
-  { id: 7, name: 'Component/Message' },
-  { id: 13, name: 'Safety Impact' },
-  { id: 14, name: 'Financial Impact' },
-  { id: 15, name: 'Operational Impact' },
-  { id: 16, name: 'Privacy Impact' },
-  { id: 17, name: 'Impact Justification' },
-  { id: 18, name: 'Associated Threat Scenarios' },
-  { id: 19, name: 'Overall Impact' },
-  { id: 20, name: 'Asset is Evaluated' },
-  { id: 21, name: 'Cybersecurity Properties are Evaluated' },
-  { id: 22, name: 'Unevaluated Cybersecurity Properties' }
+  { id: 4, name: 'Description/Scalability', w: 100, minW: 90 },
+  { id: 5, name: 'Losses of Cybersecurity Properties', w: 220, minW: 150 },
+  { id: 6, name: 'Assets', w: 70, minW: 60 },
+  // { id: 7, name: 'Component/Message', w: 100, minW: 70 },
+  { id: 13, name: 'Safety Impact', w: 160, minW: 140 },
+  { id: 14, name: 'Financial Impact', w: 160, minW: 140 },
+  { id: 15, name: 'Operational Impact', w: 160, minW: 140 },
+  { id: 16, name: 'Privacy Impact', w: 160, minW: 140 },
+  { id: 17, name: 'Impact Justification', w: 120, minW: 60 },
+  { id: 18, name: 'Associated Threat Scenarios', w: 100, minW: 60 },
+  { id: 19, name: 'Overall Impact', w: 100, minW: 60 }
+  // { id: 20, name: 'Asset is Evaluated', w: 80, minW: 60 },
+  // { id: 21, name: 'Cybersecurity Properties are Evaluated', w: 120, minW: 100 },
+  // { id: 22, name: 'Unevaluated Cybersecurity Properties', w: 120, minW: 100 }
 ];
 
 export const DsDerivationHeader = [
+  { id: 6, name: 'SNo' },
   { id: 1, name: 'Task/Requirement' },
   { id: 2, name: 'Checked' },
   { id: 3, name: 'Losses of Cybersecurity Properties' },
@@ -204,10 +205,10 @@ export const TsTableHeader = [
   { id: 7, name: 'Losses of Cybersecurity Properties' },
   { id: 8, name: 'Assets' },
   { id: 9, name: 'Related Attack Trees' },
-  { id: 10, name: 'Related Attack Path Models' },
-  { id: 11, name: 'Assessment References' },
-  { id: 12, name: 'To be Assessed' },
-  { id: 13, name: 'Assessment Jurification' }
+  { id: 10, name: 'Related Attack Path Models' }
+  // { id: 11, name: 'Assessment References' },
+  // { id: 12, name: 'To be Assessed' },
+  // { id: 13, name: 'Assessment Jurification' }
 ];
 
 export const AttackTableHeader = [
@@ -215,7 +216,7 @@ export const AttackTableHeader = [
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
-  { id: 5, name: 'Approach' },
+  // { id: 5, name: 'Approach' },
   { id: 6, name: 'Elapsed Time' },
   { id: 7, name: 'Expertise' },
   { id: 8, name: 'Knowledge of the Item' },
@@ -232,36 +233,36 @@ export const AttackTableHeader = [
 ];
 
 export const RiskTreatmentHeaderTable = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Threat Scenario' },
-  { id: 3, name: 'Assets' },
-  { id: 4, name: 'Damage Scenarios' },
-  { id: 5, name: 'Related UNECE Threats or Vulns' },
-  { id: 6, name: 'Safety Impact' },
-  { id: 7, name: 'Financial Impact' },
-  { id: 8, name: 'Operational Impact' },
-  { id: 9, name: 'Privacy Impact' },
-  { id: 10, name: 'Attack Tree or Attack Path(s)' },
-  { id: 11, name: 'Attack Path Name' },
-  { id: 12, name: 'Attack Path Details' },
-  { id: 13, name: 'Attack Feasibility Rating' },
-  { id: 14, name: 'Mitigated Attack Feasibility' },
-  { id: 15, name: 'Acceptence Level' },
-  { id: 16, name: 'Safety Risk' },
-  { id: 17, name: 'Financial Risk' },
-  { id: 18, name: 'Operational Risk' },
-  { id: 19, name: 'Privacy Risk' },
-  { id: 20, name: 'Residual Safety Risk' },
-  { id: 21, name: 'Residual Financial Risk' },
-  { id: 22, name: 'Residual Operational Risk' },
-  { id: 23, name: 'Residual Privacy Risk' },
-  { id: 24, name: 'Risk Treatment Options' },
-  { id: 25, name: 'Risk Treatment Justification' },
-  { id: 26, name: 'Applied Measures' },
-  { id: 27, name: 'Detailed / Combained Threat Scenarios' },
-  { id: 28, name: 'Cybersecurity Goals' },
-  { id: 29, name: 'Contributing Requirements' },
-  { id: 30, name: 'Cybersecurity Claims' }
+  { id: 1, name: 'SNo', w: 80, minW: 60 },
+  { id: 2, name: 'Threat Scenario', w: 150, minW: 130 },
+  { id: 3, name: 'Assets', w: 80, minW: 60 },
+  { id: 4, name: 'Damage Scenarios', w: 130, minW: 110 },
+  { id: 5, name: 'Related UNECE Threats or Vulns', w: 120, minW: 100 },
+  { id: 6, name: 'Safety Impact', w: 100, minW: 80 },
+  { id: 7, name: 'Financial Impact', w: 100, minW: 80 },
+  { id: 8, name: 'Operational Impact', w: 100, minW: 80 },
+  { id: 9, name: 'Privacy Impact', w: 100, minW: 80 },
+  { id: 10, name: 'Attack Tree or Attack Path(s)', w: 120, minW: 100 },
+  { id: 11, name: 'Attack Path Name', w: 100, minW: 80 },
+  { id: 12, name: 'Attack Path Details', w: 100, minW: 80 },
+  { id: 13, name: 'Attack Feasibility Rating', w: 100, minW: 60 },
+  { id: 14, name: 'Mitigated Attack Feasibility', w: 100, minW: 60 },
+  { id: 15, name: 'Acceptence Level', w: 100, minW: 80 },
+  { id: 16, name: 'Safety Risk', w: 100, minW: 80 },
+  { id: 17, name: 'Financial Risk', w: 100, minW: 80 },
+  { id: 18, name: 'Operational Risk', w: 100, minW: 80 },
+  { id: 19, name: 'Privacy Risk', w: 100, minW: 80 },
+  { id: 20, name: 'Residual Safety Risk', w: 100, minW: 80 },
+  { id: 21, name: 'Residual Financial Risk', w: 100, minW: 80 },
+  { id: 22, name: 'Residual Operational Risk', w: 100, minW: 80 },
+  { id: 23, name: 'Residual Privacy Risk', w: 100, minW: 80 },
+  { id: 24, name: 'Risk Treatment Options', w: 100, minW: 80 },
+  { id: 25, name: 'Risk Treatment Justification', w: 100, minW: 80 },
+  { id: 26, name: 'Applied Measures', w: 100, minW: 80 },
+  { id: 27, name: 'Detailed / Combained Threat Scenarios', w: 100, minW: 80 },
+  { id: 28, name: 'Cybersecurity Goals', w: 160, minW: 140 },
+  { id: 29, name: 'Contributing Requirements', w: 160, minW: 140 },
+  { id: 30, name: 'Cybersecurity Claims', w: 160, minW: 140 }
 ];
 
 export const VulnerbilityHeader = [

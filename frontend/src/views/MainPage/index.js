@@ -17,15 +17,16 @@ import PotentialVulnerbilityTable from '../../ui-component/Table/PotentialVulner
 import VulnerabilityTable from '../../ui-component/Table/VulnerabilityTable';
 import MitigationsTable from '../../ui-component/Table/MitigationsTable';
 import { useSelector } from 'react-redux';
+import TsDerivedTable from '../../ui-component/Table/TsDerivedTable';
 
 export default function MainPage() {
   const { tableOpen } = useSelector((state) => state?.currentId);
   const commonTables = ['Cybersecurity Requirements', 'Cybersecurity Controls', 'Cybersecurity Goals', 'Cybersecurity Claims'];
   const componentMap = {
     'Damage Scenarios Derivations': <DsDerivationTable />,
-    'Damage Scenarios - Collection & Impact Ratings': <DsTable />,
+    'Damage Scenarios - Impact Ratings': <DsTable />,
     'Threat Scenarios': <Tstable />,
-    'Derived Threat Scenarios': <Tstable />,
+    'Derived Threat Scenarios': <TsDerivedTable />,
     Attack: <AttackTreeTable />,
     'Threat Assessment & Risk Treatment': <RiskTreatmentTable />,
     'Attack Trees Canvas': <AttackTree />,

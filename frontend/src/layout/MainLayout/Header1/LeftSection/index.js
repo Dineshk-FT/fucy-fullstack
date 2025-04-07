@@ -1,9 +1,9 @@
 /* eslint-disable */
 import React, { useState, useEffect } from 'react';
-import { Box, Tooltip, Typography, IconButton } from '@mui/material';
+import { Box, Tooltip, Typography, IconButton, Collapse } from '@mui/material';
 import {
   Add as AddIcon,
-  FolderOpen as OpenIcon,
+  FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
   Undo as UndoIcon,
   Redo as RedoIcon,
@@ -11,11 +11,25 @@ import {
   ContentCopy as CopyIcon,
   ContentPaste as PasteIcon,
   SelectAll as SelectAllIcon,
-  DeselectOutlined as DeselectIcon,
-  Image as ImageIcon,
+  Deselect as DeselectIcon,
   TableChart as TableIcon,
-  Link as LinkIcon,
-  Edit as RenameIcon
+  Edit as EditIcon,
+  CreateNewFolder as NewFolderIcon,
+  DriveFileRenameOutline as RenameIcon,
+  Assessment as AssessmentIcon,
+  Warning as WarningIcon,
+  Star as StarIcon,
+  Security as SecurityIcon,
+  PlaylistAdd as AddListIcon,
+  AccountTree as TreeIcon,
+  Build as BuildIcon,
+  Assignment as AssignmentIcon,
+  Shield as ShieldIcon,
+  ReportProblem as ReportIcon,
+  ListAlt as ListAltIcon,
+  Group as GroupIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import TemplateList from '../../../../views/Libraries';
 import Components from '../../../../views/NodeList';
@@ -24,200 +38,559 @@ import AddModel from '../../../../ui-component/Modal/AddModal';
 import RenameProject from '../../../../ui-component/Modal/RenameModal';
 import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
+import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../store/ColorTheme';
+import { openAddNodeTab, openAddDataNodeTab  } from '../../../../store/slices/CanvasSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
+import CommonModal from '../../../../ui-component/Modal/CommonModal';
+import { setTitle } from '../../../../store/slices/PageSectionSlice';
+import PromptModal from '../../../../ui-component/Modal/PromptModal';
 
 const LeftSection = () => {
   const selector = (state) => ({
     Models: state.Models,
+    model: state.model,
     getModels: state.getModels,
     deleteModels: state.deleteModels,
     getSidebarNode: state.getSidebarNode,
-    getTemplates: state.getTemplates
+    getTemplates: state.getTemplates,
+    setClickedItem: state.setClickedItem,
+    getAttackScenario: state.getAttackScenario,
+    attackScenarios: state.attackScenarios,
+    isCollapsed: state.isCollapsed,
+    setCollapsed: state.setCollapsed
   });
-  const color = ColorTheme();
-  const { Models, getModels, deleteModels, getSidebarNode, getTemplates } = useStore(selector);
+  const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
 
+  const color = ColorTheme();
+  const {
+    Models,
+    model,
+    getModels,
+    deleteModels,
+    getSidebarNode,
+    getTemplates,
+    setClickedItem,
+    getAttackScenario,
+    attackScenarios,
+    isCollapsed,
+    setCollapsed
+  } = useStore(selector);
+  useStore(selector);
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
     Rename: false,
     Open: false,
-    Delete: false
+    Delete: false,
+    AttackModal: false,
+    AIModal: false
   });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
+  const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
+  const dispatch = useDispatch();
+  const [openAttackModal, setOpenAttackModal] = useState(false);
+  const [subName, setSubName] = useState('');
 
   useEffect(() => {
     getSidebarNode();
     getTemplates();
-  }, []);
+    if (model?._id) {
+      getAttackScenario(model._id);
+    }
+  }, [model?._id]);
+
+  const handleAddNewNode = (e) => {
+    dispatch(openAddNodeTab());
+  };
+
+  const handleAddDataNode = () => {
+    dispatch(openAddDataNodeTab());
+  }
+
+  const handleSystemTabClick = () => setOpenTemplateDialog(true);
+  const handleComponentsTabClick = () => setOpenComponentsDialog(true);
+
+  const handleTabChange = (tabName) => {
+    dispatch(setPreviousTab(tabName));
+    setActiveTab(tabName);
+    const actions = {
+      'Item Definition': handleModelDefinationClick,
+      'Threat Scenarios': () => handleClick('Threat Scenarios'),
+      'Damage Scenarios': () => handleClick('Damage Scenarios Derivations'),
+      'Attack Path': handleAttackTableClick,
+      CyberSecurity: () => handleClick('Cybersecurity Goals'),
+      'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment')
+    };
+    actions[tabName]?.();
+  };
+
+  const handleToggleCollapse = () => {
+    setCollapsed((prev) => !prev);
+  };
+
+  const handleContext = (name, event) => {
+    if (name === 'Attack') {
+      setOpenAttackModal(true);
+      setSubName(name);
+    } else if (name === 'Attack Trees') {
+      setOpenAttackModal(true);
+      setSubName(name);
+    } else if (name === 'create with AI') {
+      setOpenModal((prev) => ({ ...prev, AIModal: true }));
+    }
+  };
+
+  const handleAttackTreeClose = () => {
+    setOpenAttackModal(false);
+  };
+
+  const handleClick = (name) => {
+    dispatch(setPreviousTab(name));
+    dispatch(setTitle(name));
+    dispatch(setTableOpen(name));
+  };
+
+  const handleModelDefinationClick = () => {
+    setClickedItem('1');
+    dispatch(closeAll());
+  };
+
+  const handleAttackTreeClick = async (e) => {
+    setIsLoading(true);
+    setAnchorEl(e.currentTarget);
+    if (model?._id) {
+      await getAttackScenario(model._id);
+      setOpenModal((prev) => ({ ...prev, AttackModal: true }));
+    }
+    setIsLoading(false);
+  };
+
+  const handleAttackTableClick = () => {
+    dispatch(setPreviousTab('Attack'));
+    if (model?._id) {
+      setClickedItem('4');
+      dispatch(setTitle('Attack'));
+      dispatch(setTableOpen('Attack'));
+    }
+  };
+
+  const handleGroupDrag = (event) => {
+    const parseFile = JSON.stringify('');
+    event.dataTransfer.setData('application/group', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
+  };
 
   const tabs = [
     {
       name: 'Project',
       options: [
-        { label: 'New', icon: AddIcon, action: () => setOpenModal({ ...openModal, New: true }) },
+        { label: 'New', icon: NewFolderIcon, action: () => setOpenModal({ ...openModal, New: true }) },
         { label: 'Rename', icon: RenameIcon, action: () => setOpenModal({ ...openModal, Rename: true }) },
-        { label: 'Open', icon: OpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
-        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) },
-        { label: 'Undo', icon: UndoIcon, action: () => console.log('Undo') },
-        { label: 'Redo', icon: RedoIcon, action: () => console.log('Redo') },
-        { label: 'Cut', icon: CutIcon, action: () => console.log('Cut') },
-        { label: 'Copy', icon: CopyIcon, action: () => console.log('Copy') },
-        { label: 'Paste', icon: PasteIcon, action: () => console.log('Paste') },
-        { label: 'Select All', icon: SelectAllIcon, action: () => console.log('Select All') },
-        { label: 'Deselect All', icon: DeselectIcon, action: () => console.log('Deselect All') }
+        { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal({ ...openModal, Open: true }) },
+        { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal({ ...openModal, Delete: true }) }
       ]
     },
     {
-      name: 'Insert',
+      name: 'Item Definition',
       options: [
-        { label: 'Image', icon: ImageIcon, action: () => console.log('Insert Image') },
-        { label: 'Table', icon: TableIcon, action: () => console.log('Insert Table') },
-        { label: 'Link', icon: LinkIcon, action: () => console.log('Insert Link') }
-      ]
-    },
-    {
-      name: 'System',
-      options: [
+        { label: 'New Data', icon: NewFolderIcon, action: handleAddDataNode },
         {
-          subLevel: <TemplateList />
+          label: 'New Component',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: handleAddNewNode
+        }, // Plus for new model
+        // {
+        //   label: 'System',
+        //   icon: () => <img src="https://img.icons8.com/?size=100&id=107141&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+        //   action: handleSystemTabClick
+        // }, // Wrench for system
+        // {
+        //   label: 'Components',
+        //   icon: () => (
+        //     <img src="https://img.icons8.com/?size=100&id=Vp7Zc5Nc7vav&format=png&color=000000" style={{ width: 24, height: 24 }} />
+        //   ),
+        //   action: handleComponentsTabClick
+        // }, // List for components
+        {
+          label: 'Group',
+          icon: () => <img src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+          action: handleGroupDrag
         }
       ]
     },
     {
-      name: 'Components',
+      name: 'Damage Scenarios',
       options: [
         {
-          subLevel: <Components />
-        }
+          label: 'Derivation Table',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Damage Scenarios Derivations')
+        }, // Report for derivation
+        {
+          label: 'Impact Rating Table',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Damage Scenarios - Impact Ratings')
+        } // Star for rating
+      ]
+    },
+    {
+      name: 'Threat Scenarios',
+      options: [
+        {
+          label: 'Threat Table',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Threat Scenarios')
+        } // Warning for threats
+      ]
+    },
+    {
+      name: 'Attack Path',
+      options: [
+        { label: 'Attack Table', icon: TableIcon, action: handleAttackTableClick }, // Table for attack data
+        { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) }, // Add list for attacks
+        { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick }, // Tree for attack trees
+        { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) }, // Playlist add for trees
+        { label: 'create with AI', icon: AddListIcon, action: (e) => handleContext('create with AI', e) } // Playlist add for trees
+      ]
+    },
+    {
+      name: 'Cybersecurity',
+      options: [
+        {
+          label: 'Goals',
+          icon: () => <img src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+          action: () => handleClick('Cybersecurity Goals')
+        }, // Shield for goals
+        {
+          label: 'Requirements',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Cybersecurity Requirements')
+        }, // Document for requirements
+        {
+          label: 'Controls',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Cybersecurity Controls')
+        }, // Stronger shield for controls
+        {
+          label: 'Claims',
+          icon: () => <img src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+          action: () => handleClick('Cybersecurity Claims')
+        } // Assessment for claims
+      ]
+    },
+    {
+      name: 'Risk Determination & Treatment',
+      options: [
+        {
+          label: 'Risk Table',
+          icon: () => (
+            <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+          ),
+          action: () => handleClick('Threat Assessment & Risk Treatment')
+        } // Assessment for risk
       ]
     }
   ];
 
-  const handleCloseNewModal = () => {
-    setOpenModal((prev) => ({ ...prev, New: false }));
-  };
-
-  const handleCloseOpenModal = () => {
-    setOpenModal((prev) => ({ ...prev, Open: false }));
-  };
-
-  const handleCloseDeleteModal = () => {
-    setOpenModal((prev) => ({ ...prev, Delete: false }));
-  };
-
-  const handleCloseRenameModal = () => {
-    setOpenModal((prev) => ({ ...prev, Rename: false }));
-  };
+  const handleCloseNewModal = () => setOpenModal((prev) => ({ ...prev, New: false }));
+  const handleCloseOpenModal = () => setOpenModal((prev) => ({ ...prev, Open: false }));
+  const handleCloseDeleteModal = () => setOpenModal((prev) => ({ ...prev, Delete: false }));
+  const handleCloseRenameModal = () => setOpenModal((prev) => ({ ...prev, Rename: false }));
+  const handleCloseAttackModal = () => setOpenModal((prev) => ({ ...prev, AttackModal: false }));
 
   return (
-    <Box>
-      {/* Tabs */}
+    <Box
+      sx={{
+        display: 'inline-flex', // Ensure LeftSection doesn't stretch unnecessarily
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}
+    >
       <Box
         sx={{
           display: 'flex',
-          backgroundColor: 'transparent',
-          padding: '4px',
-          paddingTop: '8px'
-        }}
-      >
-        {tabs.map((tab) => (
-          <Typography
-            key={tab.name}
-            // onClick={() => setActiveTab(tab.name)}
-            sx={{
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: activeTab === tab.name ? 'blue' : color.title,
-              fontWeight: activeTab === tab.name ? 'bold' : 'normal',
-              margin: '0 8px',
-              padding: '2px 4px',
-              borderBottom: activeTab === tab.name ? '2px solid blue' : 'none',
-              paddingBottom: activeTab === tab.name ? '2px' : '0px',
-              '&:hover': { color: 'blue' }
-            }}
-          >
-            {tab.name}
-          </Typography>
-        ))}
-      </Box>
-
-      {/* Tab Content */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          padding: '6px',
+          alignItems: 'center',
+          background: color.tabBorder,
+          backdropFilter: 'blur(12px)',
           borderRadius: '10px',
-          backgroundColor: color.canvasBG,
-          border: '1px solid #ddd',
-          gap: '5px',
-          width: { xs: '350px', sm: '500px', md: 'auto', lg: 'auto' },
-          height: { xs: '50px', sm: '50px', md: '60px', lg: 'auto' },
-          overflow: 'auto'
+          padding: '6px 8px',
+          boxShadow: isDark == true ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
+          marginBottom: '6px'
         }}
       >
-        {tabs
-          .find((tab) => tab.name === activeTab)
-          ?.options.map((option, index) => {
-            const Icon = option.icon;
-            return (
-              <Box
-                key={index}
+        <IconButton
+          onClick={handleToggleCollapse}
+          sx={{
+            padding: '4px',
+            color: isDark == true ? '#64b5f6' : '#2196f3',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: isDark == true ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)',
+              transform: 'scale(1.1)',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+            }
+          }}
+        >
+          {isCollapsed ? <ExpandMoreIcon sx={{ fontSize: 22 }} /> : <ExpandLessIcon sx={{ fontSize: 22 }} />}
+        </IconButton>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', flexGrow: 1 }}>
+          {tabs.map((tab) => (
+            <Box key={tab.name} sx={{ position: 'relative', display: 'inline-block' }}>
+              <Typography
+                onClick={() => handleTabChange(tab.name)}
                 sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  width: activeTab === 'System' || activeTab === 'Components' ? 'auto' : '60px'
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: activeTab === tab.name ? 600 : 500,
+                  color: activeTab === tab.name ? (isDark == true ? '#64b5f6' : '#2196f3') : color?.sidebarContent,
+                  margin: '0 8px',
+                  padding: '4px 6px',
+                  borderRadius: '6px',
+                  borderBottom: activeTab === tab.name ? (isDark == true ? '2px solid #64b5f6' : '2px solid #2196f3') : 'none',
+                  background:
+                    activeTab === tab.name
+                      ? isDark == true
+                        ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                      : 'transparent',
+                  boxShadow: activeTab === tab.name ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    color: isDark == true ? '#64b5f6' : '#2196f3',
+                    background:
+                      isDark == true
+                        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                    transform: 'scale(1.02)',
+                    boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                    filter: isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                  }
                 }}
               >
-                {/* Only show label and icon for other tabs */}
-                {option.label && (
-                  <>
-                    <Tooltip title={option.label}>
-                      <IconButton
-                        onClick={option.action}
+                {tab.name}
+              </Typography>
+
+              {isCollapsed && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 'calc(100% + 2px)',
+                    left: 0,
+                    zIndex: 1300,
+                    display: 'none',
+                    background: color.tabBorder,
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: '8px',
+                    border: 'none',
+                    padding: '8px',
+                    boxShadow: isDark == true ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-evenly',
+                    gap: '4px',
+                    width: 'max-content',
+                    maxWidth: '280px',
+                    opacity: 0,
+                    transition: 'opacity 0.3s ease-in-out',
+                    '&:hover': { display: 'flex', opacity: 1 },
+                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 }
+                  }}
+                >
+                  {tab.options.map((option, index) => {
+                    const Icon = option.icon;
+                    return (
+                      <Box
+                        key={index}
                         sx={{
-                          padding: '6px',
-                          fontSize: '12px',
-                          color: color.title,
-                          backgroundColor: color?.sidebarBG,
-                          border: '1px solid #ddd',
-                          '&:hover': { backgroundColor: color.sidebarBG }
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          width: '70px'
+                        }}
+                        draggable={option.label === 'Group'}
+                        onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
+                      >
+                        {option.label && (
+                          <>
+                            <Tooltip title={option.label}>
+                              <IconButton
+                                onClick={option.action}
+                                sx={{
+                                  padding: '6px',
+                                  fontSize: '12px',
+                                  color: isDark == true ? '#64b5f6' : '#2196f3',
+                                  background: isDark == true ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    background:
+                                      isDark == true
+                                        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                                    transform: 'scale(1.1)',
+                                    boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                                    filter:
+                                      isDark == true
+                                        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                                  }
+                                }}
+                              >
+                                <Icon fontSize="small" sx={{ fontSize: 20 }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Typography
+                              sx={{
+                                marginTop: '4px',
+                                fontSize: '10px',
+                                fontFamily: "'Poppins', sans-serif",
+                                textAlign: 'center',
+                                color: color?.sidebarContent
+                              }}
+                            >
+                              {option.label}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+      <Collapse in={!isCollapsed}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-evenly',
+            padding: '8px',
+            borderRadius: '8px',
+            background: color.tabBorder,
+            backdropFilter: 'blur(8px)',
+            border: 'none',
+            boxShadow: isDark == true ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
+            gap: '4px',
+            width: { xs: '700px', sm: '800px', md: '1000px', lg: '1250px' },
+            maxHeight: '85px',
+            overflow: 'auto',
+            my: 0.4
+          }}
+        >
+          {tabs
+            .find((tab) => tab.name === activeTab)
+            ?.options.map((option, index) => {
+              const Icon = option.icon;
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '70px'
+                  }}
+                  draggable={option.label === 'Group'}
+                  onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
+                >
+                  {option.label && (
+                    <>
+                      <Tooltip title={option.label}>
+                        <IconButton
+                          onClick={option.action}
+                          sx={{
+                            padding: '6px',
+                            fontSize: '12px',
+                            color: isDark == true ? '#64b5f6' : '#2196f3',
+                            background: isDark == true ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              background:
+                                isDark == true
+                                  ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                                  : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                              transform: 'scale(1.1)',
+                              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                              filter:
+                                isDark == true
+                                  ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                                  : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                            }
+                          }}
+                        >
+                          <Icon fontSize="small" sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Typography
+                        sx={{
+                          marginTop: '4px',
+                          fontSize: '10px',
+                          fontFamily: "'Poppins', sans-serif",
+                          textAlign: 'center',
+                          color: color?.sidebarContent
                         }}
                       >
-                        <Icon fontSize="extra-small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Typography
-                      sx={{
-                        marginTop: '4px',
-                        fontSize: '10px',
-                        textAlign: 'center',
-                        color: color.title
-                      }}
-                    >
-                      {option.label}
-                    </Typography>
-                  </>
-                )}
-                {/* Render the subLevel (TemplateList) for the "System" tab */}
-                {option.subLevel && <Box>{option.subLevel}</Box>}
-              </Box>
-            );
-          })}
-      </Box>
+                        {option.label}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              );
+            })}
+        </Box>
+      </Collapse>
 
-      {/* Modals */}
       {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={handleCloseNewModal} />}
       {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={handleCloseRenameModal} Models={Models} />}
       {openModal.Open && <SelectProject open={openModal.Open} handleClose={handleCloseOpenModal} Models={Models} />}
       {openModal.Delete && (
         <DeleteProject
           open={openModal.Delete}
+          model={model}
           handleClose={handleCloseDeleteModal}
           Models={Models}
           deleteModels={deleteModels}
           getModels={getModels}
+        />
+      )}
+      {openModal.AIModal && (
+        <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((pre) => ({ ...pre, AIModal: false }))} />
+      )}
+      <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
+      <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
+      {openAttackModal && <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />}
+      {openModal.AttackModal && (
+        <AttackTreeRibbonModal
+          open={openModal.AttackModal}
+          handleClose={handleCloseAttackModal}
+          isLoading={isLoading}
+          anchorEl={anchorEl}
+          attackScenarios={attackScenarios}
+          getAttackScenario={getAttackScenario}
         />
       )}
     </Box>

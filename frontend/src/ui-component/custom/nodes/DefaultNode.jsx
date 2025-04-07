@@ -1,10 +1,13 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
-import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
-import { useDispatch } from 'react-redux';
-import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import { iconStyle } from '../../../store/constant';
+import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -12,65 +15,210 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  originalNodes: state.originalNodes
+  originalNodes: state.originalNodes,
+  selectedNodes: state.selectedNodes,
+  setSelectedElement: state.setSelectedElement,
+  setPropertiesOpen: state.setPropertiesOpen
 });
 
 export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes } = useStore(selector);
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
+    useStore(selector);
+  const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
+  const [width, setWidth] = useState(data?.style?.width ?? 120);
+  const labelRef = useRef(null);
+  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
+  const [isEditing, setIsEditing] = useState(false);
+  const [labelValue, setLabelValue] = useState(data?.label || '');
 
-  const handleInfoClick = () => {
-    // Open properties tab and set the selected node
-    dispatch(OpenPropertiesTab());
+  const checkSelection = () => selectedBlock?.id === id;
+  const isSelected = checkSelection();
+
+  // console.log('isSelected', isSelected);
+
+  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+  useEffect(() => {
+    setLabelValue(data?.label || '');
+  }, [data?.label]);
+
+  const handleResize = (_, { width: newWidth, height: newHeight }) => {
+    requestAnimationFrame(() => {
+      const updatedWidth = newWidth;
+      const updatedHeight = newHeight;
+
+      setWidth(updatedWidth);
+      setHeight(updatedHeight);
+
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  style: {
+                    ...node.data.style,
+                    height: updatedHeight,
+                    width: updatedWidth
+                  }
+                }
+              }
+            : node
+        )
+      );
+    });
+  };
+
+  const updateNodeLabel = (newLabel) => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                label: newLabel
+              }
+            }
+          : node
+      )
+    );
+  };
+
+  const handleLabelDoubleClick = () => {
+    setIsEditing(true);
     dispatch(setSelectedBlock({ id, data }));
   };
 
+  const handleLabelRightClick = (e) => {
+    e.preventDefault();
+    setIsEditing(true);
+  };
+
+  const handleLabelBlur = () => {
+    setIsEditing(false);
+    const newLabel = labelRef.current?.textContent || '';
+    setLabelValue(newLabel);
+    updateNodeLabel(newLabel);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLabelBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      if (labelRef.current) {
+        labelRef.current.textContent = labelValue;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'F3' && isSelected) {
+        setIsEditing(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [id, selectedBlock]);
+
+  useEffect(() => {
+    if (isEditing && labelRef.current) {
+      labelRef.current.focus();
+      const range = document.createRange();
+      range.selectNodeContents(labelRef.current);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }, [isEditing]);
+
+  const handleInfoClick = () => {
+    setPropertiesOpen(false);
+    const selectedNode = nodes.find((node) => node.id === id);
+    const { isAsset, properties } = selectedNode;
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl({ type: 'node', value: id }));
+    setSelectedElement(selectedNode);
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
+  };
+
+  const handleDetailClick = () => {
+    setPropertiesOpen(true);
+    const selectedNode = nodes.find((node) => node.id === id);
+    const { isAsset, properties } = selectedNode;
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl({ type: 'node', value: id }));
+    setSelectedElement(selectedNode);
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
+  };
+
   const onNodeClick = () => {
-    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+    setNodes((nodes) => nodes?.filter((node) => node.id !== id));
     setIsVisible(false);
   };
 
   const handleDelete = () => {
     deleteNode({ assetId: assets?._id, nodeId: id })
-      .then((res) => {
-        getAssets(model?._id);
-      })
-      .catch((err) => {
-        console.log('err', err);
-      });
-    setIsUnsavedDialogVisible(false); // Close unsaved dialog if open
+      .then(() => getAssets(model?._id))
+      .catch((err) => console.log('err', err));
+    setIsUnsavedDialogVisible(false);
     setIsVisible(false);
   };
 
   const handlePermanentDeleteClick = () => {
     if (nodes.length > originalNodes.length) {
-      setIsUnsavedDialogVisible(true); // Show unsaved changes dialog
+      setIsUnsavedDialogVisible(true);
     } else {
-      handleDelete(); // Perform delete directly
+      handleDelete();
     }
   };
 
-  const handleUnsavedDialogClose = () => {
-    setIsUnsavedDialogVisible(false);
-  };
+  const handleUnsavedDialogClose = () => setIsUnsavedDialogVisible(false);
+  const handleUnsavedDialogContinue = () => handleDelete();
 
-  const handleUnsavedDialogContinue = () => {
-    handleDelete(); // Proceed with deletion
-  };
-
-  const copiedNodes = nodes.filter((node) => node.isCopied === true);
-
-  // Check if the current node is a copied node
+  const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
-      <NodeResizer minWidth={150} minHeight={40} />
-      <ClickAwayListener onClickAway={() => setIsVisible(false)}>
+      <NodeResizer
+        minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 130}
+        minHeight={data?.label?.length <= 15 ? 30 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 50 : 80}
+        onResize={handleResize}
+        style={{
+          pointerEvents: 'auto',
+          zIndex: 10
+        }}
+      />
+      <ClickAwayListener
+        onClickAway={() => {
+          setIsVisible(false);
+          if (isEditing) handleLabelBlur();
+        }}
+      >
         <div
           role="button"
           tabIndex={0}
@@ -78,40 +226,72 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
           style={{
             ...data?.style,
             position: 'relative',
-            overflow: 'visible'
+            overflow: 'visible',
+            boxShadow: selectedNodes.some((node) => node.id === id)
+              ? '0px 0px 7px 3px #32ed0f'
+              : isSelected
+              ? '0px 0px 7px 3px violet'
+              : 'none',
+            width: width,
+            height: height,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '5px',
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap'
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Handle className="handle" id="a" position={Position.Top} isConnectable={isConnectable} />
-          <Handle className="handle" id="b" position={Position.Left} isConnectable={isConnectable} />
-          <div>{data?.label}</div>
-          <Handle className="handle" id="c" position={Position.Bottom} isConnectable={isConnectable} />
-          <Handle className="handle" id="d" position={Position.Right} isConnectable={isConnectable} />
+          <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
+          <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
+          <Box
+            ref={labelRef}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onClick={handleLabelDoubleClick}
+            onContextMenu={handleLabelRightClick}
+            onBlur={handleLabelBlur}
+            onKeyDown={handleKeyDown}
+            style={{
+              maxWidth: width - 10,
+              textAlign: 'center',
+              outline: 'none',
+              cursor: 'text',
+
+              ...(isEditing && {
+                // backgroundColor: 'white',
+                color: 'black',
+                padding: '0 4px',
+                borderRadius: '4px',
+                minWidth: '60px',
+                cursor: 'text'
+              })
+            }}
+          >
+            {labelValue}
+          </Box>
+          <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
+          <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
           <div
             onClick={(e) => {
               e.stopPropagation();
               handleInfoClick();
             }}
-            style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '-12px',
-              background: '#007bff',
-              borderRadius: '50%',
-              width: '20px',
-              height: '19px',
-              fontSize: '0.7rem',
-              color: 'white',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
-            }}
+            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
-            i
+            <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDetailClick();
+            }}
+            style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+          >
+            <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
           <div
             className="delete-icon"
@@ -120,19 +300,12 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
               setIsVisible(true);
             }}
             style={{
-              position: 'absolute',
-              width: '20px',
-              height: '19px',
-              top: '-12px',
+              ...iconStyle,
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              borderRadius: '50%',
               fontSize: '0.8rem',
-              color: 'white',
-              cursor: 'pointer',
-              opacity: isHovered ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out'
+              opacity: isHovered ? 1 : 0
             }}
           >
             x

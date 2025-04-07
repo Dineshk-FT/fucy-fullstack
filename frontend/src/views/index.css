@@ -38,8 +38,15 @@ iframe#webpack-dev-server-client-overlay {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #784be8;
+  /* background-color: #784be8; */
 }
+
+/* .handleX {
+  width: inherit !important;
+  height: 1px !important;
+  border-radius: 0% !important;
+  background-color: transparent !important;
+} */
 /* .react-flow {
   height: 97.5% !important;
 } */
@@ -54,31 +61,47 @@ iframe#webpack-dev-server-client-overlay {
   border: none !important;
   background-color: inherit !important;
   font-family: 'Inter', sans-serif;
-  height: initial;
-  width: initial;
-  z-index: 1 !important;
+  /* height: initial; */
+  /* width: auto !important; */
+  /* width: initial; */
+  box-shadow: none !important;
+}
+.react-flow__node-default {
+  z-index: 10000 !important;
+  & .react-flow__resize-control {
+    border-color: transparent !important;
+    cursor: nesw-resize;
+    padding: 6px; /* Increases the clickable area */
+
+    &.handle {
+      background-color: transparent !important;
+      width: 12px; /* Adjust width */
+      height: 12px; /* Adjust height */
+    }
+  }
 }
 .react-flow__edge {
-  z-index: 1 !important;
+  z-index: 10000 !important;
 }
 .react-flow__node-group {
   border: 3px solid darkgray !important;
-  /* min-width: 300px;
-  min-height: 300px; */
-  /* width: inherit; */
-  align-items: flex-start;
-  display: flex;
-  z-index: 0 !important;
+  /* align-items: flex-start; */
+  /* min-height: 200px;
+  min-width: 200px; */
+  width: auto !important;
+  height: auto !important;
+  /* display: flex; */
+  /* z-index: 0 !important; */
   &.selected {
     border: 3px solid #5fbdff !important;
     /* z-index: 0 !important; */
   }
 }
 
-.selected {
-  border-radius: 5px !important;
-  /* box-shadow: gray 0px 1px 13px 3px !important; */
-}
+/* .selected {
+
+  box-shadow: gray 0px 1px 13px 3px !important;
+} */
 
 .library_name {
   padding: 1px 1.5rem;
@@ -94,10 +117,21 @@ iframe#webpack-dev-server-client-overlay {
   /* border: 1px solid black; */
   border-radius: 3px;
   padding: 10px 15px;
+
+  /* box-shadow: none !important; */
 }
 
+/* .my-group-node {
+  width: inherit;
+  height: inherit;
+  border-radius: 3px;
+  padding: 10px 15px;
+} */
+
 .react-flow__resize-control {
+  /* display: none !important; */
   border-color: transparent !important ;
+  cursor: nesw-resize;
   &.handle {
     background-color: transparent !important;
   }
@@ -171,6 +205,17 @@ iframe#webpack-dev-server-client-overlay {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.cylinder-node {
+  width: inherit;
+  height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% / 25%;
+  /* background: linear-gradient(180deg, #ddd, #ea4848); */
+  padding: 10px 15px;
 }
 /* 
 .modal {

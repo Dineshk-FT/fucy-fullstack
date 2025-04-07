@@ -11,7 +11,7 @@ import Header from './Header';
 import Sidebar1 from './Sidebar1';
 
 import navigation from '../../menu-items';
-import { navbarHeight, drawerWidth } from '../../store/constant';
+import { drawerWidth, getNavbarHeight } from '../../store/constant';
 import ColorTheme from '../../store/ColorTheme';
 import { SET_MENU } from '../../store/actions';
 
@@ -26,7 +26,7 @@ import InitialModal from '../../ui-component/Modal/InitialModal';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../assets/icons';
 import useStore from '../../Zustand/store';
 
-// import Customization from '../Customization';
+import Customization from '../Customization';
 
 // const items = [
 //   {
@@ -56,19 +56,21 @@ import useStore from '../../Zustand/store';
 // ]
 
 const selector = (state) => ({
-  setClickedItem: state.setClickedItem
+  setClickedItem: state.setClickedItem,
+  isCollapsed: state.isCollapsed
 });
 
 const Footer = lazy(() => import('../../views/Landing/Footer'));
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(
-  ({ theme, open, isclose, color, draweropen }) => {
+  ({ theme, open, isclose, color, draweropenstr }) => {
+    const draweropen = Boolean(draweropenstr);
     // console.log('color', color)
     // console.log('isclose', isclose)
     return {
       ...theme.typography.mainContent,
       background: color?.canvaSurroundsBG,
-      marginTop: navbarHeight,
+      marginTop:  getNavbarHeight(isclose),
       paddingLeft: !draweropen ? '2rem' : 'auto',
       // border: '1px solid gray',
       maxWidth: 'auto',
@@ -85,7 +87,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && pr
         [theme.breakpoints.up('md')]: {
           // marginLeft: -drawerWidth,
           width: `calc(100% - ${drawerWidth}px)`,
-          marginTop: isclose ? `0` : navbarHeight
+          marginTop: getNavbarHeight(isclose)
         },
         [theme.breakpoints.down('md')]: {
           // marginLeft: '20px',
@@ -125,7 +127,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && pr
 // ==============================|| MAIN LAYOUT ||============================== //
 
 const MainLayout = ({ children }) => {
-  const { setClickedItem } = useStore(selector);
+  const { setClickedItem, isCollapsed } = useStore(selector);
   const color = ColorTheme();
   // console.log('color main', color)
   const theme = useTheme();
@@ -203,9 +205,10 @@ const MainLayout = ({ children }) => {
           elevation={0}
           sx={{
             bgcolor: color?.navBG,
-            height: !isNavbarClose ? navbarHeight : '0px',
+            height: !isNavbarClose ? getNavbarHeight(isCollapsed) : '0px',
             transition: leftDrawerOpened ? theme.transitions.create('width') : 'none',
-            borderBottom: `1px solid ${color?.title}`
+            borderBottom: `1px solid ${color?.title}`,
+            zIndex: 1300
           }}
         >
           {/* ----------------- Navbar ------------------- */}
@@ -214,7 +217,9 @@ const MainLayout = ({ children }) => {
               display: isNavbarClose ? 'none' : 'flex',
               transition: 'display 0.8s',
               justifyContent: 'space-between',
-              py: 0
+              py: 0,
+              overflow: 'visible',
+              zIndex: 1300
               // borderBottom: `0.2px solid ${color?.title}`
             }}
           >
@@ -279,9 +284,10 @@ const MainLayout = ({ children }) => {
         <Sidebar1 draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         {/* -------------------- main content -------------------------*/}
-        <Main theme={theme} open={leftDrawerOpened} isclose={isNavbarClose} color={color} draweropen={leftDrawerOpened}>
+        <Main theme={theme} open={leftDrawerOpened} isclose={isCollapsed} color={color} draweropenstr={leftDrawerOpened.toString()}>
           {/* breadcrumb */}
           <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
+          <Customization />
           <Outlet />
         </Main>
       </Box>

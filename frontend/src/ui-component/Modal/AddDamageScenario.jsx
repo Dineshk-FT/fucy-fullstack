@@ -1,19 +1,12 @@
 /* eslint-disable */
 import * as React from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  InputLabel,
-  Box,
-  TextField,
-  Slide
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
+import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
+import { DamageIcon } from '../../assets/icons';
+import DialogCommonTitle from './DialogCommonTitle';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -25,6 +18,7 @@ const selector = (state) => ({
 });
 
 export default function AddDamageScenarios({ open, handleClose, model, rows, notify }) {
+  const color = ColorTheme();
   // console.log('rows', rows);
   const { addDamageScene, getDamageScenarios } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
@@ -50,7 +44,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           // setTimeout(() => {
           notify(res?.message, 'success');
           // window.location.reload();
-          handleClose();
+          // handleClose();
           getDamageScenarios(model?._id);
           setTemplateDetails({
             ID: '',
@@ -73,23 +67,22 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
       <Dialog
         open={open}
         TransitionComponent={Transition}
+        PaperComponent={PaperComponent}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-describedby="draggable-dialog-title"
         sx={{
           '& .MuiPaper-root': {
-            // background:'#999999',
+            background: color?.modalBg,
             width: '-webkit-fill-available'
           }
         }}
       >
-        <DialogTitle variant="h4" color="primary">
-          {'Add Damage Scenario'}
-        </DialogTitle>
+        <DialogCommonTitle icon={DamageIcon} title={'Add Damage Scenario'} />
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Name :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -98,7 +91,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
               />
-              <InputLabel sx={{ color: '#000', fontWeight: 600 }}>Description :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"
@@ -112,7 +105,7 @@ export default function AddDamageScenarios({ open, handleClose, model, rows, not
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+          <Button variant="outlined" color="error" onClick={handleClose}>
             cancel
           </Button>
           <Button variant="contained" color="primary" onClick={handleCreate}>

@@ -55,10 +55,15 @@ const useStore = createWithEqualityFn((set, get) => ({
   reactFlowInstance: null,
   attackNodes: [],
   attackEdges: [],
+  initialAttackNodes: [],
+  initialAttackEdges: [],
   cyberNodes: [],
   cyberEdges: [],
   nodes: [],
   edges: [],
+  selectedNodes: [],
+  initialNodes: [],
+  initialEdges: [],
   undoStack: [],
   redoStack: [],
   sidebarNodes: [],
@@ -67,14 +72,20 @@ const useStore = createWithEqualityFn((set, get) => ({
   Models: [],
   model: {},
   clickedItem: [],
+  isSaveModalOpen: false,
+  isPropertiesOpen: false,
+  selectedElement: {},
+  isCollapsed: true,
+  globalAttackTrees: [],
+
   assets: {
     id: '1',
-    name: 'Item Model & Assets',
+    name: 'Item Definition',
     icon: 'ItemIcon'
   },
   damageScenarios: {
     id: '2',
-    name: 'Damage Scenarios Identification and Impact Ratings',
+    name: 'Damage Scenarios and Impact Ratings',
     icon: 'DamageIcon',
     subs: [
       {
@@ -83,13 +94,13 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       {
         id: '22',
-        name: 'Damage Scenarios - Collection & Impact Ratings'
+        name: 'Damage Scenarios - Impact Ratings'
       }
     ]
   },
   threatScenarios: {
     id: '3',
-    name: 'Threat Scenarios Identification',
+    name: 'Threat Scenarios',
     icon: 'ThreatIcon',
     subs: [
       {
@@ -104,7 +115,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   attackScenarios: {
     id: '4',
-    name: 'Attack Path Analysis and Attack Feasability Rating',
+    name: 'Attack Path Analysis',
     icon: 'AttackIcon',
     subs: [
       {
@@ -114,32 +125,32 @@ const useStore = createWithEqualityFn((set, get) => ({
       {
         id: '42',
         name: 'Attack Trees'
-      },
-      {
-        id: '43',
-        name: 'Vulnerability Analysis'
       }
+      // {
+      //   id: '43',
+      //   name: 'Vulnerability Analysis'
+      // }
     ]
   },
   cybersecurity: {
     id: '5',
-    name: 'Cybersecurity Goals, Claims and Requirements',
+    name: 'Goals, Claims and Requirements',
     icon: 'CybersecurityIcon',
     subs: [
       {
-        id: 51,
+        id: '51',
         name: 'Cybersecurity Goals'
       },
       {
-        id: 53,
+        id: '53',
         name: 'Cybersecurity Requirements'
       },
       {
-        id: 52,
+        id: '52',
         name: 'Cybersecurity Controls'
       },
       {
-        id: 54,
+        id: '54',
         name: 'Cybersecurity Claims'
       }
     ]
@@ -577,7 +588,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   documents: {
     id: '9',
-    name: 'Documents',
+    name: 'Reporting',
     icon: 'DocumentIcon'
   },
   // reports: {
@@ -608,32 +619,47 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Object to store filtered data for multiple tables
   filteredTableData: {},
 
+  // setter for propertiesPopper
+  setPropertiesOpen: (value) => {
+    set((state) => ({
+      isPropertiesOpen: typeof value === 'function' ? value(state.isPropertiesOpen) : value
+    }));
+  },
+  // setter for isCollapsed
+  setCollapsed: (value) =>
+    set((state) => ({
+      isCollapsed: typeof value === 'function' ? value(state.isCollapsed) : value
+    })),
+
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
     set((state) => ({
-      [table]: columns,
+      [table]: columns
     }));
   },
+
+  setSaveModal: (value) =>
+    set(() => ({
+      isSaveModalOpen: Boolean(value)
+    })),
 
   // Toggle column visibility for a specific table
   toggleColumnVisibility: (table, columnName) => {
     const currentColumns = get()[table] || [];
     const isCurrentlyVisible = currentColumns.includes(columnName);
-    const updatedColumns = isCurrentlyVisible
-      ? currentColumns.filter((col) => col !== columnName)
-      : [...currentColumns, columnName];
+    const updatedColumns = isCurrentlyVisible ? currentColumns.filter((col) => col !== columnName) : [...currentColumns, columnName];
 
     // Update visible columns for the table
     set({
-      [table]: updatedColumns,
+      [table]: updatedColumns
     });
 
     // Update the filteredTableData object
     set((state) => ({
       filteredTableData: {
         ...state.filteredTableData,
-        [table]: updatedColumns,
-      },
+        [table]: updatedColumns
+      }
     }));
   },
 
@@ -667,7 +693,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         if (Array.isArray(tableData)) {
           // Join array elements into a string with a delimiter (e.g., comma or newline)
           const tableString = tableData.join(','); // Change delimiter if needed (e.g., use '\n' for newline separation)
-          payload.append(tableKey, tableString);  // Append the plain string
+          payload.append(tableKey, tableString); // Append the plain string
         }
       });
 
@@ -732,7 +758,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       const boxHeight = maxY - minY;
 
       // Access the current dimensions of the viewport
-      const { width: viewportWidth, height: viewportHeight } = state.reactFlowInstance.getViewport();
+      const { width: viewportWidth, height: viewportHeight } = state?.reactFlowInstance?.getViewport();
 
       // Calculate the zoom level to fit the nodes within the viewport (with padding)
       const zoom = Math.min(viewportWidth / (boxWidth + 50), viewportHeight / (boxHeight + 50));
@@ -764,12 +790,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     })),
 
   onNodesChange: (changes) => {
-    const currentNodes = get().nodes; // get current nodes
+    const currentNodes = get()?.nodes; // get current nodes
     const updatedNodes = applyNodeChanges(changes, currentNodes); // apply changes
 
     set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
+      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      // redoStack: [],
       nodes: updatedNodes // set the updated nodes
     }));
   },
@@ -779,8 +805,8 @@ const useStore = createWithEqualityFn((set, get) => ({
     const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
 
     set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
+      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      // redoStack: [],
       edges: updatedEdges // set the updated edges
     }));
   },
@@ -806,6 +832,18 @@ const useStore = createWithEqualityFn((set, get) => ({
       return;
     }
 
+    // Check if an edge already exists between source and target
+    const edgeExists = edges.some(
+      (edge) =>
+        (edge.source === connection.source && edge.target === connection.target) ||
+        (edge.source === connection.target && edge.target === connection.source)
+    );
+
+    if (edgeExists) {
+      console.log('Connection already exists between the source and target.');
+      return;
+    }
+
     // Allow unrestricted connection if both nodes are of type "Gate"
     if (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) {
       const newConnection = { ...connection, data: { label: '' } };
@@ -822,10 +860,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     const child = parent === sourceNode ? targetNode : sourceNode;
 
     // Check if the child node's type matches any type in the parent's connections
-    const isMatchingType = parent.data.connections?.some((connection) => connection.type === child.type);
+    const isMatchingType = parent.data.connections?.some((conn) => conn.type === child.type);
 
     if (!isMatchingType) {
-      // console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
+      console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
       return;
     }
 
@@ -838,16 +876,66 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  setSelectedElement: (newNode) => {
+    set(() => ({
+      selectedElement: newNode
+    }));
+  },
   setNodes: (newNodes) => {
-    set({
-      nodes: newNodes
-    });
+    set((state) => ({
+      nodes: typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes
+    }));
   },
+
+  setInitialNodes: (newNodes) => {
+    set(() => ({
+      initialNodes: newNodes
+    }));
+  },
+
+  setInitialAttackNodes: (newNodes) => {
+    set(() => ({
+      initialAttackNodes: newNodes
+    }));
+  },
+
+  setSelectedNodes: (newNodes) => {
+    set((state) => ({
+      selectedNodes: typeof newNodes === 'function' ? newNodes(state.selectedNodes) : newNodes
+    }));
+  },
+
   setEdges: (newEdges) => {
+    set((state) => ({
+      edges: typeof newEdges === 'function' ? newEdges(state.edges) : newEdges
+    }));
+  },
+
+  setInitialEdges: (newEdges) => {
     set({
-      edges: newEdges
+      initialEdges: newEdges
     });
   },
+
+  setInitialAttackEdges: (newEdges) => {
+    set({
+      initialAttackEdges: newEdges
+    });
+  },
+
+  updateNodeDimensions: (nodeId, newDimensions) =>
+    set((state) => {
+      const updatedNodes = state.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            style: { ...node.style, ...newDimensions } // Update dimensions in the style
+          };
+        }
+        return node;
+      });
+      return { nodes: updatedNodes };
+    }),
 
   //Attack tree Section
   onAttackNodesChange: (changes) => {
@@ -855,7 +943,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       attackNodes: applyNodeChanges(changes, get().attackNodes)
     });
   },
-  onAttckEdgesChange: (changes) => {
+  onAttackEdgesChange: (changes) => {
     set({
       attackEdges: applyEdgeChanges(changes, get().attackEdges)
     });
@@ -867,9 +955,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   setAttackNodes: (newNodes) => {
-    set({
-      attackNodes: newNodes
-    });
+    set((state) => ({
+      attackNodes: typeof newNodes === 'function' ? newNodes(state.attackNodes) : newNodes
+    }));
   },
 
   setAttackEdges: (newEdges) => {
@@ -914,21 +1002,21 @@ const useStore = createWithEqualityFn((set, get) => ({
     function calculateOverlapArea(nodeA, nodeB) {
       const xOverlap = Math.max(0, Math.min(nodeA.x + nodeA.width, nodeB.x + nodeB.width) - Math.max(nodeA.x, nodeB.x));
       const yOverlap = Math.max(0, Math.min(nodeA.y + nodeA.height, nodeB.y + nodeB.height) - Math.max(nodeA.y, nodeB.y));
-
       return xOverlap * yOverlap;
     }
 
-    function isAtLeastHalfInside(nodeA, nodeB) {
-      const overlapArea = calculateOverlapArea(nodeA, nodeB);
-      const nodeBArea = nodeB.width * nodeB.height;
-
-      // Check if the overlap area is at least half of node B's area
-      return overlapArea >= nodeBArea / 2;
+    function isFullyInside(container, node) {
+      return (
+        node.x >= container.x &&
+        node.y >= container.y &&
+        node.x + node.width <= container.x + container.width &&
+        node.y + node.height <= container.y + container.height
+      );
     }
 
     if (groups) {
       groups.forEach((group) => {
-        const area = {
+        const groupArea = {
           x: group?.position?.x,
           y: group?.position?.y,
           width: group?.width,
@@ -937,50 +1025,92 @@ const useStore = createWithEqualityFn((set, get) => ({
 
         const intersectingNodes = nodes
           .filter((node) => {
-            // Avoid grouping group nodes with another group node
-            if (node.id !== group.id && node.type !== 'group') {
+            if (node.id !== group.id) {
               const nodeRect = {
                 x: node.position.x,
                 y: node.position.y,
                 width: node.width,
                 height: node.height
               };
-              return isAtLeastHalfInside(area, nodeRect);
+              return calculateOverlapArea(groupArea, nodeRect) >= (node.width * node.height) / 2;
             }
             return false;
           })
           .map((node) => ({
             ...node,
-            parentId: group.id,
-            extent: 'parent'
+            parentId: group.id // Assign parentId to the enclosing group
           }));
 
         intersectingNodesMap[group.id] = intersectingNodes;
 
-        // Add nodeCount to the group's data
         group.data = {
           ...group.data,
           nodeCount: intersectingNodes.length
         };
       });
 
-      // Remove parentId and extent from nodes that are not inside any group
+      // **Assign parentId only if a group is fully enclosed inside another**
+      groups.forEach((group) => {
+        const enclosingGroup = groups.find((outerGroup) => {
+          if (outerGroup.id === group.id) return false;
+          const outerRect = {
+            x: outerGroup.position.x,
+            y: outerGroup.position.y,
+            width: outerGroup.width,
+            height: outerGroup.height
+          };
+          const groupRect = {
+            x: group.position.x,
+            y: group.position.y,
+            width: group.width,
+            height: group.height
+          };
+          return isFullyInside(outerRect, groupRect);
+        });
+
+        if (enclosingGroup) {
+          group.parentId = enclosingGroup.id;
+        } else {
+          group.parentId = null; // Ensure top-level groups have no parent
+        }
+      });
+
+      // **Sort groups by depth so outer groups get lowest zIndex**
+      function computeZIndex() {
+        const depthMap = new Map();
+
+        function getDepth(group) {
+          if (!group.parentId) return 0; // Top-level groups have zIndex = 0
+          if (depthMap.has(group.id)) return depthMap.get(group.id); // Return cached depth
+
+          const parentGroup = groups.find((g) => g.id === group.parentId);
+          const depth = parentGroup ? getDepth(parentGroup) + 1 : 0;
+          depthMap.set(group.id, depth);
+          return depth;
+        }
+
+        groups.forEach((group) => {
+          group.zIndex = getDepth(group);
+        });
+      }
+
+      computeZIndex(); // Call function to update zIndex
+
+      // Remove parentId from nodes not inside any group
       nodes = nodes.map((node) => {
         const isInGroup = Object.values(intersectingNodesMap)
           .flat()
           .some((n) => n.id === node.id);
 
-        if (!isInGroup && node.parentId && node.extent) {
-          const { parentId, extent, ...rest } = node;
+        if (!isInGroup && node.parentId) {
+          const { parentId, ...rest } = node;
           return rest;
         }
         return node;
       });
     }
 
-    set({
-      nodes: nodes
-    });
+    set({ nodes });
 
     return [intersectingNodesMap, nodes];
   },
@@ -992,6 +1122,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  addNode: (newNode) => {
+    // console.log('newNode', newNode);
+    set((state) => ({
+      nodes: [...state.nodes, newNode]
+    }));
+  },
   addEdge: (newEdge) => {
     // console.log('newNode', newNode);
     set((state) => ({
@@ -1056,6 +1192,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       nodes: state.nodes.concat(newNode),
       edges: state.edges.concat(newEdge)
+    }));
+  },
+
+  dragAddAttackTemplate: (newNode, newEdge) => {
+    // console.log("store",newNode);
+    set((state) => ({
+      attackNodes: state.attackNodes.concat(newNode),
+      attackEdges: state.attackEdges.concat(newEdge)
     }));
   },
 
@@ -1124,12 +1268,12 @@ const useStore = createWithEqualityFn((set, get) => ({
       model: res,
       assets: {
         id: '1',
-        name: 'Item Model & Assets',
+        name: 'Item Definition',
         icon: 'ItemIcon'
       },
       damageScenarios: {
         id: '2',
-        name: 'Damage Scenarios Identification and Impact Ratings',
+        name: 'Damage Scenarios and Impact Ratings',
         icon: 'DamageIcon',
         subs: [
           {
@@ -1138,13 +1282,13 @@ const useStore = createWithEqualityFn((set, get) => ({
           },
           {
             id: '22',
-            name: 'Damage Scenarios - Collection & Impact Ratings'
+            name: 'Damage Scenarios - Impact Ratings'
           }
         ]
       },
       threatScenarios: {
         id: '3',
-        name: 'Threat Scenarios Identification',
+        name: 'Threat Scenarios',
         icon: 'ThreatIcon',
         subs: [
           {
@@ -1159,7 +1303,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       attackScenarios: {
         id: '4',
-        name: 'Attack Path Analysis and Attack Feasability Rating',
+        name: 'Attack Path Analysis',
         icon: 'AttackIcon',
         subs: [
           {
@@ -1169,11 +1313,11 @@ const useStore = createWithEqualityFn((set, get) => ({
           {
             id: '42',
             name: 'Attack Trees'
-          },
-          {
-            id: '43',
-            name: 'Vulnerability Analysis'
           }
+          // {
+          //   id: '43',
+          //   name: 'Vulnerability Analysis'
+          // }
         ]
       },
       riskTreatment: {
@@ -1190,23 +1334,23 @@ const useStore = createWithEqualityFn((set, get) => ({
       },
       cybersecurity: {
         id: '5',
-        name: 'Cybersecurity Goals, Claims and Requirements',
+        name: 'Goals, Claims and Requirements',
         icon: 'CybersecurityIcon',
         subs: [
           {
-            id: 51,
+            id: '51',
             name: 'Cybersecurity Goals'
           },
           {
-            id: 53,
+            id: '53',
             name: 'Cybersecurity Requirements'
           },
           {
-            id: 52,
+            id: '52',
             name: 'Cybersecurity Controls'
           },
           {
-            id: 54,
+            id: '54',
             name: 'Cybersecurity Claims'
           }
         ]
@@ -1268,7 +1412,7 @@ const useStore = createWithEqualityFn((set, get) => ({
             },
             {
               id: '22',
-              name: 'Damage Scenarios - Collection & Impact Ratings'
+              name: 'Damage Scenarios - Impact Ratings'
             }
           ]
         }
@@ -1326,7 +1470,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     if (!res?.error) {
       const attacks = res?.find((item) => item?.type === 'attack');
       const attackTrees = res?.find((item) => item?.type === 'attack_trees');
-      const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
+      // const Vulnerability = res?.find((item) => item?.type === 'Vulnerability');
       set((state) => ({
         attackScenarios: {
           ...state.attackScenarios,
@@ -1338,11 +1482,11 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               ...state.attackScenarios.subs[1],
               ...attackTrees
-            },
-            {
-              ...state.attackScenarios.subs[2],
-              ...Vulnerability
             }
+            // {
+            //   ...state.attackScenarios.subs[2],
+            //   ...Vulnerability
+            // }
           ]
         }
       }));
@@ -1358,11 +1502,11 @@ const useStore = createWithEqualityFn((set, get) => ({
             {
               id: '42',
               name: 'Attack Trees'
-            },
-            {
-              id: '43',
-              name: 'Vulnerability Analysis'
             }
+            // {
+            //   id: '43',
+            //   name: 'Vulnerability Analysis'
+            // }
           ]
         }
       }));
@@ -1408,19 +1552,19 @@ const useStore = createWithEqualityFn((set, get) => ({
           ...state.cybersecurity,
           subs: [
             {
-              id: 51,
+              id: '51',
               name: 'Cybersecurity Goals'
             },
             {
-              id: 53,
+              id: '53',
               name: 'Cybersecurity Requirements'
             },
             {
-              id: 52,
+              id: '52',
               name: 'Cybersecurity Controls'
             },
             {
-              id: 54,
+              id: '54',
               name: 'Cybersecurity Claims'
             }
           ]
@@ -1450,7 +1594,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           ...state.riskTreatment,
           subs: [
             {
-              id: 81,
+              id: '81',
               name: 'Threat Assessment & Risk Treatment',
               Details: []
             }
@@ -1460,6 +1604,14 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  getGlobalAttackTrees: async (modelId) => {
+    const url = `${configuration.apiBaseUrl}v1/get/globalAttackTrees`;
+    const res = await GET_CALL(modelId, url);
+    // console.log('res', res);
+    set({
+      globalAttackTrees: res ?? []
+    });
+  },
   //Update Section
   updateModelName: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/model-name`;
@@ -1529,7 +1681,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   updateAssets: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/assets`;
     const res = await UPDATE_CALL(details, url);
-    console.log('res', res);
+    // console.log('res', res);
     return res;
   },
 
@@ -1558,12 +1710,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   updateAttackNode: (nodeId, name) => {
     set((state) => {
-      let node = JSON.parse(JSON.stringify(state.nodes)).find((ite) => ite.id === nodeId);
-      const ind = state.nodes.findIndex((ite) => ite.id === nodeId);
+      let node = JSON.parse(JSON.stringify(state.attackNodes)).find((ite) => ite.id === nodeId);
+      const ind = state.attackNodes.findIndex((ite) => ite.id === nodeId);
       node.data.label = name;
-      state.nodes[ind] = node;
+      state.attackNodes[ind] = node;
       return {
-        nodes: [...state.nodes]
+        attackNodes: [...state.attackNodes]
       };
     });
   },
@@ -1598,20 +1750,19 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await ADD_CALL(details, url);
     // console.log('res', res);
     return res;
-    // set((state) => ({
-    //   riskTreatment: {
-    //     ...state.riskTreatment,
-    //     subs: [
-    //       {
-    //         ...state.riskTreatment.subs[0],
-    //         scenes: [
-    //           ...state.riskTreatment.subs[0].scenes, // Spread existing scenes
-    //           res // Add the new res
-    //         ]
-    //       }
-    //     ]
-    //   }
-    // }));
+  },
+
+  addAIAttackTree: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/add/aiAttackTrees`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
+
+  createPropmt: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generateAndStoreAttack`;
+    const res = await ADD_CALL(details, url);
+    // console.log('res', res);
+    return res;
   },
 
   createComponent: async (newTemplate) => {
@@ -1731,11 +1882,22 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
+  removeAttacks: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/remove/attacks`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
+  deleteAttacks: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   deleteRiskTreatment: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/risktreatment`;
     const res = await DELETE_CALL(details, url);
     return res;
   },
+
   // deleteModels: async (ids) => {
 
   //   let data = new FormData();

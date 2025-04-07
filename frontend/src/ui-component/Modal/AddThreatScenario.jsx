@@ -1,20 +1,13 @@
 /*eslint-disable*/
 import * as React from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  InputLabel,
-  Box,
-  TextField,
-  Slide
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import AlertMessage from '../Alert';
+import ColorTheme from '../../store/ColorTheme';
+import PaperComponent from './PaperComponent';
+import DialogCommonTitle from './DialogCommonTitle';
+import { ThreatIcon } from '../../assets/icons';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -26,6 +19,7 @@ const selector = (state) => ({
 });
 
 export default function AddThreatScenarios({ open, handleClose, id }) {
+  const color = ColorTheme();
   const { addScene, getThreatScenario } = useStore(selector, shallow);
   const [openMsg, setOpenMsg] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
@@ -45,7 +39,7 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
         // console.log('res page', res);
         if (res) {
           setTimeout(() => {
-            handleClose();
+            // handleClose();
             getThreatScenario(id);
             setOpenMsg(true);
             setMessage(res?.message);
@@ -71,19 +65,20 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        PaperComponent={PaperComponent}
+        aria-describedby="draggable-dialog-slide-description"
         sx={{
           '& .MuiPaper-root': {
-            // background:'#999999',
+            background: color?.modalBg,
             width: '-webkit-fill-available'
           }
         }}
       >
-        <DialogTitle>{'Add Threat Scenario'}</DialogTitle>
+        <DialogCommonTitle icon={ThreatIcon} title={'Add Threat Scenario'} />
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel>Name :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Name :</InputLabel>
               <TextField
                 id="outlined-basic"
                 // label="Name"
@@ -92,7 +87,7 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
                 placeholder="Name"
                 onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
               />
-              <InputLabel>Description :</InputLabel>
+              <InputLabel sx={{ color: color?.title, fontWeight: 600 }}>Description :</InputLabel>
               <TextField
                 id="outlined-multiline-static"
                 // label="Multiline"
@@ -106,7 +101,7 @@ export default function AddThreatScenarios({ open, handleClose, id }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+          <Button variant="outlined" color="error" onClick={handleClose}>
             cancel
           </Button>
           <Button variant="contained" color="primary" onClick={handleCreate}>

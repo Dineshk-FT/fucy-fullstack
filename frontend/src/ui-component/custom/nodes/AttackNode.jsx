@@ -6,16 +6,17 @@ import { RatingColor } from '../../Table/constraints';
 import { useSelector } from 'react-redux';
 
 const selector = (state) => ({
-  nodes: state.nodes,
+  nodes: state.attackNodes,
   updateOverallRating: state.updateOverallRating,
   attackId: state.attackScenarios.subs[1]['_id']
 });
-const AttackNode = ({ data, isConnectable, type, id }) => {
+const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
   const { nodes, updateOverallRating, attackId } = useStore(selector);
   const { setNodes } = useReactFlow();
   const { attackScene } = useSelector((state) => state?.currentId);
 
+  // console.log('data', rst);
   const [isHovered, setIsHovered] = useState(false);
   // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
@@ -24,15 +25,6 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
     setNodes((nodes) => nodes.filter((node) => node.id !== id));
   };
 
-  const handleupdate = useCallback((rating) => {
-    const details = {
-      id: attackId,
-      'scene-id': attackScene?.ID,
-      rating: rating
-    };
-    // console.log('details', details);
-    // updateOverallRating(details)
-  }, []);
   const getHighestRating = (nodes) => {
     const priorityOrder = {
       'Very Low': 1,
@@ -54,13 +46,12 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   };
 
   const borderColor = RatingColor(getHighestRating(nodes));
-
+  // console.log('borderColor', borderColor);
   const calculateFontSize = () => {
-    const baseFontSize = 14; // Base font size
     const maxFontSize = 24; // Maximum font size
     const minFontSize = 8; // Minimum font size
     const sizeFactor = Math.min(nodeDimensions.width, nodeDimensions.height); // Factor based on the smaller dimension
-    const calculatedFontSize = sizeFactor / 9.5; // Adjust divisor to tweak scaling
+    const calculatedFontSize = sizeFactor / 8; // Adjust divisor to tweak scaling
     return Math.min(maxFontSize, Math.max(minFontSize, calculatedFontSize));
   };
 
@@ -113,8 +104,8 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
   return (
     <>
       <NodeResizer
-        minWidth={180}
-        minHeight={150}
+        // minWidth={180}
+        // minHeight={150}
         onResize={(event, params) => {
           updateNodeDimensions(params.width, params.height);
         }}
@@ -151,7 +142,8 @@ const AttackNode = ({ data, isConnectable, type, id }) => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: isSmallNode ? 'flex-start' : 'center',
-            alignItems: 'flex-start'
+            alignItems: 'flex-start',
+            color: 'gray'
           }}
         >
           {data?.label}

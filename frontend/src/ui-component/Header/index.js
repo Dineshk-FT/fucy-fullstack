@@ -19,36 +19,30 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
 import AddIcon from '@mui/icons-material/Add';
+import { iconStyle } from '../../store/constant';
+import { useDispatch } from 'react-redux';
+import { closeHeader } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   header: {
-    width: 'inherit',
-    height: '2rem',
-    borderBottom: '1px solid black',
+    // width: 300,
+    height: 'auto',
     display: 'flex',
     alignItems: 'center',
-    gap: 20,
-    padding: '0 1rem',
-    overflowX: 'auto',
-    overflowY: 'hidden',
-    scrollbarWidth: 'none'
+    // rowGap: 20,
+    // padding: '0 1rem',
+    flexWrap: 'wrap', // Ensures wrapping
+    overflowX: 'hidden', // Hides horizontal scroll
+    overflowY: 'auto', // Allows vertical scrolling if needed
+    scrollbarWidth: 'none',
+    justifyContent: 'space-between'
   },
+
   icons: {
     fontSize: '20px'
   }
 }));
-export default function Header({
-  selectedElement,
-  nodes,
-  setSelectedElement,
-  setNodes,
-  horizontal,
-  vertical,
-  handleClear,
-  handleSave,
-  download,
-  createGroup
-}) {
+export default function Header({ selectedElement, nodes, setSelectedElement, setNodes }) {
   const color = ColorTheme();
   const classes = useStyles();
   const { iconColor } = color;
@@ -94,7 +88,8 @@ export default function Header({
     });
     setHighlight({
       ...highlight,
-      bold: selectedElement?.data?.style?.fontSize === 700 ? true : false,
+      bold: selectedElement?.data?.style?.fontWeight === 700 ? true : false,
+
       italic: selectedElement?.data?.style?.fontStyle === 'italic' ? true : false,
       decor: selectedElement?.data?.style?.textDecoration === 'underline' ? true : false
     });
@@ -155,14 +150,21 @@ export default function Header({
     const list = JSON.parse(JSON.stringify(nodes));
     const node = list?.find((nd) => nd?.id === selectedElement?.id);
     const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
+
+    if (!node) return;
+
     const { style } = node.data;
+    let newFontSize = parseInt(style.fontSize, 10) || 16; // Default size if undefined
+
     if (name === 'inc') {
-      setStyles((state) => ({ ...state, fontSize: state.fontSize + 2 }));
-      style.fontSize = `${styles.fontSize + 2}px`;
+      newFontSize = Math.min(newFontSize + 2, 48);
     } else {
-      setStyles((state) => ({ ...state, fontSize: state.fontSize - 2 }));
-      style.fontSize = `${styles.fontSize - 2}px`;
+      newFontSize = Math.max(newFontSize - 2, 12);
     }
+
+    setStyles((state) => ({ ...state, fontSize: newFontSize }));
+    style.fontSize = `${newFontSize}px`;
+
     setSelectedElement(node);
     list[Index] = node;
     setNodes(list);
@@ -200,47 +202,8 @@ export default function Header({
     event.dataTransfer.setData('application/group', parseFile);
     event.dataTransfer.effectAllowed = 'move';
   };
-  const segments = [
-    {
-      id: 1,
-      title: 'Grouping',
-      onclick: () => createGroup,
-      onDragStart: handleDragStart,
-      isDraggable: true,
-      component: <GridOnIcon />
-    },
-    // {
-    //   id: 2,
-    //   title: 'Clear',
-    //   onclick: () => handleClear,
-    //   component: <ClearIcon />
-    // },
-    {
-      id: 3,
-      title: 'Save',
-      onclick: () => handleSave,
-      component: <SaveIcon />
-    },
-    {
-      id: 4,
-      title: 'Vertical Align',
-      onclick: () => vertical,
-      component: <VerticalAlignCenterIcon />
-    },
-    {
-      id: 5,
-      title: 'Horizontal Align',
-      onclick: () => horizontal,
-      component: <VerticalAlignCenterIcon sx={{ rotate: '90deg' }} />
-    },
-    {
-      id: 6,
-      title: 'Download',
-      onclick: () => download,
-      component: <GetAppIcon />
-    }
-  ];
-  // console.log('styles', styles)
+
+  // console.log('highlight', highlight);
   return (
     <>
       <Box className={classes.header} sx={{ background: color?.canvasBG }}>
@@ -248,7 +211,7 @@ export default function Header({
                 <ArrowForward color={iconColor} /> */}
         <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
         <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
-        <AddIcon />
+        {/* <AddIcon /> */}
         <FormatBoldIcon
           onClick={() => handleFontStyle('bold')}
           sx={{
@@ -321,21 +284,6 @@ export default function Header({
           ></span>
           <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
         </label>
-
-        {segments?.map((item) => (
-          <React.Fragment key={item?.id}>
-            <Tooltip title={item?.title}>
-              <Typography
-                sx={{ color: iconColor, alignSelf: 'end' }}
-                onClick={item?.onclick()}
-                onDragStart={(e) => item?.onDragStart(e, item)}
-                draggable={item?.isDraggable}
-              >
-                {item?.component}
-              </Typography>
-            </Tooltip>
-          </React.Fragment>
-        ))}
       </Box>
     </>
   );

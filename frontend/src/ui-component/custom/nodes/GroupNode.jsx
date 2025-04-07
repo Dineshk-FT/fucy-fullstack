@@ -1,52 +1,89 @@
-import React, { useEffect, useState } from 'react';
-import { NodeResizer } from 'reactflow';
+/*eslint-disable*/
+import React, { useCallback, useEffect, useState } from 'react';
+import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { shallow } from 'zustand/shallow';
+import useThrottle from '../../../hooks/useThrottle';
+import { useSelector } from 'react-redux';
 
 const selector = (state) => ({
-  nodes: state.nodes,
-  setNodes: state.setNodes
+  nodes: state.nodes
 });
-const CustomGroupNode = ({ data, id }) => {
-  const { nodes, setNodes } = useStore(selector, shallow);
-  const [value, setValue] = useState('');
+
+const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
+  const { nodes } = useStore(selector, shallow);
+  const { setNodes } = useReactFlow();
+  const { selectedBlock } = useSelector((state) => state?.canvas);
+  const [dimensions, setDimensions] = useState({
+    width: data?.style?.width || 200,
+    height: data?.style?.height || 200
+  });
+
+  const checkSelection = () => selectedBlock?.id === id;
+  const isSelected = checkSelection();
+  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+  const [value, setValue] = useState(data?.label || '');
+
+  const fontSize = Math.max(12, Math.min(dimensions.width / 10, 30));
+
+  const throttledResize = useThrottle((newWidth, newHeight) => {
+    setDimensions({ width: newWidth, height: newHeight });
+
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, width: newWidth, height: newHeight } } } : node
+      )
+    );
+  }, 50);
+
+  const handleResize = useCallback(
+    (_, { width: newWidth, height: newHeight }) => {
+      requestAnimationFrame(() => {
+        throttledResize(newWidth, newHeight);
+      });
+    },
+    [throttledResize]
+  );
 
   useEffect(() => {
-    setValue(data?.label);
-  }, [data]);
-  const handlechange = (e) => {
-    const nod = [...nodes];
+    setValue(data?.label || '');
+  }, [data?.label]);
+
+  const handleChange = (e) => {
     const val = e.target.value;
     setValue(val);
-    const node = nodes?.find((nd) => nd?.id === id);
-    const Index = nodes?.findIndex((nd) => nd?.id === id);
-    node.data.label = e.target.value;
-    nod[Index] = node;
-    setNodes(nod);
+    setNodes(nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node)));
   };
+
   return (
-    <div>
+    <div style={{ height: dimensions.height, width: dimensions.width }}>
       <input
         type="text"
         value={value}
-        onChange={handlechange}
+        onChange={handleChange}
         style={{
-          alignSelf: 'flex-start',
-          fontSize: '25px',
+          fontSize: `${fontSize}px`,
           fontWeight: 600,
-          marginTop: '1rem',
+          marginTop: '0.5rem',
           textAlign: 'center',
           border: 'none',
           background: 'transparent',
-          outline: 'none'
+          outline: 'none',
+          minWidth: 100,
+          width: '100%'
         }}
       />
 
-      <NodeResizer />
+      <NodeResizer onResize={handleResize} />
+      <Handle style={{ backgroundColor: bgColor }} id="a" position={Position.Top} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} id="b" position={Position.Left} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} id="c" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle style={{ backgroundColor: bgColor }} id="d" position={Position.Right} isConnectable={isConnectable} />
+
       <div
-        className="group_node"
+        className="my-group-node"
         style={{
-          ...data?.style
+          position: 'relative'
         }}
       >
         <div
@@ -57,7 +94,7 @@ const CustomGroupNode = ({ data, id }) => {
             height: 'inherit',
             width: 'inherit'
           }}
-        ></div>
+        />
       </div>
     </div>
   );

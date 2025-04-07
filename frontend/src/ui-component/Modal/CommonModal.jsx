@@ -9,7 +9,8 @@ import {
   Button,
   Box,
   TextField,
-  Slide
+  Slide,
+  Paper
   // useTheme
 } from '@mui/material';
 import useStore from '../../Zustand/store';
@@ -17,6 +18,20 @@ import { shallow } from 'zustand/shallow';
 import { ToasterContext } from '../../layout/MainLayout/Sidebar1';
 import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
+import ColorTheme from '../../store/ColorTheme';
+import Draggable from 'react-draggable';
+import DialogCommonTitle from './DialogCommonTitle';
+import { AttackIcon } from '../../assets/icons';
+import toast, { Toaster } from 'react-hot-toast';
+
+function PaperComponent(props) {
+  const nodeRef = React.useRef(null);
+  return (
+    <Draggable nodeRef={nodeRef} handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}>
+      <Paper {...props} ref={nodeRef} />
+    </Draggable>
+  );
+}
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -28,7 +43,9 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario
 });
 export default function CommonModal({ open, handleClose, name }) {
-  const { notify } = React.useContext(ToasterContext);
+  const color = ColorTheme();
+  // const { notify } = React.useContext(ToasterContext);
+  const notify = (message, status) => toast[status](message);
   const { id } = useParams();
   const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
@@ -56,7 +73,7 @@ export default function CommonModal({ open, handleClose, name }) {
         if (!res.error) {
           notify('Added Successfully', 'success');
           getAttackScenario(model?._id);
-          onClose();
+          // onClose();
         } else {
           notify(res?.error ?? 'something went wrong', 'error');
         }
@@ -68,10 +85,19 @@ export default function CommonModal({ open, handleClose, name }) {
 
   return (
     <React.Fragment>
-      <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={onClose} aria-describedby="alert-dialog-slide-description">
-        <DialogTitle sx={{ fontSize: 20, fontFamily: 'Inter' }}>{`Add New ${name}`}</DialogTitle>
+      <Dialog
+        open={open}
+        TransitionComponent={Transition}
+        keepMounted
+        PaperComponent={PaperComponent}
+        onClose={onClose}
+        aria-labelledby="draggable-dialog-title"
+        sx={{ '& .MuiPaper-root': { backgroundColor: color?.modalBg } }}
+      >
+        <DialogCommonTitle icon={AttackIcon} title={`Add New ${name}`} />
+
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="draggable-dialog-slide-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
               <TextField
                 value={templateDetails?.name}

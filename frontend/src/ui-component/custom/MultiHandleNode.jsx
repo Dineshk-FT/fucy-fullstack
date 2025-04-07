@@ -5,7 +5,7 @@ import useStore from '../../Zustand/store';
 import { updatedModelState } from '../../utils/Constraints';
 import { useParams } from 'react-router';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
@@ -18,6 +18,8 @@ const selector = (state) => ({
 const MultiHandleNode = ({ id, data, isConnectable, type }) => {
   const dispatch = useDispatch();
   const { id: mainId } = useParams();
+  const { selectedBlock } = useSelector((state) => state?.canvas);
+
   const { model, nodes, edges, updateModel, getModelById } = useStore(selector);
   // console.log('model', model);
   const { setNodes } = useReactFlow();
@@ -60,7 +62,8 @@ const MultiHandleNode = ({ id, data, isConnectable, type }) => {
           style={{
             ...data?.style,
             position: 'relative',
-            overflow: 'visible'
+            overflow: 'visible',
+            boxShadow: selectedBlock?.id === id ? '0px 0px 7px 3px violet' : 'none'
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

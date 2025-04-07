@@ -14,7 +14,8 @@ const useStyles = makeStyles((theme) => ({
   MenuItem: {
     fontSize: '15px',
     fontWeight: 600,
-    gap: 3
+    gap: 3,
+    color: '#000'
   }
 }));
 
@@ -53,7 +54,12 @@ const InitialModal = () => {
 
   return (
     <>
-      <Dialog open={initialDialogOpen} onClose={onClose} PaperComponent={PaperComponent} aria-labelledby="draggable-dialog-title">
+      <Dialog
+        open={initialDialogOpen}
+        onClose={onClose}
+        PaperComponent={(props) => <PaperComponent {...props} height="fit-content" />}
+        aria-labelledby="draggable-dialog-title"
+      >
         <DialogTitle style={{ cursor: 'move' }} id="draggable-dialog-title">
           <Typography variant="h4" color="primary">
             Project Menu
@@ -70,7 +76,7 @@ const InitialModal = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button autoFocus onClick={onClose} variant="outlined" color="error">
+          <Button onClick={onClose} variant="outlined" color="error">
             Close
           </Button>
         </DialogActions>

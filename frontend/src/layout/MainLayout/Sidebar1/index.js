@@ -15,13 +15,13 @@ import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
 import LogoSection from '../LogoSection';
 import BrowserCard from '../Sidebar/BrowserCard/index';
-import { drawerWidth, navbarHeight } from '../../../store/constant';
+import { drawerWidth, getNavbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import MenuCard from '../Sidebar/MenuCard/index1';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
-import { ClosePropertiesTab } from '../../../store/slices/CanvasSlice';
+import { ClosePropertiesTab, setDrawerwidth } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -38,14 +38,15 @@ const useStyles = makeStyles(() => ({
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
-  fetchModels: state.getModels
+  fetchModels: state.getModels,
+  isCollapsed: state.isCollapsed
 });
 
 const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, fetchModels, models } = useStore(selector);
+  const { template, fetchModels, models, isCollapsed } = useStore(selector);
   const theme = useTheme();
   const { isNavbarClose } = useSelector((state) => state.currentId);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -60,25 +61,28 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
 
   const handleResize = (event, { size }) => {
     setSidebarWidth(size.width);
+    dispatch(setDrawerwidth(size.width));
   };
 
   const handleDrawerToggle = () => {
     setSidebarWidth(draweropen ? 0 : 370);
+    dispatch(setDrawerwidth(draweropen ? 0 : 370));
     drawerToggle();
   };
 
   const drawer = (
     <>
       <BrowserView>
-        <PerfectScrollbar component="div" style={{ paddingRight: '40px', paddingLeft: '15px', paddingTop: '15px' }}>
-          <BrowserCard template={template} models={models} />
+        <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
+          <BrowserCard template={template} models={models} isCollapsed={isCollapsed} isNavbarClose={isNavbarClose} />
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}
           sx={{
             position: 'absolute',
             border: `1px solid ${color?.title}`,
-            margin: 1,
+            marginTop: 2.5,
+            marginRight: 2.5,
             padding: '0px',
             width: '0.8em',
             height: '0.8em',
@@ -93,11 +97,11 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </BrowserView>
-      <MobileView>
+      {/* <MobileView>
         <Box sx={{ px: 2 }}>
           <MenuCard />
         </Box>
-      </MobileView>
+      </MobileView> */}
     </>
   );
 
@@ -128,14 +132,16 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           />
         }
         handleSize={[8, Infinity]}
+        style={{ height: '100%' }}
       >
         <Box
           component="nav"
           sx={{
             flexShrink: { md: 0 },
             width: sidebarWidth,
+            height: '100%',
             background: color?.sidebarBG,
-            mt: !draweropen ? navbarHeight : '0px'
+            mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px'
           }}
           aria-label="mailbox folders"
         >
@@ -148,9 +154,9 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
                 padding: '0px',
                 width: '0.8em',
                 height: '0.8em',
-                left: '0px',
-                top: 0,
-                marginTop: `${navbarHeight}px`,
+                left: '5px',
+                top: 5,
+                marginTop: `${getNavbarHeight(isCollapsed)}px`,
                 color: color?.iconColor,
                 zIndex: 1400,
                 '&:hover': { transform: 'scale(1.1)' },
@@ -166,6 +172,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             variant={matchUpMd ? 'persistent' : 'temporary'}
             anchor="left"
             open={draweropen}
+            id="sidebar_drawer"
             onClose={handleDrawerToggle} // Use handleDrawerToggle here
             sx={{
               '& .MuiDrawer-paper': {
@@ -174,11 +181,12 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
                 background: color?.sidebarBG,
                 color: theme.palette.text.primary,
                 [theme.breakpoints.up('md')]: {
-                  top: !isNavbarClose ? navbarHeight : '0px'
+                  top: !isNavbarClose ? getNavbarHeight(isCollapsed) : '0px'
                 }
               },
               '& .MuiCardContent-root': {
-                padding: '0px'
+                padding: '0px',
+                flexGrow: 1
               }
             }}
             ModalProps={{ keepMounted: true }}
@@ -194,7 +202,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
 };
 
 Sidebar.propTypes = {
-  draweropen: PropTypes.bool,
+  // draweropen: PropTypes.bool,
   drawerToggle: PropTypes.func,
   window: PropTypes.object
 };
