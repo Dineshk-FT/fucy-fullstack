@@ -21,13 +21,31 @@ const Properties = [
   { name: 'Availability', image: AvailabilityIcon }
 ];
 
-const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, dispatch, handleSaveEdit, setNodes, nodes }) => {
+const EditProperties = ({
+  anchorEl,
+  handleClosePopper,
+  details,
+  setDetails,
+  dispatch,
+  handleSaveEdit,
+  setNodes,
+  nodes,
+  edges,
+  setEdges
+}) => {
   const { selectedBlock } = useSelector((state) => state?.canvas);
-
+  // console.log('opened');
   const updateElement = (updateFn) => {
-    const updatedNodes = nodes?.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node));
-    setNodes(updatedNodes);
+    if (!selectedBlock?.id.includes('reactflow__edge')) {
+      const updatedNodes = nodes?.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node));
+      setNodes(updatedNodes);
+    } else {
+      const updatedEdges = edges?.map((edge) => (edge?.id === selectedBlock?.id ? updateFn(edge) : edge));
+      setEdges(updatedEdges);
+    }
   };
+
+  // console.log('edges', edges);
 
   const handleChange = (event, newValue) => {
     const updatedProperties = newValue.map((prop) => prop.name);
@@ -41,7 +59,7 @@ const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, disp
       open={Boolean(anchorEl)}
       anchorEl={anchorEl}
       placement="bottom-start"
-      sx={{ width: 250, boxShadow: '0px 0px 4px black', borderRadius: '8px' }}
+      sx={{ width: 250, boxShadow: '0px 0px 4px black', borderRadius: '8px', zIndex: 1200 }}
     >
       <ClickAwayListener onClickAway={handleClosePopper}>
         <Paper sx={{ padding: 1, display: 'flex', flexDirection: 'column', gap: 1, alignContent: 'center' }}>

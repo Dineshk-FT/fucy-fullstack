@@ -47,7 +47,7 @@ import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../..
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { threatType } from '../../../../ui-component/Table/constraints';
 import { v4 as uid } from 'uuid';
-import { setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
@@ -55,6 +55,8 @@ import { getNavbarHeight } from '../../../../store/constant';
 import { getNodeDetails } from '../../../../utils/Constraints';
 import { Avatar, AvatarGroup } from '@mui/material';
 import ConfirmDeleteDialog from '../../../../ui-component/Modal/ConfirmDeleteDialog';
+import EditProperties from '../../../../ui-component/Poppers/EditProperties';
+import EditName from './EditName';
 
 const imageComponents = {
   AttackIcon,
@@ -266,13 +268,16 @@ const selector = (state) => ({
   clickedItem: state.clickedItem,
   setClickedItem: state.setClickedItem,
   updateModelName: state.updateModelName,
+  update: state.updateAssets,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
-  setSelectedThreatIds: state.setSelectedThreatIds
+  setSelectedThreatIds: state.setSelectedThreatIds,
+  setSelectedElement: state.setSelectedElement,
+  setIsNodePasted: state.setIsNodePasted
 });
 
 const Properties = {
@@ -320,6 +325,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     clickedItem,
     setClickedItem,
     updateModelName,
+    update,
     setNodes,
     setEdges,
     getCatalog,
@@ -331,7 +337,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setAttackEdges,
     setInitialAttackNodes,
     setInitialAttackEdges,
-    setSelectedThreatIds
+    setSelectedThreatIds,
+    setSelectedElement,
+    setIsNodePasted
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -339,7 +347,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     data: 1
   });
   const drawerwidth = 370;
-  const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
+  const { selectedBlock, drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
     attack: false,
@@ -357,6 +365,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     id: ''
   });
 
+  const anchorElId = document.querySelector(`[data="${anchorEl?.sidebar}"]`) || null;
+  // console.log('anchorElId', anchorElId);
+  // console.log('anchorEl?.sidebar', anchorEl?.sidebar);
   const [deleteScene, setDeleteScene] = useState({
     type: '',
     id: '',
@@ -506,7 +517,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
+  // console.log('clickedItem', clickedItem);
   const handleOpenTable = (e, id, name) => {
+    // console.log('id', id);
     e.stopPropagation();
     setClickedItem(id);
     if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
@@ -605,6 +618,46 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     event.dataTransfer.setData('application/cyber', parseFile);
     event.dataTransfer.setData('application/dragItem', parseFile);
     event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const RefreshAPI = () => {
+    getAssets(model?._id).catch((err) => {
+      notify('Failed to fetch assets: ' + err.message, 'error');
+    });
+    getDamageScenarios(model?._id).catch((err) => {
+      notify('Failed to fetch damage scenarios: ' + err.message, 'error');
+    });
+  };
+  const handleSave = () => {
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
+    const details = {
+      'model-id': model?._id,
+      template: JSON.stringify(template),
+      assetId: assets?._id
+    };
+
+    update(details)
+      .then((res) => {
+        if (!res.error) {
+          notify('Saved Successfully', 'success');
+          handleClosePopper();
+          RefreshAPI();
+        } else {
+          notify(res.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
   };
 
   const getTitleLabel = (icon, name, id) => {
@@ -720,6 +773,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
+  const handleTreeItemClick = (e, handler, ...args) => {
+    // Check if click was on the expand icon
+    const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
+
+    if (isExpandIcon) {
+      // For expand icon clicks, only toggle expand/collapse
+      e.stopPropagation();
+      return;
+    }
+
+    // For other clicks, run the custom handler
+    handler?.(e, ...args);
+  };
+
   const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
     <TreeItem
       key={data.id}
@@ -760,8 +827,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               )}
             </Box>
           }
-          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
-          // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+          onClick={(e) => {
+            setClickedItem(sub.id);
+            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
+          }}
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
@@ -770,13 +839,35 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           key={sub.id}
           nodeId={sub.id}
           label={getLabel('TopicIcon', sub.name, null, sub.id)}
-          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
-          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+          onClick={(e) => {
+            setClickedItem(sub.id);
+            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
+          }}
+          onContextMenu={(e) => handleTreeItemClick(e, contextMenuHandler, sub.name)}
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
       )
     );
+  };
+
+  const handlePropertiesTab = (detail, type) => {
+    const selected = type === 'edge' ? edges.find((edge) => edge.id === detail?.nodeId) : nodes.find((node) => node.id === detail?.nodeId);
+    const { isAsset = false, properties, id, data } = selected;
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl({ type: 'sidebar', value: id }));
+    setSelectedElement(selected);
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
+  };
+
+  const handleClosePopper = () => {
+    dispatch(clearAnchorEl());
   };
 
   const renderTreeItems = (data, type) => {
@@ -788,7 +879,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
         const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
 
-        const renderProperties = (properties) => {
+        const renderProperties = (properties, detail, type) => {
           // console.log('properties', properties);
           if (!properties || properties.length === 0) return null;
 
@@ -816,7 +907,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               arrow
             >
-              <AvatarGroup max={3} spacing="medium">
+              <AvatarGroup max={3} spacing="medium" onClick={() => handlePropertiesTab(detail, type)}>
                 {displayedProperties?.map((name, index) => (
                   <Avatar key={index} sx={{ width: 20, height: 20 }}>
                     <img src={Properties[name]} alt={name} width="100%" />
@@ -879,27 +970,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}
+                    data={detail.nodeId}
                     sx={{
                       background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
                     }}
                     label={
                       <Box display="flex" alignItems="center" justifyContent="space-between">
                         <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                          <Box
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 'fit-content'
-                            }}
-                          >
-                            {i + 1}.{' '}
-                            <Typography component="span" noWrap>
-                              {detail.name}
-                            </Typography>
-                          </Box>
+                          <EditName detail={detail} index={i} onUpdate={handleSave} />
                         </Tooltip>
-                        {renderProperties(detail?.props)}
+                        {renderProperties(detail?.props, detail, type)}
                       </Box>
                     }
                     onClick={(e) => {
@@ -1276,6 +1356,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           </TreeView>
         </CardContent>
       </CardStyle>
+      {anchorElId && (
+        <EditProperties
+          anchorEl={anchorElId}
+          handleSaveEdit={handleSave}
+          handleClosePopper={handleClosePopper}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          edges={edges}
+          setEdges={setEdges}
+        />
+      )}
       <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />
       <ConfirmDeleteDialog
         open={openModal?.delete}

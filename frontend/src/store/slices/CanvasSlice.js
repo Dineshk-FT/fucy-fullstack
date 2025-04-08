@@ -10,7 +10,8 @@ const initialState = {
   addDataNodeTab: false,
   anchorEl: {
     node: null,
-    edge: null
+    edge: null,
+    sidebar: null
   },
   isSaveModalOpen: false,
   isHeaderOpen: false,
@@ -35,7 +36,7 @@ const CanvasSlice = createSlice({
       return { ...state, addNodeTabOpen: true };
     },
     openAddDataNodeTab: (state) => {
-      return {...state, addDataNodeTab: true };
+      return { ...state, addDataNodeTab: true };
     },
     openHeader: (state) => {
       return { ...state, isHeaderOpen: true };
