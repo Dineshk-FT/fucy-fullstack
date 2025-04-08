@@ -25,9 +25,12 @@ export default function CreateDerivedThreatModal({ open, handleClose, id, select
     Description: ''
   });
 
-  //   console.log('selectedRows', selectedRows);
   const handleCreate = () => {
-    const ids = selectedRows.map((row) => row?.propId);
+    const ids = selectedRows.map((row) => ({
+      propId: row?.propId,
+      nodeId: row?.nodeId,
+      rowId: row?.rowId
+    }));
     const details = {
       ...templateDetails,
       'model-id': id,

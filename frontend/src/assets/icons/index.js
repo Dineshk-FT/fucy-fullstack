@@ -26,3 +26,4 @@ export { default as AuthorizationIcon } from './Authorization.png';
 export { default as AvailabilityIcon } from './Availability.png';
 export { default as ConfidentialityIcon } from './Confidentiality.png';
 export { default as Non_repudiationIcon } from './Non_repudiation.png';
+export { default as DerivedThreatIcon } from './DerivedThreat.png';

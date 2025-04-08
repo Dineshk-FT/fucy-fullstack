@@ -157,8 +157,6 @@ const selector = (state) => ({
   removeAttacks: state.removeAttacks,
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
-  isSaveModalOpen: state.isSaveModalOpen,
-  setSaveModal: state.setSaveModal,
   initialNodes: state.initialAttackNodes,
   initialEdges: state.initialAttackEdges
 });
@@ -213,9 +211,7 @@ export default function AttackBlock({ attackScene, color }) {
     deleteCybersecurity,
     removeAttacks,
     attacks,
-    requirements,
-    isSaveModalOpen,
-    setSaveModal
+    requirements
   } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
@@ -669,7 +665,8 @@ export default function AttackBlock({ attackScene, color }) {
       }
 
       const filtered = nodes.filter((node) => node.type == 'default');
-      if (filtered.length == 1 && parsedNode.type === 'default') {
+      if (filtered.length === 1 && parsedNode?.type === 'default') {
+        notify('Must use single threat scene for an Attack tree', 'error');
         return;
       }
 
@@ -685,8 +682,8 @@ export default function AttackBlock({ attackScene, color }) {
           position,
           type: parsedNode.type || parsedNode.label,
           ...parsedNode,
-          width: 120,
-          height: 60,
+          width: parsedNode?.width ?? 120,
+          height: parsedNode?.height ?? 60,
           data: {
             label: parsedNode.label,
             nodeId: parsedNode.nodeId,
@@ -694,9 +691,10 @@ export default function AttackBlock({ attackScene, color }) {
               ...style,
               backgroundColor: 'transparent',
               color: 'black',
-              width: 120,
-              height: 60
-            }
+              width: parsedNode?.width ?? 120,
+              height: parsedNode?.height ?? 60
+            },
+            nodeType: parsedNode?.nodeType
           }
         };
         addNode(newNode);
@@ -745,8 +743,8 @@ export default function AttackBlock({ attackScene, color }) {
         );
 
         dragAdd(newNodes, newEdges);
-        centerLayout();
       }
+      centerLayout();
     },
     [reactFlowInstance, nodes, addNode, addEdge, dragAdd]
   );

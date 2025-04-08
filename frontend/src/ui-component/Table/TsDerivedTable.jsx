@@ -32,7 +32,7 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../store/ColorTheme';
-import { colorPicker, threatType, TsTableHeader } from './constraints';
+import { colorPicker, threatType, TsDerivedTableHeader } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableHeight } from '../../store/constant';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
@@ -60,7 +60,7 @@ const selector = (state) => ({
 
 const notify = (message, status) => toast[status](message);
 
-const column = TsTableHeader;
+const column = TsDerivedTableHeader;
 
 const useStyles = makeStyles({
   div: {
@@ -119,15 +119,14 @@ export default function TsDerivedTable() {
   const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state.threatScenTblClms);
+  const visibleColumns = useStore((state) => state?.threatDerivedScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   const Head = useMemo(() => {
-    const col = [...column];
-    col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-    return col.filter((header) => visibleColumns.includes(header.name));
+    return column.filter((header) => visibleColumns.includes(header.name));
   }, [title, visibleColumns]);
 
+  // console.log('Head', Head);
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -162,19 +161,21 @@ export default function TsDerivedTable() {
     if (derived['Details']) {
       let id = 0;
       const mappedDetails = Array.isArray(userDefined['Details'])
-        ? userDefined['Details'].map((detail, i) =>
-            detail && typeof detail === 'object'
+        ? userDefined['Details'].map((detail, i) => {
+            // console.log('detail', detail);
+            return detail && typeof detail === 'object'
               ? {
                   SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
                   ID: detail?.id || null,
                   Name: detail?.name || null,
                   Description: detail?.description || null,
+                  'Detailed / Combined Threat Scenarios': detail?.threat_ids,
                   type: 'User-defined',
                   'Damage Scenarios': detail?.damage_details,
                   'Losses of Cybersecurity Properties': detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
                 }
-              : {}
-          )
+              : {};
+          })
         : [];
 
       setRows(mappedDetails);
@@ -189,10 +190,6 @@ export default function TsDerivedTable() {
 
   const handleCloseTs = () => {
     setOpenTs(false);
-  };
-
-  const handleBack = () => {
-    dispatch(closeAll());
   };
 
   const handleSearch = (e) => {
@@ -387,6 +384,22 @@ export default function TsDerivedTable() {
                 );
               }
               break;
+            case item.name === 'Detailed / Combined Threat Scenarios':
+              // console.log('row[item.name] ', row[item.name]);
+              cellContent = (
+                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                  {row[item.name]
+                    ? row[item.name]?.map((threat, i) => (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
+                          <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                            {threat?.prop_key ? `[TS${(threat?.prop_key).toString().padStart(3, '0')}] ${threat?.prop_name}` : '-'}
+                          </span>
+                        </span>
+                      ))
+                    : '-'}
+                </StyledTableCell>
+              );
+              break;
             case item.name === 'SNo':
               cellContent = (
                 <StyledTableCell
@@ -467,6 +480,7 @@ export default function TsDerivedTable() {
                 </StyledTableCell>
               );
               break;
+
             case typeof row[item.name] !== 'object':
               cellContent = (
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
@@ -573,13 +587,13 @@ export default function TsDerivedTable() {
       <Dialog open={openFilter} onClose={handleCloseFilter}>
         <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
         <DialogContent>
-          {TsTableHeader.map((column) => (
+          {TsDerivedTableHeader.map((column) => (
             <FormControlLabel
               key={column.id}
               control={
                 <Checkbox
                   checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('threatScenTblClms', column.name)}
+                  onChange={() => toggleColumnVisibility('threatDerivedScenTblClms', column.name)}
                 />
               }
               label={column.name} // Display column name as label

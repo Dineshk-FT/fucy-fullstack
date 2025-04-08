@@ -57,7 +57,8 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
-  deleteThreatScenario: state.deleteThreatScenario
+  deleteThreatScenario: state.deleteThreatScenario,
+  selectedthreatIds: state.selectedthreatIds
 });
 
 const notify = (message, status) => toast[status](message);
@@ -118,7 +119,8 @@ export default function Tstable() {
     UserDefinedId,
     deleteThreatScenario,
     getRiskTreatment,
-    addThreatScene
+    addThreatScene,
+    selectedthreatIds
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -129,15 +131,10 @@ export default function Tstable() {
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
+    return column.filter((header) => visibleColumns.includes(header.name));
   }, [title, visibleColumns]);
 
+  // console.log('selectedthreatIds', selectedthreatIds);
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -168,6 +165,8 @@ export default function Tstable() {
     getDamageScenarios(model?._id);
   }, []);
 
+  // console.log('selectedRows', selectedRows);
+
   useEffect(() => {
     if (derived['Details']) {
       let id = 0;
@@ -197,23 +196,24 @@ export default function Tstable() {
         })
         .flat(2);
 
-      const mappedDetails = Array.isArray(userDefined['Details'])
-        ? userDefined['Details'].map((detail, i) =>
-            detail && typeof detail === 'object'
-              ? {
-                  SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
-                  ID: detail?.id || null,
-                  Name: detail?.name || null,
-                  Description: detail?.description || null,
-                  type: 'User-defined',
-                  'Damage Scenarios': detail?.damage_details,
-                  'Losses of Cybersecurity Properties': detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
-                }
-              : {}
-          )
-        : [];
+      // const mappedDetails = Array.isArray(userDefined['Details'])
+      //   ? userDefined['Details'].map((detail, i) =>
+      //       detail && typeof detail === 'object'
+      //         ? {
+      //             SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
+      //             ID: detail?.id || null,
+      //             Name: detail?.name || null,
+      //             Description: detail?.description || null,
+      //             type: 'User-defined',
+      //             'Damage Scenarios': detail?.damage_details,
+      //             'Losses of Cybersecurity Properties': detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
+      //           }
+      //         : {}
+      //     )
+      //   : [];
 
-      const combined = mod1.concat(mappedDetails);
+      // const combined = mod1.concat(mappedDetails);
+      const combined = mod1;
       setRows(combined);
       setFiltered(combined);
       setDetails(damageScenarios);
@@ -226,10 +226,6 @@ export default function Tstable() {
 
   const handleCloseTs = () => {
     setOpenModal((state) => ({ ...state, threat: false }));
-  };
-
-  const handleBack = () => {
-    dispatch(closeAll());
   };
 
   const handleSearch = (e) => {
@@ -286,6 +282,7 @@ export default function Tstable() {
   };
   const handleCloseDerived = () => {
     setOpenModal((state) => ({ ...state, derived: false }));
+    setSelectedRows([]);
   };
   const handleDeleteSelected = () => {
     const details = {
@@ -392,7 +389,8 @@ export default function Tstable() {
         sx={{
           backgroundColor: isSelected ? '#9FE2BF' : isChild ? '#F4F8FE' : color?.sidebarBG,
           '& .MuiTableCell-root.MuiTableCell-body': {
-            color: `${color?.sidebarContent} !important`
+            color: `${color?.sidebarContent} !important`,
+            textShadow: selectedthreatIds.includes(row?.ID) ? '0px 0px 4px #0096FF' : 'none'
           }
         }}
       >
@@ -616,7 +614,7 @@ export default function Tstable() {
       <Dialog open={openFilter} onClose={handleCloseFilter}>
         <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
         <DialogContent>
-          {TsTableHeader.map((column) => (
+          {TsTableHeader?.map((column) => (
             <FormControlLabel
               key={column.id}
               control={

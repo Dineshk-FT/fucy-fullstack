@@ -4,6 +4,8 @@ import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { RatingColor } from '../../Table/constraints';
 import { useSelector } from 'react-redux';
+import { Box } from '@mui/material';
+import { DerivedThreatIcon } from '../../../assets/icons';
 
 const selector = (state) => ({
   nodes: state.attackNodes,
@@ -16,7 +18,6 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
   const { setNodes } = useReactFlow();
   const { attackScene } = useSelector((state) => state?.currentId);
 
-  // console.log('data', rst);
   const [isHovered, setIsHovered] = useState(false);
   // console.log('data.style', data.style);
   // Calculate font size dynamically based on node dimensions
@@ -116,9 +117,9 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
         onMouseLeave={() => setIsHovered(false)}
         style={{
           ...data?.style,
-          fontSize: `${fontSize}px`, // Dynamically set font size
-          letterSpacing: `${letterSpacing}px`, // Dynamically set letter spacing
-          lineHeight: `${lineHeight}px`, // Dynamically set line height
+          fontSize: `${fontSize}px`,
+          letterSpacing: `${letterSpacing}px`,
+          lineHeight: `${lineHeight}px`,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -130,25 +131,43 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
           border: `2px solid ${borderColor ?? '#ccc'}`,
           borderRadius: '4px',
           backgroundColor: '#fff',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative' // Add this for proper positioning of children
         }}
       >
         <div
           style={{
             width: '100%',
             height: '100%',
-            overflowWrap: 'break-word', // Wrap text to prevent overflow
-            wordBreak: 'break-word', // Handles long words gracefully
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word',
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: isSmallNode ? 'flex-start' : 'center',
-            alignItems: 'flex-start',
-            color: 'gray'
+            flexDirection: 'row', // Change to row to place icon and label side by side
+            alignItems: 'center', // Center vertically
+            gap: '8px', // Add some space between icon and label
+            paddingLeft: data?.nodeType === 'derived' ? '28px' : '0', // Add padding if icon exists
+            color: 'gray',
+            position: 'relative'
           }}
         >
+          {data?.nodeType && data?.nodeType === 'derived' && (
+            <img
+              src={DerivedThreatIcon}
+              alt="attack"
+              style={{
+                height: '20px',
+                width: '20px',
+                position: 'absolute',
+                left: '8px', // Adjust as needed
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}
+            />
+          )}
           {data?.label}
         </div>
-        <Handle className="handle" type="source" id="b" position={Position.Bottom} isConnectable={isConnectable} />
+
+        {/* Delete button and handles remain the same */}
         <div
           className="delete-icon"
           role="button"
@@ -182,6 +201,7 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
         >
           x
         </div>
+        <Handle className="handle" type="source" id="b" position={Position.Bottom} isConnectable={isConnectable} />
       </div>
     </>
   );

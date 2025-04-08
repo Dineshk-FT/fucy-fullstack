@@ -211,6 +211,19 @@ export const TsTableHeader = [
   // { id: 13, name: 'Assessment Jurification' }
 ];
 
+export const TsDerivedTableHeader = [
+  { id: 1, name: 'SNo' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Detailed / Combined Threat Scenarios' },
+  { id: 4, name: 'Description' },
+  { id: 5, name: 'Damage Scenarios' },
+  { id: 6, name: 'Related Threats from Catalog' },
+  { id: 7, name: 'Losses of Cybersecurity Properties' },
+  { id: 8, name: 'Assets' },
+  { id: 9, name: 'Related Attack Trees' },
+  { id: 10, name: 'Related Attack Path Models' }
+];
+
 export const AttackTableHeader = [
   { id: 1, name: 'SNO' },
   { id: 2, name: 'Name' },

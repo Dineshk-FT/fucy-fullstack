@@ -271,7 +271,8 @@ const selector = (state) => ({
   getCatalog: state.getCatalog,
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
-  deleteAttacks: state.deleteAttacks
+  deleteAttacks: state.deleteAttacks,
+  setSelectedThreatIds: state.setSelectedThreatIds
 });
 
 const Properties = {
@@ -329,7 +330,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setAttackNodes,
     setAttackEdges,
     setInitialAttackNodes,
-    setInitialAttackEdges
+    setInitialAttackEdges,
+    setSelectedThreatIds
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -357,7 +359,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   const [deleteScene, setDeleteScene] = useState({
     type: '',
-    id: ''
+    id: '',
+    name: ''
   });
 
   // console.log('assets', assets);
@@ -394,9 +397,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   };
 
   const handleOpenDeleteModal = (type, scene) => {
+    // console.log('scene', scene);
     setDeleteScene({
       type: type,
-      id: scene?.ID
+      id: scene?.ID,
+      name: scene?.Name
     });
     setOpenModal((state) => ({ ...state, delete: true }));
   };
@@ -405,7 +410,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setOpenModal((state) => ({ ...state, delete: false }));
     setDeleteScene({
       type: '',
-      id: ''
+      id: '',
+      name: ''
     });
   };
   const handleDeleteAttack = () => {
@@ -677,7 +683,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const getLabel = (icon, name, index, id) => {
+  const getLabel = (icon, name, index, id, ids, onClick) => {
+    // console.log('onClick', onClick);
     const IconComponent = iconComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
@@ -700,11 +707,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           }}
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
+          onClick={(e) => onClick && onClick(e)}
         >
           {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
           <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
             {index && `${index}. `}
             {name}
+            {ids && ids.length && ` [${ids.length}]`}
           </Typography>
         </div>
       </Tooltip>
@@ -994,7 +1003,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         nodeId: prop.id.concat(detail?.rowId),
                         extraProps: {
                           threatId: prop?.id,
-                          damageId: detail?.rowId
+                          damageId: detail?.rowId,
+                          width: 150,
+                          height: 60
                         }
                       };
                     })
@@ -1003,19 +1014,30 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     {
                       label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
                       nodeId: detail?.id,
-                      extraProps: {}
+                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
                     }
                   ]
-              ).map(({ label, nodeId, extraProps }) => (
-                <DraggableTreeItem
-                  draggable={true}
-                  key={nodeId}
-                  nodeId={nodeId}
-                  label={getLabel('TopicIcon', label, key || i + 1, nodeId)}
-                  onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ))
+              ).map(({ label, nodeId, extraProps }) => {
+                const onClick = (e) => {
+                  e.stopPropagation();
+                  const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
+                  setSelectedThreatIds(ids);
+                };
+                // console.log('extraProps', extraProps);
+                return (
+                  <DraggableTreeItem
+                    draggable={true}
+                    key={nodeId}
+                    nodeId={nodeId}
+                    label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
+                    onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedThreatIds([]);
+                    }}
+                  />
+                );
+              })
             );
           })
         );
@@ -1259,7 +1281,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         open={openModal?.delete}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteAttack}
-        type={deleteScene?.type}
+        name={deleteScene?.name}
       />
     </>
   );

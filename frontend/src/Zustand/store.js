@@ -14,7 +14,8 @@ import {
   CybersecurityGoalsHeader,
   CybersecurityClaimsHeader,
   CybersecurityRequirementsHeader,
-  CybersecurityControlsHeader
+  CybersecurityControlsHeader,
+  TsDerivedTableHeader
 } from '../ui-component/Table/constraints';
 
 export const createHeaders = () => {
@@ -77,6 +78,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedElement: {},
   isCollapsed: true,
   globalAttackTrees: [],
+  selectedthreatIds: [],
 
   assets: {
     id: '1',
@@ -609,6 +611,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   DsTable: DsDerivationHeader.map((column) => column.name),
   dmgScenTblClms: DSTableHeader.map((column) => column.name),
   threatScenTblClms: TsTableHeader.map((column) => column.name),
+  threatDerivedScenTblClms: TsDerivedTableHeader.map((column) => column.name),
   attackTreeTblClms: AttackTableHeader.map((column) => column.name),
   riskTreatmentTblClms: RiskTreatmentHeaderTable.map((column) => column.name),
   CybersecurityGoalsTable: CybersecurityGoalsHeader.map((column) => column.name),
@@ -623,6 +626,12 @@ const useStore = createWithEqualityFn((set, get) => ({
   setPropertiesOpen: (value) => {
     set((state) => ({
       isPropertiesOpen: typeof value === 'function' ? value(state.isPropertiesOpen) : value
+    }));
+  },
+
+  setSelectedThreatIds: (value) => {
+    set((state) => ({
+      selectedthreatIds: typeof value === 'function' ? value(state.selectedthreatIds) : value
     }));
   },
   // setter for isCollapsed
