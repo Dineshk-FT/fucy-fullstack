@@ -84,7 +84,8 @@ const selector = (state) => ({
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges
+  initialEdges: state.initialEdges,
+  setCanvasRef: state.setCanvasRef,
 });
 
 // Edge line styling
@@ -178,7 +179,8 @@ export default function MainCanvas() {
     setPropertiesOpen,
     isDark,
     initialNodes,
-    initialEdges
+    initialEdges,
+    setCanvasRef,
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -206,6 +208,41 @@ export default function MainCanvas() {
   const edgesRef = useRef(edges);
   const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
   const [zoomLevel, setZoomLevel] = useState(1);
+
+  const canvasRef = useRef(null);
+
+
+  useEffect(() => {
+    setCanvasRef(canvasRef);
+
+    // Capture image before unmounting
+    return () => {
+      if (canvasRef.current) {
+        const reactFlowViewport = canvasRef.current.querySelector('.react-flow__viewport');
+        if (reactFlowViewport && nodes.length > 0) {
+          const imageWidth = 1920;
+          const imageHeight = 1080;
+          const nodesBounds = getRectOfNodes(nodes);
+          const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+
+          toPng(reactFlowViewport, {
+            backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
+            width: imageWidth,
+            height: imageHeight,
+            style: {
+              width: `${imageWidth}px`,
+              height: `${imageHeight}px`,
+              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+            },
+          })
+            .then((dataUrl) => {
+              useStore.getState().setCanvasImage(dataUrl); // Store the image
+            })
+            .catch((err) => console.error('Failed to capture image on unmount:', err));
+        }
+      }
+    };
+  }, [nodes, canvasRef, setCanvasRef, isDark]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -250,9 +287,6 @@ export default function MainCanvas() {
       });
   };
 
-  // useEffect(() => {
-
-  // }, []);
   const handleCheckForChange = () => {
     if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
       return true;
@@ -966,6 +1000,7 @@ export default function MainCanvas() {
             onNodeContextMenu={handleNodeContextMenu}
             minZoom={0.2}
             maxZoom={2}
+            ref={canvasRef}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <Box
