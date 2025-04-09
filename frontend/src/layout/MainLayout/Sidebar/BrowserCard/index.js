@@ -886,7 +886,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           // Extract names for processing
           const propertyNames = properties.map((prop) => prop.name);
 
-          const displayedProperties = propertyNames.slice(0, 2);
+          const displayedProperties = propertyNames;
           const remainingCount = propertyNames.length - 2;
 
           return (
