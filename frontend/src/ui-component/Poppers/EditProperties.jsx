@@ -1,8 +1,8 @@
 /*eslint-disable*/
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Autocomplete, Chip, InputLabel, TextField, Box, Popper, Paper, ClickAwayListener, Button, Avatar } from '@mui/material';
 import { fontSize } from '../../store/constant';
-import { useSelector } from 'react-redux';
+import { useSelector, batch } from 'react-redux';
 import {
   ConfidentialityIcon,
   IntegrityIcon,
@@ -11,15 +11,6 @@ import {
   Non_repudiationIcon,
   AvailabilityIcon
 } from '../../assets/icons';
-
-const Properties = [
-  { name: 'Confidentiality', image: ConfidentialityIcon },
-  { name: 'Integrity', image: IntegrityIcon },
-  { name: 'Authenticity', image: AuthenticityIcon },
-  { name: 'Authorization', image: AuthorizationIcon },
-  { name: 'Non-repudiation', image: Non_repudiationIcon },
-  { name: 'Availability', image: AvailabilityIcon }
-];
 
 const EditProperties = ({
   anchorEl,
@@ -34,25 +25,45 @@ const EditProperties = ({
   setEdges
 }) => {
   const { selectedBlock } = useSelector((state) => state?.canvas);
-  // console.log('opened');
-  const updateElement = (updateFn) => {
-    if (!selectedBlock?.id.includes('reactflow__edge')) {
-      const updatedNodes = nodes?.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node));
-      setNodes(updatedNodes);
-    } else {
-      const updatedEdges = edges?.map((edge) => (edge?.id === selectedBlock?.id ? updateFn(edge) : edge));
-      setEdges(updatedEdges);
-    }
-  };
+  const Properties = useMemo(
+    () => [
+      { name: 'Confidentiality', image: ConfidentialityIcon },
+      { name: 'Integrity', image: IntegrityIcon },
+      { name: 'Authenticity', image: AuthenticityIcon },
+      { name: 'Authorization', image: AuthorizationIcon },
+      { name: 'Non-repudiation', image: Non_repudiationIcon },
+      { name: 'Availability', image: AvailabilityIcon }
+    ],
+    []
+  );
+  const updateElement = useCallback(
+    (updateFn) => {
+      if (!selectedBlock?.id.includes('reactflow__edge')) {
+        setNodes((prevNodes) => prevNodes.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node)));
+      } else {
+        setEdges((prevEdges) => prevEdges.map((edge) => (edge?.id === selectedBlock?.id ? updateFn(edge) : edge)));
+      }
+    },
+    [selectedBlock?.id]
+  );
 
   // console.log('edges', edges);
 
-  const handleChange = (event, newValue) => {
-    const updatedProperties = newValue.map((prop) => prop.name);
-    // console.log('updatedProperties', updatedProperties);
-    dispatch(setDetails({ ...details, properties: updatedProperties }));
-    updateElement((element) => ({ ...element, properties: updatedProperties }));
-  };
+  const handleChange = useCallback(
+    (event, newValue) => {
+      const updatedProperties = newValue.map((prop) => prop.name);
+
+      // Batch both state updates together
+      batch(() => {
+        // Update Redux state
+        dispatch(setDetails({ ...details, properties: updatedProperties }));
+
+        // Update local state
+        updateElement((element) => ({ ...element, properties: updatedProperties }));
+      });
+    },
+    [details, dispatch, updateElement]
+  );
 
   return (
     <Popper
@@ -109,4 +120,4 @@ const EditProperties = ({
   );
 };
 
-export default EditProperties;
+export default React.memo(EditProperties);

@@ -74,7 +74,13 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     <>
       <BrowserView>
         <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
-          <BrowserCard template={template} models={models} isCollapsed={isCollapsed} isNavbarClose={isNavbarClose} />
+          <BrowserCard
+            template={template}
+            models={models}
+            isCollapsed={isCollapsed}
+            isNavbarClose={isNavbarClose}
+            sidebarWidth={sidebarWidth}
+          />
         </PerfectScrollbar>
         <IconButton
           onClick={handleDrawerToggle}

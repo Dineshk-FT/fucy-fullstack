@@ -907,16 +907,26 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               arrow
             >
-              <AvatarGroup max={3} spacing="medium" onClick={() => handlePropertiesTab(detail, type)}>
-                {displayedProperties?.map((name, index) => (
-                  <Avatar key={index} sx={{ width: 20, height: 20 }}>
-                    <img src={Properties[name]} alt={name} width="100%" />
-                  </Avatar>
-                ))}
-                {remainingCount > 0 && (
-                  <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'transparent' }}>+{remainingCount}</Avatar>
-                )}
-              </AvatarGroup>
+              {
+                // Narrow sidebar - show just the count in a circle
+                <Box
+                  sx={{
+                    backgroundColor: '#d7e6ff',
+                    borderRadius: '50%',
+                    width: 24,
+                    height: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'medium',
+                    color: '#2196F3'
+                  }}
+                  onClick={() => handlePropertiesTab(detail, type)}
+                >
+                  +{displayedProperties.length}
+                </Box>
+              }
             </Tooltip>
           );
         };
