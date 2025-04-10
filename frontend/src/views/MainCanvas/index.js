@@ -5,11 +5,11 @@ import ReactFlow, {
   Controls,
   Background,
   ReactFlowProvider,
-  getRectOfNodes,
-  getTransformForBounds,
+  getViewportForBounds,
   MarkerType,
   Panel,
-  useReactFlow
+  useReactFlow,
+  getNodesBounds
 } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
@@ -222,8 +222,8 @@ export default function MainCanvas() {
         if (reactFlowViewport && nodes.length > 0) {
           const imageWidth = 1920;
           const imageHeight = 1080;
-          const nodesBounds = getRectOfNodes(nodes);
-          const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+          const nodesBounds = getNodesBounds(nodes);
+          const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
           toPng(reactFlowViewport, {
             backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
@@ -234,6 +234,8 @@ export default function MainCanvas() {
               height: `${imageHeight}px`,
               transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
             },
+            ignoreElements: (el) => el.tagName === 'style', // Ignore style elements
+            skipFonts: true // Skip font embedding
           })
             .then((dataUrl) => {
               useStore.getState().setCanvasImage(dataUrl); // Store the image
@@ -398,8 +400,8 @@ export default function MainCanvas() {
   const imageHeight = 1080;
 
   const handleDownload = () => {
-    const nodesBounds = getRectOfNodes(nodes);
-    const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+    const nodesBounds = getNodesBounds(nodes);
+    const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
     toPng(document.querySelector('.react-flow__viewport'), {
       backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',

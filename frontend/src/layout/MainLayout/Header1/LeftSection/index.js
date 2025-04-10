@@ -120,11 +120,11 @@ const LeftSection = () => {
     setActiveTab(tabName);
     const actions = {
       'Item Definition': handleModelDefinationClick,
-      'Threat Scenarios': () => handleClick('Threat Scenarios'),
-      'Damage Scenarios': () => handleClick('Damage Scenarios Derivations'),
+      'Damage Scenarios': () => handleClick('Damage Scenarios Derivations', '2'),
+      'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
       'Attack Path': handleAttackTableClick,
-      CyberSecurity: () => handleClick('Cybersecurity Goals'),
-      'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment')
+      'Cybersecurity': () => handleClick('Cybersecurity Goals', '5'),
+      'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
     };
     actions[tabName]?.();
   };
@@ -149,7 +149,8 @@ const LeftSection = () => {
     setOpenAttackModal(false);
   };
 
-  const handleClick = (name) => {
+  const handleClick = (name, number) => {
+    setClickedItem(number);
     dispatch(setPreviousTab(name));
     dispatch(setTitle(name));
     dispatch(setTableOpen(name));

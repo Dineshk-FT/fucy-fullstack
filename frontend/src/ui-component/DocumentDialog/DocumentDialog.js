@@ -72,7 +72,7 @@ const DocumentDialog = ({ open, onClose }) => {
       const imageWidth = 1920;
       const imageHeight = 1080;
 
-      const getRectOfNodes = (nodes) => {
+      const getNodesBounds = (nodes) => {
         const rect = {
           x: Math.min(...nodes.map((n) => n.position.x)),
           y: Math.min(...nodes.map((n) => n.position.y)),
@@ -82,7 +82,7 @@ const DocumentDialog = ({ open, onClose }) => {
         return rect;
       };
 
-      const getTransformForBounds = (bounds, width, height, minZoom, maxZoom) => {
+      const getViewportForBounds = (bounds, width, height, minZoom, maxZoom) => {
         const zoomX = width / bounds.width;
         const zoomY = height / bounds.height;
         const zoom = Math.min(zoomX, zoomY, maxZoom);
@@ -92,8 +92,8 @@ const DocumentDialog = ({ open, onClose }) => {
         return [offsetX, offsetY, clampedZoom];
       };
 
-      const nodesBounds = getRectOfNodes(nodes);
-      const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+      const nodesBounds = getNodesBounds(nodes);
+      const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
       // Ensure the viewport is fully rendered before capturing
       await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay for DOM stability
