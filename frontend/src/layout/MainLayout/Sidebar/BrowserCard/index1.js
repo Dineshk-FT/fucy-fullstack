@@ -87,7 +87,7 @@ const CardStyle = styled(Card)(() => ({
   marginBottom: '22px',
   overflow: 'hidden',
   position: 'relative',
-  height: '50vh',
+  height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
   boxShadow: 'inset 0px 0px 7px gray',
   '&:after': {
     content: '""',
@@ -422,7 +422,14 @@ const BrowserCard = ({ models }) => {
                         key={`1${sub?.name}`}
                         nodeId={`1${sub?.name}`} //change to id
                         //   label={sub?.name}
-                        label={getLabel('TopicIcon', sub?.name)}
+                        label={
+                          <div className={classes.labelRoot}>
+                            <TopicIcon color="inherit" sx={{ fontSize: 16 }} />
+                            <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                              {sub?.name}
+                            </Typography>
+                          </div>
+                        }
                         onClick={() => handleSwicthTable(sub?.name)} //change to onClick
                         sx={{ paddingY: 0.5, paddingLeft: 1 }}
                       >
@@ -444,8 +451,15 @@ const BrowserCard = ({ models }) => {
                               <TreeItem
                                 key={dm_scene?.id}
                                 nodeId={dm_scene?.id}
-                                label={getLabel('DangerousIcon', dm_scene?.Name)}
                                 //   label={dm_scene?.name}
+                                label={
+                                  <div className={classes.labelRoot}>
+                                    <DangerousIcon color="inherit" sx={{ fontSize: 16 }} />
+                                    <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                      {dm_scene?.Name}
+                                    </Typography>
+                                  </div>
+                                }
                               ></TreeItem>
                             );
                           })}
@@ -487,7 +501,15 @@ const BrowserCard = ({ models }) => {
                                   <TreeItem
                                     key={sce?.id}
                                     nodeId={sce?.id}
-                                    label={getLabel('BrightnessLowIcon', sce?.name)}
+                                    // label={getLabel('BrightnessLowIcon', sce?.name)}
+                                    label={
+                                      <div className={classes.labelRoot}>
+                                        <BrightnessLowIcon color="inherit" sx={{ fontSize: 16 }} />
+                                        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                          {sce?.name}
+                                        </Typography>
+                                      </div>
+                                    }
                                     onClick={() => handleAddComponent('goal', sce)}
                                     onDragStart={() => handleDragStart(e, sce)}
                                   ></TreeItem>
@@ -497,7 +519,15 @@ const BrowserCard = ({ models }) => {
                                   <TreeItem
                                     key={sce?.id}
                                     nodeId={sce?.id}
-                                    label={getLabel('CalendarMonthIcon', sce?.name)}
+                                    // label={getLabel('CalendarMonthIcon', sce?.name)}
+                                    label={
+                                      <div className={classes.labelRoot}>
+                                        <CalendarMonthIcon color="inherit" sx={{ fontSize: 16 }} />
+                                        <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                          {sce?.name}
+                                        </Typography>
+                                      </div>
+                                    }
                                     onClick={() => handleAddComponent('require', sce)}
                                     onDragStart={() => handleDragStart(e, sce)}
                                   ></TreeItem>
@@ -511,7 +541,15 @@ const BrowserCard = ({ models }) => {
                               <TreeItem
                                 key={`${th_scene?.id}${i}`}
                                 nodeId={`${th_scene?.id}${i}`}
-                                label={getLabel('ReportIcon', th_scene?.name)}
+                                // label={getLabel('ReportIcon', th_scene?.name)}
+                                label={
+                                  <div className={classes.labelRoot}>
+                                    <ReportIcon color="inherit" sx={{ fontSize: 16 }} />
+                                    <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                      {th_scene?.name}
+                                    </Typography>
+                                  </div>
+                                }
                               ></TreeItem>
                             );
                           })}
@@ -521,8 +559,15 @@ const BrowserCard = ({ models }) => {
                               <TreeItem
                                 key={th_scene?.id}
                                 nodeId={th_scene?.id}
-                                //   label={th_scene?.name}
-                                label={getLabel('SecurityIcon', th_scene?.name)}
+                                // label={getLabel('SecurityIcon', th_scene?.name)}
+                                label={
+                                  <div className={classes.labelRoot}>
+                                    <SecurityIcon color="inherit" sx={{ fontSize: 16 }} />
+                                    <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                      {th_scene?.name}
+                                    </Typography>
+                                  </div>
+                                }
                               ></TreeItem>
                             );
                           })}
@@ -531,6 +576,7 @@ const BrowserCard = ({ models }) => {
                   {scene?.name === 'Item Definition' &&
                     scene?.Details?.map((value, i) => (
                       <DraggableTreeItem
+                        draggable={!isDragged}
                         key={`1${i}`}
                         nodeId={`1${i}`}
                         label={`[000${i}] ${value?.name}`}
@@ -574,7 +620,15 @@ const BrowserCard = ({ models }) => {
                         <TreeItem
                           key={`2${sub?.name}`}
                           nodeId={`2${sub?.name}`}
-                          label={getLabel('SwipeRightAltIcon', sub?.name)}
+                          // label={getLabel('SwipeRightAltIcon', sub?.name)}
+                          label={
+                            <div className={classes.labelRoot}>
+                              <SwipeRightAltIcon color="inherit" sx={{ fontSize: 16 }} />
+                              <Typography variant="body2" ml={0.5} className={classes.labelTypo}>
+                                {sub?.name}
+                              </Typography>
+                            </div>
+                          }
                           onClick={() => handleOpenActionTree(sub?.name)}
                           onContextMenu={(e) => handleContext(e, sub?.name)}
                         >

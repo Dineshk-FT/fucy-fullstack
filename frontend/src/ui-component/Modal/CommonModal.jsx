@@ -10,7 +10,8 @@ import {
   Box,
   TextField,
   Slide,
-  Paper
+  Paper,
+  Typography
   // useTheme
 } from '@mui/material';
 import useStore from '../../Zustand/store';
@@ -97,20 +98,19 @@ export default function CommonModal({ open, handleClose, name }) {
         <DialogCommonTitle icon={AttackIcon} title={`Add New ${name}`} />
 
         <DialogContent>
-          <DialogContentText id="draggable-dialog-slide-description">
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <TextField
-                value={templateDetails?.name}
-                id="outlined-basic"
-                label="name"
-                variant="outlined"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
-                sx={{
-                  width: '300px'
-                }}
-              />
-            </Box>
-          </DialogContentText>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
+            <Typography variant="body1" component="div" gutterBottom>
+              Add new {name} details:
+            </Typography>
+            <TextField
+              fullWidth
+              label="Name"
+              value={templateDetails.name}
+              onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
+              variant="outlined"
+              size="small"
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" color="error" onClick={onClose}>
