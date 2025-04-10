@@ -404,15 +404,25 @@ export default function MainCanvas() {
     const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
     toPng(document.querySelector('.react-flow__viewport'), {
-      backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',
+      backgroundColor: isDark === true ? '#1E1E1E' : '#F5F5F5',
       width: imageWidth,
       height: imageHeight,
       style: {
-        width: imageWidth,
-        height: imageHeight,
         transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
-      }
-    }).then(downloadImage);
+      },
+      ignoreElements: (el) => el.tagName === 'style' || el.tagName === 'link',
+      skipFonts: true,
+      filter: (node) => node.tagName !== 'style' && node.tagName !== 'link'
+    })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = 'Item-Defination.png';
+        link.href = dataUrl;
+        link.click();
+      })
+      .catch((error) => {
+        console.error('Error downloading image:', error);
+      });
   };
 
   const onDragOver = useCallback((event) => {
@@ -997,8 +1007,8 @@ export default function MainCanvas() {
             onNodeClick={handleSelectNodeSingleClick}
             onEdgeClick={handleSelectEdgeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
-            defaultPosition={[0, 0]}
-            defaultZoom={1}
+            position={[0, 0]}
+            zoom={1}
             onNodeContextMenu={handleNodeContextMenu}
             minZoom={0.2}
             maxZoom={2}
@@ -1101,39 +1111,41 @@ export default function MainCanvas() {
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Undo">
-                  <IconButton
-                    onClick={undo}
-                    disabled={undoStack.length === 0}
-                    sx={{
-                      color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          undoStack.length === 0
-                            ? 'transparent'
-                            : isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
-                        boxShadow:
-                          undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          undoStack.length === 0
-                            ? 'none'
-                            : isDark == true
-                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Undo action"
-                  >
-                    <UndoIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      onClick={undo}
+                      disabled={undoStack.length === 0}
+                      sx={{
+                        color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                        padding: '4px',
+                        '&:hover': {
+                          background:
+                            undoStack.length === 0
+                              ? 'transparent'
+                              : isDark == true
+                              ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                              : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                          transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
+                          boxShadow:
+                            undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                          filter:
+                            undoStack.length === 0
+                              ? 'none'
+                              : isDark == true
+                              ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                              : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                        },
+                        '&:focus': {
+                          outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                          outlineOffset: '2px'
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label="Undo action"
+                    >
+                      <UndoIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </span>
                 </Tooltip>
                 <Tooltip title="Redo">
                   <span>

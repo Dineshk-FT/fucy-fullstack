@@ -211,24 +211,29 @@ const useStyles = makeStyles((theme, isDark) => ({
   }
 }));
 
-const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
-  marginBottom: '16px', // Reduced margin for a tighter layout
+const CardStyle = styled(
+  Card,
+  {
+    shouldForwardProp: (prop) => prop !== 'isDark' && prop !== 'isNavbarClose' && prop !== 'isCollapsed'
+  }
+)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
+  marginBottom: '22px',
   overflow: 'hidden',
   position: 'relative',
   height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
-  border: 'none',
-  borderRadius: '12px', // Slightly smaller border radius
-  background:
-    isDark == true
-      ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
-      : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
-  backdropFilter: 'blur(12px)', // Reduced blur for performance
-  boxShadow: isDark == true ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
-  [theme.breakpoints.down('sm')]: {
-    marginBottom: '8px'
+  boxShadow: 'inset 0px 0px 7px gray',
+  '&:after': {
+    content: '"',
+    position: 'absolute',
+    borderRadius: '50%',
+    top: '-105px',
+    right: '-96px'
   },
-  [theme.breakpoints.down('xs')]: {
-    marginBottom: '4px'
+  '&::-webkit-scrollbar': {
+    width: '5px'
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: isDark ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)' : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
   }
 }));
 
@@ -664,41 +669,43 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-        <Box
-          color={color?.sidebarContent}
-          className={classes.title}
-          sx={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 'fit-content',
-            display: 'flex',
-            alignItems: 'center',
-            background:
-              clickedItem === id
-                ? isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                : 'transparent',
-            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-          }}
-          tabIndex={0} // Added for keyboard navigation
-          onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
-        >
-          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
-          <Typography
-            variant="body2"
-            ml={1.25}
-            className={classes.labelTypo}
-            color="inherit"
-            fontSize={'18px !important'} // Slightly larger for emphasis
-            fontWeight={600}
-            noWrap
-            sx={{ letterSpacing: '0.5px' }}
+        <div>
+          <Box
+            color={color?.sidebarContent}
+            className={classes.title}
+            sx={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 'fit-content',
+              display: 'flex',
+              alignItems: 'center',
+              background:
+                clickedItem === id
+                  ? isDark == true
+                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                  : 'transparent',
+              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            }}
+            tabIndex={0} // Added for keyboard navigation
+            onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
           >
-            {name}
-          </Typography>
-        </Box>
+            {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+            <Typography
+              variant="body2"
+              ml={1.25}
+              className={classes.labelTypo}
+              color="inherit"
+              fontSize={'18px !important'} // Slightly larger for emphasis
+              fontWeight={600}
+              noWrap
+              sx={{ letterSpacing: '0.5px' }}
+            >
+              {name}
+            </Typography>
+          </Box>
+        </div>
       </Tooltip>
     );
   };
@@ -707,30 +714,33 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-        <div
-          className={classes.labelRoot}
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 'fit-content',
-            display: 'flex',
-            alignItems: 'center',
-            background:
-              clickedItem === id
-                ? isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                : 'transparent',
-            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-          }}
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
-        >
-          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
-          <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
-            {name}
-          </Typography>
+        <div>
+          <Box
+            color={color?.sidebarContent}
+            className={classes.title}
+            sx={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 'fit-content',
+              display: 'flex',
+              alignItems: 'center',
+              background:
+                clickedItem === id
+                  ? isDark == true
+                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                  : 'transparent',
+              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            }}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
+          >
+            {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+            <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
+              {name}
+            </Typography>
+          </Box>
         </div>
       </Tooltip>
     );
@@ -741,33 +751,35 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     const IconComponent = iconComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-        <div
-          className={classes.labelRoot}
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 'fit-content',
-            display: 'flex',
-            alignItems: 'center',
-            background:
-              clickedItem === id
-                ? isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                : 'transparent',
-            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-          }}
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
-          onClick={(e) => onClick && onClick(e)}
-        >
-          {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
-          <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
-            {index && `${index}. `}
-            {name}
-            {ids && ids.length && ` [${ids.length}]`}
-          </Typography>
+        <div>
+          <div
+            className={classes.labelRoot}
+            style={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 'fit-content',
+              display: 'flex',
+              alignItems: 'center',
+              background:
+                clickedItem === id
+                  ? isDark == true
+                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                  : 'transparent',
+              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            }}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
+            onClick={(e) => onClick && onClick(e)}
+          >
+            {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
+            <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
+              {index && `${index}. `}
+              {name}
+              {ids && ids.length && ` [${ids.length}]`}
+            </Typography>
+          </div>
         </div>
       </Tooltip>
     );
@@ -892,41 +904,45 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           return (
             <Tooltip
               title={
-                <Box display="flex" flexDirection="column" alignItems="start">
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'start',
+                    padding: '8px'
+                  }}
+                >
                   {propertyNames?.map((name, index) => (
-                    <Box key={index} display="flex" alignItems="center" gap={1}>
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                       <Avatar sx={{ width: 18, height: 18 }}>
                         <img src={Properties[name]} alt={name} width="100%" />
                       </Avatar>
                       <Typography variant="body2" sx={{ color: 'white' }}>
                         {name}
                       </Typography>
-                    </Box>
+                    </div>
                   ))}
-                </Box>
+                </div>
               }
               arrow
             >
-              {
-                // Narrow sidebar - show just the count in a circle
-                <Box
-                  sx={{
-                    backgroundColor: '#d7e6ff',
-                    borderRadius: '50%',
-                    width: 24,
-                    height: 24,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'medium',
-                    color: '#2196F3'
-                  }}
-                  onClick={() => handlePropertiesTab(detail, type)}
-                >
-                  +{displayedProperties.length}
-                </Box>
-              }
+              <div
+                style={{
+                  backgroundColor: '#d7e6ff',
+                  borderRadius: '50%',
+                  width: 24,
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'medium',
+                  color: '#2196F3'
+                }}
+                onClick={() => handlePropertiesTab(detail, type)}
+              >
+                +{displayedProperties.length}
+              </div>
             </Tooltip>
           );
         };
@@ -1217,6 +1233,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             ));
           })
         );
+
       case 'cybersecurity':
         return renderTreeItem(
           data,
@@ -1296,21 +1313,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
-      <CardStyle
-        isCollapsed={isCollapsed}
-        isNavbarClose={isNavbarClose}
+      <CardStyle isCollapsed={isCollapsed} isNavbarClose={isNavbarClose} isDark={isDark}
         sx={{
           background: color.tabBorder,
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
-            width: '5px' // Thinner scrollbar
+            width: '5px'
           },
           '&::-webkit-scrollbar-thumb': {
-            background:
-              isDark == true
-                ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
-                : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)',
-            borderRadius: '3px'
+            background: isDark ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)' : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
           }
         }}
       >
