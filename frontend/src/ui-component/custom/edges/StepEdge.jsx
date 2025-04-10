@@ -1,6 +1,6 @@
 /*eslint-disable*/
-import React, { useState, useEffect, useRef } from 'react';
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useEdgesState, useReactFlow } from 'reactflow';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
@@ -9,6 +9,12 @@ import ColorTheme from '../../../store/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
 import { setAnchorEl, setEdgeDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+
+const markerStates = [
+  { start: true, end: true },
+  { start: false, end: true },
+  { start: true, end: false }
+];
 
 export default function StepEdge({
   id,
@@ -26,26 +32,20 @@ export default function StepEdge({
   const dispatch = useDispatch();
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { getEdges, setEdges } = useReactFlow();
-  const edges = getEdges();
   const color = ColorTheme();
-  const [isMarkerVisible, setIsMarkerVisible] = useState({
-    start: true,
-    end: true
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [labelValue, setLabelValue] = useState(data?.label || '');
   const editableRef = useRef(null);
 
-  useEffect(() => {
-    setIsMarkerVisible({
-      start: style.start,
-      end: style?.end
-    });
-  }, [style.start, style.end]);
+  // Derive marker visibility from props instead of local state
+  const isMarkerVisible = {
+    start: style?.start !== false,
+    end: style?.end !== false
+  };
 
-  useEffect(() => {
-    setLabelValue(data?.label || '');
-  }, [data?.label]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [labelValue, setLabelValue] = useState(data?.label || '');
+
+  const edges = getEdges();
+  const currentEdge = edges.find((edge) => edge.id === id);
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -57,92 +57,80 @@ export default function StepEdge({
     borderRadius: 0
   });
 
-  const updateEdges = (updatedEdge) => {
-    const newEdges = edges.map((edge) => (edge.id === id ? updatedEdge : edge));
-    setEdges(newEdges);
-  };
+  useEffect(() => {
+    setLabelValue(data?.label || '');
+  }, [data?.label]);
 
-  const onEdgeClick = () => {
-    const updated = edges?.filter((edge) => edge.id !== id);
-    setEdges(updated);
-  };
+  const updateEdge = useCallback(
+    (updates) => {
+      setEdges((eds) => eds.map((edge) => (edge.id === id ? { ...edge, ...updates } : edge)));
+    },
+    [id, setEdges]
+  );
 
-  const handleSwap = () => {
-    if (isMarkerVisible.start && isMarkerVisible.end) {
-      setIsMarkerVisible({ start: false, end: true });
-      updateEdges({
-        ...getEdges().find((edge) => edge.id === id),
-        style: { ...style, start: false, end: true }
-      });
-    } else if (isMarkerVisible.end) {
-      setIsMarkerVisible({ start: true, end: false });
-      updateEdges({
-        ...getEdges().find((edge) => edge.id === id),
-        style: { ...style, start: true, end: false }
-      });
-    } else if (isMarkerVisible.start || (!isMarkerVisible.start && !isMarkerVisible.end)) {
-      setIsMarkerVisible({ start: true, end: true });
-      updateEdges({
-        ...getEdges().find((edge) => edge.id === id),
-        style: { ...style, start: true, end: true }
-      });
-    }
-  };
+  const handleSwap = useCallback(() => {
+    const currentIndex = markerStates.findIndex((state) => state.start === isMarkerVisible.start && state.end === isMarkerVisible.end);
+    const nextIndex = (currentIndex + 1) % markerStates.length;
+    const newState = markerStates[nextIndex];
 
-  const onEditEdge = (e) => {
-    const selectedEdge = edges.find((edge) => edge.id === id);
-    const { isAsset, properties, markerStart, markerEnd } = selectedEdge;
+    updateEdge({
+      style: { ...style, ...newState }
+    });
+  }, [isMarkerVisible, style, updateEdge]);
+
+  const onEditEdge = useCallback(() => {
     dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
     dispatch(setSelectedBlock({ id, data }));
     dispatch(
       setEdgeDetails({
         name: data?.label ?? '',
-        properties: properties ?? [],
-        isAsset: isAsset ?? false,
+        properties: currentEdge?.properties ?? [],
+        isAsset: currentEdge?.isAsset ?? false,
         style: style ?? {},
-        startPoint: markerStart.color ?? '#000000',
+        startPoint: markerStart?.color ?? '#000000',
         endPoint: markerEnd?.color ?? '#000000'
       })
     );
-  };
+  }, [currentEdge, data, dispatch, id, markerEnd, markerStart, style]);
 
-  const handleLabelDoubleClick = () => {
+  const handleLabelDoubleClick = useCallback(() => {
     setIsEditing(true);
     dispatch(setSelectedBlock({ id, data }));
-  };
+  }, [data, dispatch, id]);
 
-  const handleLabelRightClick = (e) => {
+  const handleLabelRightClick = useCallback((e) => {
     e.preventDefault();
     setIsEditing(true);
-  };
+  }, []);
 
-  const handleLabelBlur = () => {
+  const handleLabelBlur = useCallback(() => {
     setIsEditing(false);
     const newLabel = editableRef.current?.textContent || '';
     setLabelValue(newLabel);
-    updateEdges({
-      ...getEdges().find((edge) => edge.id === id),
+    updateEdge({
       data: { ...data, label: newLabel }
     });
-  };
+  }, [data, updateEdge]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleLabelBlur();
-      dispatch(setSelectedBlock({}));
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      if (editableRef.current) {
-        editableRef.current.textContent = labelValue;
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLabelBlur();
+        dispatch(setSelectedBlock({}));
+      } else if (e.key === 'Escape') {
+        setIsEditing(false);
+        if (editableRef.current) {
+          editableRef.current.textContent = labelValue;
+        }
       }
-    }
-  };
+    },
+    [dispatch, handleLabelBlur, labelValue]
+  );
 
   useEffect(() => {
     if (isEditing && editableRef.current) {
       editableRef.current.focus();
-      // Select all text when editing starts
       const range = document.createRange();
       range.selectNodeContents(editableRef.current);
       const selection = window.getSelection();
@@ -151,17 +139,12 @@ export default function StepEdge({
     }
   }, [isEditing]);
 
-  const renderButton = () => {
+  const renderButton = useMemo(() => {
     const { start, end } = isMarkerVisible;
+    let Icon = start && end ? ArrowRightAltIcon : ArrowSwapHorizontal;
+    const iconProps = { className: 'icons', size: 15 };
 
-    let Icon = ArrowSwapHorizontal;
-    let iconProps = { className: 'icons' };
-    iconProps.size = 15;
-
-    if (start && end) {
-      Icon = ArrowRightAltIcon;
-    } else if (end) {
-      Icon = ArrowRightAltIcon;
+    if (!start && end) {
       if (Icon.muiName) {
         iconProps.sx = { ...iconProps.sx, transform: 'rotate(180deg)' };
       }
@@ -172,6 +155,23 @@ export default function StepEdge({
         <Icon {...iconProps} />
       </button>
     );
+  }, [isMarkerVisible]);
+
+  const isSelected = selectedBlock?.id === id;
+  const edgeStyle = {
+    ...style,
+    filter: isSelected ? 'drop-shadow(0px 0px 8px #BF00FF)' : 'none'
+  };
+
+  const labelStyle = {
+    outline: 'none',
+    cursor: 'text',
+    color: labelValue && isSelected ? 'black' : labelValue ? color?.title : color?.label,
+    whiteSpace: 'nowrap',
+    ...(isEditing && {
+      color: 'black',
+      borderRadius: '4px'
+    })
   };
 
   return (
@@ -181,7 +181,7 @@ export default function StepEdge({
         id={id}
         markerEnd={isMarkerVisible.end ? markerEnd : undefined}
         markerStart={isMarkerVisible.start ? markerStart : undefined}
-        style={{ ...style, filter: selectedBlock?.id === id ? 'drop-shadow(0px 0px 8px #BF00FF' : 'none' }}
+        style={edgeStyle}
       />
       <EdgeLabelRenderer>
         <Box
@@ -201,7 +201,7 @@ export default function StepEdge({
             zIndex: 1,
             cursor: 'pointer',
             outline: 'none',
-            backgroundColor: selectedBlock?.id === id ? 'wheat' : 'transparent',
+            backgroundColor: isSelected ? 'wheat' : 'transparent',
             padding: '4px 8px'
           }}
           className="nodrag nopan edge-container"
@@ -215,29 +215,17 @@ export default function StepEdge({
               onContextMenu={handleLabelRightClick}
               onBlur={handleLabelBlur}
               onKeyDown={handleKeyDown}
-              sx={{
-                outline: 'none',
-                cursor: 'text',
-                color: data?.label?.length && selectedBlock?.id === id ? 'black' : data?.label?.length ? color?.title : color?.label,
-                // minWidth: '60px',
-                whiteSpace: 'nowrap',
-                ...(isEditing && {
-                  // backgroundColor: 'white',
-                  color: 'black',
-                  // padding: '0 4px',
-                  borderRadius: '4px'
-                })
-              }}
+              sx={labelStyle}
             >
               {labelValue || 'connect'}
             </Box>
           </ClickAwayListener>
           <Box className="edge-buttons" display="flex" gap={0.5}>
-            <Box onClick={handleSwap}>{renderButton()}</Box>
+            <Box onClick={handleSwap}>{renderButton}</Box>
             <Box className="edgebutton" onClick={onEditEdge}>
               <EditIcon sx={{ fontSize: '0.6rem', ml: 0.5, mt: 0.4 }} />
             </Box>
-            <button className="edgebutton" onClick={onEdgeClick}>
+            <button className="edgebutton" onClick={() => setEdges((eds) => eds.filter((edge) => edge.id !== id))}>
               X
             </button>
           </Box>

@@ -211,12 +211,9 @@ const useStyles = makeStyles((theme, isDark) => ({
   }
 }));
 
-const CardStyle = styled(
-  Card,
-  {
-    shouldForwardProp: (prop) => prop !== 'isDark' && prop !== 'isNavbarClose' && prop !== 'isCollapsed'
-  }
-)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
+const CardStyle = styled(Card, {
+  shouldForwardProp: (prop) => prop !== 'isDark' && prop !== 'isNavbarClose' && prop !== 'isCollapsed'
+})(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
   marginBottom: '22px',
   overflow: 'hidden',
   position: 'relative',
@@ -233,7 +230,9 @@ const CardStyle = styled(
     width: '5px'
   },
   '&::-webkit-scrollbar-thumb': {
-    background: isDark ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)' : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
+    background: isDark
+      ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
+      : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
   }
 }));
 
@@ -691,7 +690,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             tabIndex={0} // Added for keyboard navigation
             onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
           >
-            {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+            {Image && (
+              <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />
+            )}
             <Typography
               variant="body2"
               ml={1.25}
@@ -736,7 +737,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
           >
-            {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+            {Image && (
+              <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />
+            )}
             <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
               {name}
             </Typography>
@@ -1015,6 +1018,35 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                     onDoubleClick={(e) => {
                       e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                      const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
+                      // dispatch(
+                      //   setAnchorEl({
+                      //     type: type,
+                      //     value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
+                      //   })
+                      // );
+                      // dispatch(
+                      //   type === 'edge'
+                      //     ? setEdgeDetails({
+                      //         name: selected?.data?.label ?? '',
+                      //         properties: selected?.properties ?? [],
+                      //         isAsset: selected?.isAsset ?? false,
+                      //         style: selected?.style ?? {},
+                      //         startPoint: selected?.markerStart?.color ?? '#000000',
+                      //         endPoint: selected?.markerEnd?.color ?? '#000000'
+                      //       })
+                      //     : setDetails({
+                      //         name: selected?.data?.label ?? '',
+                      //         properties: selected?.properties ?? [],
+                      //         isAsset: selected?.isAsset ?? false
+                      //       })
+                      // );
+                    }}
+                    onContextMenu={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       setClickedItem(detail.nodeId);
                       dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                       const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
@@ -1313,7 +1345,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
-      <CardStyle isCollapsed={isCollapsed} isNavbarClose={isNavbarClose} isDark={isDark}
+      <CardStyle
+        isCollapsed={isCollapsed}
+        isNavbarClose={isNavbarClose}
+        isDark={isDark}
         sx={{
           background: color.tabBorder,
           scrollbarWidth: 'thin',
@@ -1321,7 +1356,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             width: '5px'
           },
           '&::-webkit-scrollbar-thumb': {
-            background: isDark ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)' : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
+            background: isDark
+              ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
+              : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
           }
         }}
       >

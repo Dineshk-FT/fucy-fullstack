@@ -57,48 +57,63 @@ const Properties = [
   { name: 'Non-repudiation', image: Non_repudiationIcon },
   { name: 'Availability', image: AvailabilityIcon }
 ];
+
 const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, edges, setEdges }) => {
   const color = ColorTheme();
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
-  const [tabValue, setTabValue] = useState(0); // Managing tab state
+  const [tabValue, setTabValue] = useState(0);
 
-  const updateElement = (updateFn) => {
-    const updatedEdges = edges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge));
-    setEdges(updatedEdges);
+  // Improved update function using functional update
+  const updateEdge = (updates) => {
+    setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? { ...edge, ...updates } : edge)));
   };
+
   const handleChange = (event, newValue) => {
     const updatedProperties = newValue.map((prop) => prop.name);
-    // console.log('updatedProperties', updatedProperties);
-    dispatch(setDetails({ ...details, properties: updatedProperties }));
-    updateElement((element) => ({ ...element, properties: updatedProperties }));
+    const updatedDetails = { ...details, properties: updatedProperties };
+
+    dispatch(setDetails(updatedDetails));
+    updateEdge({ properties: updatedProperties });
   };
 
   const handleStyle = (e) => {
     const { value } = e.target;
-    dispatch(setDetails((state) => ({ ...state, name: value })));
+    const updatedDetails = { ...details, name: value };
 
-    updateElement((element) => ({
-      ...element,
-      data: { ...element.data, label: value }
-    }));
+    dispatch(setDetails(updatedDetails));
+    updateEdge({ data: { ...selectedBlock?.data, label: value } });
   };
 
   const onChange = (e, name) => {
-    const value = name == 'strokeDasharray' ? e.value : e.target.value;
+    const value = name === 'strokeDasharray' ? e?.value : e.target.value;
+    let updates = {};
+
     if (name === 'startPoint' || name === 'endPoint') {
-      dispatch(setDetails({ ...details, [name]: value }));
-      updateElement((element) => ({
-        ...element,
-        [name === 'startPoint' ? 'markerStart' : 'markerEnd']: {
-          ...element[name === 'startPoint' ? 'markerStart' : 'markerEnd'],
+      const markerType = name === 'startPoint' ? 'markerStart' : 'markerEnd';
+      updates = {
+        [markerType]: {
+          ...selectedBlock?.[markerType],
           color: value
         }
-      }));
+      };
+      dispatch(setDetails({ ...details, [name]: value }));
     } else {
-      dispatch(setDetails({ ...details, style: { ...details.style, [name]: value } }));
-      updateElement((element) => ({ ...element, style: { ...element.style, [name]: value } }));
+      updates = {
+        style: {
+          ...selectedBlock?.style,
+          [name]: value
+        }
+      };
+      dispatch(
+        setDetails({
+          ...details,
+          style: { ...details.style, [name]: value }
+        })
+      );
     }
+
+    updateEdge(updates);
   };
 
   return (
@@ -106,11 +121,10 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
       open={Boolean(anchorEl)}
       anchorEl={anchorEl}
       placement="top-start"
-      modifiers={[{ name: 'offset', options: { offset: [0, 20] } }]}
+      modifiers={[{ options: { offset: [0, 20] }, name: 'flip', enabled: false }]}
       sx={{
         minWidth: 250,
         width: 300,
-        // maxWidth: 400,
         boxShadow: '0px 0px 4px black',
         borderRadius: '8px',
         zIndex: 1100,
@@ -119,7 +133,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
     >
       <ClickAwayListener onClickAway={handleClosePopper}>
         <Paper sx={{ padding: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {/* Tabs */}
           <Tabs
             value={tabValue}
             onChange={(e, newValue) => setTabValue(newValue)}
@@ -131,38 +144,31 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
             <Tab label="Style" />
           </Tabs>
 
-          {/* Tab Content */}
           {tabValue === 0 && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {/* Name & Asset Checkbox */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box sx={{ flex: 1 }}>
                   <InputLabel className={classes.inputlabel}>Name :</InputLabel>
                   <TextField
                     variant="outlined"
-                    value={details?.name}
+                    value={details?.name || ''}
                     onChange={handleStyle}
                     sx={{
                       background: `${color?.sidebarBG} !important`,
                       color: color?.sidebarContent,
                       '& .MuiInputBase-input': { fontSize: fontSize - 2, padding: '6px 8px', borderRadius: '0px' },
-                      '& .MuiOutlinedInput-notchedOutline': { borderRadius: '5px' }, // Remove border radius
+                      '& .MuiOutlinedInput-notchedOutline': { borderRadius: '5px' },
                       width: '240px'
                     }}
                   />
                 </Box>
-                {/* <FormControlLabel
-                  sx={{ fontSize: fontSize - 2, color: color?.sidebarContent, position: 'relative', top: '10px' }}
-                  control={<Checkbox onChange={handleChecked} checked={Boolean(details?.isAsset)} />}
-                  label="Asset"
-                /> */}
               </Box>
 
-              {/* Properties */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
                 <Autocomplete
                   multiple
+                  disablePortal
                   options={Properties}
                   getOptionLabel={(option) => option.name}
                   value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
@@ -195,7 +201,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
 
           {tabValue === 1 && (
             <Grid container spacing={2} mb={2}>
-              {/* Edge Thickness */}
               <Grid item xs={6}>
                 <InputLabel className={classes.inputlabel}>Edge Thickness:</InputLabel>
                 <TextField
@@ -207,7 +212,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                 />
               </Grid>
 
-              {/* Color */}
               <Grid item xs={6}>
                 <InputLabel className={classes.inputlabel}>Color:</InputLabel>
                 <TextField
@@ -219,7 +223,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                 />
               </Grid>
 
-              {/* End-Point Color */}
               <Grid item xs={6} display="flex" gap={1}>
                 <Box>
                   <InputLabel className={classes.inputlabel}>Start-Point:</InputLabel>
@@ -243,7 +246,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                 </Box>
               </Grid>
 
-              {/* Line Style Autocomplete */}
               <Grid item xs={6}>
                 <InputLabel className={classes.inputlabel}>Line Style:</InputLabel>
                 <Autocomplete
@@ -258,7 +260,6 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
             </Grid>
           )}
 
-          {/* Action Buttons */}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button variant="outlined" color="error" onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
               Close

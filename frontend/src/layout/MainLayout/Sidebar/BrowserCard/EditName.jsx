@@ -1,5 +1,5 @@
-/*eslint-disable*/
-import { useEffect, useState } from 'react';
+/* eslint-disable */
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import useStore from '../../../../Zustand/store';
@@ -10,43 +10,47 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges
 });
+
 const EditName = ({ detail, index, onUpdate }) => {
   const { nodes, edges, setNodes, setEdges } = useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(detail?.name);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    setValue(detail?.name); // Sync state when detail updates
+    if (detail?.name !== value) {
+      setValue(detail?.name);
+    }
   }, [detail?.name]);
 
-  const updateElement = (updateFn) => {
-    if (!selectedBlock?.id.includes('reactflow__edge')) {
-      const updatedNodes = nodes?.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node));
-      setNodes(updatedNodes);
-    } else {
-      const updatedEdges = edges?.map((edge) => (edge?.id === selectedBlock?.id ? updateFn(edge) : edge));
-      setEdges(updatedEdges);
-    }
-  };
+  const updateElement = useCallback(
+    (updateFn) => {
+      if (!selectedBlock?.id.includes('reactflow__edge')) {
+        setNodes((prevNodes) => prevNodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node)));
+      } else {
+        setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge)));
+      }
+    },
+    [selectedBlock?.id, setNodes, setEdges]
+  );
 
   const handleDoubleClick = () => {
     setIsEditing(true);
   };
 
   const handleChange = (event) => {
-    const { value } = event.target;
-    setValue(value);
-    //   dispatch(setDetails((state) => ({ ...state, name: value })));
+    const newValue = event.target.value;
+    setValue(newValue);
     updateElement((element) => ({
       ...element,
-      data: { ...element.data, label: value }
+      data: { ...element.data, label: newValue }
     }));
   };
 
   const handleBlur = () => {
     setIsEditing(false);
-    onUpdate(); // Call parent function to update data
+    onUpdate();
   };
 
   const handleKeyDown = (event) => {
@@ -68,6 +72,7 @@ const EditName = ({ detail, index, onUpdate }) => {
       {index + 1}.{' '}
       {isEditing ? (
         <TextField
+          inputRef={inputRef}
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}

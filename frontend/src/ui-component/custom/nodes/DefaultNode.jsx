@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../Zustand/store';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
@@ -21,7 +21,7 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-export default function DefaultNode({ id, data, isConnectable, type }) {
+function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector);
@@ -42,53 +42,30 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   // console.log('isSelected', isSelected);
 
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
-  useEffect(() => {
-    setLabelValue(data?.label || '');
-  }, [data?.label]);
 
-  const handleResize = (_, { width: newWidth, height: newHeight }) => {
-    requestAnimationFrame(() => {
-      const updatedWidth = newWidth;
-      const updatedHeight = newHeight;
+  useEffect(() => setLabelValue(data?.label || ''), [data?.label]);
 
-      setWidth(updatedWidth);
-      setHeight(updatedHeight);
+  const handleResize = useCallback(
+    (_, { width: newWidth, height: newHeight }) => {
+      requestAnimationFrame(() => {
+        setWidth(newWidth);
+        setHeight(newHeight);
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, height: newHeight, width: newWidth } } } : node
+          )
+        );
+      });
+    },
+    [id, setNodes]
+  );
 
-      setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === id
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  style: {
-                    ...node.data.style,
-                    height: updatedHeight,
-                    width: updatedWidth
-                  }
-                }
-              }
-            : node
-        )
-      );
-    });
-  };
-
-  const updateNodeLabel = (newLabel) => {
-    setNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === id
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                label: newLabel
-              }
-            }
-          : node
-      )
-    );
-  };
+  const updateNodeLabel = useCallback(
+    (newLabel) => {
+      setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: newLabel } } : node)));
+    },
+    [id, setNodes]
+  );
 
   const handleLabelDoubleClick = () => {
     setIsEditing(true);
@@ -385,3 +362,5 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     </>
   );
 }
+
+export default React.memo(DefaultNode);
