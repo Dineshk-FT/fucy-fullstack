@@ -23,7 +23,7 @@ export default function MainPage() {
   const { tableOpen } = useSelector((state) => state?.currentId);
   const commonTables = ['Cybersecurity Requirements', 'Cybersecurity Controls', 'Cybersecurity Goals', 'Cybersecurity Claims'];
   const componentMap = {
-    'Damage Scenarios Derivations': <DsDerivationTable />,
+    'Damage Scenarios (DS) Derivations': <DsDerivationTable />,
     'Damage Scenarios - Impact Ratings': <DsTable />,
     'Threat Scenarios': <Tstable />,
     'Derived Threat Scenarios': <TsDerivedTable />,

@@ -49,18 +49,19 @@ const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
     setValue(data?.label || '');
   }, [data?.label]);
 
-  const handleChange = (e) => {
+  const handleInput = useCallback((e) => {
     const val = e.target.value;
     setValue(val);
     setNodes(nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node)));
-  };
+  }, []);
 
   return (
     <div style={{ height: dimensions.height, width: dimensions.width }}>
       <input
         type="text"
+        name="group"
         value={value}
-        onChange={handleChange}
+        onChange={handleInput}
         style={{
           fontSize: `${fontSize}px`,
           fontWeight: 600,
@@ -100,4 +101,4 @@ const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
   );
 };
 
-export default CustomGroupNode;
+export default React.memo(CustomGroupNode);

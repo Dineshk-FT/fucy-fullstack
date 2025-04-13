@@ -172,7 +172,11 @@ export default function TsDerivedTable() {
                   'Detailed / Combined Threat Scenarios': detail?.threat_ids,
                   type: 'User-defined',
                   'Damage Scenarios': detail?.damage_details,
-                  'Losses of Cybersecurity Properties': detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
+                  'Losses of Cybersecurity Properties': detail.damage_details
+                    ? detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
+                    : detail?.threat_ids
+                    ? detail?.threat_ids
+                    : '-'
                 }
               : {};
           })
@@ -392,7 +396,12 @@ export default function TsDerivedTable() {
                     ? row[item.name]?.map((threat, i) => (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
                           <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                            {threat?.prop_key ? `[TS${(threat?.prop_key).toString().padStart(3, '0')}] ${threat?.prop_name}` : '-'}
+                            {/* {threat?.prop_key ? `[TS${(threat?.prop_key).toString().padStart(3, '0')}] ${threat?.prop_name}` : '-'} */}
+                            {threat?.prop_key
+                              ? `[TS${threat?.prop_key.toString().padStart(3, '0')}] ${threatType(threat?.prop_name)} of ${
+                                  threat?.node_name
+                                } leads to ${threat?.damage_scene}`
+                              : '-'}
                           </span>
                         </span>
                       ))
@@ -414,31 +423,20 @@ export default function TsDerivedTable() {
               break;
 
             case item.name === 'Losses of Cybersecurity Properties':
-              if (row.type === 'derived') {
-                cellContent = row[item?.name] && (
-                  <StyledTableCell component="th" scope="row">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <CircleIcon sx={{ fontSize: 14, color: colorPicker(row[item.name]) }} />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                        Loss of {row[item.name]}
-                      </span>
-                    </span>
-                  </StyledTableCell>
-                );
-              } else {
-                cellContent = row[item?.name] && (
-                  <StyledTableCell component="th" scope="row">
-                    {row[item?.name].map((loss, i) => (
+              // console.log('row[item?.name]1', row[item?.name]);
+              cellContent = row[item?.name] && (
+                <StyledTableCell component="th" scope="row">
+                  {row[item?.name].map((loss, i) => {
+                    const name = loss?.name ? loss?.name : loss?.prop_name ? loss?.prop_name : '';
+                    return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                          Loss of {loss?.name}
-                        </span>
+                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(name) }} />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>Loss of {name}</span>
                       </span>
-                    ))}
-                  </StyledTableCell>
-                );
-              }
+                    );
+                  })}
+                </StyledTableCell>
+              );
               break;
             case item.name === 'Damage Scenarios':
               if (row.type === 'derived') {

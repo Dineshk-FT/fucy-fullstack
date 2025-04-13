@@ -433,7 +433,7 @@ const BrowserCard = ({ models }) => {
                         onClick={() => handleSwicthTable(sub?.name)} //change to onClick
                         sx={{ paddingY: 0.5, paddingLeft: 1 }}
                       >
-                        {sub?.name === 'Damage Scenarios Derivations' &&
+                        {sub?.name === 'Damage Scenarios (DS) Derivations' &&
                           sub?.Details?.map((ls) => (
                             <TreeItem
                               key={ls?.id}

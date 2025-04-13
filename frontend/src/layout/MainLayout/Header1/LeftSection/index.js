@@ -40,7 +40,7 @@ import DeleteProject from '../../../../ui-component/Modal/DeleteProjects';
 import useStore from '../../../../Zustand/store';
 import AttackTreeRibbonModal from '../../../../ui-component/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../store/ColorTheme';
-import { openAddNodeTab, openAddDataNodeTab  } from '../../../../store/slices/CanvasSlice';
+import { openAddNodeTab, openAddDataNodeTab } from '../../../../store/slices/CanvasSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
@@ -110,7 +110,7 @@ const LeftSection = () => {
 
   const handleAddDataNode = () => {
     dispatch(openAddDataNodeTab());
-  }
+  };
 
   const handleSystemTabClick = () => setOpenTemplateDialog(true);
   const handleComponentsTabClick = () => setOpenComponentsDialog(true);
@@ -120,10 +120,10 @@ const LeftSection = () => {
     setActiveTab(tabName);
     const actions = {
       'Item Definition': handleModelDefinationClick,
-      'Damage Scenarios': () => handleClick('Damage Scenarios Derivations', '2'),
+      'Damage Scenarios': () => handleClick('Damage Scenarios (DS) Derivations', '2'),
       'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
       'Attack Path': handleAttackTableClick,
-      'Cybersecurity': () => handleClick('Cybersecurity Goals', '5'),
+      Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
       'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
     };
     actions[tabName]?.();
@@ -234,7 +234,7 @@ const LeftSection = () => {
           icon: () => (
             <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
           ),
-          action: () => handleClick('Damage Scenarios Derivations')
+          action: () => handleClick('Damage Scenarios (DS) Derivations')
         }, // Report for derivation
         {
           label: 'Impact Rating Table',

@@ -1099,7 +1099,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            if (sub.name === 'Damage Scenarios Derivations') {
+            if (sub.name === 'Damage Scenarios (DS) Derivations') {
               return sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}

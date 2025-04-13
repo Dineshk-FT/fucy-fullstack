@@ -94,7 +94,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     subs: [
       {
         id: '21',
-        name: 'Damage Scenarios Derivations'
+        name: 'Damage Scenarios (DS) Derivations'
       },
       {
         id: '22',
@@ -1293,7 +1293,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         subs: [
           {
             id: '21',
-            name: 'Damage Scenarios Derivations'
+            name: 'Damage Scenarios (DS) Derivations'
           },
           {
             id: '22',
@@ -1423,7 +1423,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           subs: [
             {
               id: '21',
-              name: 'Damage Scenarios Derivations'
+              name: 'Damage Scenarios (DS) Derivations'
             },
             {
               id: '22',
