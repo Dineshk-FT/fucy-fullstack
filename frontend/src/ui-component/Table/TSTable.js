@@ -138,9 +138,7 @@ export default function Tstable() {
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
-  );
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Open/Close the filter modal
@@ -261,10 +259,8 @@ export default function Tstable() {
     const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
-    const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(80, startWidth + delta);
-
+    const handleMouseMove = (event) => {
+      const newWidth = Math.max(startWidth + (event.clientX - startX), TsTableHeader?.find((col) => col.id === columnId)?.minW || 50);
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
 
@@ -646,7 +642,8 @@ export default function Tstable() {
                 <StyledTableCell
                   key={hd.id}
                   style={{
-                    width: `${columnWidths[hd.id]}px`,
+                    width: columnWidths[hd.id] ?? hd?.w,
+                    minWidth: hd?.minW,
                     position: 'relative',
                     overflowWrap: 'break-word'
                   }}

@@ -196,32 +196,32 @@ export const DsDerivationHeader = [
 ];
 
 export const TsTableHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Category' },
-  { id: 4, name: 'Description' },
-  { id: 5, name: 'Damage Scenarios' },
-  { id: 6, name: 'Related Threats from Catalog' },
-  { id: 7, name: 'Losses of Cybersecurity Properties' },
-  { id: 8, name: 'Assets' },
-  { id: 9, name: 'Related Attack Trees' },
-  { id: 10, name: 'Related Attack Path Models' }
+  { id: 1, name: 'SNo', w: 80, minW: 60 },
+  { id: 2, name: 'Name', w: 150, minW: 110 },
+  { id: 3, name: 'Category', w: 80, minW: 60 },
+  { id: 4, name: 'Description', w: 180, minW: 140 },
+  { id: 5, name: 'Damage Scenarios', w: 200, minW: 160 },
+  { id: 6, name: 'Related Threats from Catalog', w: 120, minW: 100 },
+  { id: 7, name: 'Losses of Cybersecurity Properties', w: 200, minW: 160 },
+  { id: 8, name: 'Assets', w: 100, minW: 80 },
+  { id: 9, name: 'Related Attack Trees', w: 120, minW: 100 },
+  { id: 10, name: 'Related Attack Path Models', w: 120, minW: 100 }
   // { id: 11, name: 'Assessment References' },
   // { id: 12, name: 'To be Assessed' },
   // { id: 13, name: 'Assessment Jurification' }
 ];
 
 export const TsDerivedTableHeader = [
-  { id: 1, name: 'SNo' },
-  { id: 2, name: 'Name' },
-  { id: 3, name: 'Detailed / Combined Threat Scenarios' },
-  { id: 4, name: 'Description' },
-  { id: 5, name: 'Damage Scenarios' },
-  { id: 6, name: 'Related Threats from Catalog' },
-  { id: 7, name: 'Losses of Cybersecurity Properties' },
-  { id: 8, name: 'Assets' },
-  { id: 9, name: 'Related Attack Trees' },
-  { id: 10, name: 'Related Attack Path Models' }
+  { id: 1, name: 'SNo', w: 80, minW: 60 },
+  { id: 2, name: 'Name', w: 130, minW: 100 },
+  { id: 3, name: 'Detailed / Combined Threat Scenarios', w: 240, minW: 180 },
+  { id: 4, name: 'Description', w: 180, minW: 140 },
+  { id: 5, name: 'Damage Scenarios', w: 200, minW: 160 },
+  { id: 6, name: 'Related Threats from Catalog', w: 120, minW: 100 },
+  { id: 7, name: 'Losses of Cybersecurity Properties', w: 200, minW: 160 },
+  { id: 8, name: 'Assets', w: 70, minW: 60 },
+  { id: 9, name: 'Related Attack Trees', w: 120, minW: 100 },
+  { id: 10, name: 'Related Attack Path Models', w: 130, minW: 110 }
 ];
 
 export const AttackTableHeader = [

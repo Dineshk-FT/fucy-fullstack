@@ -130,9 +130,7 @@ export default function TsDerivedTable() {
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
-  );
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Open/Close the filter modal
@@ -171,12 +169,12 @@ export default function TsDerivedTable() {
                   Description: detail?.description || null,
                   'Detailed / Combined Threat Scenarios': detail?.threat_ids,
                   type: 'User-defined',
-                  'Damage Scenarios': detail?.damage_details,
+                  'Damage Scenarios': detail?.damage_details ? detail?.damage_details : detail?.threat_ids ? detail?.threat_ids : [],
                   'Losses of Cybersecurity Properties': detail.damage_details
                     ? detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
                     : detail?.threat_ids
                     ? detail?.threat_ids
-                    : '-'
+                    : []
                 }
               : {};
           })
@@ -229,10 +227,8 @@ export default function TsDerivedTable() {
     const headerCell = e.currentTarget.parentElement;
     const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
 
-    const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(80, startWidth + delta);
-
+    const handleMouseMove = (event) => {
+      const newWidth = Math.max(startWidth + (event.clientX - startX), Head?.find((col) => col.id === columnId)?.minW || 50);
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
 
@@ -439,37 +435,27 @@ export default function TsDerivedTable() {
               );
               break;
             case item.name === 'Damage Scenarios':
-              if (row.type === 'derived') {
-                cellContent = (
-                  <StyledTableCell component="th" scope="row">
-                    {
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              cellContent = (
+                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
+                  {row[item.name] && row[item.name].length ? (
+                    row[item.name].map((damage, i) => (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, margin: '10px auto' }} key={i}>
                         <img src={DamageIcon} alt="damage" height="10px" width="10px" />
                         <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                          {row[item?.name]}
+                          {damage?.key
+                            ? `[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`
+                            : damage?.damage_id
+                            ? `[${damage?.damage_id}] ${damage?.damage_scene}`
+                            : '-'}
                         </span>
                       </span>
-                    }
-                  </StyledTableCell>
-                );
-              } else {
-                cellContent = (
-                  <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
-                    {row[item.name] && row[item.name].length ? (
-                      row[item.name].map((damage, i) => (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                          <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                          <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                            {`[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`}
-                          </span>
-                        </span>
-                      ))
-                    ) : (
-                      <InputLabel>Select Damage Scenario</InputLabel>
-                    )}
-                  </StyledTableCell>
-                );
-              }
+                    ))
+                  ) : (
+                    <InputLabel>Select Damage Scenario</InputLabel>
+                  )}
+                </StyledTableCell>
+              );
+
               break;
             case item.name === 'ID':
               cellContent = (
@@ -617,7 +603,8 @@ export default function TsDerivedTable() {
                 <StyledTableCell
                   key={hd.id}
                   style={{
-                    width: `${columnWidths[hd.id]}px`,
+                    width: columnWidths[hd.id] ?? hd?.w,
+                    minWidth: hd?.minW,
                     position: 'relative',
                     overflowWrap: 'break-word'
                   }}
