@@ -436,7 +436,16 @@ export default function TsDerivedTable() {
               break;
             case item.name === 'Damage Scenarios':
               cellContent = (
-                <StyledTableCell component="th" scope="row" onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  onClick={() => {
+                    if (!row[item.name].length) {
+                      handleOpenSelect(row);
+                    }
+                  }}
+                  sx={{ cursor: 'pointer' }}
+                >
                   {row[item.name] && row[item.name].length ? (
                     row[item.name].map((damage, i) => (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5, margin: '10px auto' }} key={i}>
