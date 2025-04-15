@@ -1129,32 +1129,35 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           null,
           renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
             let key = 0;
-            return sub.Details?.flatMap((detail, i) =>
-              (sub.name === 'Threat Scenarios'
-                ? detail?.Details?.flatMap((nodeDetail) =>
-                    nodeDetail?.props?.map((prop) => {
-                      key++;
-                      return {
-                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
-                          detail?.damage_name
-                        } [${detail?.id}]`,
-                        nodeId: prop.id.concat(detail?.rowId),
-                        extraProps: {
-                          threatId: prop?.id,
-                          damageId: detail?.rowId,
-                          width: 150,
-                          height: 60
-                        }
-                      };
-                    })
-                  )
-                : [
-                    {
-                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
-                      nodeId: detail?.id,
-                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
-                    }
-                  ]
+            return sub.Details?.flatMap((detail, i) => {
+              // console.log('detail', detail);
+              return (
+                sub.name === 'Threat Scenarios'
+                  ? detail?.Details?.flatMap((nodeDetail) =>
+                      nodeDetail?.props?.map((prop) => {
+                        key++;
+                        return {
+                          label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                            detail?.damage_name
+                          } [${detail?.id}]`,
+                          nodeId: nodeDetail?.nodeId,
+                          extraProps: {
+                            threatId: prop?.id,
+                            damageId: detail?.rowId,
+                            width: 150,
+                            height: 60,
+                            key: `TS${key.toString().padStart(3, '0')}`
+                          }
+                        };
+                      })
+                    )
+                  : [
+                      {
+                        label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                        nodeId: detail?.id,
+                        extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
+                      }
+                    ]
               ).map(({ label, nodeId, extraProps }) => {
                 const onClick = (e) => {
                   e.stopPropagation();
@@ -1165,7 +1168,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 return (
                   <DraggableTreeItem
                     draggable={true}
-                    key={nodeId}
+                    key={extraProps?.key}
                     nodeId={nodeId}
                     label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
                     onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
@@ -1175,8 +1178,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                   />
                 );
-              })
-            );
+              });
+            });
           })
         );
 
