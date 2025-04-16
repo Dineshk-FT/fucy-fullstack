@@ -85,7 +85,7 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
   initialEdges: state.initialEdges,
-  setCanvasRef: state.setCanvasRef,
+  setCanvasRef: state.setCanvasRef
 });
 
 // Edge line styling
@@ -180,7 +180,7 @@ export default function MainCanvas() {
     isDark,
     initialNodes,
     initialEdges,
-    setCanvasRef,
+    setCanvasRef
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -211,7 +211,6 @@ export default function MainCanvas() {
 
   const canvasRef = useRef(null);
 
-
   useEffect(() => {
     setCanvasRef(canvasRef);
 
@@ -232,7 +231,7 @@ export default function MainCanvas() {
             style: {
               width: `${imageWidth}px`,
               height: `${imageHeight}px`,
-              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
             },
             ignoreElements: (el) => el.tagName === 'style', // Ignore style elements
             skipFonts: true // Skip font embedding
