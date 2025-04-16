@@ -48,6 +48,7 @@ import FitScreenIcon from '@mui/icons-material/FitScreen';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
+import useThrottle from '../../hooks/useThrottle';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -339,6 +340,7 @@ export default function MainCanvas() {
   }, [nodes, edges]);
 
   const checkForNodes = () => {
+    console.log('not a group');
     const [intersectingNodesMap, nodes] = getGroupedNodes();
     let values = Object.values(intersectingNodesMap).flat();
     let updated = nodes.map((item1) => {
@@ -350,18 +352,30 @@ export default function MainCanvas() {
 
   const onNodeDragStart = useCallback((_, node) => {
     dragRef.current = node;
+    if (node.type === 'group') {
+      // Only call once and store the result
+      const [intersectingNodesMap, nodes] = getGroupedNodes();
+
+      // Do the merging directly here
+      const values = Object.values(intersectingNodesMap).flat();
+      const updated = nodes.map((item1) => {
+        const match = values.find((item2) => item2.id === item1.id);
+        return match ? match : item1;
+      });
+
+      setNodes(updated);
+    }
   }, []);
 
-  const onNodeDrag = useCallback((event, node) => {
+  const throttledOnNodeDrag = useThrottle((event, node) => {
     const prevNode = nodesRefer.current.find((n) => n.id === node.id);
     if (!prevNode) return;
 
     const deltaX = node.position.x - prevNode.position.x;
     const deltaY = node.position.y - prevNode.position.y;
 
-    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
+    if (deltaX === 0 && deltaY === 0) return;
 
-    // Use a Map to track updated positions
     const updatedPositions = new Map();
 
     const moveChildren = (parentId, dx, dy) => {
@@ -380,14 +394,35 @@ export default function MainCanvas() {
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
     moveChildren(node.id, deltaX, deltaY);
 
-    setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
-  }, []);
+    // 🔥 Apply the change check here
+    setNodes((prevNodes) => {
+      let changed = false;
+      const updated = prevNodes.map((n) => {
+        if (updatedPositions.has(n.id)) {
+          const newPos = updatedPositions.get(n.id);
+          if (n.position.x !== newPos.x || n.position.y !== newPos.y) {
+            changed = true;
+            return { ...n, position: newPos };
+          }
+        }
+        return n;
+      });
+
+      return changed ? updated : prevNodes;
+    });
+  }, 30); // Or tweak to 16ms if you want it super smooth
+
+  const onNodeDrag = useCallback(
+    (event, node) => {
+      throttledOnNodeDrag(event, node);
+    },
+    [throttledOnNodeDrag]
+  );
 
   const onNodeDragStop = useCallback(() => {
     nodesRefer.current = [...nodes]; // Update ref after drag stops
-    getGroupedNodes();
-    checkForNodes();
   }, [nodes]);
+
   function downloadImage(dataUrl) {
     const a = document.createElement('a');
     a.setAttribute('download', 'canvas-diagram.png');
@@ -556,7 +591,6 @@ export default function MainCanvas() {
 
         dragAddNode(newNodes, newEdges);
       }
-      checkForNodes();
     },
     [reactFlowInstance]
   );
@@ -808,8 +842,6 @@ export default function MainCanvas() {
 
         setNodes((nds) => [...nds, newNode]);
       });
-
-      checkForNodes();
     }
 
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
@@ -881,7 +913,6 @@ export default function MainCanvas() {
     };
 
     dragAdd(newNode);
-    checkForNodes();
     setSelectedNodes([]);
   }, []);
 
