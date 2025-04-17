@@ -13,15 +13,12 @@ import 'react-resizable/css/styles.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
-import LogoSection from '../LogoSection';
 import BrowserCard from '../Sidebar/BrowserCard/index';
-import { drawerWidth, getNavbarHeight } from '../../../store/constant';
+import { getNavbarHeight } from '../../../store/constant';
 import ColorTheme from '../../../store/ColorTheme';
 import useStore from '../../../Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
-import MenuCard from '../Sidebar/MenuCard/index1';
-import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
-import { ClosePropertiesTab, setDrawerwidth } from '../../../store/slices/CanvasSlice';
+import { setDrawerwidth } from '../../../store/slices/CanvasSlice';
 
 export const ToasterContext = createContext();
 
@@ -42,7 +39,7 @@ const selector = (state) => ({
   isCollapsed: state.isCollapsed
 });
 
-const Sidebar = ({ draweropen, drawerToggle, window }) => {
+const Sidebar = React.memo(({ draweropen, drawerToggle, window }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const color = ColorTheme();
@@ -205,7 +202,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
       </ResizableBox>
     </ToasterContext.Provider>
   );
-};
+});
 
 Sidebar.propTypes = {
   // draweropen: PropTypes.bool,
@@ -213,4 +210,4 @@ Sidebar.propTypes = {
   window: PropTypes.object
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

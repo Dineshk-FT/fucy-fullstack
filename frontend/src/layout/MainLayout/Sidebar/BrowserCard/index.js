@@ -274,7 +274,6 @@ const selector = (state) => ({
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
-  // console.log('browser rendered');
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();

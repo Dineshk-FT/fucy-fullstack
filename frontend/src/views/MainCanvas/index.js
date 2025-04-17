@@ -374,6 +374,8 @@ export default function MainCanvas() {
   }, []);
 
   const throttledOnNodeDrag = useThrottle((event, node) => {
+    if (node.type !== 'group') return;
+
     const prevNode = nodesRefer.current.find((n) => n.id === node.id);
     if (!prevNode) return;
 
@@ -384,11 +386,24 @@ export default function MainCanvas() {
 
     const updatedPositions = new Map();
 
+    const nodesList = [];
+
+    const collectChildren = (parentId, list) => {
+      nodesRefer.current.forEach((child) => {
+        if (child.parentId === parentId) {
+          list.push(child);
+          collectChildren(child.id, list); // recursively collect nested children
+        }
+      });
+    };
+
     const moveChildren = (parentId, dx, dy) => {
       nodesRefer.current.forEach((child) => {
         if (child.parentId === parentId) {
-          nodesList.push(child);
-          collectChildren(child.id, nodesList);
+          const newX = child.position.x + dx;
+          const newY = child.position.y + dy;
+          updatedPositions.set(child.id, { x: newX, y: newY });
+          moveChildren(child.id, dx, dy); // recursively move nested children
         }
       });
     };
@@ -396,7 +411,6 @@ export default function MainCanvas() {
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
     moveChildren(node.id, deltaX, deltaY);
 
-    // 🔥 Apply the change check here
     setNodes((prevNodes) => {
       let changed = false;
       const updated = prevNodes.map((n) => {
@@ -412,7 +426,7 @@ export default function MainCanvas() {
 
       return changed ? updated : prevNodes;
     });
-  }, 30); // Or tweak to 16ms if you want it super smooth
+  }, 30);
 
   const onNodeDrag = useCallback(
     (event, node) => {
