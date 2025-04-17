@@ -1136,7 +1136,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   ? detail?.Details?.flatMap((nodeDetail) =>
                       nodeDetail?.props?.map((prop) => {
                         key++;
-                        return {
+                          return {
                           label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
                             detail?.damage_name
                           } [${detail?.id}]`,
@@ -1144,9 +1144,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                           extraProps: {
                             threatId: prop?.id,
                             damageId: detail?.rowId,
+                            scenarioNumber: key,
                             width: 150,
                             height: 60,
-                            key: `TS${key.toString().padStart(3, '0')}`
+                            // key: `TS${key.toString().padStart(3, '0')}`
                           }
                         };
                       })
@@ -1168,9 +1169,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 return (
                   <DraggableTreeItem
                     draggable={true}
-                    key={extraProps?.key}
+                    key={nodeId}
                     nodeId={nodeId}
-                    label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
+                    label={getLabel('TopicIcon', label, extraProps.scenarioNumber || i + 1, nodeId, extraProps?.threat_ids, onClick)}
                     onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
                     onClick={(e) => {
                       e.stopPropagation();
