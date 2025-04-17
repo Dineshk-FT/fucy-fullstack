@@ -10,8 +10,6 @@ import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ControlPointIcon from '@mui/icons-material/ControlPoint';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {
   ItemIcon,
   AttackIcon,
@@ -24,13 +22,7 @@ import {
   DocumentIcon,
   ReportIcon,
   LayoutIcon,
-  ModelIcon,
-  ConfidentialityIcon,
-  IntegrityIcon,
-  AuthenticityIcon,
-  AuthorizationIcon,
-  Non_repudiationIcon,
-  AvailabilityIcon
+  ModelIcon
 } from '../../../../assets/icons';
 import { makeStyles } from '@mui/styles';
 import { ReceiptItem } from 'iconsax-react';
@@ -42,21 +34,16 @@ import TopicIcon from '@mui/icons-material/Topic';
 import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
-import DraggableTreeItem from './DraggableItem';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import { threatType } from '../../../../ui-component/Table/constraints';
-import { v4 as uid } from 'uuid';
 import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';
 import DocumentDialog from '../../../../ui-component/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
 import { getNavbarHeight } from '../../../../store/constant';
-import { getNodeDetails } from '../../../../utils/Constraints';
-import { Avatar, AvatarGroup } from '@mui/material';
 import ConfirmDeleteDialog from '../../../../ui-component/Modal/ConfirmDeleteDialog';
 import EditProperties from '../../../../ui-component/Poppers/EditProperties';
-import EditName from './EditName';
+import RenderedTreeItems from './RenderedTreeItems';
 
 const imageComponents = {
   AttackIcon,
@@ -284,15 +271,6 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted
 });
 
-const Properties = {
-  Confidentiality: ConfidentialityIcon,
-  Integrity: IntegrityIcon,
-  Authenticity: AuthenticityIcon,
-  Authorization: AuthorizationIcon,
-  'Non-repudiation': Non_repudiationIcon,
-  Availability: AvailabilityIcon
-};
-
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
 const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
@@ -346,12 +324,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setIsNodePasted
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
-  const [count, setCount] = useState({
-    node: 1,
-    data: 1
-  });
   const drawerwidth = 370;
-  const { selectedBlock, drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
+  const { drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
     attack: false,
@@ -377,8 +351,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     id: '',
     name: ''
   });
-
-  // console.log('assets', assets);
 
   const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
@@ -484,24 +456,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setClickedItem(modelId);
   };
 
-  const handleAddNewNode = (e) => {
-    e.stopPropagation();
-    const nodeDetail = getNodeDetails('default', 'Node', count.node);
-    const list = [...nodes, nodeDetail];
-    setNodes(list);
-    setCount((prev) => ({ ...prev, node: prev.node + 1 }));
-    // dispatch(openAddNodeTab());
-  };
-
-  const handleAddDataNode = (e) => {
-    e.stopPropagation();
-    const nodeDetail = getNodeDetails('data', 'Data', count.data);
-    const list = [...nodes, nodeDetail];
-    setNodes(list);
-    setCount((prev) => ({ ...prev, data: prev.data + 1 }));
-    // dispatch(openAddDataNodeTab());
-  };
-
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
@@ -532,9 +486,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
     dispatch(setPreviousTab(name));
   };
-
-  // console.log('attackNodes', attackNodes);
-  // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     const prevSceneId = attackScene?.ID;
@@ -599,10 +550,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       // console.log('later');
       dispatch(setTableOpen('Attack Trees Canvas'));
     }
-  };
-
-  const handleNodes = (e) => {
-    e.preventDefault();
   };
 
   const handleContext = (e, name) => {
@@ -788,84 +735,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const handleTreeItemClick = (e, handler, ...args) => {
-    // Check if click was on the expand icon
-    const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
-
-    if (isExpandIcon) {
-      // For expand icon clicks, only toggle expand/collapse
-      e.stopPropagation();
-      return;
-    }
-
-    // For other clicks, run the custom handler
-    handler?.(e, ...args);
-  };
-
-  const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
-    <TreeItem
-      key={data.id}
-      nodeId={data.id}
-      label={getImageLabel(data.icon, data.name, data.id)}
-      onClick={onClick}
-      onContextMenu={contextMenuHandler}
-      className={classes.treeItem}
-    >
-      {children}
-    </TreeItem>
-  );
-
-  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
-    return subs?.map((sub) =>
-      sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
-        <TreeItem
-          key={sub.id}
-          nodeId={sub.id}
-          label={
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
-              onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
-            >
-              <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
-              {hovered[sub.type] && (
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    contextMenuHandler(e, sub.name);
-                  }}
-                >
-                  <ControlPointIcon color="primary" sx={{ fontSize: 19 }} />
-                </Box>
-              )}
-            </Box>
-          }
-          onClick={(e) => {
-            setClickedItem(sub.id);
-            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
-          }}
-        >
-          {additionalMapping && additionalMapping(sub)}
-        </TreeItem>
-      ) : (
-        <TreeItem
-          key={sub.id}
-          nodeId={sub.id}
-          label={getLabel('TopicIcon', sub.name, null, sub.id)}
-          onClick={(e) => {
-            setClickedItem(sub.id);
-            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
-          }}
-          onContextMenu={(e) => handleTreeItemClick(e, contextMenuHandler, sub.name)}
-        >
-          {additionalMapping && additionalMapping(sub)}
-        </TreeItem>
-      )
-    );
-  };
-
   const handlePropertiesTab = (detail, type) => {
     const selected = type === 'edge' ? edges.find((edge) => edge.id === detail?.nodeId) : nodes.find((node) => node.id === detail?.nodeId);
     const { isAsset = false, properties, id, data } = selected;
@@ -885,6 +754,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     dispatch(clearAnchorEl());
   };
 
+<<<<<<< HEAD
   const renderTreeItems = (data, type) => {
     if (!data) return null;
 
@@ -1345,6 +1215,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
+=======
+>>>>>>> 3b7d148d66ae2c9b748b837c728b3de724ce3723
   return (
     <>
       <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
@@ -1413,7 +1285,33 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               sx={{ '& .Mui-selected': { backgroundColor: 'transparent !important' } }}
             >
-              {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
+              {scenarios.map(({ name, scene }, i) => (
+                <RenderedTreeItems
+                  key={i}
+                  data={scene}
+                  type={name}
+                  handlePropertiesTab={handlePropertiesTab}
+                  getLabel={getLabel}
+                  getImageLabel={getImageLabel}
+                  setClickedItem={setClickedItem}
+                  classes={classes}
+                  hovered={hovered}
+                  setHovered={setHovered}
+                  drawerwidth={drawerwidth}
+                  dispatch={dispatch}
+                  setEdgeDetails={setEdgeDetails}
+                  setDetails={setDetails}
+                  onDragStart={onDragStart}
+                  setSelectedThreatIds={setSelectedThreatIds}
+                  handleOpenTable={handleOpenTable}
+                  handleContext={handleContext}
+                  handleOpenDeleteModal={handleOpenDeleteModal}
+                  handleOpenAttackTree={handleOpenAttackTree}
+                  handleClick={handleClick}
+                  handleOpenDocumentDialog={handleOpenDocumentDialog}
+                  handleSave={handleSave}
+                />
+              ))}
             </TreeItem>
           </TreeView>
         </CardContent>
@@ -1443,4 +1341,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   );
 };
 
+<<<<<<< HEAD
 export default BrowserCard;
+=======
+export default React.memo(BrowserCard);
+>>>>>>> 3b7d148d66ae2c9b748b837c728b3de724ce3723

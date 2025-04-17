@@ -225,6 +225,7 @@ export default function AttackBlock({ attackScene, color }) {
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
   const prevAttackSceneRef = useRef(attackScene);
+  const flowWrapper = useRef(null);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
 
@@ -388,15 +389,32 @@ export default function AttackBlock({ attackScene, color }) {
   }, []);
 
   // console.log('nodes', nodes);
+  const getRelativePosition = (event) => {
+    const container = event.currentTarget.getBoundingClientRect();
+    return {
+      x: event.clientX - container.left,
+      y: event.clientY - container.top
+    };
+  };
+
   const handleNodeContextMenu = (event, node) => {
-    if (node.type !== 'default') {
-      event.preventDefault();
+    event.preventDefault();
+
+    const flowWrapperRect = flowWrapper.current.getBoundingClientRect();
+    const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+
+    if (nodeElement) {
+      const nodeRect = nodeElement.getBoundingClientRect();
+
+      const relativeX = nodeRect.left - flowWrapperRect.left + 100;
+      const relativeY = nodeRect.bottom - flowWrapperRect.top + 4; // Position just below
+
       setCopiedNode(node);
       setSelectedNode(node);
       setContextMenu({
         visible: true,
-        x: event.clientX,
-        y: event.clientY,
+        x: relativeX,
+        y: relativeY,
         options: node.type === 'Event' ? ['Copy', 'Paste', 'Attack', 'Requirement'] : ['Copy', 'Paste'],
         node
       });
@@ -405,14 +423,12 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleCanvasContextMenu = (event) => {
     event.preventDefault();
-    // Check if there's a copied node
-    // const copiedNodes = JSON.parse(localStorage.getItem("copiedNode"));
-    // if (copiedNodes && copiedNodes.length > 0) {
+    const pos = getRelativePosition(event);
     if (copiedNode && copiedNode.length > 0) {
       setContextMenu({
         visible: true,
-        x: event.clientX,
-        y: event.clientY,
+        x: pos.x,
+        y: pos.y,
         options: ['Copy', 'Paste']
       });
     } else {
@@ -763,7 +779,7 @@ export default function AttackBlock({ attackScene, color }) {
   if (!isReady) return null;
 
   return (
-    <div style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
+    <div ref={flowWrapper} style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}

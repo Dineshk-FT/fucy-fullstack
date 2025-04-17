@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import useStore from '../../../../Zustand/store';
@@ -11,7 +11,7 @@ const selector = (state) => ({
   setEdges: state.setEdges
 });
 
-const EditName = ({ detail, index, onUpdate }) => {
+const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
   const { nodes, edges, setNodes, setEdges } = useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,6 +61,7 @@ const EditName = ({ detail, index, onUpdate }) => {
 
   return (
     <Box
+      ref={ref}
       sx={{
         whiteSpace: 'nowrap',
         overflow: 'hidden',
@@ -88,6 +89,6 @@ const EditName = ({ detail, index, onUpdate }) => {
       )}
     </Box>
   );
-};
+});
 
 export default EditName;
