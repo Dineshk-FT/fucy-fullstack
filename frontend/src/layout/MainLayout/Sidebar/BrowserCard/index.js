@@ -1059,18 +1059,18 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       dispatch(
                         type === 'edge'
                           ? setEdgeDetails({
-                            name: selected?.data?.label ?? '',
-                            properties: selected?.properties ?? [],
-                            isAsset: selected?.isAsset ?? false,
-                            style: selected?.style ?? {},
-                            startPoint: selected?.markerStart?.color ?? '#000000',
-                            endPoint: selected?.markerEnd?.color ?? '#000000'
-                          })
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false,
+                              style: selected?.style ?? {},
+                              startPoint: selected?.markerStart?.color ?? '#000000',
+                              endPoint: selected?.markerEnd?.color ?? '#000000'
+                            })
                           : setDetails({
-                            name: selected?.data?.label ?? '',
-                            properties: selected?.properties ?? [],
-                            isAsset: selected?.isAsset ?? false
-                          })
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false
+                            })
                       );
                     }}
                     onDragStart={(e) => onDragStart(e, detail)}
@@ -1121,64 +1121,66 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             }
           })
         );
+
       case 'threatScenarios':
-        let key = 0;
-
-        // Reset counter before rendering begins
-        function resetCounter() {
-          key = 0;
-        }
-
-        // Before your render function, call resetCounter()
-        resetCounter();
-
         return renderTreeItem(
           data,
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
           renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
-            return sub.Details?.flatMap((detail, i) =>
-              (sub.name === 'Threat Scenarios'
-                ? detail?.Details?.flatMap((nodeDetail) =>
-                  nodeDetail?.props?.map((prop) => {
-                    key++;
-                    return {
-                      label: `TS${key.toString().padStart(3, '0')} ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${detail?.damage_name} [${detail?.id}]`,
-                      nodeId: prop.id.concat(detail?.rowId),
-                      extraProps: {
-                        threatId: prop?.id,
-                        damageId: detail?.rowId,
-                        scenarioNumber: key // Store the counter in extraProps
+            let key = 0;
+            return sub.Details?.flatMap((detail, i) => {
+              // console.log('detail', detail);
+              return (
+                sub.name === 'Threat Scenarios'
+                  ? detail?.Details?.flatMap((nodeDetail) =>
+                      nodeDetail?.props?.map((prop) => {
+                        key++;
+                          return {
+                          label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                            detail?.damage_name
+                          } [${detail?.id}]`,
+                          nodeId: nodeDetail?.nodeId,
+                          extraProps: {
+                            threatId: prop?.id,
+                            damageId: detail?.rowId,
+                            scenarioNumber: key,
+                            width: 150,
+                            height: 60,
+                            // key: `TS${key.toString().padStart(3, '0')}`
+                          }
+                        };
+                      })
+                    )
+                  : [
+                      {
+                        label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                        nodeId: detail?.id,
+                        extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
                       }
-                    };
-                  })
-                )
-                : [
-                  {
-                    label: `TSD${(i + 1).toString().padStart(3, '0')} ${detail?.name}`,
-                    nodeId: detail?.id,
-                    extraProps: {}
-                  }
-                ]
-              ).map(({ label, nodeId, extraProps }) => (
-                <DraggableTreeItem
-                  draggable={true}
-                  key={nodeId}
-                  nodeId={nodeId}
-                  label={getLabel('TopicIcon', label, extraProps.scenarioNumber || i + 1, nodeId)}
-                  onDragStart={(e) =>
-                    onDragStart(e, {
-                      label,
-                      type: 'default',
-                      dragged: true,
-                      nodeId,
-                      ...extraProps
-                    })
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ))
-            );
+                    ]
+              ).map(({ label, nodeId, extraProps }) => {
+                const onClick = (e) => {
+                  e.stopPropagation();
+                  const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
+                  setSelectedThreatIds(ids);
+                };
+                // console.log('extraProps', extraProps);
+                return (
+                  <DraggableTreeItem
+                    draggable={true}
+                    key={nodeId}
+                    nodeId={nodeId}
+                    label={getLabel('TopicIcon', label, extraProps.scenarioNumber || i + 1, nodeId, extraProps?.threat_ids, onClick)}
+                    onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedThreatIds([]);
+                    }}
+                  />
+                );
+              });
+            });
           })
         );
 
