@@ -5,14 +5,14 @@ import Loadable from '../ui-component/Loadable';
 import RequireAuth from './Protected';
 
 // sample page routing
-const Home = Loadable(lazy(() => import('../views/HomePage')));
+const Home = Loadable(lazy(() => import('../Website/HomePage')));
 const MainPage = Loadable(lazy(() => import('../views/MainPage')));
-const Career = Loadable(lazy(() => import('../views/CareerPage')));
-const Contact = Loadable(lazy(() => import('../views/ContactPage')));
-const Work = Loadable(lazy(() => import('../views/Landing/YourWorkSection')));
-const About = Loadable(lazy(() => import('../views/AboutPage')));
+const Career = Loadable(lazy(() => import('../Website/CareerPage')));
+const Contact = Loadable(lazy(() => import('../Website/ContactPage')));
+const Work = Loadable(lazy(() => import('../Website/Landing/YourWorkSection')));
+const About = Loadable(lazy(() => import('../Website/AboutPage')));
 
-const ErrorPage = Loadable(lazy(() => import('../views/ErrorPage')));
+const ErrorPage = Loadable(lazy(() => import('../Website/ErrorPage')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {

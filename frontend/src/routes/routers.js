@@ -4,7 +4,7 @@ import MainLayout from '../layout/MainLayout';
 import RequireAuth from './Protected';
 
 const Home = Loadable(lazy(() => import('../Website/HomePage')));
-const MainPage = Loadable(lazy(() => import('../Website/MainPage')));
+const MainPage = Loadable(lazy(() => import('../views/MainPage')));
 const Career = Loadable(lazy(() => import('../Website/CareerPage')));
 const Contact = Loadable(lazy(() => import('../Website/ContactPage')));
 const Work = Loadable(lazy(() => import('../Website/YourWorkSection')));
