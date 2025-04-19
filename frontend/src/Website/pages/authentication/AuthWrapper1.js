@@ -9,3 +9,4 @@ const AuthWrapper1 = styled('div')(({ theme }) => ({
 }));
 
 export default AuthWrapper1;
+

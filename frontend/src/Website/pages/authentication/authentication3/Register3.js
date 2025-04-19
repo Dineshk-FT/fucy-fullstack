@@ -12,8 +12,6 @@ import Logo from '../../../../ui-component/Logo';
 import AuthRegister from '../auth-forms/AuthRegister';
 import AuthFooter from '../../../../ui-component/cards/AuthFooter';
 
-// assets
-
 // ===============================|| AUTH3 - REGISTER ||=============================== //
 
 const Register = () => {
@@ -68,12 +66,10 @@ const Register = () => {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={12} sx={{ m: 3, mt: 1 }}>
-          <AuthFooter />
-        </Grid>
       </Grid>
     </AuthWrapper1>
   );
 };
 
 export default Register;
+

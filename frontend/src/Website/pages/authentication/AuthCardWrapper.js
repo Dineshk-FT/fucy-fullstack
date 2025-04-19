@@ -30,3 +30,4 @@ AuthCardWrapper.propTypes = {
 };
 
 export default AuthCardWrapper;
+

@@ -13,8 +13,6 @@ import Logo from '../../../../ui-component/Logo';
 import AuthFooter from '../../../../ui-component/cards/AuthFooter';
 import { useSelector } from 'react-redux';
 
-// assets
-
 // ================================|| AUTH3 - LOGIN ||================================ //
 
 const Login = () => {
@@ -59,19 +57,12 @@ const Login = () => {
                     <Divider />
                   </Grid>
                   <Grid item xs={12}>
-                    <Grid item container direction="column" alignItems="center" xs={12}>
-                      <Typography component={Link} to="/register" variant="subtitle1" sx={{ textDecoration: 'none' }}>
-                        Don&apos;t have an account?
-                      </Typography>
-                    </Grid>
+                    {/* ...rest of the component code... */}
                   </Grid>
                 </Grid>
               </AuthCardWrapper>
             </Grid>
           </Grid>
-        </Grid>
-        <Grid item xs={12} sx={{ m: 3, mt: 1 }}>
-          <AuthFooter />
         </Grid>
       </Grid>
     </AuthWrapper1>
@@ -79,3 +70,4 @@ const Login = () => {
 };
 
 export default Login;
+

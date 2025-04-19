@@ -5,8 +5,8 @@ import MinimalLayout from '../layout/MinimalLayout';
 import { Navigate } from 'react-router';
 
 // login option 3 routing
-const AuthLogin3 = Loadable(lazy(() => import('../views/pages/authentication/authentication3/Login3')));
-const AuthRegister3 = Loadable(lazy(() => import('../views/pages/authentication/authentication3/Register3')));
+const AuthLogin3 = Loadable(lazy(() => import('../Website/pages/authentication/authentication3/Login3')));
+const AuthRegister3 = Loadable(lazy(() => import('../Website/pages/authentication/authentication3/Register3')));
 
 // ==============================|| AUTHENTICATION ROUTING ||============================== //
 
@@ -19,7 +19,7 @@ const AuthenticationRoutes = {
             element: <Navigate to="/home" />
           },
           {
-            path: '/login',
+            path: 'login',
             element: <AuthLogin3 />
           },
         {
