@@ -7,9 +7,9 @@ const Home = Loadable(lazy(() => import('../Website/pages/Home')));
 const MainPage = Loadable(lazy(() => import('../views/MainPage')));
 const Career = Loadable(lazy(() => import('../Website/pages/Career')));
 const Contact = Loadable(lazy(() => import('../Website/pages/Contact')));
-const Work = Loadable(lazy(() => import('../Website/pages/Landing')));
+const Work = Loadable(lazy(() => import('../Website/pages/Landing/YourWorkSection')));
 const About = Loadable(lazy(() => import('../Website/pages/About')));
-const Dashboard = Loadable(lazy(() => import('../Website/Dashboard')));
+const Dashboard = Loadable(lazy(() => import('../Website/components/Dashboard')));
 const ErrorPage = Loadable(lazy(() => import('../Website/pages/Error')));
 
 const commonRoutes = [

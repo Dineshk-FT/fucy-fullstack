@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useDispatch } from 'react-redux';
-import { changePage } from '../../../store/slices/PageSectionSlice';
+import { changePage } from '../../../../store/slices/PageSectionSlice';
 import { makeStyles } from '@mui/styles';
 import WorkSubmissionForm from './WorkForm';
 

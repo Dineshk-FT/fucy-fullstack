@@ -59,6 +59,7 @@ const TeamImage = styled('img')({
   borderRadius: '8px',
 });
 
+
 const NetworkImage = styled('img')({
   width: '100%',
   height: '80%',
@@ -67,7 +68,7 @@ const NetworkImage = styled('img')({
 
 
 
-export default function CompliancePage() {
+function CompliancePage() {
   const classes = useStyles();
 
   const features = [
@@ -187,3 +188,6 @@ export default function CompliancePage() {
     </Container>
   );
 }
+
+CompliancePage.propTypes = {};
+export default React.memo(CompliancePage);

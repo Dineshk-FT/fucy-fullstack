@@ -4,7 +4,7 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import FadeInDiv from '../../../ui-component/FadeInDiv';
 
-export default function Footer() {
+const Footer = React.memo(function Footer() {
   return (
     <FadeInDiv>
       <Box
@@ -14,7 +14,6 @@ export default function Footer() {
           flexDirection: 'column',
           alignItems: 'center',
           padding: '40px 20px',
-          // background: 'linear-gradient(180deg, #ffffff, #f5f5f5)',
           background: 'black',
           borderTop: '1px solid #e0e0e0',
           gap: '20px',
@@ -58,10 +57,12 @@ export default function Footer() {
         </Box>
 
         {/* Copyright Text */}
-        <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 2, fontSize: '12px' }}>
-          © 2024 Fucy Tech, Inc. - All Rights Reserved.
+        <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 2, fontSize: '12px' }} component="footer" aria-label="Copyright">
+          &copy; {new Date().getFullYear()} Fucy Tech. All rights reserved.
         </Typography>
       </Box>
     </FadeInDiv>
   );
-}
+});
+
+export default Footer;

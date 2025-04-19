@@ -3,7 +3,9 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
 
-const WhyChooseFucyTech = () => {
+import React from 'react';
+
+function WhyChooseFucyTech() {
   const features = [
     {
       icon: <AutoGraphIcon fontSize="large" sx={{ color: '#4a90e2' }} />,
@@ -63,6 +65,6 @@ const WhyChooseFucyTech = () => {
       </Grid>
     </Box>
   );
-};
+}
 
-export default WhyChooseFucyTech;
+export default React.memo(WhyChooseFucyTech);
