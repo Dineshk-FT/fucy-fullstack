@@ -11,7 +11,7 @@ import themes from './themes';
 
 // project imports
 import NavigationScroll from './layout/NavigationScroll';
-import MockErrorBoundary from './Website/ErrorPage';
+import MockErrorBoundary from './Website/pages/Error/index';
 import { ReactFlowProvider } from 'reactflow';
 
 // ==============================|| APP ||============================== //

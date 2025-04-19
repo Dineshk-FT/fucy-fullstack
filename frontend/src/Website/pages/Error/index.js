@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetError } from '../../store/slices/PageSectionSlice';
+import { resetError } from '../../../store/slices/PageSectionSlice';
 
 function MockErrorBoundary({ children }) {
   const dispatch = useDispatch();

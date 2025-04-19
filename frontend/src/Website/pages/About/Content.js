@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Grid, Button } from '@mui/material';
 // import { styled } from '@mui/system';
-import Team from '../../assets//images/others/Team.webp';
+import Team from '../../../assets/images/others/Team.webp';
 // import network from '../../assets/images/others/network.webp';
 import { makeStyles } from '@mui/styles';
 

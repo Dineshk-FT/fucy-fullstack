@@ -19,7 +19,7 @@ import { SET_MENU } from '../../store/actions/actions';
 import { IconChevronRight } from '@tabler/icons';
 import { ArrowSquareDown } from 'iconsax-react';
 import { navbarSlide } from '../../store/slices/CurrentIdSlice';
-import HeaderSection from '../../Website/HeaderSection';
+import HeaderSection from '../../Website/pages/Landing/HeaderSection';
 import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
 import InitialModal from '../../ui-component/Modal/InitialModal';
@@ -60,7 +60,7 @@ const selector = (state) => ({
   isCollapsed: state.isCollapsed
 });
 
-const Footer = lazy(() => import('../../Website/Footer'));
+const Footer = lazy(() => import('../../Website/components/Footer'));
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(
   ({ theme, open, isclose, color, draweropenstr }) => {

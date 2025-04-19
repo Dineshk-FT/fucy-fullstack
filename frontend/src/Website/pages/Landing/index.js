@@ -1,12 +1,12 @@
 import React, { lazy, Suspense } from 'react';
-// import CareerPage from "../CareerPage";
-import MainSection from './MainSection';
-import CyberSecuritySection from './LearnAboutUs';
-import CompliancePage from './ComplianceSection';
-import WhyComponent from './WhySection';
+
+import MainSection from '../../components/MainSection';
+import CyberSecuritySection from '../../components/LearnAboutUs';
+import CompliancePage from '../../components/ComplianceSection';
+import WhyComponent from '../../components/WhySection';
 import HeaderSection from './HeaderSection';
-import FadeInDiv from '../../ui-component/FadeInDiv';
-const Footer = lazy(() => import('./Footer'));
+import FadeInDiv from '../../../ui-component/FadeInDiv';
+const Footer = lazy(() => import('../../components/Footer'));
 
 export default function HomePage() {
   return (

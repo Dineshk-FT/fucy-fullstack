@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
+import ContactForm from './ContactForm';
 import { useDispatch } from 'react-redux';
-import { changePage } from '../../store/slices/PageSectionSlice';
+import { changePage } from '../../../store/slices/PageSectionSlice';
 import { makeStyles } from '@mui/styles';
-import WorkSubmissionForm from './WorkForm';
 
 const useStyles = makeStyles((theme) => ({
   head: {
@@ -27,10 +27,10 @@ export default function ContactPage() {
     <Box sx={{ marginTop: '6rem' }}>
       <Box textAlign="center" my={4}>
         <Typography variant="h3" align="left" gutterBottom fontWeight={700} className={classes.head}>
-          Work Submission
+          Contact us
         </Typography>
       </Box>
-      <WorkSubmissionForm />
+      <ContactForm />
     </Box>
   );
 }

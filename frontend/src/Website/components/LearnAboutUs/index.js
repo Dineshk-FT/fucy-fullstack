@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Container, Grid } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import ideas from '../../assets/images/others/nextidea.jpg';
+import nextidea from '../../../assets/images/others/nextidea.jpg';
 
 const useStyles = makeStyles((theme) => ({
   section: {
@@ -66,7 +66,7 @@ export default function CyberSecuritySection() {
     <Box>
       <Grid container className={classes.section} spacing={2} display="flex" justifyContent="space-evenly">
         <Grid item xs={12} md={6} lg={4}>
-          <Box component="img" src={ideas} alt="Cybersecurity Innovation" className={classes.image} />
+          <Box component="img" src={nextidea} alt="Cybersecurity Innovation" className={classes.image} />
         </Grid>
         <Grid item lg={5} md={6} xs={12}>
           <Box className={classes.content}>

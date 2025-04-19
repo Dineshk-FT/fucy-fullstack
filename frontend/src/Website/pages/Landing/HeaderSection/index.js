@@ -6,7 +6,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch } from 'react-redux';
-import { changeCanvasPage } from '../../store/slices/CanvasSlice';
+import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import { products, cybersecurityServices, consulting, academy, contact } from './dropdown-options-data';
 import { AppBar, Toolbar, Box, Typography, MenuItem, Menu, IconButton, Drawer, List, ListItem, ListItemText } from '@mui/material';
