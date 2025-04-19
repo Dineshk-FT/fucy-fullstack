@@ -1,10 +1,10 @@
 import { lazy } from 'react';
-import Loadable from '../ui-component/Loadable';
-import MainLayout from '../layout/MainLayout';
+import Loadable from '../components/Loadable';
+import MainLayout from '../layouts/MainLayout';
 import RequireAuth from './Protected';
 
 const Home = Loadable(lazy(() => import('../Website/pages/Home')));
-const MainPage = Loadable(lazy(() => import('../views/MainPage')));
+const MainPage = Loadable(lazy(() => import('../pages/MainPage')));
 const Career = Loadable(lazy(() => import('../Website/pages/Career')));
 const Contact = Loadable(lazy(() => import('../Website/pages/Contact')));
 const Work = Loadable(lazy(() => import('../Website/pages/Landing/YourWorkSection')));

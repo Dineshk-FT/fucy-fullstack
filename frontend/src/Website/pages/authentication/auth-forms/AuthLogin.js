@@ -28,7 +28,7 @@ import { Formik } from 'formik';
 
 // project imports
 import useScriptRef from '../../../../hooks/useScriptRef';
-import AnimateButton from '../../../../ui-component/extended/AnimateButton';
+import AnimateButton from '../../../../components/extended/AnimateButton';
 
 // assets
 import Visibility from '@mui/icons-material/Visibility';
@@ -37,7 +37,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Google from '../../../../assets/images/icons/social-google.svg';
 import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
-import { login } from '../../../../API/api';
+import { login } from '../../../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { setModelId } from '../../../../store/slices/PageSectionSlice';
 
