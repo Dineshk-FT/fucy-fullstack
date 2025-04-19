@@ -14,12 +14,12 @@ import {
   Typography
   // useTheme
 } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { ToasterContext } from '../../layout/MainLayout/Sidebar1';
 import { useParams } from 'react-router';
 import { v4 as uid } from 'uuid';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import Draggable from 'react-draggable';
 import DialogCommonTitle from './DialogCommonTitle';
 import { AttackIcon } from '../../assets/icons';

@@ -3,13 +3,13 @@ import Loadable from '../ui-component/Loadable';
 import MainLayout from '../layout/MainLayout';
 import RequireAuth from './Protected';
 
-const Home = Loadable(lazy(() => import('../views/HomePage')));
-const MainPage = Loadable(lazy(() => import('../views/MainPage')));
-const Career = Loadable(lazy(() => import('../views/CareerPage')));
-const Contact = Loadable(lazy(() => import('../views/ContactPage')));
-const Work = Loadable(lazy(() => import('../views/YourWorkSection')));
-const About = Loadable(lazy(() => import('../views/AboutPage')));
-const Dashboard = Loadable(lazy(() => import('../views/Dashboard')));
+const Home = Loadable(lazy(() => import('../Website/HomePage')));
+const MainPage = Loadable(lazy(() => import('../Website/MainPage')));
+const Career = Loadable(lazy(() => import('../Website/CareerPage')));
+const Contact = Loadable(lazy(() => import('../Website/ContactPage')));
+const Work = Loadable(lazy(() => import('../Website/YourWorkSection')));
+const About = Loadable(lazy(() => import('../Website/AboutPage')));
+const Dashboard = Loadable(lazy(() => import('../Website/Dashboard')));
 
 // const ErrorPage = Loadable(lazy(()=>import('../views/ErrorPage')));
 

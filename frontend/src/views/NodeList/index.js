@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import AddIcon from '@mui/icons-material/Add';
 import { Avatar, Button, Fab, Typography } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -10,7 +10,7 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import AddNewComponentLibrary from '../../ui-component/Modal/AddNewComponentLibrary';
 import { useDispatch } from 'react-redux';

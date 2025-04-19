@@ -11,8 +11,8 @@ import { BrowserView, MobileView } from 'react-device-detect';
 // project imports
 import LogoSection from '../LogoSection';
 import MenuCard from './MenuCard';
-import { drawerWidth, navbarHeight } from '../../../store/constant';
-import ColorTheme from '../../../store/ColorTheme';
+import { drawerWidth, navbarHeight } from '../../../themes/constant';
+import ColorTheme from '../../../themes/ColorTheme';
 // import BrowserCard from './BrowserCard';
 import BrowserCard from './BrowserCard/index1';
 import useStore from '../../../Zustand/store';

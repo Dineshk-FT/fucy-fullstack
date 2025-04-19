@@ -11,7 +11,7 @@ import {
   Slide
   // useTheme
 } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';

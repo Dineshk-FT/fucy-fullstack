@@ -2,7 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { configuration } from '../services/baseApiService';
 import axios from 'axios';
-import { createHeaders, createHeadersForJson } from '../Zustand/store';
+import { createHeaders, createHeadersForJson } from '../store/Zustand/store';
 
 const FormData = require('form-data');
 

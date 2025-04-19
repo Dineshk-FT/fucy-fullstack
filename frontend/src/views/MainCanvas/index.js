@@ -15,7 +15,7 @@ import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
 import { CustomEdge } from '../../ui-component/custom';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
 import { lazy, Suspense } from 'react';
@@ -24,7 +24,7 @@ const EditProperties = lazy(() => import('../../ui-component/Poppers/EditPropert
 const AddLibrary = lazy(() => import('../../ui-component/Modal/AddLibrary'));
 import { useDispatch, useSelector } from 'react-redux';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import {
   OpenPropertiesTab,

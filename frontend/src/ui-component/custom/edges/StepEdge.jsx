@@ -5,7 +5,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
 import './buttonedge.css';
-import ColorTheme from '../../../store/ColorTheme';
+import ColorTheme from '../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
 import { setAnchorEl, setEdgeDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';

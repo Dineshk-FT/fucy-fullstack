@@ -5,7 +5,7 @@ import { Radio, Typography, FormControl, FormLabel, RadioGroup, FormControlLabel
 import { ArrowSquareLeft, ArrowSquareRight } from 'iconsax-react';
 import Components from '../../../views/NodeList';
 import { makeStyles } from '@mui/styles';
-import ColorTheme from '../../../store/ColorTheme';
+import ColorTheme from '../../../themes/ColorTheme';
 import TemplateList from '../../../views/Libraries';
 
 const useStyles = makeStyles(() => ({

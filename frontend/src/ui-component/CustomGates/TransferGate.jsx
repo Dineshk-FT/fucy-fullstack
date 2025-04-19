@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useEffect, useState } from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 // import Levels from '../../views/Home/Levels';
 import {
   useDispatch
@@ -11,7 +11,7 @@ import { levelOpen } from '../../store/slices/CurrentIdSlice';
 import CustomHandle from './CustomHandle';
 import AddPropertiesGate from '../Modal/AddPropertiesGate';
 import { colorPickerTab } from './colorPicker';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 
 const selector = (state) => ({
   update: state.updateAttackNode,

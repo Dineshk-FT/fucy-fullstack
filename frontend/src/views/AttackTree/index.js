@@ -6,8 +6,8 @@ import AttackBlock from '../AttackSceneCanvas';
 import Properties from './Properties';
 import Levels from '../AttackSceneCanvas/Levels';
 import 'react-resizable/css/styles.css';
-import ColorTheme from '../../store/ColorTheme';
-import useStore from '../../Zustand/store';
+import ColorTheme from '../../themes/ColorTheme';
+import useStore from '../../store/Zustand/store';
 import GlobalAttackTreeList from './GlobalAttackTreeList';
 
 const selector = (state) => ({

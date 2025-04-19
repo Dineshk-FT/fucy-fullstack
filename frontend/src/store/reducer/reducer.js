@@ -2,10 +2,10 @@ import { combineReducers } from 'redux';
 
 // reducer import
 import customizationReducer from './customizationReducer';
-import CurrentIdSlice from './slices/CurrentIdSlice';
-import CanvasSlice from './slices/CanvasSlice';
-import PageSectionSlice from './slices/PageSectionSlice';
-import UserDetailsSlice from './slices/UserDetailsSlice';
+import CurrentIdSlice from '../slices/CurrentIdSlice';
+import CanvasSlice from '../slices/CanvasSlice';
+import PageSectionSlice from '../slices/PageSectionSlice';
+import UserDetailsSlice from '../slices/UserDetailsSlice';
 
 // ==============================|| COMBINE REDUCER ||============================== //
 

@@ -5,7 +5,7 @@ import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import ColorTheme from '../../../../store/ColorTheme';
+import ColorTheme from '../../../../themes/ColorTheme';
 import AttackIcon from '../../../../assets/icons/attack.png';
 import ItemIcon from '../../../../assets/icons/item.png';
 import DamageIcon from '../../../../assets/icons/damage.png';

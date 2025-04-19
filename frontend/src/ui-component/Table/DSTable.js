@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import CircleIcon from '@mui/icons-material/Circle';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
@@ -41,11 +41,11 @@ import { closeAll } from '../../store/slices/CurrentIdSlice';
 import SelectLosses from '../Modal/SelectLosses';
 import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
 import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { tableHeight } from '../../store/constant';
+import { tableHeight } from '../../themes/constant';
 import FormPopper from '../Poppers/FormPopper';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 

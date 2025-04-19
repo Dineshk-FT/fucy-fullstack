@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import ReactFlow, { ReactFlowProvider, Controls, MiniMap, Panel, MarkerType, Background } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { CustomEdge } from '../../ui-component/custom';
 import { Button, Checkbox } from '@mui/material';

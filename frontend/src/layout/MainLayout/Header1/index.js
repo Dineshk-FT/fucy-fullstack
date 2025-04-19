@@ -3,7 +3,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import LeftSection from './LeftSection';
 import RightSection from './RightSection';
-import ColorTheme from '../../../store/ColorTheme'; // Adjust path as needed
+import ColorTheme from '../../../themes/ColorTheme'; // Adjust path as needed
 
 const Header1 = () => {
   const color = ColorTheme();

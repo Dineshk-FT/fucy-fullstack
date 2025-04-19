@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import useStore from '../../../Zustand/store';
+import useStore from '../../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import useThrottle from '../../../hooks/useThrottle';
 import { useSelector } from 'react-redux';

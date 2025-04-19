@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setAttackScene } from '../../store/slices/CurrentIdSlice';
 import { setTableOpen } from '../../store/slices/CurrentIdSlice';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 
 const selector = (state) => ({
   attackScenarios: state.attackScenarios,

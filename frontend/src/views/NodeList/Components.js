@@ -26,7 +26,7 @@ import {
 } from 'iconsax-react';
 import AddNewNode from '../../ui-component/Modal/AddNewNode';
 import { Avatar, Typography } from '@mui/material';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 
 const selector = (state) => ({
   sidebarNodes: state.sidebarNodes,

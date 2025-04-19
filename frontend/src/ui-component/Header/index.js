@@ -12,14 +12,14 @@ import SaveIcon from '@mui/icons-material/Save';
 import FontSizeSelector from './FontResizer';
 import FontSelector from './FontSelector';
 import CreateIcon from '@mui/icons-material/Create';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import BorderOuterIcon from '@mui/icons-material/BorderOuter';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
 import AddIcon from '@mui/icons-material/Add';
-import { iconStyle } from '../../store/constant';
+import { iconStyle } from '../../themes/constant';
 import { useDispatch } from 'react-redux';
 import { closeHeader } from '../../store/slices/CanvasSlice';
 

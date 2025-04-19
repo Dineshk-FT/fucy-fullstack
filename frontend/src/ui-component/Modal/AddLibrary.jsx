@@ -7,7 +7,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Button, Chip, FormControl, InputLabel, MenuItem, OutlinedInput, Select } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { v4 as uid } from 'uuid';
 import { useTheme } from '@mui/material/styles';
 

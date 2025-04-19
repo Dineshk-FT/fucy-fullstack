@@ -2,7 +2,7 @@
 import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/system';
-import ColorTheme from '../store/ColorTheme';
+import ColorTheme from '../themes/ColorTheme';
 
 /**
  * if you want to use image instead of <svg> uncomment following.

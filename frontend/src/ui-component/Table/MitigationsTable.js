@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { tableCellClasses } from '@mui/material/TableCell';
 import { MitigationsHeader } from './constraints';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {

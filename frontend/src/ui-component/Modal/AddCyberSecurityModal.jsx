@@ -1,11 +1,11 @@
 /*eslint-disable*/
 import React, { useMemo, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 // import { v4 as uid } from 'uuid';
 import toast, { Toaster } from 'react-hot-toast';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import PaperComponent from './PaperComponent';
 import { CyberClaimsIcon, CyberControlsIcon, CyberGoalIcon, CyberRequireIcon, CybersecurityIcon } from '../../assets/icons';
 import DialogCommonTitle from './DialogCommonTitle';

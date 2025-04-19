@@ -6,7 +6,7 @@ import { CloseInitialDialog } from '../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import SelectProject from './SelectProject';
 import AddModel from './AddModal';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import PaperComponent from './PaperComponent';
 

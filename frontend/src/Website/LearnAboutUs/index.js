@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Container, Grid } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import ideas from '../../../assets/images/others/nextidea.jpg';
+import ideas from '../../assets/images/others/nextidea.jpg';
 
 const useStyles = makeStyles((theme) => ({
   section: {

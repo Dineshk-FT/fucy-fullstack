@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import useStore from '../../../Zustand/store';
+import useStore from '../../../store/Zustand/store';
 import { RatingColor } from '../../Table/constraints';
 import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';

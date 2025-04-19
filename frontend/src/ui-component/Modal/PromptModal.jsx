@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import React, { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { useDispatch } from 'react-redux';
 import { setAttackScene, setTableOpen } from '../../store/slices/CurrentIdSlice';
 

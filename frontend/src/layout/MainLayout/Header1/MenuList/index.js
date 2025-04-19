@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { makeStyles } from '@mui/styles';
 import { Box, Tabs, Tab, Typography, Tooltip } from '@mui/material';
-import ColorTheme from '../../../../store/ColorTheme';
+import ColorTheme from '../../../../themes/ColorTheme';
 import AttackIcon from '../../../../assets/icons/attack.png';
 import ItemIcon from '../../../../assets/icons/item.png';
 import DamageIcon from '../../../../assets/icons/damage.png';

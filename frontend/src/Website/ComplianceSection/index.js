@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/system';
 import { makeStyles } from '@mui/styles';
-import Team from '../../../assets/images/others/Team.webp';
-import network from '../../../assets/images/others/network.webp';
+import Team from '../../assets/images/others/Team.webp';
+import network from '../../assets/images/others/network.webp';
 
 const useStyles = makeStyles((theme) => ({
   section: {

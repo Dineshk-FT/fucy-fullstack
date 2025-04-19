@@ -7,9 +7,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 import { ClosePropertiesTab } from '../../store/slices/CanvasSlice';
 import { useDispatch } from 'react-redux';
-import { fontSize } from '../../store/constant';
+import { fontSize } from '../../themes/constant';
 import { makeStyles } from '@mui/styles';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import Draggable from 'react-draggable';
 
 const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];

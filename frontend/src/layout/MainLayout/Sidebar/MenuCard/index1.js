@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import EditContent from '../../../../ui-component/Drawer/EditContent';
-import useStore from '../../../../Zustand/store';
+import useStore from '../../../../store/Zustand/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 

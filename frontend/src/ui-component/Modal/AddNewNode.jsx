@@ -2,16 +2,16 @@
 import React, { useState } from 'react';
 import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography, Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { getNodeDetails, updatedModelState } from '../../utils/Constraints';
 import { v4 as uid } from 'uuid';
 import { CloseCircle } from 'iconsax-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
-import { fontSize } from '../../store/constant';
+import { fontSize } from '../../themes/constant';
 import toast, { Toaster } from 'react-hot-toast';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 
 const ITEM_HEIGHT = 48;

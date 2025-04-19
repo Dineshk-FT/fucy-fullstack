@@ -2,7 +2,7 @@
 import { Box } from '@mui/material';
 import React from 'react';
 import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { RatingColor } from '../Table/constraints';
 
 const selector = (state) => ({

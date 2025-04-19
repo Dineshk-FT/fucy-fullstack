@@ -5,7 +5,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, ClickAwayListener } from '@mui/material';
 import { ArrowSwapHorizontal } from 'iconsax-react';
 import './buttonedge.css';
-import ColorTheme from '../../../store/ColorTheme';
+import ColorTheme from '../../../themes/ColorTheme';
 
 export default function StepEdgeAttackTree({
   id,

@@ -6,11 +6,11 @@ import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { styled, Paper, Box, Dialog, TablePagination, Typography, TextField, Button } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { tableHeight } from '../../store/constant';
+import { tableHeight } from '../../themes/constant';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 

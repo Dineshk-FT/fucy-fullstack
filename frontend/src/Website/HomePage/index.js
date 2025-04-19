@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import MainSection from '../Landing/MainSection';
-import CyberSecuritySection from '../Landing/LearnAboutUs';
-import CompliancePage from '../Landing/ComplianceSection';
-import WhyComponent from '../Landing/WhySection';
-import Contact from '../Landing/ContactSection'
+import MainSection from '../MainSection';
+import CyberSecuritySection from '../LearnAboutUs';
+import CompliancePage from '../ComplianceSection';
+import WhyComponent from '../WhySection';
+import Contact from '../../Website/ContactSection'
 import { useDispatch } from 'react-redux';
 import { changePage } from '../../store/slices/PageSectionSlice';
 import { changeCanvasPage } from '../../store/slices/CanvasSlice';

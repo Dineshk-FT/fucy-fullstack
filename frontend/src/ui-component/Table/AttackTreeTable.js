@@ -27,16 +27,16 @@ import {
   FormControlLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { RatingColor, getRating } from './constraints';
-import { tableHeight } from '../../store/constant';
+import { tableHeight } from '../../themes/constant';
 import { AttackTableoptions as options, AttackTableHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 

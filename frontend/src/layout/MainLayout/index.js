@@ -11,20 +11,20 @@ import Header from './Header';
 import Sidebar1 from './Sidebar1';
 
 import navigation from '../../menu-items';
-import { drawerWidth, getNavbarHeight } from '../../store/constant';
-import ColorTheme from '../../store/ColorTheme';
-import { SET_MENU } from '../../store/actions';
+import { drawerWidth, getNavbarHeight } from '../../themes/constant';
+import ColorTheme from '../../themes/ColorTheme';
+import { SET_MENU } from '../../store/actions/actions';
 
 // assets
 import { IconChevronRight } from '@tabler/icons';
 import { ArrowSquareDown } from 'iconsax-react';
 import { navbarSlide } from '../../store/slices/CurrentIdSlice';
-import HeaderSection from '../../views/Landing/HeaderSection';
+import HeaderSection from '../../Website/HeaderSection';
 import FadeInDiv from '../../ui-component/FadeInDiv';
 import Header1 from './Header1';
 import InitialModal from '../../ui-component/Modal/InitialModal';
 import { ItemIcon, AttackIcon, DamageIcon, ThreatIcon, CybersecurityIcon, RiskIcon } from '../../assets/icons';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 
 import Customization from '../Customization';
 
@@ -60,7 +60,7 @@ const selector = (state) => ({
   isCollapsed: state.isCollapsed
 });
 
-const Footer = lazy(() => import('../../views/Landing/Footer'));
+const Footer = lazy(() => import('../../Website/Footer'));
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isclose' })(
   ({ theme, open, isclose, color, draweropenstr }) => {

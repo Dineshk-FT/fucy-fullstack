@@ -12,7 +12,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 // assets
 import { IconMenu2 } from '@tabler/icons';
 import MenuList from './MenuList';
-import ColorTheme from '../../../store/ColorTheme';
+import ColorTheme from '../../../themes/ColorTheme';
 import { useDispatch } from 'react-redux';
 import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
 import { useNavigate } from 'react-router';

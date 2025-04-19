@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Handle, Position, NodeResizer } from 'reactflow';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';

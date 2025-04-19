@@ -1,12 +1,12 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import useStore from '../../../Zustand/store';
+import useStore from '../../../store/Zustand/store';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
-import { iconStyle } from '../../../store/constant';
+import { iconStyle } from '../../../themes/constant';
 import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({

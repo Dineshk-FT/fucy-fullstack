@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
 import { Handle, NodeResizer, NodeToolbar, Position, useReactFlow } from 'reactflow';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { updatedModelState } from '../../utils/Constraints';
 import { useParams } from 'react-router';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';

@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useMemo } from 'react';
 import { Autocomplete, Chip, InputLabel, TextField, Box, Popper, Paper, ClickAwayListener, Button, Avatar } from '@mui/material';
-import { fontSize } from '../../store/constant';
+import { fontSize } from '../../themes/constant';
 import { useSelector, batch } from 'react-redux';
 import {
   ConfidentialityIcon,

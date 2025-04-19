@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import CustomHandle from './CustomHandle';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 
 export default function ORGate(props) {
   const color = ColorTheme();

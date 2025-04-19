@@ -6,7 +6,7 @@ import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
@@ -25,11 +25,11 @@ import {
   DialogTitle,
   FormControlLabel
 } from '@mui/material';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { makeStyles } from '@mui/styles';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { tableHeight } from '../../store/constant';
+import { tableHeight } from '../../themes/constant';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 import EditIcon from '@mui/icons-material/Edit';

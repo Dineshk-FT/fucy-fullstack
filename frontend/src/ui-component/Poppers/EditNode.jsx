@@ -17,8 +17,8 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React, { useState } from 'react';
-import ColorTheme from '../../store/ColorTheme';
-import { fontSize } from '../../store/constant';
+import ColorTheme from '../../themes/ColorTheme';
+import { fontSize } from '../../themes/constant';
 import { useSelector } from 'react-redux';
 import Header from '../Header';
 import {

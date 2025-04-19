@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Tooltip
 } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { useSelector } from 'react-redux';
 import { toPng } from 'html-to-image';
 

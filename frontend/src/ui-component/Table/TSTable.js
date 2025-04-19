@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from 'react';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
@@ -31,10 +31,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import { colorPicker, threatType, TsTableHeader } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
-import { tableHeight } from '../../store/constant';
+import { tableHeight } from '../../themes/constant';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
 import { DamageIcon } from '../../assets/icons';
 import FormPopper from '../Poppers/FormPopper';

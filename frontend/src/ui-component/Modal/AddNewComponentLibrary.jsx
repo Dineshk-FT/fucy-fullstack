@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Box, TextField, Slide } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import AlertMessage from '../Alert';
 

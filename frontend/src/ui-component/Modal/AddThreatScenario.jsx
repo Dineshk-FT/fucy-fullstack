@@ -1,10 +1,10 @@
 /*eslint-disable*/
 import * as React from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import AlertMessage from '../Alert';
-import ColorTheme from '../../store/ColorTheme';
+import ColorTheme from '../../themes/ColorTheme';
 import PaperComponent from './PaperComponent';
 import DialogCommonTitle from './DialogCommonTitle';
 import { ThreatIcon } from '../../assets/icons';

@@ -47,7 +47,7 @@ import {
   LayoutIcon,
   ModelIcon
 } from '../../../../assets/icons';
-import ColorTheme from '../../../../store/ColorTheme';
+import ColorTheme from '../../../../themes/ColorTheme';
 import { NavLink, useParams } from 'react-router-dom';
 import DraggableTreeItem from './DraggableItem';
 import CommonModal from '../../../../ui-component/Modal/CommonModal';

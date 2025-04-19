@@ -8,7 +8,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { ArrowSquareDown, ArrowSquareUp } from 'iconsax-react';
-import ColorTheme from '../../../../store/ColorTheme';
+import ColorTheme from '../../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import NightsStayIcon from '@mui/icons-material/NightsStay';

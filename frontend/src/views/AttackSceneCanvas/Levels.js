@@ -20,7 +20,7 @@ import OutputNode from '../../ui-component/custom/nodes/OutputNode';
 import CircularNode from '../../ui-component/custom/nodes/CircularNode';
 import DiagonalNode from '../../ui-component/custom/nodes/DiagonalNode ';
 import AttackTreeNode from '../../ui-component/CustomGates/AttackTreeNode';
-import useStore from '../../Zustand/store';
+import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import ORGate from '../../ui-component/CustomGates/ORGate';
 import ANDGate from '../../ui-component/CustomGates/ANDGate';
