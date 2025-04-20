@@ -351,7 +351,7 @@ export default function TsDerivedTable() {
         }}
       >
         {Head?.map((item, index) => {
-          const isEditableField = item.name === 'Description';
+          const isEditableField = (item.name === 'Description' || item.name === 'Name');
           let cellContent;
           switch (true) {
             case isEditableField:

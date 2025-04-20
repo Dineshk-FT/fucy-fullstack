@@ -1,5 +1,5 @@
 /* eslint-disable*/
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { styled, useTheme } from '@mui/material/styles';
@@ -28,33 +28,6 @@ import useStore from '../../store/Zustand/store';
 
 import Customization from '../Customization';
 
-// const items = [
-//   {
-//     name: 'ItemIcon',
-//     id: 1
-//   },
-//   {
-//     name: 'DamageIcon',
-//     id: 2
-//   },
-//   {
-//     name: 'ThreatIcon',
-//     id: 3
-//   },
-//   {
-//     name: 'AttackIcon',
-//     id: 4
-//   },
-//   {
-//     name: 'RiskIcon',
-//     id: 8
-//   },
-//   {
-//     name: 'CybersecurityIcon',
-//     id: 5
-//   },
-// ]
-
 const selector = (state) => ({
   setClickedItem: state.setClickedItem,
   isCollapsed: state.isCollapsed
@@ -70,7 +43,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' && pr
     return {
       ...theme.typography.mainContent,
       background: color?.canvaSurroundsBG,
-      marginTop:  getNavbarHeight(isclose),
+      marginTop: getNavbarHeight(isclose),
       paddingLeft: !draweropen ? '2rem' : 'auto',
       // border: '1px solid gray',
       maxWidth: 'auto',
@@ -138,14 +111,10 @@ const MainLayout = ({ children }) => {
   const { isNavbarClose, isDark } = useSelector((state) => state?.currentId);
   const { isCanvasPage } = useSelector((state) => state?.canvas);
 
-  // useEffect(() => {
-  //   dispatch({ type: SET_MENU, opened: !matchDownMd });
-  // }, [matchDownMd]);
-
   const dispatch = useDispatch();
-  const handleLeftDrawerToggle = () => {
+  const handleLeftDrawerToggle = useCallback(() => {
     dispatch({ type: SET_MENU, opened: !leftDrawerOpened });
-  };
+  }, [dispatch, leftDrawerOpened]);
 
   const handleClick = (item) => {
     setClickedItem(item); // Dispatch the action to store the clicked item
@@ -175,23 +144,6 @@ const MainLayout = ({ children }) => {
     CybersecurityIcon,
     RiskIcon
   };
-
-  // const getImageLabel = (item) => {
-  //   const Image = imageComponents[item?.name];
-  //   const isLongLabel = item?.label.length > 40;
-  //   const displayLabel = isLongLabel ? `${item.label.slice(0, 40)}...` : item.label;
-
-  //   return (
-  //     <Box display="flex" alignItems="center" gap={2}>
-  //       {Image && <img src={Image} alt={item.label} style={{ height: '14px', width: '14px' }} />}
-  //       <Tooltip title={item.label} arrow disableHoverListener={!isLongLabel}>
-  //         <Typography variant="body2" sx={{ fontSize: 12, color: 'black', fontFamily: 'Inter', color: color?.title }}>
-  //           {displayLabel}
-  //         </Typography>
-  //       </Tooltip>
-  //     </Box>
-  //   );
-  // };
 
   return (
     <>
@@ -223,56 +175,9 @@ const MainLayout = ({ children }) => {
               // borderBottom: `0.2px solid ${color?.title}`
             }}
           >
-            {/* <Header handleLeftDrawerToggle={handleLeftDrawerToggle} /> */}
             <Header1 />
           </Toolbar>
-          {/* <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              gap: 2,
-              px: 4,
-              fontSize: '11px', 
-              '& *': {
-                fontSize: '11px'
-              }
-            }}
-          >
-            {items.map((icon, index) => {
-              const name = icon.name
-              return (
-              <Box
-                key={index}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  cursor: 'pointer',
-                  fontSize: 'inherit',
-                  transition: 'background-color 0.3s, box-shadow 0.3s',
-                  '&:hover': {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-                    borderRadius: '4px'
-                  }
-                }}
-                onClick={() => handleClick(icon.id)} // Handle click event to dispatch action
-              >
-                {getImageLabel({
-                  name,
-                  label: [
-                    'Item Definition',
-                    'Damage Scenarios',
-                    'Threat Scenarios',
-                    'Attack Path Analysis',
-                    'Risk Treatment',
-                    'Cybersecurity Goals'
-                  ][index]
-                })}
-              </Box>
-            )})}
-          </Box> */}
+
           {isNavbarClose && (
             <Box display="flex" justifyContent="end" onClick={() => dispatch(navbarSlide())}>
               <ArrowSquareDown size="20" color={isDark ? 'white' : 'black'} />
@@ -296,4 +201,4 @@ const MainLayout = ({ children }) => {
   );
 };
 
-export default MainLayout;
+export default React.memo(MainLayout);

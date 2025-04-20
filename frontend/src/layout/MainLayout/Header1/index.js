@@ -24,7 +24,7 @@ const Header1 = () => {
         //   : '0 4px 16px rgba(0,0,0,0.15)',
         overflow: 'visible', // Prevent clipping of dropdown
         zIndex: 1300, // Ensure Header1 is above Sidebar
-        padding: '0 16px', // Add padding for spacing
+        padding: '0 16px' // Add padding for spacing
       }}
     >
       <Box
@@ -32,7 +32,7 @@ const Header1 = () => {
           flex: 1,
           display: 'flex',
           justifyContent: 'center', // Center the LeftSection
-          alignItems: 'center',
+          alignItems: 'center'
         }}
       >
         <LeftSection />
@@ -42,4 +42,4 @@ const Header1 = () => {
   );
 };
 
-export default Header1;
+export default React.memo(Header1);

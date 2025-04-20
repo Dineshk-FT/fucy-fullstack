@@ -41,6 +41,10 @@ import EditNode from '../../ui-component/Poppers/EditNode';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import FitScreenIcon from '@mui/icons-material/FitScreen';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import DownloadIcon from '@mui/icons-material/Download';
+import useThrottle from '../../hooks/useThrottle';
 import CanvasToolbar from './CanvasToolbar';
 import ContextMenu from './ContextMenu';
 import CanvasSpinner from './CanvasSpinner';
@@ -81,64 +85,73 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
   initialEdges: state.initialEdges,
-  setCanvasRef: state.setCanvasRef,
+  setCanvasRef: state.setCanvasRef
 });
 
 const flowKey = 'example-flow';
 
 export default function MainCanvas() {
   // Edge line styling (now inside component)
-  const connectionLineStyle = useMemo(() => ({
-    stroke: '#64B5F6',
-    strokeWidth: 2,
-    strokeDasharray: '5,5'
-  }), []);
-
-  const edgeOptions = useMemo(() => ({
-    type: 'step',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 18,
-      height: 18,
-      color: '#64B5F6'
-    },
-    markerStart: {
-      type: MarkerType.ArrowClosed,
-      orient: 'auto-start-reverse',
-      width: 18,
-      height: 18,
-      color: '#64B5F6'
-    },
-    animated: true,
-    style: {
+  const connectionLineStyle = useMemo(
+    () => ({
+      stroke: '#64B5F6',
       strokeWidth: 2,
-      stroke: '#808080',
-      start: false,
-      end: true,
-      strokeDasharray: '0'
-    },
-    properties: ['Confidentiality'],
-    data: {
-      label: 'edge',
+      strokeDasharray: '5,5'
+    }),
+    []
+  );
+
+  const edgeOptions = useMemo(
+    () => ({
+      type: 'step',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 18,
+        height: 18,
+        color: '#64B5F6'
+      },
+      markerStart: {
+        type: MarkerType.ArrowClosed,
+        orient: 'auto-start-reverse',
+        width: 18,
+        height: 18,
+        color: '#64B5F6'
+      },
+      animated: true,
       style: {
-        background: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: '4px',
-        padding: '2px 4px',
-        fontFamily: "'Poppins', sans-serif",
-        fontSize: '12px',
-        color: '#333333'
+        strokeWidth: 2,
+        stroke: '#808080',
+        start: false,
+        end: true,
+        strokeDasharray: '0'
+      },
+      properties: ['Confidentiality'],
+      data: {
+        label: 'edge',
+        style: {
+          background: 'rgba(255, 255, 255, 0.8)',
+          borderRadius: '4px',
+          padding: '2px 4px',
+          fontFamily: "'Poppins', sans-serif",
+          fontSize: '12px',
+          color: '#333333'
+        }
       }
-    }
-  }), []);
+    }),
+    []
+  );
 
   const CustomStepEdge = useCallback((props) => {
     return <StepEdge {...props} />;
   }, []);
 
-  const edgeTypes = useMemo(() => ({
-    custom: CustomEdge,
-    step: CustomStepEdge
-  }), [CustomEdge, CustomStepEdge]);
+  const edgeTypes = useMemo(
+    () => ({
+      custom: CustomEdge,
+      step: CustomStepEdge
+    }),
+    [CustomEdge, CustomStepEdge]
+  );
 
   const {
     nodes,
@@ -176,7 +189,7 @@ export default function MainCanvas() {
     isDark,
     initialNodes,
     initialEdges,
-    setCanvasRef,
+    setCanvasRef
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -214,7 +227,6 @@ export default function MainCanvas() {
 
   const canvasRef = useRef(null);
 
-
   useEffect(() => {
     setCanvasRef(canvasRef);
 
@@ -235,7 +247,7 @@ export default function MainCanvas() {
             style: {
               width: `${imageWidth}px`,
               height: `${imageHeight}px`,
-              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
             },
             ignoreElements: (el) => el.tagName === 'style', // Ignore style elements
             skipFonts: true // Skip font embedding
@@ -342,104 +354,91 @@ export default function MainCanvas() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nodes, edges]);
 
-  const checkForNodes = () => {
-    const [intersectingNodesMap, nodes] = getGroupedNodes();
-    let values = Object.values(intersectingNodesMap).flat();
-    let updated = nodes.map((item1) => {
-      const match = values.find((item2) => item2.id === item1.id);
-      return match ? match : item1;
-    });
-    setNodes(updated);
-  };
-
   // On drag start, cache the dragged node and all its children (flattened)
   const onNodeDragStart = useCallback((_, node) => {
-    Promise.resolve().then(() => setIsDragging(true));
+    // Promise.resolve().then(() => setIsDragging(true));
     dragRef.current = node;
-    // Find all children recursively
-    const collectChildren = (parentId, nodesList) => {
+    if (node.type === 'group') {
+      // Only call once and store the result
+      const [intersectingNodesMap, nodes] = getGroupedNodes();
+
+      // Do the merging directly here
+      const values = Object.values(intersectingNodesMap).flat();
+      const updated = nodes.map((item1) => {
+        const match = values.find((item2) => item2.id === item1.id);
+        return match ? match : item1;
+      });
+
+      setNodes(updated);
+    }
+  }, []);
+
+  const throttledOnNodeDrag = useThrottle((event, node) => {
+    if (node.type !== 'group') return;
+
+    const prevNode = nodesRefer.current.find((n) => n.id === node.id);
+    if (!prevNode) return;
+
+    const deltaX = node.position.x - prevNode.position.x;
+    const deltaY = node.position.y - prevNode.position.y;
+
+    if (deltaX === 0 && deltaY === 0) return;
+
+    const updatedPositions = new Map();
+
+    const nodesList = [];
+
+    const collectChildren = (parentId, list) => {
       nodesRefer.current.forEach((child) => {
         if (child.parentId === parentId) {
-          nodesList.push(child);
-          collectChildren(child.id, nodesList);
+          list.push(child);
+          collectChildren(child.id, list); // recursively collect nested children
         }
       });
     };
-    const dragged = [node];
-    collectChildren(node.id, dragged);
-    draggedNodesRef.current = dragged.map(n => ({ ...n })); // clone for immutability
-  }, []);
 
-  // On drag, only update the dragged node and its children, throttled with rAF
-  const onNodeDrag = useCallback((event, node) => {
-    if (!isDragging) setIsDragging(true); // Backup: ensure spinner always shows
-    if (!draggedNodesRef.current.length) return;
-    // Find the original node position
-    const original = draggedNodesRef.current.find(n => n.id === node.id);
-    if (!original) return;
-    const deltaX = node.position.x - original.position.x;
-    const deltaY = node.position.y - original.position.y;
-    // Only update if moved more than 0.5px (to avoid noise)
-    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
-
-    // Store the drag update in a ref
-    pendingDragUpdate.current = { node, deltaX, deltaY };
-
-    // Only schedule one rAF at a time
-    if (!dragDirtyRef.current) {
-      dragDirtyRef.current = true;
-      animationFrameRef.current = requestAnimationFrame(() => {
-        const { node, deltaX, deltaY } = pendingDragUpdate.current;
-        const updatedPositions = {};
-        draggedNodesRef.current.forEach(origNode => {
-          if (origNode.id === node.id) {
-            updatedPositions[origNode.id] = { ...node.position };
-          } else {
-            updatedPositions[origNode.id] = {
-              x: origNode.position.x + deltaX,
-              y: origNode.position.y + deltaY
-            };
-          }
-        });
-        setNodes(prevNodes => prevNodes.map(n =>
-          updatedPositions[n.id] ? { ...n, position: updatedPositions[n.id] } : n
-        ));
-        animationFrameRef.current = null;
-        dragDirtyRef.current = false;
+    const moveChildren = (parentId, dx, dy) => {
+      nodesRefer.current.forEach((child) => {
+        if (child.parentId === parentId) {
+          const newX = child.position.x + dx;
+          const newY = child.position.y + dy;
+          updatedPositions.set(child.id, { x: newX, y: newY });
+          moveChildren(child.id, dx, dy); // recursively move nested children
+        }
       });
-    }
-  }, []);
+    };
+
+    updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
+    moveChildren(node.id, deltaX, deltaY);
+
+    setNodes((prevNodes) => {
+      let changed = false;
+      const updated = prevNodes.map((n) => {
+        if (updatedPositions.has(n.id)) {
+          const newPos = updatedPositions.get(n.id);
+          if (n.position.x !== newPos.x || n.position.y !== newPos.y) {
+            changed = true;
+            return { ...n, position: newPos };
+          }
+        }
+        return n;
+      });
+
+      return changed ? updated : prevNodes;
+    });
+  }, 30);
+
+  const onNodeDrag = useCallback(
+    (event, node) => {
+      throttledOnNodeDrag(event, node);
+    },
+    [throttledOnNodeDrag]
+  );
 
   // On drag stop, flush any pending updates, update refs, and clear cache
   const onNodeDragStop = useCallback(() => {
-    setIsDragging(false);
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (pendingDragUpdate.current) {
-      const { node, deltaX, deltaY } = pendingDragUpdate.current;
-      const updatedPositions = {};
-      draggedNodesRef.current.forEach(origNode => {
-        if (origNode.id === node.id) {
-          updatedPositions[origNode.id] = { ...node.position };
-        } else {
-          updatedPositions[origNode.id] = {
-            x: origNode.position.x + deltaX,
-            y: origNode.position.y + deltaY
-          };
-        }
-      });
-      setNodes(prevNodes => prevNodes.map(n =>
-        updatedPositions[n.id] ? { ...n, position: updatedPositions[n.id] } : n
-      ));
-      pendingDragUpdate.current = null;
-    }
-    dragDirtyRef.current = false;
-    nodesRefer.current = [...nodes];
-    draggedNodesRef.current = [];
-    getGroupedNodes();
-    checkForNodes();
+    nodesRefer.current = [...nodes]; // Update ref after drag stops
+    // Promise.resolve().then(() => setIsDragging(false));
   }, [nodes]);
 
   function downloadImage(dataUrl) {
@@ -610,7 +609,6 @@ export default function MainCanvas() {
 
         dragAddNode(newNodes, newEdges);
       }
-      checkForNodes();
     },
     [reactFlowInstance]
   );
@@ -862,8 +860,6 @@ export default function MainCanvas() {
 
         setNodes((nds) => [...nds, newNode]);
       });
-
-      checkForNodes();
     }
 
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
@@ -935,7 +931,6 @@ export default function MainCanvas() {
     };
 
     dragAdd(newNode);
-    checkForNodes();
     setSelectedNodes([]);
   }, []);
 
@@ -1252,7 +1247,13 @@ export default function MainCanvas() {
         <>{renderPopper()}</>
         <Suspense fallback={null}>
           {openTemplate && (
-            <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
+            <AddLibrary
+              open={openTemplate}
+              handleClose={handleClose}
+              savedTemplate={savedTemplate}
+              setNodes={setNodes}
+              setEdges={setEdges}
+            />
           )}
         </Suspense>
       </div>

@@ -416,6 +416,7 @@ export default function RiskTreatmentTable() {
               );
               break;
             case item.name.includes('Cybersecurity'):
+              // console.log('row', item.name);
               cellContent = (
                 <StyledTableCell
                   component="th"
@@ -465,7 +466,7 @@ export default function RiskTreatmentTable() {
                       ))}
                     </Box>
                   ) : (
-                    <InputLabel>N/A</InputLabel>
+                    <InputLabel onClick={() => handleOpenSelect(row, item.name)}>Select</InputLabel>
                   )}
                 </StyledTableCell>
               );

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 
 // material-ui
@@ -124,4 +124,4 @@ const Customization = () => {
   );
 };
 
-export default Customization;
+export default React.memo(Customization);
