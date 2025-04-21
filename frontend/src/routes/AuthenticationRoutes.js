@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 // project imports
-import Loadable from '../ui-component/Loadable';
-import MinimalLayout from '../layout/MinimalLayout';
+import Loadable from '../components/Loadable';
+import MinimalLayout from '../layouts/MinimalLayout';
 import { Navigate } from 'react-router';
 
 // login option 3 routing

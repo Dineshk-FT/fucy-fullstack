@@ -10,10 +10,10 @@ import {
   MicroController,
   MultiHandleNode,
   OutputNode
-} from '../ui-component/custom';
-import AttackNode from '../ui-component/custom/nodes/AttackNode';
-import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../ui-component/CustomGates';
-import DataNode from '../ui-component/custom/nodes/DataNode';
+} from '../components/custom';
+import AttackNode from '../components/custom/nodes/AttackNode';
+import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../components/CustomGates';
+import DataNode from '../components/custom/nodes/DataNode';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);

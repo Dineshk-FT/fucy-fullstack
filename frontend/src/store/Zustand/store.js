@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../../services/baseApiService';
-import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../API/api';
+import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../services/api';
 import {
   DSTableHeader,
   DsDerivationHeader,
@@ -16,7 +16,7 @@ import {
   CybersecurityRequirementsHeader,
   CybersecurityControlsHeader,
   TsDerivedTableHeader
-} from '../../ui-component/Table/constraints';
+} from '../../components/Table/constraints';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
