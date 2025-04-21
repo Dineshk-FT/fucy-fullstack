@@ -658,6 +658,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
+  // console.log('sidebar rendered');
   const getImageLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (

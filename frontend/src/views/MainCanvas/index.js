@@ -304,13 +304,13 @@ export default function MainCanvas() {
       });
   };
 
-  const handleCheckForChange = () => {
-    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-      return true;
-    }
-    return false;
-  };
-  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
+  // const handleCheckForChange = () => {
+  //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
+  // const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -318,11 +318,11 @@ export default function MainCanvas() {
     setNodes([]);
     setEdges([]);
     setTimeout(() => setIsReady(true), 0);
-    return () => {
-      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-        handleSaveToModel();
-      }
-    };
+    // return () => {
+    //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+    //     handleSaveToModel();
+    //   }
+    // };
   }, []);
 
   useEffect(() => {
@@ -385,8 +385,6 @@ export default function MainCanvas() {
     if (deltaX === 0 && deltaY === 0) return;
 
     const updatedPositions = new Map();
-
-    const nodesList = [];
 
     const collectChildren = (parentId, list) => {
       nodesRefer.current.forEach((child) => {
@@ -1080,7 +1078,7 @@ export default function MainCanvas() {
               <CanvasToolbar
                 isDark={isDark}
                 Color={Color}
-                isChanged={isChanged}
+                // isChanged={isChanged}
                 onRestore={onRestore}
                 handleSaveToModel={handleSaveToModel}
                 onSelectionClick={onSelectionClick}
