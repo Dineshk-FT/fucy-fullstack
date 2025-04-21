@@ -348,7 +348,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           },
           {
             id: '79',
-            name: 'Vulnerablity',
+            name: 'Vulnerability',
             item_name: [
               {
                 id: '[1.1]',
