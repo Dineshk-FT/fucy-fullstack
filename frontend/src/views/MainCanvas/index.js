@@ -1,20 +1,9 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import ReactFlow, {
-  MiniMap,
-  Controls,
-  Background,
-  ReactFlowProvider,
-  getViewportForBounds,
-  MarkerType,
-  Panel,
-  useReactFlow,
-  getNodesBounds
-} from 'reactflow';
+import ReactFlow, { MiniMap, Background, ReactFlowProvider, getViewportForBounds, Panel, getNodesBounds } from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
-import { CustomEdge } from '../../ui-component/custom';
 import useStore from '../../Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
@@ -25,29 +14,16 @@ const AddLibrary = lazy(() => import('../../ui-component/Modal/AddLibrary'));
 import { useDispatch, useSelector } from 'react-redux';
 import RightDrawer from '../../layout/MainLayout/RightSidebar';
 import ColorTheme from '../../store/ColorTheme';
-import { pageNodeTypes, style } from '../../utils/Constraints';
-import {
-  OpenPropertiesTab,
-  setSelectedBlock,
-  setDetails,
-  setEdgeDetails,
-  setAnchorEl,
-  clearAnchorEl
-} from '../../store/slices/CanvasSlice';
-import StepEdge from '../../ui-component/custom/edges/StepEdge';
-import { Button, Tooltip, Typography, IconButton, Box, Zoom, CircularProgress } from '@mui/material';
+import { pageNodeTypes } from '../../utils/Constraints';
+import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import toast, { Toaster } from 'react-hot-toast';
 import EditNode from '../../ui-component/Poppers/EditNode';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import FitScreenIcon from '@mui/icons-material/FitScreen';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
-import DownloadIcon from '@mui/icons-material/Download';
 import useThrottle from '../../hooks/useThrottle';
 import CanvasToolbar from './CanvasToolbar';
 import ContextMenu from './ContextMenu';
-import CanvasSpinner from './CanvasSpinner';
+import { ZoomControls } from './CanvasControls';
+import { useEdgeConfig } from './EdgeConfig';
+import { onDrop } from './OnDrop';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -92,66 +68,6 @@ const flowKey = 'example-flow';
 
 export default function MainCanvas() {
   // Edge line styling (now inside component)
-  const connectionLineStyle = useMemo(
-    () => ({
-      stroke: '#64B5F6',
-      strokeWidth: 2,
-      strokeDasharray: '5,5'
-    }),
-    []
-  );
-
-  const edgeOptions = useMemo(
-    () => ({
-      type: 'step',
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 18,
-        height: 18,
-        color: '#64B5F6'
-      },
-      markerStart: {
-        type: MarkerType.ArrowClosed,
-        orient: 'auto-start-reverse',
-        width: 18,
-        height: 18,
-        color: '#64B5F6'
-      },
-      animated: true,
-      style: {
-        strokeWidth: 2,
-        stroke: '#808080',
-        start: false,
-        end: true,
-        strokeDasharray: '0'
-      },
-      properties: ['Confidentiality'],
-      data: {
-        label: 'edge',
-        style: {
-          background: 'rgba(255, 255, 255, 0.8)',
-          borderRadius: '4px',
-          padding: '2px 4px',
-          fontFamily: "'Poppins', sans-serif",
-          fontSize: '12px',
-          color: '#333333'
-        }
-      }
-    }),
-    []
-  );
-
-  const CustomStepEdge = useCallback((props) => {
-    return <StepEdge {...props} />;
-  }, []);
-
-  const edgeTypes = useMemo(
-    () => ({
-      custom: CustomEdge,
-      step: CustomStepEdge
-    }),
-    [CustomEdge, CustomStepEdge]
-  );
 
   const {
     nodes,
@@ -194,16 +110,11 @@ export default function MainCanvas() {
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
-  // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
-  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
-  const draggedNodesRef = useRef([]); // Track dragged node and children
-  const pendingDragUpdate = useRef(null); // Store pending drag update
-  const animationFrameRef = useRef(null); // Animation frame id
-  const dragDirtyRef = useRef(false); // Prevent redundant rAF
+  const { connectionLineStyle, edgeOptions, edgeTypes } = useEdgeConfig();
   const reactFlowWrapper = useRef(null);
 
   // Spinner overlay during drag
@@ -222,7 +133,7 @@ export default function MainCanvas() {
   const nodesRef = useRef(nodes);
   const nodesRefer = useRef(nodes);
   const edgesRef = useRef(edges);
-  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
+
   const [zoomLevel, setZoomLevel] = useState(1);
 
   const canvasRef = useRef(null);
@@ -384,31 +295,32 @@ export default function MainCanvas() {
 
     if (deltaX === 0 && deltaY === 0) return;
 
+    // Step 1: Prepare a lookup for children
+    const childMap = new Map();
+    nodesRefer.current.forEach((n) => {
+      if (!childMap.has(n.parentId)) childMap.set(n.parentId, []);
+      childMap.get(n.parentId).push(n);
+    });
+
+    // Step 2: Collect updated positions recursively
     const updatedPositions = new Map();
 
-    const collectChildren = (parentId, list) => {
-      nodesRefer.current.forEach((child) => {
-        if (child.parentId === parentId) {
-          list.push(child);
-          collectChildren(child.id, list); // recursively collect nested children
-        }
-      });
+    const moveNodeAndChildren = (nodeId, dx, dy) => {
+      const children = childMap.get(nodeId) || [];
+      for (const child of children) {
+        const newX = child.position.x + dx;
+        const newY = child.position.y + dy;
+        updatedPositions.set(child.id, { x: newX, y: newY });
+
+        moveNodeAndChildren(child.id, dx, dy); // recurse
+      }
     };
 
-    const moveChildren = (parentId, dx, dy) => {
-      nodesRefer.current.forEach((child) => {
-        if (child.parentId === parentId) {
-          const newX = child.position.x + dx;
-          const newY = child.position.y + dy;
-          updatedPositions.set(child.id, { x: newX, y: newY });
-          moveChildren(child.id, dx, dy); // recursively move nested children
-        }
-      });
-    };
-
+    // Start with the dragged group node itself
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
-    moveChildren(node.id, deltaX, deltaY);
+    moveNodeAndChildren(node.id, deltaX, deltaY);
 
+    // Step 3: Apply updates
     setNodes((prevNodes) => {
       let changed = false;
       const updated = prevNodes.map((n) => {
@@ -479,137 +391,6 @@ export default function MainCanvas() {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
-
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const file = event.dataTransfer.getData('application/parseFile');
-      const template = event.dataTransfer.getData('application/template');
-      const group = event.dataTransfer.getData('application/group');
-      const dragItem = event.dataTransfer.getData('application/dragItem');
-      const parsedDragItem = dragItem ? JSON.parse(dragItem) : null;
-      let parsedNode;
-      let parsedTemplate;
-      let parsedNodeItem;
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY
-      });
-
-      const dropType = parsedDragItem ? 'dragItem' : file ? 'file' : group ? 'group' : 'template';
-
-      switch (dropType) {
-        case 'dragItem':
-          parsedNodeItem = parsedDragItem;
-          break;
-        case 'file':
-          parsedNode = JSON.parse(file);
-          break;
-        case 'group':
-          createGroup(position);
-          break;
-        case 'template':
-          parsedTemplate = JSON.parse(template);
-          break;
-        default:
-          console.error('Unsupported drop type');
-      }
-
-      if (parsedNode) {
-        const newNode = {
-          id: uid(),
-          type: parsedNode.type,
-          isAsset: false,
-          position,
-          properties: parsedNode.properties,
-          width: parsedNode?.width,
-          height: parsedNode?.height,
-          data: {
-            label: parsedNode.data['label'],
-            style: {
-              backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
-              borderRadius: '8px',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: '14px',
-              padding: '8px 12px',
-              ...style
-            }
-          }
-        };
-        dragAdd(newNode);
-      }
-
-      if (parsedNodeItem) {
-        const newNode = {
-          id: parsedNodeItem.id,
-          type: parsedNodeItem.type,
-          position,
-          data: {
-            label: parsedNodeItem.name,
-            nodeId: parsedNodeItem.nodeId,
-            style: {
-              backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
-              borderRadius: '8px',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: '14px',
-              padding: '8px 12px',
-              ...style
-            }
-          },
-          properties: parsedNodeItem.props || []
-        };
-        dragAdd(newNode);
-      }
-
-      if (parsedTemplate) {
-        let newNodes = [];
-        let newEdges = [];
-        const randomId = Math.floor(Math.random() * 1000);
-        const randomPos = Math.floor(Math.random() * 500);
-
-        parsedTemplate['nodes'].map((node) => {
-          newNodes.push({
-            id: `${node.id + randomId}`,
-            data: {
-              ...node?.data,
-              style: {
-                backgroundColor: node.data['bgColor'],
-                borderRadius: '8px',
-                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '14px',
-                padding: '8px 12px',
-                ...style
-              }
-            },
-            type: node.type,
-            isAsset: false,
-            position: {
-              x: node['position']['x'] + randomPos,
-              y: node['position']['y'] + randomPos
-            },
-            properties: node.properties,
-            parentId: node.parentId ? `${node.parentId + randomId}` : null,
-            extent: node?.extent ? node?.extent : null
-          });
-        });
-
-        parsedTemplate['edges'].map((edge) =>
-          newEdges.push({
-            id: uid(),
-            source: `${edge.source + randomId}`,
-            target: `${edge.target + randomId}`,
-            ...edgeOptions
-          })
-        );
-
-        dragAddNode(newNodes, newEdges);
-      }
-    },
-    [reactFlowInstance]
-  );
 
   const RefreshAPI = () => {
     getAssets(model?._id).catch((err) => {
@@ -690,8 +471,7 @@ export default function MainCanvas() {
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
   };
-  // console.log('nodes', nodes);
-  // console.log('selectedNodes', selectedNodes);
+
   const handleClosePopper = () => {
     if (!isPopperFocused) {
       dispatch(clearAnchorEl());
@@ -991,21 +771,6 @@ export default function MainCanvas() {
     return null;
   };
 
-  const handleZoomIn = () => {
-    zoomIn({ duration: 300 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
-  };
-
-  const handleZoomOut = () => {
-    zoomOut({ duration: 300 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
-  };
-
-  const handleFitView = () => {
-    fitCanvasView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 500);
-  };
-
   const notify = (message, status) => toast[status](message);
 
   if (!isReady) return null;
@@ -1028,7 +793,7 @@ export default function MainCanvas() {
         onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
         {/* Spinner overlay during drag */}
-        <CanvasSpinner open={isDragging} isDark={isDark} isDragging={isDragging} />
+        {/* <CanvasSpinner open={isDragging} isDark={isDark} isDragging={isDragging} /> */}
 
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -1055,7 +820,7 @@ export default function MainCanvas() {
             onNodeDragStop={onNodeDragStop}
             connectionLineStyle={connectionLineStyle}
             defaultEdgeOptions={edgeOptions}
-            onDrop={onDrop}
+            onDrop={(event) => onDrop(event, createGroup, reactFlowInstance, dragAdd, dragAddNode)}
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
@@ -1092,113 +857,8 @@ export default function MainCanvas() {
                 assets={assets}
               />
             </Panel>
-            <Panel position="bottom-right" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 0.5,
-                  background: Color.tabBorder,
-                  backdropFilter: 'blur(4px)',
-                  borderRadius: '6px',
-                  padding: '2px 4px',
-                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                  alignItems: 'center'
-                }}
-              >
-                <Tooltip title="Zoom In">
-                  <IconButton
-                    onClick={handleZoomIn}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Zoom in"
-                  >
-                    <ZoomInIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Zoom Out">
-                  <IconButton
-                    onClick={handleZoomOut}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Zoom out"
-                  >
-                    <ZoomOutIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Fit View">
-                  <IconButton
-                    onClick={handleFitView}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Fit view"
-                  >
-                    <FitScreenIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Typography
-                  sx={{
-                    fontFamily: "'Poppins', sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    color: isDark == true ? '#E0E0E0' : '#333333',
-                    alignSelf: 'center',
-                    padding: '0 6px'
-                  }}
-                >
-                  {Math.round(zoomLevel * 100)}%
-                </Typography>
-              </Box>
+            <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <ZoomControls isDark={isDark} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} reactFlowInstance={reactFlowInstance} />
             </Panel>
             <MiniMap
               zoomable

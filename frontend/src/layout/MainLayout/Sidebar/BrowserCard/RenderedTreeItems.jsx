@@ -225,7 +225,7 @@ const RenderedTreeItems = ({
         const renderSection = (nodeId, label, details, type) => {
           const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
 
-          if (!details.length) return null;
+          // if (!details.length) return null;
           return (
             <DraggableTreeItem
               nodeId={nodeId}
