@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import useStore from '../../../store/Zustand/store';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
@@ -15,80 +15,83 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  originalNodes: state.originalNodes,
+  initialNodes: state.initialNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-export default function DataNode({ id, data, isConnectable, type }) {
+function DataNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, initialNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [width, setWidth] = useState(data?.style?.width ?? 120);
+  const [dimensions, setDimensions] = useState({
+    width: data?.style?.width ?? 120,
+    height: data?.style?.height ?? 40
+  });
   const labelRef = useRef(null);
-  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const timeoutRef = useRef(null);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
 
-  // console.log('isSelected', isSelected);
-
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+
+  useEffect(() => setLabelValue(data?.label || ''), [data?.label]);
+
+  // Debounce resize updates to prevent excessive re-renders
   useEffect(() => {
-    setLabelValue(data?.label || '');
-  }, [data?.label]);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
-  const handleResize = (_, { width: newWidth, height: newHeight }) => {
-    requestAnimationFrame(() => {
-      const updatedWidth = newWidth;
-      const updatedHeight = newHeight;
+  const handleResize = useCallback(
+    (_, { width: newWidth, height: newHeight }) => {
+      setDimensions({ width: newWidth, height: newHeight });
 
-      setWidth(updatedWidth);
-      setHeight(updatedHeight);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-      setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === id
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  style: {
-                    ...node.data.style,
-                    height: updatedHeight,
-                    width: updatedWidth
+      timeoutRef.current = setTimeout(() => {
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    style: {
+                      ...node.data.style,
+                      height: newHeight,
+                      width: newWidth
+                    }
                   }
                 }
-              }
-            : node
-        )
-      );
-    });
-  };
+              : node
+          )
+        );
+      }, 100);
+    },
+    [id, setNodes]
+  );
 
-  const updateNodeLabel = (newLabel) => {
-    setNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === id
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                label: newLabel
-              }
-            }
-          : node
-      )
-    );
-  };
+  const updateNodeLabel = useCallback(
+    (newLabel) => {
+      setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: newLabel } } : node)));
+    },
+    [id, setNodes]
+  );
 
   const handleLabelDoubleClick = () => {
     setIsEditing(true);
@@ -189,7 +192,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
   };
 
   const handlePermanentDeleteClick = () => {
-    if (nodes.length > originalNodes.length) {
+    if (nodes.length > initialNodes.length) {
       setIsUnsavedDialogVisible(true);
     } else {
       handleDelete();
@@ -233,15 +236,16 @@ export default function DataNode({ id, data, isConnectable, type }) {
               : isSelected
               ? '0px 0px 7px 3px violet'
               : 'none',
-            width: width,
-            height: height,
+            width: dimensions.width,
+            height: dimensions.height,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
             padding: '5px',
             wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap'
+            whiteSpace: 'pre-wrap',
+            transition: 'width 0.2s ease, height 0.2s ease' // Smooth transition effect
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -257,13 +261,11 @@ export default function DataNode({ id, data, isConnectable, type }) {
             onBlur={handleLabelBlur}
             onKeyDown={handleKeyDown}
             style={{
-              maxWidth: width - 10,
+              maxWidth: dimensions.width - 10,
               textAlign: 'center',
               outline: 'none',
               cursor: 'text',
-
               ...(isEditing && {
-                // backgroundColor: 'white',
                 color: 'black',
                 padding: '0 4px',
                 borderRadius: '4px',
@@ -386,3 +388,5 @@ export default function DataNode({ id, data, isConnectable, type }) {
     </>
   );
 }
+
+export default React.memo(DataNode);

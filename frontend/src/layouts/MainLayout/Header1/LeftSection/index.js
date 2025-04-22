@@ -65,7 +65,7 @@ const LeftSection = () => {
     []
   );
 
-  const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
+  const { isDark } = useSelector((state) => state?.currentId);
   const color = ColorTheme();
   const {
     Models,
@@ -98,6 +98,7 @@ const LeftSection = () => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
 
+  // console.log('left section rendered');
   useEffect(() => {
     getSidebarNode();
     getTemplates();
