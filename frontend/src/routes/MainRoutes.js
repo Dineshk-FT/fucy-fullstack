@@ -1,18 +1,18 @@
 import { lazy } from 'react';
 // project imports
-import MainLayout from '../layout/MainLayout';
-import Loadable from '../ui-component/Loadable';
+import MainLayout from '../layouts/MainLayout';
+import Loadable from '../components/Loadable';
 import RequireAuth from './Protected';
 
 // sample page routing
-const Home = Loadable(lazy(() => import('../views/HomePage')));
-const MainPage = Loadable(lazy(() => import('../views/MainPage')));
-const Career = Loadable(lazy(() => import('../views/CareerPage')));
-const Contact = Loadable(lazy(() => import('../views/ContactPage')));
-const Work = Loadable(lazy(() => import('../views/Landing/YourWorkSection')));
-const About = Loadable(lazy(() => import('../views/AboutPage')));
+const Home = Loadable(lazy(() => import('../Website/pages/Home')));
+const MainPage = Loadable(lazy(() => import('../pages/MainPage')));
+const Career = Loadable(lazy(() => import('../Website/pages/Career')));
+const Contact = Loadable(lazy(() => import('../Website/pages/Contact')));
+const Work = Loadable(lazy(() => import('../Website/pages/Landing')));
+const About = Loadable(lazy(() => import('../Website/pages/About')));
 
-const ErrorPage = Loadable(lazy(() => import('../views/ErrorPage')));
+const ErrorPage = Loadable(lazy(() => import('../Website/pages/Error')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
