@@ -93,7 +93,7 @@ const CardStyle = styled(Card)(() =>
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
-const MenuCard = () => {
+const MenuCard = React.memo(() => {
   const color = ColorTheme();
   const [properties, setProperties] = useState([]);
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -155,6 +155,7 @@ const MenuCard = () => {
       />
     </>
   );
-};
+});
 
+// Memoized export to prevent unnecessary rerenders
 export default MenuCard;

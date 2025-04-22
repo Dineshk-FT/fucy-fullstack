@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import debounce from 'lodash.debounce';
 import { Box, TextField, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import useStore from '../../../../store/Zustand/store';
@@ -11,12 +12,25 @@ const selector = (state) => ({
   setEdges: state.setEdges
 });
 
-const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
+const EditName = React.memo(React.forwardRef(({ detail, index, onUpdate }, ref) => {
   const { nodes, edges, setNodes, setEdges } = useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(detail?.name);
   const inputRef = useRef(null);
+
+  // Debounced updater to avoid excessive store writes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedUpdateElement = useCallback(
+    debounce((updateFn) => {
+      if (!selectedBlock?.id.includes('reactflow__edge')) {
+        setNodes((prevNodes) => prevNodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node)));
+      } else {
+        setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge)));
+      }
+    }, 250),
+    [selectedBlock?.id, setNodes, setEdges]
+  );
 
   useEffect(() => {
     if (detail?.name !== value) {
@@ -24,40 +38,36 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
     }
   }, [detail?.name]);
 
-  const updateElement = useCallback(
-    (updateFn) => {
-      if (!selectedBlock?.id.includes('reactflow__edge')) {
-        setNodes((prevNodes) => prevNodes.map((node) => (node.id === selectedBlock?.id ? updateFn(node) : node)));
-      } else {
-        setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? updateFn(edge) : edge)));
-      }
-    },
-    [selectedBlock?.id, setNodes, setEdges]
-  );
+  // Focus input only when entering edit mode
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick = useCallback(() => {
     setIsEditing(true);
-  };
+  }, []);
 
-  const handleChange = (event) => {
+  const handleChange = useCallback((event) => {
     const newValue = event.target.value;
     setValue(newValue);
-    updateElement((element) => ({
+    debouncedUpdateElement((element) => ({
       ...element,
       data: { ...element.data, label: newValue }
     }));
-  };
+  }, [debouncedUpdateElement]);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     setIsEditing(false);
     onUpdate();
-  };
+  }, [onUpdate]);
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = useCallback((event) => {
     if (event.key === 'Enter') {
       handleBlur();
     }
-  };
+  }, [handleBlur]);
 
   return (
     <Box
@@ -69,6 +79,10 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
         maxWidth: 'fit-content'
       }}
       onDoubleClick={handleDoubleClick}
+      tabIndex={0}
+      aria-label={`Edit name for item ${index + 1}`}
+      role="textbox"
+      onKeyDown={handleKeyDown}
     >
       {index + 1}.{' '}
       {isEditing ? (
@@ -77,10 +91,11 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
           size="small"
           variant="standard"
+          inputProps={{
+            'aria-label': `Edit name for item ${index + 1}`
+          }}
         />
       ) : (
         <Typography component="span" noWrap>
@@ -89,6 +104,7 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
       )}
     </Box>
   );
-});
+}));
 
+// Memoized export to prevent unnecessary rerenders
 export default EditName;

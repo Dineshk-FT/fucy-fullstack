@@ -67,7 +67,7 @@ const selector = (state) => ({
   clickedItem: state.clickedItem
 });
 
-const LabelItem = ({ type = 'icon', icon, name, id, index, ids, onClick }) => {
+const LabelItem = React.memo(({ type = 'icon', icon, name, id, index, ids, onClick }) => {
   const classes = useStyles();
   const { clickedItem } = useStore(selector);
   const { drawerwidthChange } = useSelector((state) => state.canvas);
@@ -147,6 +147,7 @@ const LabelItem = ({ type = 'icon', icon, name, id, index, ids, onClick }) => {
       </div>
     </Tooltip>
   );
-};
+});
 
+// Memoized export to prevent unnecessary rerenders
 export default LabelItem;

@@ -879,4 +879,5 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   );
 };
 
+// Export with React.memo for top-level memoization
 export default React.memo(BrowserCard);

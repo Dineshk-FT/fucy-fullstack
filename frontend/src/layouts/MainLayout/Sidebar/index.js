@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect, createContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useTheme } from '@mui/material/styles';
 import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
@@ -10,41 +10,31 @@ import { BrowserView, MobileView } from 'react-device-detect';
 import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { makeStyles } from '@mui/styles';
 import toast, { Toaster } from 'react-hot-toast';
-import ColorTheme from '../../../themes/ColorTheme';
 import useStore from '../../../store/Zustand/store';
 import { clearProperties } from '../../../store/slices/PageSectionSlice';
 import BrowserCard from './BrowserCard';
 import { setDrawerwidth } from '../../../store/slices/CanvasSlice';
 import { getNavbarHeight } from '../../../themes/constant';
+import ColorTheme from '../../../themes/ColorTheme';
+import { shallow } from 'zustand/shallow';
 
 export const ToasterContext = createContext();
-
-const useStyles = makeStyles(() => ({
-  icon: {
-    fontSize: 24,
-    position: 'absolute',
-    right: 0,
-    cursor: 'pointer',
-    zIndex: 1400
-  }
-}));
 
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
   fetchModels: state.getModels,
   isCollapsed: state.isCollapsed
-});
+}); // Use shallow equality for better memoization
 
-const Sidebar = React.memo(({ draweropen, drawerToggle, window }) => {
-  const classes = useStyles();
+const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, fetchModels, models, isCollapsed } = useStore(selector);
+  const { template, fetchModels, models, isCollapsed } = useStore(selector, shallow);
   const theme = useTheme();
-  const { isNavbarClose } = useSelector((state) => state.currentId);
+  const isNavbarClose = useSelector((state) => state.currentId.isNavbarClose);
+  const Properties = useSelector((state) => state?.pageName?.Properties);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
@@ -66,45 +56,61 @@ const Sidebar = React.memo(({ draweropen, drawerToggle, window }) => {
     drawerToggle();
   };
 
-  const drawer = (
-    <>
-      <BrowserView>
-        <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
-          <BrowserCard
-            template={template}
-            models={models}
-            isCollapsed={isCollapsed}
-            isNavbarClose={isNavbarClose}
-            sidebarWidth={sidebarWidth}
-          />
-        </PerfectScrollbar>
-        <IconButton
-          onClick={handleDrawerToggle}
-          sx={{
-            position: 'absolute',
-            border: `1px solid ${color?.title}`,
-            marginTop: 2.5,
-            marginRight: 2.5,
-            padding: '0px',
-            width: '0.8em',
-            height: '0.8em',
-            top: 0,
-            right: 0,
-            color: color?.iconColor,
-            zIndex: 1400,
-            '&:hover': { transform: 'scale(1.1)' },
-            transition: 'transform 0.2s ease'
-          }}
-        >
-          {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-        </IconButton>
-      </BrowserView>
-      {/* <MobileView>
+  // Memoize static drawer structure
+  const drawer = useMemo(
+    () => (
+      <>
+        <BrowserView>
+          <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
+            <BrowserCard
+              template={template}
+              models={models}
+              isCollapsed={isCollapsed}
+              isNavbarClose={isNavbarClose}
+              sidebarWidth={sidebarWidth}
+            />
+          </PerfectScrollbar>
+          <IconButton
+            onClick={handleDrawerToggle}
+            sx={{
+              position: 'absolute',
+              border: `1px solid ${color?.title}`,
+              marginTop: 2.5,
+              marginRight: 2.5,
+              padding: '0px',
+              width: '0.8em',
+              height: '0.8em',
+              top: 0,
+              right: 0,
+              color: color?.iconColor,
+              zIndex: 1400,
+              '&:hover': { transform: 'scale(1.1)' },
+              transition: 'transform 0.2s ease'
+            }}
+          >
+            {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          </IconButton>
+          <PerfectScrollbar
+            component="div"
+            style={{
+              height: !matchUpMd ? 'calc(80vh - 56px)' : 'calc(80vh - 88px)',
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              marginTop: '1.4rem'
+            }}
+          >
+            <BrowserCard template={template} models={models} />
+            {Properties && Properties.length > 0 && <MenuCard properties={Properties} />}
+          </PerfectScrollbar>
+        </BrowserView>
+        {/* <MobileView>
         <Box sx={{ px: 2 }}>
           <MenuCard />
         </Box>
       </MobileView> */}
-    </>
+      </>
+    ),
+    [template, models, matchUpMd, Properties]
   );
 
   const container = window !== undefined ? () => window.document.body : undefined;
@@ -201,7 +207,7 @@ const Sidebar = React.memo(({ draweropen, drawerToggle, window }) => {
       </ResizableBox>
     </ToasterContext.Provider>
   );
-});
+};
 
 Sidebar.propTypes = {
   // draweropen: PropTypes.bool,
