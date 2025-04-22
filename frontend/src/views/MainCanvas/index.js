@@ -351,13 +351,6 @@ export default function MainCanvas() {
     // Promise.resolve().then(() => setIsDragging(false));
   }, [nodes]);
 
-  function downloadImage(dataUrl) {
-    const a = document.createElement('a');
-    a.setAttribute('download', 'canvas-diagram.png');
-    a.setAttribute('href', dataUrl);
-    a.click();
-  }
-
   const imageWidth = 1920;
   const imageHeight = 1080;
 

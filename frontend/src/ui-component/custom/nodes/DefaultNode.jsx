@@ -15,7 +15,7 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  originalNodes: state.originalNodes,
+  initialNodes: state.initialNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
   setPropertiesOpen: state.setPropertiesOpen
@@ -23,7 +23,7 @@ const selector = (state) => ({
 
 function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, initialNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
@@ -37,7 +37,7 @@ function DefaultNode({ id, data, isConnectable, type }) {
   const labelRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
-  const nodeRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
@@ -47,17 +47,23 @@ function DefaultNode({ id, data, isConnectable, type }) {
   useEffect(() => setLabelValue(data?.label || ''), [data?.label]);
 
   // Debounce resize updates to prevent excessive re-renders
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleResize = useCallback(
     (_, { width: newWidth, height: newHeight }) => {
-      // Update dimensions immediately for smooth visual feedback
       setDimensions({ width: newWidth, height: newHeight });
 
-      // Debounce the actual node update
-      if (nodeRef.current.resizeTimeout) {
-        clearTimeout(nodeRef.current.resizeTimeout);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
 
-      nodeRef.current.resizeTimeout = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setNodes((nodes) =>
           nodes.map((node) =>
             node.id === id
@@ -75,19 +81,10 @@ function DefaultNode({ id, data, isConnectable, type }) {
               : node
           )
         );
-      }, 100); // 100ms debounce delay
+      }, 100);
     },
     [id, setNodes]
   );
-
-  // Clean up timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (nodeRef.current.resizeTimeout) {
-        clearTimeout(nodeRef.current.resizeTimeout);
-      }
-    };
-  }, []);
 
   const updateNodeLabel = useCallback(
     (newLabel) => {
@@ -195,7 +192,7 @@ function DefaultNode({ id, data, isConnectable, type }) {
   };
 
   const handlePermanentDeleteClick = () => {
-    if (nodes.length > originalNodes.length) {
+    if (nodes.length > initialNodes.length) {
       setIsUnsavedDialogVisible(true);
     } else {
       handleDelete();
@@ -226,7 +223,6 @@ function DefaultNode({ id, data, isConnectable, type }) {
         }}
       >
         <div
-          ref={nodeRef}
           role="button"
           tabIndex={0}
           className={`my-custom-node ${type}`}
@@ -248,7 +244,7 @@ function DefaultNode({ id, data, isConnectable, type }) {
             padding: '5px',
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap',
-            transition: 'width 0.1s ease, height 0.1s ease' // Smooth transition effect
+            transition: 'width 0.2s ease, height 0.2s ease' // Smooth transition effect
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

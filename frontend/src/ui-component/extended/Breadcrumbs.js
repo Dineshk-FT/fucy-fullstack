@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // material-ui
@@ -45,9 +45,9 @@ const Breadcrumbs = ({ card, divider, icon, icons, maxItems, navigation, rightAl
   const getCollapse = (menu) => {
     if (menu.children) {
       menu.children.filter((collapse) => {
-        if (collapse.type && collapse.type === 'collapse') {
+        if (collapse.type === 'collapse') {
           getCollapse(collapse);
-        } else if (collapse.type && collapse.type === 'item') {
+        } else if (collapse.type === 'item') {
           if (document.location.pathname === config.basename + collapse.url) {
             setMain(menu);
             setItem(collapse);
@@ -59,17 +59,19 @@ const Breadcrumbs = ({ card, divider, icon, icons, maxItems, navigation, rightAl
   };
 
   useEffect(() => {
-    navigation?.items?.map((menu) => {
-      if (menu.type && menu.type === 'group') {
+    navigation?.items?.forEach((menu) => {
+      if (menu.type === 'group') {
         getCollapse(menu);
       }
-      return false;
     });
-  });
+  }, [navigation]);
 
   // item separator
-  const SeparatorIcon = separator;
-  const separatorIcon = separator ? <SeparatorIcon stroke={1.5} size="1rem" /> : <IconTallymark1 stroke={1.5} size="1rem" />;
+  let separatorIcon = <IconTallymark1 stroke={1.5} size="1rem" />;
+  if (separator && typeof separator === 'function') {
+    const SeparatorComponent = separator;
+    separatorIcon = <SeparatorComponent stroke={1.5} size="1rem" />;
+  }
 
   let mainContent;
   let itemContent;
@@ -80,7 +82,7 @@ const Breadcrumbs = ({ card, divider, icon, icons, maxItems, navigation, rightAl
 
   // collapse item
   if (main && main.type === 'collapse') {
-    CollapseIcon = main.icon ? main.icon : AccountTreeTwoToneIcon;
+    CollapseIcon = main.icon || AccountTreeTwoToneIcon;
     mainContent = (
       <Typography component={Link} to="#" variant="subtitle1" sx={linkSX}>
         {icons && <CollapseIcon style={iconStyle} />}
@@ -92,8 +94,7 @@ const Breadcrumbs = ({ card, divider, icon, icons, maxItems, navigation, rightAl
   // items
   if (item && item.type === 'item') {
     itemTitle = item.title;
-
-    ItemIcon = item.icon ? item.icon : AccountTreeTwoToneIcon;
+    ItemIcon = item.icon || AccountTreeTwoToneIcon;
     itemContent = (
       <Typography
         variant="subtitle1"
@@ -110,7 +111,6 @@ const Breadcrumbs = ({ card, divider, icon, icons, maxItems, navigation, rightAl
       </Typography>
     );
 
-    // main
     if (item.breadcrumbs !== false) {
       breadcrumbContent = (
         <Card
@@ -179,9 +179,9 @@ Breadcrumbs.propTypes = {
   maxItems: PropTypes.number,
   navigation: PropTypes.object,
   rightAlign: PropTypes.bool,
-  separator: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  separator: PropTypes.oneOfType([PropTypes.func]),
   title: PropTypes.bool,
   titleBottom: PropTypes.bool
 };
 
-export default Breadcrumbs;
+export default React.memo(Breadcrumbs);
