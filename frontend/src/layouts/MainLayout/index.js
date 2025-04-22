@@ -7,8 +7,8 @@ import { AppBar, Box, CssBaseline, Toolbar } from '@mui/material';
 
 // project imports
 import Breadcrumbs from '../../components/extended/Breadcrumbs';
-import Header1 from './Header1';
-import Sidebar1 from './Sidebar1';
+import Header from './Header';
+import Sidebar from './Sidebar';
 import FadeInDiv from '../../components/FadeInDiv';
 import InitialModal from '../../components/Modal/InitialModal';
 import Customization from '../Customization';
@@ -118,7 +118,7 @@ const MainLayout = ({ children }) => {
                 zIndex: 1300
               }}
             >
-              <Header1 />
+              <Header />
             </Toolbar>
           )}
           {isNavbarClose && (
@@ -128,7 +128,7 @@ const MainLayout = ({ children }) => {
           )}
         </AppBar>
 
-        <Sidebar1 draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
+        <Sidebar draweropen={leftDrawerOpened} drawerToggle={handleLeftDrawerToggle} />
 
         <Main theme={theme} open={leftDrawerOpened} isclose={isCollapsed} color={color} draweropenstr={String(leftDrawerOpened)}>
           <Breadcrumbs separator={<ArrowSquareDown size="12" />} navigation={navigation} icon title rightAlign />

@@ -1,91 +1,45 @@
-// material-ui
-import { useTheme } from '@mui/material/styles';
-import { Avatar, Box, ButtonBase } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+/* eslint-disable */
+import React from 'react';
+import { Box } from '@mui/material';
+import LeftSection from './LeftSection';
+import RightSection from './RightSection';
+import ColorTheme from '../../../themes/ColorTheme'; // Adjust path as needed
 
-// project imports
-// import LogoSection from '../LogoSection';
-// import SearchSection from './SearchSection';
-// import ProfileSection from './ProfileSection';
-// import NotificationSection from './NotificationSection';
-
-// assets
-import { IconMenu2 } from '@tabler/icons';
-import MenuList from './MenuList';
-import ColorTheme from '../../../themes/ColorTheme';
-import { useDispatch } from 'react-redux';
-import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
-import { useNavigate } from 'react-router';
-
-// ==============================|| MAIN NAVBAR / HEADER ||============================== //
-
-const Header = ({ handleLeftDrawerToggle }) => {
+const Header = () => {
   const color = ColorTheme();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const handleClick = () => {
-    // console.log('clicked')
-    dispatch(changeCanvasPage('home'));
-    navigate('/home', { replace: true });
-    // setTimeout(() => {
-    // window.location.href = '/home';
-    // }, 200);
-  };
 
   return (
-    <>
-      {/* logo & toggler button */}
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        // background: color?.mode === 'dark'
+        //   ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+        //   : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+        // backdropFilter: 'blur(12px)',
+        // boxShadow: color?.mode === 'dark'
+        //   ? '0 4px 16px rgba(0,0,0,0.5)'
+        //   : '0 4px 16px rgba(0,0,0,0.15)',
+        overflow: 'visible', // Prevent clipping of dropdown
+        zIndex: 1300, // Ensure Header1 is above Sidebar
+        padding: '0 16px' // Add padding for spacing
+      }}
+    >
       <Box
         sx={{
-          width: 228,
-          marginBottom: '4.5rem',
+          flex: 1,
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-          [theme.breakpoints.down('md')]: {
-            width: 'auto',
-            mb: 4,
-            mr: 2
-          },
-          [theme.breakpoints.up('md')]: {
-            width: 'auto',
-            mb: 4,
-            mr: 2
-          }
+          justifyContent: 'center', // Center the LeftSection
+          alignItems: 'center'
         }}
       >
-        {/* <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
-                    <LogoSection />
-                </Box> */}
-        <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
-          <Avatar
-            variant="rounded"
-            sx={{
-              ...theme.typography.commonAvatar,
-              ...theme.typography.mediumAvatar,
-              transition: 'all .2s ease-in-out',
-              background: 'white',
-              color: 'black',
-              '&:hover': {
-                background: 'black',
-                color: 'white'
-              }
-            }}
-            onClick={handleLeftDrawerToggle}
-            color="inherit"
-          >
-            <IconMenu2 stroke={1.5} size="1.3rem" />
-          </Avatar>
-        </ButtonBase>
-        <Box onClick={handleClick}>
-          <ArrowBackIcon sx={{ color: color?.title }} />
-        </Box>
+        <LeftSection />
       </Box>
-      <MenuList />
-    </>
+      <RightSection />
+    </Box>
   );
 };
 
-export default Header;
+export default React.memo(Header);

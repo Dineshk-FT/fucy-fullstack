@@ -41,8 +41,6 @@ import CommonModal from '../../../../components/Modal/CommonModal';
 import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
 import { getNavbarHeight } from '../../../../themes/constant';
-import { getNodeDetails } from '../../../../utils/Constraints';
-import { Avatar, AvatarGroup } from '@mui/material';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 import EditProperties from '../../../../components/Poppers/EditProperties';
 import RenderedTreeItems from './RenderedTreeItems';
