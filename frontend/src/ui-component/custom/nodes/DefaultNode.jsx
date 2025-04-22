@@ -30,35 +30,64 @@ function DefaultNode({ id, data, isConnectable, type }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [width, setWidth] = useState(data?.style?.width ?? 120);
+  const [dimensions, setDimensions] = useState({
+    width: data?.style?.width ?? 120,
+    height: data?.style?.height ?? 40
+  });
   const labelRef = useRef(null);
-  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const nodeRef = useRef(null);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
-
-  // console.log('isSelected', isSelected);
 
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
 
   useEffect(() => setLabelValue(data?.label || ''), [data?.label]);
 
+  // Debounce resize updates to prevent excessive re-renders
   const handleResize = useCallback(
     (_, { width: newWidth, height: newHeight }) => {
-      requestAnimationFrame(() => {
-        setWidth(newWidth);
-        setHeight(newHeight);
+      // Update dimensions immediately for smooth visual feedback
+      setDimensions({ width: newWidth, height: newHeight });
+
+      // Debounce the actual node update
+      if (nodeRef.current.resizeTimeout) {
+        clearTimeout(nodeRef.current.resizeTimeout);
+      }
+
+      nodeRef.current.resizeTimeout = setTimeout(() => {
         setNodes((nodes) =>
           nodes.map((node) =>
-            node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, height: newHeight, width: newWidth } } } : node
+            node.id === id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    style: {
+                      ...node.data.style,
+                      height: newHeight,
+                      width: newWidth
+                    }
+                  }
+                }
+              : node
           )
         );
-      });
+      }, 100); // 100ms debounce delay
     },
     [id, setNodes]
   );
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (nodeRef.current.resizeTimeout) {
+        clearTimeout(nodeRef.current.resizeTimeout);
+      }
+    };
+  }, []);
 
   const updateNodeLabel = useCallback(
     (newLabel) => {
@@ -197,6 +226,7 @@ function DefaultNode({ id, data, isConnectable, type }) {
         }}
       >
         <div
+          ref={nodeRef}
           role="button"
           tabIndex={0}
           className={`my-custom-node ${type}`}
@@ -209,15 +239,16 @@ function DefaultNode({ id, data, isConnectable, type }) {
               : isSelected
               ? '0px 0px 7px 3px violet'
               : 'none',
-            width: width,
-            height: height,
+            width: dimensions.width,
+            height: dimensions.height,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
             padding: '5px',
             wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap'
+            whiteSpace: 'pre-wrap',
+            transition: 'width 0.1s ease, height 0.1s ease' // Smooth transition effect
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -233,13 +264,11 @@ function DefaultNode({ id, data, isConnectable, type }) {
             onBlur={handleLabelBlur}
             onKeyDown={handleKeyDown}
             style={{
-              maxWidth: width - 10,
+              maxWidth: dimensions.width - 10,
               textAlign: 'center',
               outline: 'none',
               cursor: 'text',
-
               ...(isEditing && {
-                // backgroundColor: 'white',
                 color: 'black',
                 padding: '0 4px',
                 borderRadius: '4px',
