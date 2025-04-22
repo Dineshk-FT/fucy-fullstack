@@ -3,11 +3,12 @@ import React from 'react';
 import { Box } from '@mui/material';
 import LeftSection from './LeftSection';
 import RightSection from './RightSection';
-import ColorTheme from '../../../themes/ColorTheme'; // Adjust path as needed
 
 const Header = () => {
-  const color = ColorTheme();
-
+  const MemoLeftSection = React.memo(LeftSection, (prevProps, nextProps) => {
+    // Add custom prop comparison logic if needed
+    return JSON.stringify(prevProps) === JSON.stringify(nextProps);
+  });
   return (
     <Box
       sx={{
@@ -35,7 +36,7 @@ const Header = () => {
           alignItems: 'center'
         }}
       >
-        <LeftSection />
+        <MemoLeftSection />
       </Box>
       <RightSection />
     </Box>

@@ -810,7 +810,7 @@ export default function MainCanvas() {
             edgeTypes={edgeTypes}
             onClick={(e) => {
               e.preventDefault();
-              // e.stopPropagation();
+              e.stopPropagation();
               dispatch(setSelectedBlock({}));
             }}
             onInit={onInit}

@@ -110,7 +110,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
       </MobileView> */}
       </>
     ),
-    [template, models, matchUpMd, Properties]
+    []
   );
 
   const container = window !== undefined ? () => window.document.body : undefined;

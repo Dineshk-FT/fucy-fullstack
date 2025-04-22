@@ -44,6 +44,7 @@ import { getNavbarHeight } from '../../../../themes/constant';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 import EditProperties from '../../../../components/Poppers/EditProperties';
 import RenderedTreeItems from './RenderedTreeItems';
+import { shallow } from 'zustand/shallow';
 
 const imageComponents = {
   AttackIcon,
@@ -322,7 +323,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setSelectedThreatIds,
     setSelectedElement,
     setIsNodePasted
-  } = useStore(selector);
+  } = useStore(selector, shallow);
+
+  console.log('browser rendered');
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);

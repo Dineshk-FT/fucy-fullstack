@@ -46,6 +46,7 @@ import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices
 import CommonModal from '../../../../components/Modal/CommonModal';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import PromptModal from '../../../../components/Modal/PromptModal';
+import { shallow } from 'zustand/shallow';
 
 const LeftSection = () => {
   const selector = useCallback(
@@ -79,7 +80,7 @@ const LeftSection = () => {
     attackScenarios,
     isCollapsed,
     setCollapsed
-  } = useStore(selector);
+  } = useStore(selector, shallow);
 
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
@@ -98,7 +99,8 @@ const LeftSection = () => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
 
-  // console.log('left section rendered');
+  console.log('left section rendered');
+
   useEffect(() => {
     getSidebarNode();
     getTemplates();
@@ -535,8 +537,8 @@ const LeftSection = () => {
       {openModal.AIModal && (
         <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((prev) => ({ ...prev, AIModal: false }))} />
       )}
-      <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />
-      <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />
+      {openTemplateDialog && <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />}
+      {openComponentsDialog && <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />}
       {openAttackModal && <CommonModal open={openAttackModal} handleClose={handleAttackTreeClose} name={subName} />}
       {openModal.AttackModal && (
         <AttackTreeRibbonModal

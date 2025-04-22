@@ -3,12 +3,7 @@ import { makeStyles } from '@mui/styles';
 import { Box, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState, useCallback } from 'react';
 import { BrushBig } from 'iconsax-react';
-import GridOnIcon from '@mui/icons-material/GridOn';
 import FormatShapesIcon from '@mui/icons-material/FormatShapes';
-import VerticalAlignCenterIcon from '@mui/icons-material/VerticalAlignCenter';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import ClearIcon from '@mui/icons-material/Clear';
-import SaveIcon from '@mui/icons-material/Save';
 import FontSizeSelector from './FontResizer';
 import FontSelector from './FontSelector';
 import CreateIcon from '@mui/icons-material/Create';
@@ -18,10 +13,6 @@ import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
-import AddIcon from '@mui/icons-material/Add';
-import { iconStyle } from '../../themes/constant';
-import { useDispatch } from 'react-redux';
-import { closeHeader } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   header: {
