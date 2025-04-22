@@ -22,17 +22,19 @@ import { clearProperties } from '../../../store/slices/PageSectionSlice';
 
 // ==============================|| SIDEBAR DRAWER ||============================== //
 
+import shallow from 'zustand/shallow';
 const selector = (state) => ({
   template: state.template,
   models: state.Models,
   fetchModels: state.getModels
-});
+}); // Use shallow equality for better memoization
+
 const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const dispatch = useDispatch();
-  const { template, fetchModels, models } = useStore(selector);
+  const { template, fetchModels, models } = useStore(selector, shallow);
   const theme = useTheme();
-  const { isNavbarClose } = useSelector((state) => state.currentId);
-  const { Properties } = useSelector((state) => state?.pageName);
+  const isNavbarClose = useSelector((state) => state.currentId.isNavbarClose);
+  const Properties = useSelector((state) => state?.pageName?.Properties);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
 
   useEffect(() => {
@@ -40,7 +42,8 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     dispatch(clearProperties());
   }, []);
 
-  const drawer = (
+  // Memoize static drawer structure
+  const drawer = useMemo(() => (
     <>
       <Box sx={{ display: { xs: 'block', md: 'none' } }}>
         <Box sx={{ display: 'flex', p: 2, mx: 'auto' }}>
@@ -51,7 +54,6 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
         <PerfectScrollbar
           component="div"
           style={{
-            // marginTop: '3rem',
             height: !matchUpMd ? 'calc(80vh - 56px)' : 'calc(80vh - 88px)',
             paddingLeft: '16px',
             paddingRight: '16px',
@@ -59,7 +61,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           }}
         >
           <BrowserCard template={template} models={models} />
-          {Properties && Properties?.length > 0 && <MenuCard properties={Properties} />}
+          {Properties && Properties.length > 0 && <MenuCard properties={Properties} />}
         </PerfectScrollbar>
       </BrowserView>
       <MobileView>
@@ -68,7 +70,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
         </Box>
       </MobileView>
     </>
-  );
+  ), [template, models, matchUpMd, Properties]);
 
   const container = window !== undefined ? () => window.document.body : undefined;
 

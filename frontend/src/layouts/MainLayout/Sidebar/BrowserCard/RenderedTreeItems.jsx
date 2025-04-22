@@ -35,7 +35,7 @@ const selector = (state) => ({
   edges: state.edges
 });
 
-const RenderedTreeItems = ({
+const RenderedTreeItems = React.memo(({
   data,
   type,
   handlePropertiesTab,
@@ -59,6 +59,7 @@ const RenderedTreeItems = ({
   handleSave,
   drawerwidth
 }) => {
+
   const { model, setNodes, nodes, edges } = useStore(selector);
   const [count, setCount] = useState({
     node: 1,
@@ -314,18 +315,18 @@ const RenderedTreeItems = ({
                         dispatch(
                           type === 'edge'
                             ? setEdgeDetails({
-                                name: selected?.data?.label ?? '',
-                                properties: selected?.properties ?? [],
-                                isAsset: selected?.isAsset ?? false,
-                                style: selected?.style ?? {},
-                                startPoint: selected?.markerStart?.color ?? '#000000',
-                                endPoint: selected?.markerEnd?.color ?? '#000000'
-                              })
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false,
+                              style: selected?.style ?? {},
+                              startPoint: selected?.markerStart?.color ?? '#000000',
+                              endPoint: selected?.markerEnd?.color ?? '#000000'
+                            })
                             : setDetails({
-                                name: selected?.data?.label ?? '',
-                                properties: selected?.properties ?? [],
-                                isAsset: selected?.isAsset ?? false
-                              })
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false
+                            })
                         );
                       }}
                       onDragStart={(e) => onDragStart(e, detail)}
@@ -391,30 +392,29 @@ const RenderedTreeItems = ({
               return (
                 sub.name === 'Threat Scenarios'
                   ? detail?.Details?.flatMap((nodeDetail) =>
-                      nodeDetail?.props?.map((prop) => {
-                        key++;
-                        return {
-                          label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
-                            detail?.damage_name
+                    nodeDetail?.props?.map((prop) => {
+                      key++;
+                      return {
+                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${detail?.damage_name
                           } [${detail?.id}]`,
-                          nodeId: nodeDetail?.nodeId,
-                          extraProps: {
-                            threatId: prop?.id,
-                            damageId: detail?.rowId,
-                            width: 150,
-                            height: 60,
-                            key: `TS${key.toString().padStart(3, '0')}`
-                          }
-                        };
-                      })
-                    )
+                        nodeId: nodeDetail?.nodeId,
+                        extraProps: {
+                          threatId: prop?.id,
+                          damageId: detail?.rowId,
+                          width: 150,
+                          height: 60,
+                          key: `TS${key.toString().padStart(3, '0')}`
+                        }
+                      };
+                    })
+                  )
                   : [
-                      {
-                        label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
-                        nodeId: detail?.id,
-                        extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
-                      }
-                    ]
+                    {
+                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                      nodeId: detail?.id,
+                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
+                    }
+                  ]
               ).map(({ label, nodeId, extraProps }) => {
                 const onClick = (e) => {
                   e.stopPropagation();
@@ -602,6 +602,7 @@ const RenderedTreeItems = ({
   };
 
   return renderedContent();
-};
+});
 
+// Memoized export to prevent unnecessary rerenders
 export default RenderedTreeItems;
