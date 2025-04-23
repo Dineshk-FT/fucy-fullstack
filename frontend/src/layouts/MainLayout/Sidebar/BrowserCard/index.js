@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import ColorTheme from '../../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,11 +36,11 @@ import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { clearAnchorEl, setDetails } from '../../../../store/slices/CanvasSlice';
 import CommonModal from '../../../../components/Modal/CommonModal';
 import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
 import toast from 'react-hot-toast';
-import { getNavbarHeight } from '../../../../themes/constant';
+import { drawerWidth, getNavbarHeight } from '../../../../themes/constant';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 import EditProperties from '../../../../components/Poppers/EditProperties';
 import RenderedTreeItems from './RenderedTreeItems';
@@ -267,8 +267,6 @@ const selector = (state) => ({
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
-  setSelectedThreatIds: state.setSelectedThreatIds,
-  setSelectedElement: state.setSelectedElement,
   setIsNodePasted: state.setIsNodePasted
 });
 
@@ -320,14 +318,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setAttackEdges,
     setInitialAttackNodes,
     setInitialAttackEdges,
-    setSelectedThreatIds,
-    setSelectedElement,
     setIsNodePasted
   } = useStore(selector, shallow);
 
   // console.log('browser rendered');
   const { modelId } = useSelector((state) => state?.pageName);
-  const drawerwidth = 370;
   const { drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
@@ -338,13 +333,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
-  const [hovered, setHovered] = useState({
-    node: false,
-    data: false,
-    attack: false,
-    attack_rees: false,
-    id: ''
-  });
 
   const anchorElId = document.querySelector(`[data="${anchorEl?.sidebar}"]`) || null;
   // console.log('anchorElId', anchorElId);
@@ -567,13 +555,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setOpenModal((state) => ({ ...state, attack: false }));
   };
 
-  const onDragStart = (event, item) => {
-    const parseFile = JSON.stringify(item);
-    event.dataTransfer.setData('application/cyber', parseFile);
-    event.dataTransfer.setData('application/dragItem', parseFile);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
   const RefreshAPI = () => {
     getAssets(model?._id).catch((err) => {
       notify('Failed to fetch assets: ' + err.message, 'error');
@@ -617,7 +598,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <div>
           <Box
             color={color?.sidebarContent}
@@ -665,7 +646,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const getImageLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <div>
           <Box
             color={color?.sidebarContent}
@@ -704,7 +685,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     // console.log('onClick', onClick);
     const IconComponent = iconComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <div>
           <div
             className={classes.labelRoot}
@@ -739,28 +720,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const handlePropertiesTab = (detail, type) => {
-    const selected = type === 'edge' ? edges.find((edge) => edge.id === detail?.nodeId) : nodes.find((node) => node.id === detail?.nodeId);
-    const { isAsset = false, properties, id, data } = selected;
-    dispatch(setSelectedBlock({ id, data }));
-    dispatch(setAnchorEl({ type: 'sidebar', value: id }));
-    setSelectedElement(selected);
-    dispatch(
-      setDetails({
-        name: data?.label ?? '',
-        properties: properties ?? [],
-        isAsset: isAsset ?? false
-      })
-    );
-  };
-
   const handleClosePopper = () => {
     dispatch(clearAnchorEl());
   };
 
   return (
     <>
-      <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
+      {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />}
 
       <CardStyle
         isCollapsed={isCollapsed}
@@ -831,19 +797,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   key={i}
                   data={scene}
                   type={name}
-                  handlePropertiesTab={handlePropertiesTab}
                   getLabel={getLabel}
                   getImageLabel={getImageLabel}
                   setClickedItem={setClickedItem}
                   classes={classes}
-                  hovered={hovered}
-                  setHovered={setHovered}
-                  drawerwidth={drawerwidth}
-                  dispatch={dispatch}
-                  setEdgeDetails={setEdgeDetails}
-                  setDetails={setDetails}
-                  onDragStart={onDragStart}
-                  setSelectedThreatIds={setSelectedThreatIds}
                   handleOpenTable={handleOpenTable}
                   handleContext={handleContext}
                   handleOpenDeleteModal={handleOpenDeleteModal}

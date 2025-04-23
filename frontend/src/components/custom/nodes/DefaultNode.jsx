@@ -22,7 +22,7 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-function DefaultNode({ id, data, isConnectable, type }) {
+function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, initialNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector, shallow);
@@ -244,8 +244,8 @@ function DefaultNode({ id, data, isConnectable, type }) {
             textAlign: 'center',
             padding: '5px',
             wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap',
-            transition: 'width 0.2s ease, height 0.2s ease' // Smooth transition effect
+            whiteSpace: 'pre-wrap'
+            // transition: 'width 0.2s ease, height 0.2s ease' // Smooth transition effect
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

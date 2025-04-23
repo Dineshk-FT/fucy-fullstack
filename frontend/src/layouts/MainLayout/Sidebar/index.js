@@ -90,18 +90,6 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           >
             {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
-          <PerfectScrollbar
-            component="div"
-            style={{
-              height: !matchUpMd ? 'calc(80vh - 56px)' : 'calc(80vh - 88px)',
-              paddingLeft: '16px',
-              paddingRight: '16px',
-              marginTop: '1.4rem'
-            }}
-          >
-            <BrowserCard template={template} models={models} />
-            {Properties && Properties.length > 0 && <MenuCard properties={Properties} />}
-          </PerfectScrollbar>
         </BrowserView>
         {/* <MobileView>
         <Box sx={{ px: 2 }}>
