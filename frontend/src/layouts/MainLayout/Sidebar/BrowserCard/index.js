@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -343,9 +343,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     name: ''
   });
 
-  const handleOpenDocumentDialog = () => {
+  const handleOpenDocumentDialog = useCallback(() => {
     setOpenDocumentDialog(true);
-  };
+  }, []);
 
   const handleCloseDocumentDialog = () => {
     setOpenDocumentDialog(false);
@@ -374,7 +374,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
-  const handleOpenDeleteModal = (type, scene) => {
+  const handleOpenDeleteModal = useCallback((type, scene) => {
     // console.log('scene', scene);
     setDeleteScene({
       type: type,
@@ -382,7 +382,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       name: scene?.Name
     });
     setOpenModal((state) => ({ ...state, delete: true }));
-  };
+  }, []);
 
   const handleCloseDeleteModal = () => {
     setOpenModal((state) => ({ ...state, delete: false }));
@@ -447,27 +447,32 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setClickedItem(modelId);
   };
 
-  const handleClick = async (event, ModelId, name, id) => {
-    event.stopPropagation();
-    setClickedItem(id);
-    if (name === 'assets') {
-      dispatch(setPreviousTab(name));
-      dispatch(closeAll());
-    }
-    const get_api = {
-      assets: getAssets,
-      damage: getDamageScenarios,
-      threat: getThreatScenario,
-      attack: getAttackScenario,
-      risks: getRiskTreatment,
-      cybersecurity: getCyberSecurityScenario,
-      catalog: getCatalog
-    };
-    await get_api[name](ModelId);
-  };
+  const handleClick = useCallback(
+    async (event, ModelId, name, id) => {
+      event.stopPropagation();
+      setClickedItem(id);
 
+      if (name === 'assets') {
+        dispatch(setPreviousTab(name));
+        dispatch(closeAll());
+      }
+
+      const get_api = {
+        assets: getAssets,
+        damage: getDamageScenarios,
+        threat: getThreatScenario,
+        attack: getAttackScenario,
+        risks: getRiskTreatment,
+        cybersecurity: getCyberSecurityScenario,
+        catalog: getCatalog
+      };
+
+      await get_api[name](ModelId);
+    },
+    [dispatch, setClickedItem] // add other dependencies if needed
+  );
   // console.log('clickedItem', clickedItem);
-  const handleOpenTable = (e, id, name) => {
+  const handleOpenTable = useCallback((e, id, name) => {
     // console.log('id', id);
     e.stopPropagation();
     setClickedItem(id);
@@ -476,8 +481,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       dispatch(setTitle(name));
     }
     dispatch(setPreviousTab(name));
-  };
-  const handleOpenAttackTree = (e, scene, name) => {
+  }, []);
+  const handleOpenAttackTree = useCallback((e, scene, name) => {
     e.stopPropagation();
     const prevSceneId = attackScene?.ID;
     if (name === 'Attack Trees') {
@@ -541,15 +546,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       // console.log('later');
       dispatch(setTableOpen('Attack Trees Canvas'));
     }
-  };
+  }, []);
 
-  const handleContext = (e, name) => {
+  const handleContext = useCallback((e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
       setOpenModal((state) => ({ ...state, attack: true }));
       setSubName(name);
     }
-  };
+  }, []);
 
   const handleAttackTreeClose = () => {
     setOpenModal((state) => ({ ...state, attack: false }));
@@ -563,20 +568,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       notify('Failed to fetch damage scenarios: ' + err.message, 'error');
     });
   };
-  const handleSave = () => {
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
+  const handleSave = useCallback(() => {
+    const { nodes: nodeState } = useStore.getState();
+    // Don't mutate nodes directly – consider making a copy (safer in React)
+    const updatedNodes = nodeState?.map((node) => (node.isCopied ? { ...node, isCopied: false } : node));
+    // console.log('updatedNodes', updatedNodes);
     setIsNodePasted(false);
+
     const details = {
       'model-id': model?._id,
-      template: JSON.stringify(template),
+      template: JSON.stringify({ nodes: updatedNodes, edges }),
       assetId: assets?._id
     };
 
@@ -590,10 +591,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           notify(res.error ?? 'Something went wrong', 'error');
         }
       })
-      .catch((err) => {
+      .catch(() => {
         notify('Something went wrong', 'error');
       });
-  };
+  }, [update]);
 
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
@@ -643,7 +644,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   };
 
   // console.log('sidebar rendered');
-  const getImageLabel = (icon, name, id) => {
+  const getImageLabel = useCallback((icon, name, id) => {
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
@@ -679,9 +680,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         </div>
       </Tooltip>
     );
-  };
+  }, []);
 
-  const getLabel = (icon, name, index, id, ids, onClick) => {
+  const getLabel = useCallback((icon, name, index, id, ids, onClick) => {
     // console.log('onClick', onClick);
     const IconComponent = iconComponents[icon];
     return (
@@ -718,7 +719,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         </div>
       </Tooltip>
     );
-  };
+  }, []);
 
   const handleClosePopper = () => {
     dispatch(clearAnchorEl());

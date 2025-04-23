@@ -17,7 +17,7 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(detail?.name);
   const inputRef = useRef(null);
-  console.log('edit name rendered');
+  // console.log('edit name rendered');
   // Debounced updater to avoid excessive store writes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateElement = useCallback(

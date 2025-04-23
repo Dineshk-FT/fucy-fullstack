@@ -774,7 +774,7 @@ export default function MainCanvas() {
   const handleCanvasClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (Object.keys(selectedBlock).length !== 0) {
+    if (selectedBlock && Object.keys(selectedBlock).length !== 0) {
       dispatch(setSelectedBlock({}));
     }
   };
