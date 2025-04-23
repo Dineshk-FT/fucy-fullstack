@@ -9,6 +9,7 @@ import 'react-resizable/css/styles.css';
 import ColorTheme from '../../themes/ColorTheme';
 import useStore from '../../store/Zustand/store';
 import GlobalAttackTreeList from './GlobalAttackTreeList';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   model: state.model,
@@ -19,7 +20,7 @@ const selector = (state) => ({
 
 const AttackTree = () => {
   const color = ColorTheme();
-  const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector);
+  const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector, shallow);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
   const dispatch = useDispatch();
 

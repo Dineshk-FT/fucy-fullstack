@@ -8,6 +8,7 @@ import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../themes/constant';
 import DetailsIcon from '@mui/icons-material/Details';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -24,7 +25,7 @@ const selector = (state) => ({
 function DataNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, initialNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
-    useStore(selector);
+    useStore(selector, shallow);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);

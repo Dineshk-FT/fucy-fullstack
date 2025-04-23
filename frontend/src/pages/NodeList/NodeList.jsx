@@ -4,13 +4,14 @@ import { TreeItem, TreeView } from '@mui/x-tree-view';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Typography } from '@mui/material';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   sidebarNodes: state.sidebarNodes,
   getSidebarNode: state.getSidebarNode
 });
 const NodeList = ({ setSelected }) => {
-  const { sidebarNodes, getSidebarNode } = useStore(selector);
+  const { sidebarNodes, getSidebarNode } = useStore(selector, shallow);
 
   const handleSelect = (node) => {
     setSelected(node);

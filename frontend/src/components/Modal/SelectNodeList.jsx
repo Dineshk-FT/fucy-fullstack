@@ -8,6 +8,7 @@ import { useParams } from 'react-router';
 import toast, { Toaster } from 'react-hot-toast';
 import { updatedModelState } from '../../utils/Constraints';
 import PaperComponent from './PaperComponent';
+import { shallow } from 'zustand/shallow';
 
 const notify = (message, status) => toast[status](message);
 
@@ -23,7 +24,7 @@ const selector = (state) => ({
 export default function SelectNodeList({ open, handleClose }) {
   const [selected, setSelected] = React.useState({});
   const { id } = useParams();
-  const { model, nodes, edges, setNodes, getModelById, updateModel } = useStore(selector);
+  const { model, nodes, edges, setNodes, getModelById, updateModel } = useStore(selector, shallow);
 
   const handleAdd = () => {
     if (selected) {
@@ -89,12 +90,12 @@ export default function SelectNodeList({ open, handleClose }) {
           <Typography variant="h3" color="primary">
             {'Select the Node'}
           </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ borderBottom: '1px solid black', paddingTop:'4px'}}>
+          <Typography variant="body2" color="textSecondary" sx={{ borderBottom: '1px solid black', paddingTop: '4px' }}>
             Select a node from the list below to add it to your model.
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description"  sx={{ maxHeight: 300, overflow: 'auto' }}>
+          <DialogContentText id="alert-dialog-description" sx={{ maxHeight: 300, overflow: 'auto' }}>
             <NodeList setSelected={setSelected} />
           </DialogContentText>
         </DialogContent>

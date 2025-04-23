@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { openAddNodeTab } from '../../store/slices/CanvasSlice';
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { shallow } from 'zustand/shallow';
 
 const useStyles = makeStyles(() => ({
   paper: {
@@ -54,7 +55,7 @@ const Components = ({ openDialog, setOpenDialog }) => {
   const [openAdd, setOpenAdd] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
-  const { sidebarNodes } = useStore(selector);
+  const { sidebarNodes } = useStore(selector, shallow);
   const color = ColorTheme();
 
   const handleMouseEnter = (event, item) => {
@@ -103,100 +104,106 @@ const Components = ({ openDialog, setOpenDialog }) => {
             overflowX: 'auto',
             borderRadius: '8px',
             justifyContent: 'flex-start',
-            paddingBottom: '20px',
+            paddingBottom: '20px'
           }}
         >
-        {sidebarNodes?.map((item, i) => (
-          <Box
-            key={i}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            onMouseEnter={(e) => handleMouseEnter(e, item)}
-            onMouseLeave={handleMouseLeave}
-            sx={{ cursor: 'pointer' }}
-          >
-            <Avatar
-              {...stringAvatar(item?.name)}
-              variant="rounded"
-              sx={{
-                width: 25,
-                height: 25,
-                fontSize: '12px',
-                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
-              }}
-            />
-            <Typography variant="body2" color={'#1d97fc'} noWrap sx={{ fontSize: '10px' }}>
-              {item?.name}
-            </Typography>
-            <Popper
-              open={Boolean(anchorEl) && hoveredItem === item}
-              anchorEl={anchorEl}
-              placement="bottom"
-              transition
-              disablePortal={false}
-              sx={{ zIndex: 1500, '&:hover': { cursor: 'grab' } }}
+          {sidebarNodes?.map((item, i) => (
+            <Box
+              key={i}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              onMouseEnter={(e) => handleMouseEnter(e, item)}
+              onMouseLeave={handleMouseLeave}
+              sx={{ cursor: 'pointer' }}
             >
-              {({ TransitionProps }) => (
-                <Grow
-                  {...TransitionProps}
-                  style={{
-                    transformOrigin: 'top center'
-                  }}
-                >
-                  <Paper
-                    sx={{
-                      backgroundColor: color?.leftbarBG,
-                      zIndex: 1500,
-                      '&:hover': { cursor: 'grab' }
+              <Avatar
+                {...stringAvatar(item?.name)}
+                variant="rounded"
+                sx={{
+                  width: 25,
+                  height: 25,
+                  fontSize: '12px',
+                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }
+                }}
+              />
+              <Typography variant="body2" color={'#1d97fc'} noWrap sx={{ fontSize: '10px' }}>
+                {item?.name}
+              </Typography>
+              <Popper
+                open={Boolean(anchorEl) && hoveredItem === item}
+                anchorEl={anchorEl}
+                placement="bottom"
+                transition
+                disablePortal={false}
+                sx={{ zIndex: 1500, '&:hover': { cursor: 'grab' } }}
+              >
+                {({ TransitionProps }) => (
+                  <Grow
+                    {...TransitionProps}
+                    style={{
+                      transformOrigin: 'top center'
                     }}
-                    className={classes.paper}
                   >
-                    <ClickAwayListener onClickAway={handleMouseLeave}>
-                      <MenuList autoFocusItem={hoveredItem === item}>
-                        {item?.nodes?.map((node) => (
-                          <MenuItem draggable onDragStart={(event) => onDragStart(event, node)} key={node?.id} onClick={handleMouseLeave} sx={{'&:hover': { cursor: 'grab' }}}>
-                            {node?.data['label']}
+                    <Paper
+                      sx={{
+                        backgroundColor: color?.leftbarBG,
+                        zIndex: 1500,
+                        '&:hover': { cursor: 'grab' }
+                      }}
+                      className={classes.paper}
+                    >
+                      <ClickAwayListener onClickAway={handleMouseLeave}>
+                        <MenuList autoFocusItem={hoveredItem === item}>
+                          {item?.nodes?.map((node) => (
+                            <MenuItem
+                              draggable
+                              onDragStart={(event) => onDragStart(event, node)}
+                              key={node?.id}
+                              onClick={handleMouseLeave}
+                              sx={{ '&:hover': { cursor: 'grab' } }}
+                            >
+                              {node?.data['label']}
+                            </MenuItem>
+                          ))}
+                          <MenuItem>
+                            <Button
+                              sx={{
+                                margin: 0
+                              }}
+                              onClick={() => handleOpen(item)}
+                              variant="outlined"
+                            >
+                              + Add
+                            </Button>
                           </MenuItem>
-                        ))}
-                        <MenuItem>
-                          <Button
-                            sx={{
-                              margin: 0,
-                            }}
-                            onClick={() => handleOpen(item)}
-                            variant="outlined"
-                          >
-                            + Add
-                          </Button>
-                        </MenuItem>
-                      </MenuList>
-                    </ClickAwayListener>
-                  </Paper>
-                </Grow>
-              )}
-            </Popper>
-          </Box>
-        ))}
-        <Fab
-          size="small"
-          color="primary"
-          aria-label="add"
-          onClick={() => setOpenAdd(true)}
-          sx={{
-            background: 'transparent',
-            boxShadow: 'none',
-            color: '#2196f3',
-            border: '2px solid #2196f3',
-            width: '30px',
-            height: '30px',
-            minHeight: '30px',
-            '&:hover': { color: 'white' }
-          }}
-        >
-          <AddIcon />
-        </Fab>
-      </Box>
+                        </MenuList>
+                      </ClickAwayListener>
+                    </Paper>
+                  </Grow>
+                )}
+              </Popper>
+            </Box>
+          ))}
+          <Fab
+            size="small"
+            color="primary"
+            aria-label="add"
+            onClick={() => setOpenAdd(true)}
+            sx={{
+              background: 'transparent',
+              boxShadow: 'none',
+              color: '#2196f3',
+              border: '2px solid #2196f3',
+              width: '30px',
+              height: '30px',
+              minHeight: '30px',
+              '&:hover': { color: 'white' }
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseDialog} color="primary">

@@ -5,6 +5,7 @@ import useStore from '../../../store/Zustand/store';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -17,7 +18,7 @@ const selector = (state) => ({
 const InputNode = ({ id, data, isConnectable, type }) => {
   const dispatch = useDispatch();
   // console.log('style', data?.style)
-  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector);
+  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

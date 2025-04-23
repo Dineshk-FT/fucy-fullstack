@@ -126,7 +126,7 @@ export default function MainCanvas() {
 
   // Spinner overlay during drag
   const [isDragging, setIsDragging] = useState(false);
-  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
+  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
@@ -771,6 +771,14 @@ export default function MainCanvas() {
     return null;
   };
 
+  const handleCanvasClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (Object.keys(selectedBlock).length !== 0) {
+      dispatch(setSelectedBlock({}));
+    }
+  };
+
   const notify = (message, status) => toast[status](message);
 
   if (!isReady) return null;
@@ -808,11 +816,7 @@ export default function MainCanvas() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              dispatch(setSelectedBlock({}));
-            }}
+            onClick={handleCanvasClick}
             onInit={onInit}
             onLoad={onLoad}
             onNodeDrag={onNodeDrag}

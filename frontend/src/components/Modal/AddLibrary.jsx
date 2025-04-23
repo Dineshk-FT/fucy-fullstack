@@ -10,6 +10,7 @@ import Box from '@mui/material/Box';
 import useStore from '../../store/Zustand/store';
 import { v4 as uid } from 'uuid';
 import { useTheme } from '@mui/material/styles';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   getTemplates: state.getTemplates
@@ -40,7 +41,7 @@ const AddLibrary = ({ open, handleClose, savedTemplate, setNodes, setEdges }) =>
     name: '',
     properties: []
   });
-  const { getTemplates } = useStore(selector);
+  const { getTemplates } = useStore(selector, shallow);
 
   const handleChange = (event) => {
     const {

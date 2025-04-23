@@ -6,6 +6,7 @@ import { RatingColor } from '../../Table/constraints';
 import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 import { DerivedThreatIcon } from '../../../assets/icons';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   nodes: state.attackNodes,
@@ -14,7 +15,7 @@ const selector = (state) => ({
 });
 const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
   const [nodeDimensions, setNodeDimensions] = useState({ width: data?.style?.width ?? 250, height: data?.style?.height ?? 250 }); // Default dimensions
-  const { nodes, updateOverallRating, attackId } = useStore(selector);
+  const { nodes, updateOverallRating, attackId } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const { attackScene } = useSelector((state) => state?.currentId);
 

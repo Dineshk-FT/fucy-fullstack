@@ -5,6 +5,7 @@ import useStore from '../../../store/Zustand/store';
 import { ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { OpenPropertiesTab, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -15,7 +16,7 @@ const selector = (state) => ({
 });
 export default function DiagonalNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector);
+  const { nodes, model, assets, getAssets, deleteNode } = useStore(selector, shallow);
   // console.log('model', model);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
@@ -43,10 +44,10 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
       });
   };
 
-  const copiedNodes = nodes.filter(node => node.isCopied === true);
+  const copiedNodes = nodes.filter((node) => node.isCopied === true);
 
   // Check if the current node is a copied node
-  const isCopiedNode = copiedNodes.some(node => node.id === id);
+  const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   return (
     <>
@@ -140,21 +141,21 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
           >
             Delete from Canvas
           </button>
-          {!isCopiedNode && ( 
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '6px',
-              fontSize: '0.8rem',
-              border: '1px solid #dc3545',
-              background: '#dc3545',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
-          >
-            Delete Permanently
-          </button>
-        )}
+          {!isCopiedNode && (
+            <button
+              onClick={handleDelete}
+              style={{
+                padding: '6px',
+                fontSize: '0.8rem',
+                border: '1px solid #dc3545',
+                background: '#dc3545',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Delete Permanently
+            </button>
+          )}
         </DialogActions>
       </Dialog>
     </>

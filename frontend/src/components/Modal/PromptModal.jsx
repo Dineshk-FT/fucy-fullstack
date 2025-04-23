@@ -17,6 +17,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import { useDispatch } from 'react-redux';
 import { setAttackScene, setTableOpen } from '../../store/slices/CurrentIdSlice';
+import { shallow } from 'zustand/shallow';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -30,7 +31,7 @@ const selector = (state) => ({
   getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 const PromptModal = ({ handleClose, open, refreshAPI }) => {
-  const { create, modelId, getAttackScenario, getGlobalAttackTrees } = useStore(selector);
+  const { create, modelId, getAttackScenario, getGlobalAttackTrees } = useStore(selector, shallow);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [templateDetails, setTemplateDetails] = useState({ name: '' });

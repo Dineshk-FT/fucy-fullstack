@@ -9,6 +9,7 @@ import AddModel from './AddModal';
 import useStore from '../../store/Zustand/store';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import PaperComponent from './PaperComponent';
+import { shallow } from 'zustand/shallow';
 
 const useStyles = makeStyles((theme) => ({
   MenuItem: {
@@ -27,7 +28,7 @@ const selector = (state) => ({
 const InitialModal = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { Models, getModels } = useStore(selector);
+  const { Models, getModels } = useStore(selector, shallow);
   const [open, setOpen] = useState({
     New: false,
     Open: false

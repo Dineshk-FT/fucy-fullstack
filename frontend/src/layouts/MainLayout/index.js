@@ -22,6 +22,7 @@ import { ArrowSquareDown } from 'iconsax-react';
 import { navbarSlide } from '../../store/slices/CurrentIdSlice';
 import HeaderSection from '../../Website/pages/Landing/HeaderSection';
 import useStore from '../../store/Zustand/store';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   isCollapsed: state.isCollapsed
@@ -59,7 +60,7 @@ const Main = styled('main', {
 });
 
 const MainLayout = ({ children }) => {
-  const { isCollapsed } = useStore(selector);
+  const { isCollapsed } = useStore(selector, shallow);
   const color = ColorTheme();
   const theme = useTheme();
 

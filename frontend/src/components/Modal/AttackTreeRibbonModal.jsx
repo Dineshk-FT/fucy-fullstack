@@ -1,11 +1,11 @@
-
-/*eslint-disable*/import React, { useState, useEffect } from 'react';
+/*eslint-disable*/ import React, { useState, useEffect } from 'react';
 import { List, ListItemButton, ListItemText, Button, CircularProgress, Box, Typography, Popper, Paper } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setAttackScene } from '../../store/slices/CurrentIdSlice';
 import { setTableOpen } from '../../store/slices/CurrentIdSlice';
 import useStore from '../../store/Zustand/store';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   attackScenarios: state.attackScenarios,
@@ -17,17 +17,15 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
   const navigate = useNavigate();
   const [selectedAttackTree, setSelectedAttackTree] = useState(null);
   const { modelId } = useSelector((state) => state?.pageName);
-  const { attackScenarios } = useStore(selector);
+  const { attackScenarios } = useStore(selector, shallow);
   const currentTable = useSelector((state) => state.currentId.tableOpen); // Debug current table state
 
   // Get all attack trees with full scene data
-  const attackTrees = attackScenarios?.subs
-    ?.flatMap(sub => sub.scenes || [])
-    .filter(tree => 'threat_id' in tree) || [];
+  const attackTrees = attackScenarios?.subs?.flatMap((sub) => sub.scenes || []).filter((tree) => 'threat_id' in tree) || [];
 
   const handleAttackTreeClick = (scene) => {
     if (scene) {
-      console.log(scene)
+      console.log(scene);
       // Dispatch actions synchronously
       dispatch(closeAll()); // Close other views first
       dispatch(setTableOpen('Attack Trees Canvas')); // Set the specific canvas
@@ -35,22 +33,22 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
 
       handleClose(); // Close the modal
       navigate(`/Models/${modelId}`); // Navigate to attacks route
-      
+
       // Force a re-check after navigation (workaround for timing issues)
       setTimeout(() => {
         dispatch(setTableOpen('Attack Trees Canvas'));
       }, 100);
-      
+
       setSelectedAttackTree(scene.ID); // Update visual feedback
     }
   };
 
   return (
-    <Popper 
-      open={open} 
-      anchorEl={anchorEl} 
-      placement="bottom-end" 
-      disablePortal={false} 
+    <Popper
+      open={open}
+      anchorEl={anchorEl}
+      placement="bottom-end"
+      disablePortal={false}
       style={{ zIndex: 1500 }}
       modifiers={[
         {

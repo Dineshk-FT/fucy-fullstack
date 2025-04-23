@@ -17,6 +17,7 @@ import {
 import useStore from '../../store/Zustand/store';
 import { useSelector } from 'react-redux';
 import { toPng } from 'html-to-image';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   template: state.assets.template,
@@ -24,11 +25,11 @@ const selector = (state) => ({
   nodes: state.nodes,
   edges: state.edges,
   canvasRef: state.canvasRef,
-  canvasImage: state.canvasImage,
+  canvasImage: state.canvasImage
 });
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, edges, canvasRef, canvasImage } = useStore(selector);
+  const { template, generateDocument, nodes, edges, canvasRef, canvasImage } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);

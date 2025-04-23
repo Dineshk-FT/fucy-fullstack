@@ -3,6 +3,7 @@ import EditContent from '../../../../components/Drawer/EditContent';
 import useStore from '../../../../store/Zustand/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -17,7 +18,7 @@ const selector = (state) => ({
 });
 const MenuCard = () => {
   const dispatch = useDispatch();
-  const { nodes, edges, setEdges, setNodes, model, assets, update, getAssets, getDamageScenarios } = useStore(selector);
+  const { nodes, edges, setEdges, setNodes, model, assets, update, getAssets, getDamageScenarios } = useStore(selector, shallow);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const setSelectedElement = (node) => dispatch(setSelectedBlock(node));
 

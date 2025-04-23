@@ -99,8 +99,6 @@ const LeftSection = () => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
 
-  console.log('left section rendered');
-
   useEffect(() => {
     getSidebarNode();
     getTemplates();

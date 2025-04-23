@@ -12,6 +12,7 @@ import CustomHandle from './CustomHandle';
 import AddPropertiesGate from '../Modal/AddPropertiesGate';
 import { colorPickerTab } from './colorPicker';
 import ColorTheme from '../../themes/ColorTheme';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
@@ -22,7 +23,7 @@ export default function TransferGate(props) {
   const color = ColorTheme();
 
   const [inputValue, setInputValue] = useState('');
-  const { nodes, update } = useStore(selector);
+  const { nodes, update } = useStore(selector, shallow);
   const [open, setOpen] = useState(false);
   const { setNodes } = useReactFlow();
   const [isHovered, setIsHovered] = useState(false);

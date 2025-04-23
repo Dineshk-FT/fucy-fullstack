@@ -14,6 +14,7 @@ import Select from '@mui/material/Select';
 import Chip from '@mui/material/Chip';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../store/Zustand/store';
+import { shallow } from 'zustand/shallow';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -44,7 +45,7 @@ export default function AddPropertiesGate({ open, handleClose, updateNode }) {
     properties: [],
     status: ''
   });
-  const { nodes, setNodes } = useStore(selector);
+  const { nodes, setNodes } = useStore(selector, shallow);
 
   const handleChangeType = (event) => {
     setProp({

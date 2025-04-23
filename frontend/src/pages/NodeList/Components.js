@@ -27,6 +27,7 @@ import {
 import AddNewNode from '../../ui-component/Modal/AddNewNode';
 import { Avatar, Typography } from '@mui/material';
 import ColorTheme from '../../themes/ColorTheme';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   sidebarNodes: state.sidebarNodes,
@@ -54,7 +55,7 @@ const iconComponents = {
 
 const Components = () => {
   const [open, setOpen] = useState(false);
-  const { sidebarNodes, getSidebarNode } = useStore(selector);
+  const { sidebarNodes, getSidebarNode } = useStore(selector, shallow);
   const color = ColorTheme();
 
   const [hoveredItem, setHoveredItem] = useState(null);

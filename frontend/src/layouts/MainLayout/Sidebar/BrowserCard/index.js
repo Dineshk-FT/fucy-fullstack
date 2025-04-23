@@ -325,7 +325,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setIsNodePasted
   } = useStore(selector, shallow);
 
-  console.log('browser rendered');
+  // console.log('browser rendered');
   const { modelId } = useSelector((state) => state?.pageName);
   const drawerwidth = 370;
   const { drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);

@@ -13,6 +13,7 @@ import { fontSize } from '../../themes/constant';
 import toast, { Toaster } from 'react-hot-toast';
 import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import { shallow } from 'zustand/shallow';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -67,7 +68,7 @@ const AddDataNode = ({ assets }) => {
     bgColor: ''
   });
 
-  const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector);
+  const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector, shallow);
 
   const handleChange = (event) => {
     const {

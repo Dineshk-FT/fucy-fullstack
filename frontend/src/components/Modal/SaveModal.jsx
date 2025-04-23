@@ -4,6 +4,7 @@ import React from 'react';
 import { makeStyles } from '@mui/styles';
 import WarningIcon from '@mui/icons-material/Warning';
 import useStore from '../../Zustand/store';
+import { shallow } from 'zustand/shallow';
 
 const useStyles = makeStyles((theme) => ({
   MenuItem: {
@@ -20,7 +21,7 @@ const selector = (state) => ({
 });
 
 const SaveModal = ({ open, handleClose, handleSave }) => {
-  const { nodes, edges } = useStore(selector);
+  const { nodes, edges } = useStore(selector, shallow);
   return (
     <>
       <Dialog

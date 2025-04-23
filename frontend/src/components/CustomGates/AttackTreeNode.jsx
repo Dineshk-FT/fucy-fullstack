@@ -4,12 +4,13 @@ import React from 'react';
 import { Handle, Position, NodeResizer, useReactFlow } from 'reactflow';
 import useStore from '../../store/Zustand/store';
 import { RatingColor } from '../Table/constraints';
+import { shallow } from 'zustand/shallow';
 
 const selector = (state) => ({
   attacks: state.attackScenarios['subs'][0]
 });
 const AttackTreeNode = ({ data, isConnectable, type, id }) => {
-  const { attacks } = useStore(selector);
+  const { attacks } = useStore(selector, shallow);
   const { getNodes, getEdges } = useReactFlow();
   const nodes = getNodes();
   const edges = getEdges();

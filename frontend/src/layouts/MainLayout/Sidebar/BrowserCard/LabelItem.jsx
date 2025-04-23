@@ -20,6 +20,7 @@ import {
 } from '../../../../assets/icons'; // adjust path if needed
 import useStore from '../../../../Zustand/store';
 import { drawerWidth } from '../../../../store/constant';
+import { shallow } from 'zustand/shallow';
 
 const useStyles = makeStyles((theme) => ({
   labelRoot: {
@@ -69,7 +70,7 @@ const selector = (state) => ({
 
 const LabelItem = React.memo(({ type = 'icon', icon, name, id, index, ids, onClick }) => {
   const classes = useStyles();
-  const { clickedItem } = useStore(selector);
+  const { clickedItem } = useStore(selector, shallow);
   const { drawerwidthChange } = useSelector((state) => state.canvas);
   const { isDark } = useSelector((state) => state.currentId); // adjust path
   const color = useSelector((state) => state.theme?.color); // adjust path
