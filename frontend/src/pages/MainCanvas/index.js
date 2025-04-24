@@ -16,7 +16,6 @@ import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
 import { CustomEdge } from '../../components/custom';
 import useStore from '../../store/Zustand/store';
-import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
 import AddLibrary from '../../components/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,6 +38,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 import RightDrawer from '../../layouts/MainLayout/RightSidebar';
 import ColorTheme from '../../themes/ColorTheme';
 import { ZoomControls } from './CanvasControls';
+import { onDrop } from './OnDrop';
+import CanvasToolbar from './CanvasToolbar';
+import { shallow } from 'zustand/shallow';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -305,6 +307,7 @@ export default function MainCanvas() {
   };
 
   const onNodeDragStart = useCallback((_, node) => {
+    setTimeout(() => checkForNodes(), 0);
     dragRef.current = node;
   }, []);
 
@@ -341,9 +344,8 @@ export default function MainCanvas() {
 
   const onNodeDragStop = useCallback(() => {
     nodesRefer.current = [...nodes]; // Update ref after drag stops
-    getGroupedNodes();
-    checkForNodes();
   }, [nodes]);
+
   function downloadImage(dataUrl) {
     const a = document.createElement('a');
     a.setAttribute('download', 'canvas-diagram.png');
@@ -374,138 +376,6 @@ export default function MainCanvas() {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
-
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const file = event.dataTransfer.getData('application/parseFile');
-      const template = event.dataTransfer.getData('application/template');
-      const group = event.dataTransfer.getData('application/group');
-      const dragItem = event.dataTransfer.getData('application/dragItem');
-      const parsedDragItem = dragItem ? JSON.parse(dragItem) : null;
-      let parsedNode;
-      let parsedTemplate;
-      let parsedNodeItem;
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY
-      });
-
-      const dropType = parsedDragItem ? 'dragItem' : file ? 'file' : group ? 'group' : 'template';
-
-      switch (dropType) {
-        case 'dragItem':
-          parsedNodeItem = parsedDragItem;
-          break;
-        case 'file':
-          parsedNode = JSON.parse(file);
-          break;
-        case 'group':
-          createGroup(position);
-          break;
-        case 'template':
-          parsedTemplate = JSON.parse(template);
-          break;
-        default:
-          console.error('Unsupported drop type');
-      }
-
-      if (parsedNode) {
-        const newNode = {
-          id: uid(),
-          type: parsedNode.type,
-          isAsset: false,
-          position,
-          properties: parsedNode.properties,
-          width: parsedNode?.width,
-          height: parsedNode?.height,
-          data: {
-            label: parsedNode.data['label'],
-            style: {
-              backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
-              borderRadius: '8px',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: '14px',
-              padding: '8px 12px',
-              ...style
-            }
-          }
-        };
-        dragAdd(newNode);
-      }
-
-      if (parsedNodeItem) {
-        const newNode = {
-          id: parsedNodeItem.id,
-          type: parsedNodeItem.type,
-          position,
-          data: {
-            label: parsedNodeItem.name,
-            nodeId: parsedNodeItem.nodeId,
-            style: {
-              backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
-              borderRadius: '8px',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: '14px',
-              padding: '8px 12px',
-              ...style
-            }
-          },
-          properties: parsedNodeItem.props || []
-        };
-        dragAdd(newNode);
-      }
-
-      if (parsedTemplate) {
-        let newNodes = [];
-        let newEdges = [];
-        const randomId = Math.floor(Math.random() * 1000);
-        const randomPos = Math.floor(Math.random() * 500);
-
-        parsedTemplate['nodes'].map((node) => {
-          newNodes.push({
-            id: `${node.id + randomId}`,
-            data: {
-              ...node?.data,
-              style: {
-                backgroundColor: node.data['bgColor'],
-                borderRadius: '8px',
-                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '14px',
-                padding: '8px 12px',
-                ...style
-              }
-            },
-            type: node.type,
-            isAsset: false,
-            position: {
-              x: node['position']['x'] + randomPos,
-              y: node['position']['y'] + randomPos
-            },
-            properties: node.properties,
-            parentId: node.parentId ? `${node.parentId + randomId}` : null,
-            extent: node?.extent ? node?.extent : null
-          });
-        });
-
-        parsedTemplate['edges'].map((edge) =>
-          newEdges.push({
-            id: uid(),
-            source: `${edge.source + randomId}`,
-            target: `${edge.target + randomId}`,
-            ...edgeOptions
-          })
-        );
-
-        dragAddNode(newNodes, newEdges);
-      }
-      checkForNodes();
-    },
-    [reactFlowInstance]
-  );
 
   const RefreshAPI = () => {
     getAssets(model?._id).catch((err) => {
@@ -884,21 +754,6 @@ export default function MainCanvas() {
     return null;
   };
 
-  const handleZoomIn = () => {
-    zoomIn({ duration: 300 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
-  };
-
-  const handleZoomOut = () => {
-    zoomOut({ duration: 300 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
-  };
-
-  const handleFitView = () => {
-    fitCanvasView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
-    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 500);
-  };
-
   const notify = (message, status) => toast[status](message);
 
   if (!isReady) return null;
@@ -940,7 +795,7 @@ export default function MainCanvas() {
             onNodeDragStop={onNodeDragStop}
             connectionLineStyle={connectionLineStyle}
             defaultEdgeOptions={edgeOptions}
-            onDrop={onDrop}
+            onDrop={(event) => onDrop(event, createGroup, reactFlowInstance, dragAdd, dragAddNode)}
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
@@ -959,201 +814,22 @@ export default function MainCanvas() {
             maxZoom={2}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 0.5,
-                  background: Color.tabBorder,
-                  backdropFilter: 'blur(4px)',
-                  borderRadius: '6px',
-                  padding: '2px 4px',
-                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
-                }}
-              >
-                <Tooltip title="Restore">
-                  <IconButton
-                    onClick={() => onRestore(assets?.template)}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Restore canvas"
-                  >
-                    <RestoreIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Save">
-                  <IconButton
-                    onClick={handleSaveToModel}
-                    sx={{
-                      // color: isDark == true ? '#64B5F6' : '#2196F3',
-                      color: isChanged ? '#FF3131' : '#32CD32',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Save canvas"
-                  >
-                    <SaveIcon sx={{ fontSize: 19 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Group Selected Nodes">
-                  <IconButton
-                    onClick={(e) => onSelectionClick(e, selectedNodes)}
-                    onDragStart={(e) => handleGroupDrag(e)}
-                    draggable={true}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Group selected nodes"
-                  >
-                    <GridOnIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Undo">
-                  <IconButton
-                    onClick={undo}
-                    disabled={undoStack.length === 0}
-                    sx={{
-                      color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          undoStack.length === 0
-                            ? 'transparent'
-                            : isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
-                        boxShadow:
-                          undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          undoStack.length === 0
-                            ? 'none'
-                            : isDark == true
-                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Undo action"
-                  >
-                    <UndoIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Redo">
-                  <span>
-                    <IconButton
-                      onClick={redo}
-                      disabled={redoStack.length === 0}
-                      sx={{
-                        color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
-                        padding: '4px',
-                        '&:hover': {
-                          background:
-                            redoStack.length === 0
-                              ? 'transparent'
-                              : isDark == true
-                              ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                              : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                          transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
-                          boxShadow:
-                            redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                          filter:
-                            redoStack.length === 0
-                              ? 'none'
-                              : isDark == true
-                              ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                              : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                        },
-                        '&:focus': {
-                          outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                          outlineOffset: '2px'
-                        }
-                      }}
-                      tabIndex={0}
-                      aria-label="Redo action"
-                    >
-                      <RedoIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title="Download as PNG">
-                  <IconButton
-                    onClick={handleDownload}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Download canvas as PNG"
-                  >
-                    <DownloadIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+              <CanvasToolbar
+                isDark={isDark}
+                Color={Color}
+                // isChanged={isChanged}
+                onRestore={onRestore}
+                handleSaveToModel={handleSaveToModel}
+                onSelectionClick={onSelectionClick}
+                selectedNodes={selectedNodes}
+                handleGroupDrag={handleGroupDrag}
+                undo={undo}
+                redo={redo}
+                undoStack={undoStack}
+                redoStack={redoStack}
+                handleDownload={handleDownload}
+                assets={assets}
+              />
             </Panel>
             <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />

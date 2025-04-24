@@ -17,7 +17,6 @@ import BrowserCard from './BrowserCard';
 import { setDrawerwidth } from '../../../store/slices/CanvasSlice';
 import { getNavbarHeight } from '../../../themes/constant';
 import ColorTheme from '../../../themes/ColorTheme';
-import { shallow } from 'zustand/shallow';
 
 export const ToasterContext = createContext();
 
@@ -31,10 +30,9 @@ const selector = (state) => ({
 const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const dispatch = useDispatch();
   const color = ColorTheme();
-  const { template, fetchModels, models, isCollapsed } = useStore(selector, shallow);
+  const { template, fetchModels, models, isCollapsed } = useStore(selector);
   const theme = useTheme();
   const isNavbarClose = useSelector((state) => state.currentId.isNavbarClose);
-  const Properties = useSelector((state) => state?.pageName?.Properties);
   const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox

@@ -57,6 +57,7 @@ import useStore from '../../../../store/Zustand/store';
 import RenderedTreeItems from './RenderedTreeItems';
 import EditName from './EditName';
 import EditProperties from '../../../../components/Poppers/EditProperties';
+import { shallow } from 'zustand/shallow';
 
 const imageComponents = {
   AttackIcon,
@@ -328,7 +329,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getGlobalAttackTrees,
     deleteAttacks,
     setIsNodePasted
-  } = useStore(selector);
+  } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
     node: 1,
