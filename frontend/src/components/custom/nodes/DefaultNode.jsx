@@ -1,14 +1,14 @@
 /*eslint-disable*/
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import useStore from '../../../store/Zustand/store';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { setAnchorEl, setSelectedBlock, setDetails, openHeader } from '../../../store/slices/CanvasSlice';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../themes/constant';
-import DetailsIcon from '@mui/icons-material/Details';
+import { setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
 import { shallow } from 'zustand/shallow';
+import useStore from '../../../store/Zustand/store';
+import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -16,83 +16,80 @@ const selector = (state) => ({
   deleteNode: state.deleteNode,
   getAssets: state.getAssets,
   assets: state.assets,
-  initialNodes: state.initialNodes,
+  originalNodes: state.originalNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-function DefaultNode({ id, data, type }) {
+export default function DefaultNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, initialNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
+  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector, shallow);
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [dimensions, setDimensions] = useState({
-    width: data?.style?.width ?? 120,
-    height: data?.style?.height ?? 40
-  });
+  const [width, setWidth] = useState(data?.style?.width ?? 120);
   const labelRef = useRef(null);
+  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
-  const timeoutRef = useRef(null);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
 
+  // console.log('isSelected', isSelected);
+
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
-
-  useEffect(() => setLabelValue(data?.label || ''), [data?.label]);
-
-  // Debounce resize updates to prevent excessive re-renders
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    setLabelValue(data?.label || '');
+  }, [data?.label]);
 
-  const handleResize = useCallback(
-    (_, { width: newWidth, height: newHeight }) => {
-      setDimensions({ width: newWidth, height: newHeight });
+  const handleResize = (_, { width: newWidth, height: newHeight }) => {
+    requestAnimationFrame(() => {
+      const updatedWidth = newWidth;
+      const updatedHeight = newHeight;
 
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      setWidth(updatedWidth);
+      setHeight(updatedHeight);
 
-      timeoutRef.current = setTimeout(() => {
-        setNodes((nodes) =>
-          nodes.map((node) =>
-            node.id === id
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    style: {
-                      ...node.data.style,
-                      height: newHeight,
-                      width: newWidth
-                    }
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  style: {
+                    ...node.data.style,
+                    height: updatedHeight,
+                    width: updatedWidth
                   }
                 }
-              : node
-          )
-        );
-      }, 100);
-    },
-    [id, setNodes]
-  );
+              }
+            : node
+        )
+      );
+    });
+  };
 
-  const updateNodeLabel = useCallback(
-    (newLabel) => {
-      setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: newLabel } } : node)));
-    },
-    [id, setNodes]
-  );
+  const updateNodeLabel = (newLabel) => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                label: newLabel
+              }
+            }
+          : node
+      )
+    );
+  };
 
   const handleLabelDoubleClick = () => {
     setIsEditing(true);
@@ -193,7 +190,7 @@ function DefaultNode({ id, data, type }) {
   };
 
   const handlePermanentDeleteClick = () => {
-    if (nodes.length > initialNodes.length) {
+    if (nodes.length > originalNodes.length) {
       setIsUnsavedDialogVisible(true);
     } else {
       handleDelete();
@@ -236,8 +233,8 @@ function DefaultNode({ id, data, type }) {
               : isSelected
               ? '0px 0px 7px 3px violet'
               : 'none',
-            width: dimensions.width,
-            height: dimensions.height,
+            width: width,
+            height: height,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -245,7 +242,6 @@ function DefaultNode({ id, data, type }) {
             padding: '5px',
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
-            // transition: 'width 0.2s ease, height 0.2s ease' // Smooth transition effect
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -261,11 +257,13 @@ function DefaultNode({ id, data, type }) {
             onBlur={handleLabelBlur}
             onKeyDown={handleKeyDown}
             style={{
-              maxWidth: dimensions.width - 10,
+              maxWidth: width - 10,
               textAlign: 'center',
               outline: 'none',
               cursor: 'text',
+
               ...(isEditing && {
+                // backgroundColor: 'white',
                 color: 'black',
                 padding: '0 4px',
                 borderRadius: '4px',
@@ -388,5 +386,3 @@ function DefaultNode({ id, data, type }) {
     </>
   );
 }
-
-export default React.memo(DefaultNode);

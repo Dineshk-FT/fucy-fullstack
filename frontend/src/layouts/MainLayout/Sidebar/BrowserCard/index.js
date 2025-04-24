@@ -1,15 +1,15 @@
 /*eslint-disable*/
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
-import ColorTheme from '../../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
-import useStore from '../../../../store/Zustand/store';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {
   ItemIcon,
   AttackIcon,
@@ -22,7 +22,13 @@ import {
   DocumentIcon,
   ReportIcon,
   LayoutIcon,
-  ModelIcon
+  ModelIcon,
+  ConfidentialityIcon,
+  IntegrityIcon,
+  AuthenticityIcon,
+  AuthorizationIcon,
+  Non_repudiationIcon,
+  AvailabilityIcon
 } from '../../../../assets/icons';
 import { makeStyles } from '@mui/styles';
 import { ReceiptItem } from 'iconsax-react';
@@ -34,17 +40,21 @@ import TopicIcon from '@mui/icons-material/Topic';
 import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import SecurityIcon from '@mui/icons-material/Security';
+import DraggableTreeItem from './DraggableItem';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import { clearAnchorEl, setDetails } from '../../../../store/slices/CanvasSlice';
-import CommonModal from '../../../../components/Modal/CommonModal';
-import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
+import { setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import toast from 'react-hot-toast';
-import { drawerWidth, getNavbarHeight } from '../../../../themes/constant';
+import { Avatar, AvatarGroup } from '@mui/material';
+import ColorTheme from '../../../../themes/ColorTheme';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
-import EditProperties from '../../../../components/Poppers/EditProperties';
+import { getNodeDetails } from '../../../../utils/Constraints';
+import { getNavbarHeight } from '../../../../themes/constant';
+import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
+import CommonModal from '../../../../components/Modal/CommonModal';
+import { threatType } from '../../../../components/Table/constraints';
+import useStore from '../../../../store/Zustand/store';
 import RenderedTreeItems from './RenderedTreeItems';
-import { shallow } from 'zustand/shallow';
 
 const imageComponents = {
   AttackIcon,
@@ -199,28 +209,24 @@ const useStyles = makeStyles((theme, isDark) => ({
   }
 }));
 
-const CardStyle = styled(Card, {
-  shouldForwardProp: (prop) => prop !== 'isDark' && prop !== 'isNavbarClose' && prop !== 'isCollapsed'
-})(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
-  marginBottom: '22px',
+const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
+  marginBottom: '16px', // Reduced margin for a tighter layout
   overflow: 'hidden',
   position: 'relative',
   height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
-  boxShadow: 'inset 0px 0px 7px gray',
-  '&:after': {
-    content: '"',
-    position: 'absolute',
-    borderRadius: '50%',
-    top: '-105px',
-    right: '-96px'
+  border: 'none',
+  borderRadius: '12px', // Slightly smaller border radius
+  background:
+    isDark == true
+      ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+      : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+  backdropFilter: 'blur(12px)', // Reduced blur for performance
+  boxShadow: isDark == true ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: '8px'
   },
-  '&::-webkit-scrollbar': {
-    width: '5px'
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: isDark
-      ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
-      : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
+  [theme.breakpoints.down('xs')]: {
+    marginBottom: '4px'
   }
 }));
 
@@ -233,10 +239,6 @@ const selector = (state) => ({
   edges: state.edges,
   attackNodes: state.attackNodes,
   attackEdges: state.attackEdges,
-  setAttackNodes: state.setAttackNodes,
-  setAttackEdges: state.setAttackEdges,
-  setInitialAttackNodes: state.setInitialAttackNodes,
-  setInitialAttackEdges: state.setInitialAttackEdges,
   initialAttackNodes: state.initialAttackNodes,
   initialAttackEdges: state.initialAttackEdges,
   model: state.model,
@@ -259,16 +261,24 @@ const selector = (state) => ({
   layouts: state.layouts,
   clickedItem: state.clickedItem,
   setClickedItem: state.setClickedItem,
-  updateModelName: state.updateModelName,
   update: state.updateAssets,
+  updateModelName: state.updateModelName,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
-  deleteAttacks: state.deleteAttacks,
-  setIsNodePasted: state.setIsNodePasted
+  deleteAttacks: state.deleteAttacks
 });
+
+const Properties = {
+  Confidentiality: ConfidentialityIcon,
+  Integrity: IntegrityIcon,
+  Authenticity: AuthenticityIcon,
+  Authorization: AuthorizationIcon,
+  'Non-repudiation': Non_repudiationIcon,
+  Availability: AvailabilityIcon
+};
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
@@ -313,17 +323,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     updateAttack,
     isDark,
     getGlobalAttackTrees,
-    deleteAttacks,
-    setAttackNodes,
-    setAttackEdges,
-    setInitialAttackNodes,
-    setInitialAttackEdges,
-    setIsNodePasted
-  } = useStore(selector, shallow);
-
-  // console.log('browser rendered');
+    deleteAttacks
+  } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
-  const { drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
+  const [count, setCount] = useState({
+    node: 1,
+    data: 1
+  });
+  const drawerwidth = 370;
+  const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
     attack: false,
@@ -333,19 +341,24 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState('');
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
-
-  const anchorElId = document.querySelector(`[data="${anchorEl?.sidebar}"]`) || null;
-  // console.log('anchorElId', anchorElId);
-  // console.log('anchorEl?.sidebar', anchorEl?.sidebar);
-  const [deleteScene, setDeleteScene] = useState({
-    type: '',
-    id: '',
-    name: ''
+  const [hovered, setHovered] = useState({
+    node: false,
+    data: false,
+    attack: false,
+    attack_rees: false,
+    id: ''
   });
 
-  const handleOpenDocumentDialog = useCallback(() => {
+  const [deleteScene, setDeleteScene] = useState({
+    type: '',
+    id: ''
+  });
+
+  // console.log('assets', assets);
+
+  const handleOpenDocumentDialog = () => {
     setOpenDocumentDialog(true);
-  }, []);
+  };
 
   const handleCloseDocumentDialog = () => {
     setOpenDocumentDialog(false);
@@ -374,22 +387,19 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
-  const handleOpenDeleteModal = useCallback((type, scene) => {
-    // console.log('scene', scene);
+  const handleOpenDeleteModal = (type, scene) => {
     setDeleteScene({
       type: type,
-      id: scene?.ID,
-      name: scene?.Name
+      id: scene?.ID
     });
     setOpenModal((state) => ({ ...state, delete: true }));
-  }, []);
+  };
 
   const handleCloseDeleteModal = () => {
     setOpenModal((state) => ({ ...state, delete: false }));
     setDeleteScene({
       type: '',
-      id: '',
-      name: ''
+      id: ''
     });
   };
   const handleDeleteAttack = () => {
@@ -447,33 +457,44 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setClickedItem(modelId);
   };
 
-  const handleClick = useCallback(
-    async (event, ModelId, name, id) => {
-      event.stopPropagation();
-      setClickedItem(id);
+  const handleAddNewNode = (e) => {
+    e.stopPropagation();
+    const nodeDetail = getNodeDetails('default', 'Node', count.node);
+    const list = [...nodes, nodeDetail];
+    setNodes(list);
+    setCount((prev) => ({ ...prev, node: prev.node + 1 }));
+    // dispatch(openAddNodeTab());
+  };
 
-      if (name === 'assets') {
-        dispatch(setPreviousTab(name));
-        dispatch(closeAll());
-      }
+  const handleAddDataNode = (e) => {
+    e.stopPropagation();
+    const nodeDetail = getNodeDetails('data', 'Data', count.data);
+    const list = [...nodes, nodeDetail];
+    setNodes(list);
+    setCount((prev) => ({ ...prev, data: prev.data + 1 }));
+    // dispatch(openAddDataNodeTab());
+  };
 
-      const get_api = {
-        assets: getAssets,
-        damage: getDamageScenarios,
-        threat: getThreatScenario,
-        attack: getAttackScenario,
-        risks: getRiskTreatment,
-        cybersecurity: getCyberSecurityScenario,
-        catalog: getCatalog
-      };
+  const handleClick = async (event, ModelId, name, id) => {
+    event.stopPropagation();
+    setClickedItem(id);
+    if (name === 'assets') {
+      dispatch(setPreviousTab(name));
+      dispatch(closeAll());
+    }
+    const get_api = {
+      assets: getAssets,
+      damage: getDamageScenarios,
+      threat: getThreatScenario,
+      attack: getAttackScenario,
+      risks: getRiskTreatment,
+      cybersecurity: getCyberSecurityScenario,
+      catalog: getCatalog
+    };
+    await get_api[name](ModelId);
+  };
 
-      await get_api[name](ModelId);
-    },
-    [dispatch, setClickedItem] // add other dependencies if needed
-  );
-  // console.log('clickedItem', clickedItem);
-  const handleOpenTable = useCallback((e, id, name) => {
-    // console.log('id', id);
+  const handleOpenTable = (e, id, name) => {
     e.stopPropagation();
     setClickedItem(id);
     if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
@@ -481,8 +502,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       dispatch(setTitle(name));
     }
     dispatch(setPreviousTab(name));
-  }, []);
-  const handleOpenAttackTree = useCallback((e, scene, name) => {
+  };
+
+  // console.log('attackNodes', attackNodes);
+  // handle the attack template comparision & pre-save before switching the attack tree
+  const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
     const prevSceneId = attackScene?.ID;
     if (name === 'Attack Trees') {
@@ -538,46 +562,159 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         // handleSave(prevSceneId);
       } else {
         dispatch(setAttackScene(scene));
-        setInitialAttackEdges(scene?.templates?.edges ?? []);
-        setInitialAttackNodes(scene?.templates?.nodes ?? []);
-        setAttackEdges(scene?.templates?.edges ?? []);
-        setAttackNodes(scene?.templates?.nodes ?? []);
       }
       // console.log('later');
       dispatch(setTableOpen('Attack Trees Canvas'));
     }
-  }, []);
+  };
 
-  const handleContext = useCallback((e, name) => {
+  const handleNodes = (e) => {
+    e.preventDefault();
+  };
+
+  const handleContext = (e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
       setOpenModal((state) => ({ ...state, attack: true }));
       setSubName(name);
     }
-  }, []);
+  };
 
   const handleAttackTreeClose = () => {
     setOpenModal((state) => ({ ...state, attack: false }));
   };
 
-  const RefreshAPI = () => {
-    getAssets(model?._id).catch((err) => {
-      notify('Failed to fetch assets: ' + err.message, 'error');
-    });
-    getDamageScenarios(model?._id).catch((err) => {
-      notify('Failed to fetch damage scenarios: ' + err.message, 'error');
-    });
+  const onDragStart = (event, item) => {
+    const parseFile = JSON.stringify(item);
+    event.dataTransfer.setData('application/cyber', parseFile);
+    event.dataTransfer.setData('application/dragItem', parseFile);
+    event.dataTransfer.effectAllowed = 'move';
   };
-  const handleSave = useCallback(() => {
-    const { nodes: nodeState } = useStore.getState();
-    // Don't mutate nodes directly – consider making a copy (safer in React)
-    const updatedNodes = nodeState?.map((node) => (node.isCopied ? { ...node, isCopied: false } : node));
-    // console.log('updatedNodes', updatedNodes);
-    setIsNodePasted(false);
 
+  const getTitleLabel = (icon, name, id) => {
+    const Image = imageComponents[icon];
+    return (
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+        <Box
+          color={color?.sidebarContent}
+          className={classes.title}
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 'fit-content',
+            display: 'flex',
+            alignItems: 'center',
+            background:
+              clickedItem === id
+                ? isDark == true
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                : 'transparent',
+            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+          }}
+          tabIndex={0} // Added for keyboard navigation
+          onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+          <Typography
+            variant="body2"
+            ml={1.25}
+            className={classes.labelTypo}
+            color="inherit"
+            fontSize={'18px !important'} // Slightly larger for emphasis
+            fontWeight={600}
+            noWrap
+            sx={{ letterSpacing: '0.5px' }}
+          >
+            {name}
+          </Typography>
+        </Box>
+      </Tooltip>
+    );
+  };
+
+  const getImageLabel = (icon, name, id) => {
+    const Image = imageComponents[icon];
+    return (
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 'fit-content',
+            display: 'flex',
+            alignItems: 'center',
+            background:
+              clickedItem === id
+                ? isDark == true
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                : 'transparent',
+            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+          }}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
+        >
+          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
+          <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const getLabel = (icon, name, index, id) => {
+    const IconComponent = iconComponents[icon];
+    return (
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+        <div
+          className={classes.labelRoot}
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 'fit-content',
+            display: 'flex',
+            alignItems: 'center',
+            background:
+              clickedItem === id
+                ? isDark == true
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                : 'transparent',
+            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+          }}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
+        >
+          {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
+          <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
+            {index && `${index}. `}
+            {name}
+          </Typography>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const handleSave = () => {
+    const template = {
+      nodes: nodes,
+      edges: edges
+    };
+    nodes.forEach((node) => {
+      if (node.isCopied == true) {
+        node.isCopied = false;
+      }
+    });
+    setIsNodePasted(false);
     const details = {
       'model-id': model?._id,
-      template: JSON.stringify({ nodes: updatedNodes, edges }),
+      template: JSON.stringify(template),
       assetId: assets?._id
     };
 
@@ -591,158 +728,499 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           notify(res.error ?? 'Something went wrong', 'error');
         }
       })
-      .catch(() => {
+      .catch((err) => {
         notify('Something went wrong', 'error');
       });
-  }, [update]);
+  };
 
-  const getTitleLabel = (icon, name, id) => {
-    const Image = imageComponents[icon];
-    return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
-        <div>
-          <Box
-            color={color?.sidebarContent}
-            className={classes.title}
-            sx={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: 'fit-content',
-              display: 'flex',
-              alignItems: 'center',
-              background:
-                clickedItem === id
-                  ? isDark == true
-                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                  : 'transparent',
-              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-            }}
-            tabIndex={0} // Added for keyboard navigation
-            onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
-          >
-            {Image && (
-              <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />
-            )}
-            <Typography
-              variant="body2"
-              ml={1.25}
-              className={classes.labelTypo}
-              color="inherit"
-              fontSize={'18px !important'} // Slightly larger for emphasis
-              fontWeight={600}
-              noWrap
-              sx={{ letterSpacing: '0.5px' }}
+  const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
+    <TreeItem
+      key={data.id}
+      nodeId={data.id}
+      label={getImageLabel(data.icon, data.name, data.id)}
+      onClick={onClick}
+      onContextMenu={contextMenuHandler}
+      className={classes.treeItem}
+    >
+      {children}
+    </TreeItem>
+  );
+
+  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
+    return subs?.map((sub) =>
+      sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
+        <TreeItem
+          key={sub.id}
+          nodeId={sub.id}
+          label={
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
+              onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
             >
-              {name}
-            </Typography>
-          </Box>
-        </div>
-      </Tooltip>
+              <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
+              {hovered[sub.type] && (
+                <Box
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    contextMenuHandler(e, sub.name);
+                  }}
+                >
+                  <ControlPointIcon color="primary" sx={{ fontSize: 19 }} />
+                </Box>
+              )}
+            </Box>
+          }
+          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+          // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+        >
+          {additionalMapping && additionalMapping(sub)}
+        </TreeItem>
+      ) : (
+        <TreeItem
+          key={sub.id}
+          nodeId={sub.id}
+          label={getLabel('TopicIcon', sub.name, null, sub.id)}
+          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+        >
+          {additionalMapping && additionalMapping(sub)}
+        </TreeItem>
+      )
     );
   };
 
-  // console.log('sidebar rendered');
-  const getImageLabel = useCallback((icon, name, id) => {
-    const Image = imageComponents[icon];
-    return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
-        <div>
-          <Box
-            color={color?.sidebarContent}
-            className={classes.title}
-            sx={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: 'fit-content',
-              display: 'flex',
-              alignItems: 'center',
-              background:
-                clickedItem === id
-                  ? isDark == true
-                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                  : 'transparent',
-              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-            }}
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
-          >
-            {Image && (
-              <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />
-            )}
-            <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
-              {name}
-            </Typography>
-          </Box>
-        </div>
-      </Tooltip>
-    );
-  }, []);
+  const renderTreeItems = (data, type) => {
+    if (!data) return null;
 
-  const getLabel = useCallback((icon, name, index, id, ids, onClick) => {
-    // console.log('onClick', onClick);
-    const IconComponent = iconComponents[icon];
-    return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
-        <div>
-          <div
-            className={classes.labelRoot}
-            style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: 'fit-content',
-              display: 'flex',
-              alignItems: 'center',
-              background:
-                clickedItem === id
-                  ? isDark == true
-                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                  : 'transparent',
-              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-            }}
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
-            onClick={(e) => onClick && onClick(e)}
-          >
-            {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
-            <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
-              {index && `${index}. `}
-              {name}
-              {ids && ids.length && ` [${ids.length}]`}
-            </Typography>
-          </div>
-        </div>
-      </Tooltip>
-    );
-  }, []);
+    switch (type) {
+      case 'assets': {
+        const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
+        const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
+        const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
 
-  const handleClosePopper = () => {
-    dispatch(clearAnchorEl());
+        const renderProperties = (properties) => {
+          // console.log('properties', properties);
+          if (!properties || properties.length === 0) return null;
+
+          // Extract names for processing
+          const propertyNames = properties.map((prop) => prop.name);
+
+          const displayedProperties = propertyNames.slice(0, 2);
+          const remainingCount = propertyNames.length - 2;
+
+          return (
+            <Tooltip
+              title={
+                <Box display="flex" flexDirection="column" alignItems="start">
+                  {propertyNames?.map((name, index) => (
+                    <Box key={index} display="flex" alignItems="center" gap={1}>
+                      <Avatar sx={{ width: 18, height: 18 }}>
+                        <img src={Properties[name]} alt={name} width="100%" />
+                      </Avatar>
+                      <Typography variant="body2" sx={{ color: 'white' }}>
+                        {name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              }
+              arrow
+            >
+              <AvatarGroup max={3} spacing="medium">
+                {displayedProperties?.map((name, index) => (
+                  <Avatar key={index} sx={{ width: 20, height: 20 }}>
+                    <img src={Properties[name]} alt={name} width="100%" />
+                  </Avatar>
+                ))}
+                {remainingCount > 0 && (
+                  <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'transparent' }}>+{remainingCount}</Avatar>
+                )}
+              </AvatarGroup>
+            </Tooltip>
+          );
+        };
+
+        const renderSection = (nodeId, label, details, type) => {
+          if (!details.length) return null;
+          return (
+            <DraggableTreeItem
+              nodeId={nodeId}
+              label={
+                nodeId === 'nodes_section' || nodeId === 'data_section' ? (
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    onMouseEnter={() =>
+                      setHovered((state) => ({
+                        ...state,
+                        node: nodeId === 'nodes_section' ? true : state.node,
+                        data: nodeId === 'data_section' ? true : state.data
+                      }))
+                    }
+                    onMouseLeave={() =>
+                      setHovered((state) => ({
+                        ...state,
+                        node: nodeId === 'nodes_section' ? false : state.node,
+                        data: nodeId === 'data_section' ? false : state.data
+                      }))
+                    }
+                  >
+                    <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
+                    {(nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data) ? (
+                      <Box onClick={nodeId === 'nodes_section' ? handleAddNewNode : handleAddDataNode}>
+                        <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
+                      </Box>
+                    ) : null}
+                  </Box>
+                ) : (
+                  getLabel('TopicIcon', label, null, nodeId)
+                )
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                setClickedItem(nodeId);
+              }}
+              className={classes.template}
+            >
+              {details?.map((detail, i) => {
+                // console.log('detail', detail);
+                return detail.name.length && detail?.props?.length > 0 ? (
+                  <DraggableTreeItem
+                    key={detail.nodeId}
+                    nodeId={detail.nodeId}
+                    sx={{
+                      background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
+                    }}
+                    label={
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                          <Box
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'fit-content'
+                            }}
+                          >
+                            {i + 1}.{' '}
+                            <Typography component="span" noWrap>
+                              {detail.name}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                        {renderProperties(detail?.props)}
+                      </Box>
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                    }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                      const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
+                      dispatch(
+                        setAnchorEl({
+                          type: type,
+                          value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
+                        })
+                      );
+                      dispatch(
+                        type === 'edge'
+                          ? setEdgeDetails({
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false,
+                              style: selected?.style ?? {},
+                              startPoint: selected?.markerStart?.color ?? '#000000',
+                              endPoint: selected?.markerEnd?.color ?? '#000000'
+                            })
+                          : setDetails({
+                              name: selected?.data?.label ?? '',
+                              properties: selected?.properties ?? [],
+                              isAsset: selected?.isAsset ?? false
+                            })
+                      );
+                    }}
+                    onDragStart={(e) => onDragStart(e, detail)}
+                  />
+                ) : null;
+              })}
+            </DraggableTreeItem>
+          );
+        };
+
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'assets', data.id),
+          handleNodes,
+          <>
+            {renderSection('nodes_section', 'Components', nodesDetail, 'node')}
+            {renderSection('data_section', 'Data', dataDetail, 'data')}
+            {renderSection('edges_section', 'Connectors', edgesDetail, 'edge')}
+          </>
+        );
+      }
+
+      case 'damageScenarios':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'damage', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            if (sub.name === 'Damage Scenarios Derivations') {
+              return sub.Derivations?.map((derivation, i) => (
+                <TreeItem
+                  onClick={(e) => e.stopPropagation()}
+                  key={derivation.id}
+                  nodeId={derivation.id}
+                  label={getLabel('TopicIcon', derivation.name, i + 1, derivation.id)}
+                />
+              ));
+            }
+            if (sub.name === 'Damage Scenarios - Impact Ratings') {
+              return sub.Details?.map((detail, i) => (
+                <TreeItem
+                  onClick={(e) => e.stopPropagation()}
+                  key={detail._id}
+                  nodeId={detail._id}
+                  label={getLabel('DangerousIcon', detail.Name, i + 1, detail._id)}
+                />
+              ));
+            }
+          })
+        );
+
+      case 'threatScenarios':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'threat', data.id),
+          null,
+          renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
+            let key = 0;
+            return sub.Details?.flatMap((detail, i) =>
+              (sub.name === 'Threat Scenarios'
+                ? detail?.Details?.flatMap((nodeDetail) =>
+                    nodeDetail?.props?.map((prop) => {
+                      key++;
+                      return {
+                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                          detail?.damage_name
+                        } [${detail?.id}]`,
+                        nodeId: prop.id.concat(detail?.rowId),
+                        extraProps: {
+                          threatId: prop?.id,
+                          damageId: detail?.rowId
+                        }
+                      };
+                    })
+                  )
+                : [
+                    {
+                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                      nodeId: detail?.id,
+                      extraProps: {}
+                    }
+                  ]
+              ).map(({ label, nodeId, extraProps }) => (
+                <DraggableTreeItem
+                  draggable={true}
+                  key={nodeId}
+                  nodeId={nodeId}
+                  label={getLabel('TopicIcon', label, key || i + 1, nodeId)}
+                  onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ))
+            );
+          })
+        );
+
+      case 'attackScenarios':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'attack', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
+            sub.scenes?.map((at_scene, i) => {
+              const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
+
+              return sub.name === 'Attack' ? (
+                <DraggableTreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
+                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
+                    >
+                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
+                      {hovered.id === at_scene?.ID && (
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDeleteModal(sub?.type, at_scene);
+                          }}
+                        >
+                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
+                        </Box>
+                      )}
+                    </Box>
+                  }
+                  draggable
+                  onDragStart={(e) => onDragStart(e, Details)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <TreeItem
+                  key={at_scene.ID}
+                  nodeId={at_scene.ID}
+                  label={
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
+                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
+                    >
+                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
+                      {hovered.id === at_scene?.ID && (
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDeleteModal(sub?.type, at_scene);
+                          }}
+                        >
+                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
+                        </Box>
+                      )}
+                    </Box>
+                  }
+                  onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
+                />
+              );
+            })
+          )
+        );
+      case 'riskTreatment':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'risks', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.Derivations?.map((derivation) => (
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={derivation.id}
+                nodeId={derivation.id}
+                label={getLabel('TopicIcon', derivation.name, null, derivation.id)}
+              />
+            ));
+          })
+        );
+      case 'cybersecurity':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.scenes?.map((scene) => (
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={scene.ID}
+                nodeId={scene.ID}
+                label={getLabel('TopicIcon', scene.Name, null, scene.ID)}
+              />
+            ));
+          })
+        );
+
+      case 'catalog':
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, 'catalog', data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            return sub.subs_scenes?.map((scene) => (
+              <TreeItem
+                key={scene.id}
+                nodeId={scene.id}
+                label={getLabel('TopicIcon', scene.name, null, scene.id)}
+                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+              >
+                {scene.item_name?.map((subScene) => (
+                  <DraggableTreeItem
+                    key={subScene.id}
+                    nodeId={subScene.id}
+                    label={getLabel('TopicIcon', subScene.name, null, subScene.id)}
+                    draggable={true}
+                    onClick={(e) => e.stopPropagation()}
+                    onDragStart={(e) => onDragStart(e, subScene)}
+                  />
+                ))}
+              </TreeItem>
+            ));
+          })
+        );
+
+      case 'documents':
+        return renderTreeItem(
+          data,
+          (e) => {
+            e.stopPropagation();
+            handleOpenDocumentDialog();
+          },
+          null,
+          null
+        );
+
+      default:
+        return renderTreeItem(
+          data,
+          (e) => handleClick(e, model?._id, data.name, data.id),
+          null,
+          renderSubItems(data.subs, handleOpenTable, null, (sub) =>
+            sub.Details?.map((detail) => (
+              <TreeItem
+                onClick={(e) => e.stopPropagation()}
+                key={detail._id}
+                nodeId={detail._id}
+                label={getLabel('DangerousIcon', detail.name, null, detail._id)}
+              />
+            ))
+          )
+        );
+    }
   };
 
   return (
     <>
-      {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />}
+      <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
 
       <CardStyle
         isCollapsed={isCollapsed}
         isNavbarClose={isNavbarClose}
-        isDark={isDark}
         sx={{
           background: color.tabBorder,
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
-            width: '5px'
+            width: '5px' // Thinner scrollbar
           },
           '&::-webkit-scrollbar-thumb': {
-            background: isDark
-              ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
-              : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)'
+            background:
+              isDark == true
+                ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
+                : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)',
+            borderRadius: '3px'
           }
         }}
       >
@@ -793,52 +1271,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               }
               sx={{ '& .Mui-selected': { backgroundColor: 'transparent !important' } }}
             >
-              {scenarios.map(({ name, scene }, i) => (
-                <RenderedTreeItems
-                  key={i}
-                  data={scene}
-                  type={name}
-                  getLabel={getLabel}
-                  getImageLabel={getImageLabel}
-                  setClickedItem={setClickedItem}
-                  classes={classes}
-                  handleOpenTable={handleOpenTable}
-                  handleContext={handleContext}
-                  handleOpenDeleteModal={handleOpenDeleteModal}
-                  handleOpenAttackTree={handleOpenAttackTree}
-                  handleClick={handleClick}
-                  handleOpenDocumentDialog={handleOpenDocumentDialog}
-                  handleSave={handleSave}
-                />
-              ))}
+              {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
             </TreeItem>
           </TreeView>
         </CardContent>
       </CardStyle>
-      {anchorElId && (
-        <EditProperties
-          anchorEl={anchorElId}
-          handleSaveEdit={handleSave}
-          handleClosePopper={handleClosePopper}
-          setDetails={setDetails}
-          details={details}
-          dispatch={dispatch}
-          nodes={nodes}
-          setNodes={setNodes}
-          edges={edges}
-          setEdges={setEdges}
-        />
-      )}
       <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />
       <ConfirmDeleteDialog
         open={openModal?.delete}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteAttack}
-        name={deleteScene?.name}
+        type={deleteScene?.type}
       />
     </>
   );
 };
 
-// Export with React.memo for top-level memoization
-export default React.memo(BrowserCard);
+export default BrowserCard;

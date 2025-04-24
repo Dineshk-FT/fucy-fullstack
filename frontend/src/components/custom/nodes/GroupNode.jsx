@@ -1,10 +1,10 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import useStore from '../../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import useThrottle from '../../../hooks/useThrottle';
 import { useSelector } from 'react-redux';
+import useThrottle from '../../../hooks/useThrottle';
+import useStore from '../../../store/Zustand/store';
 
 const selector = (state) => ({
   nodes: state.nodes
@@ -49,19 +49,18 @@ const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
     setValue(data?.label || '');
   }, [data?.label]);
 
-  const handleInput = useCallback((e) => {
+  const handleChange = (e) => {
     const val = e.target.value;
     setValue(val);
     setNodes(nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node)));
-  }, []);
+  };
 
   return (
-    <div style={{ height: dimensions.height, width: dimensions.width }}>
+    <div style={{ height: dimensions.height, width: dimensions.width, transition: 'width 0.2s ease, height 0.2s ease' }}>
       <input
         type="text"
-        name="group"
         value={value}
-        onChange={handleInput}
+        onChange={handleChange}
         style={{
           fontSize: `${fontSize}px`,
           fontWeight: 600,
@@ -101,4 +100,4 @@ const CustomGroupNode = ({ data, id, isConnectable, ...rest }) => {
   );
 };
 
-export default React.memo(CustomGroupNode);
+export default CustomGroupNode;

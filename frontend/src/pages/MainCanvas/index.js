@@ -1,19 +1,25 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import ReactFlow, { MiniMap, Background, ReactFlowProvider, getViewportForBounds, Panel, getNodesBounds } from 'reactflow';
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  ReactFlowProvider,
+  getRectOfNodes,
+  getTransformForBounds,
+  MarkerType,
+  Panel,
+  useReactFlow
+} from 'reactflow';
 import '../index.css';
 import 'reactflow/dist/style.css';
 import { v4 as uid } from 'uuid';
+import { CustomEdge } from '../../components/custom';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { toPng } from 'html-to-image';
-import { lazy, Suspense } from 'react';
-const EditEdge = lazy(() => import('../../components/custom/edges/EditEdge'));
-const EditProperties = lazy(() => import('../../components/Poppers/EditProperties'));
-const AddLibrary = lazy(() => import('../../components/Modal/AddLibrary'));
+import AddLibrary from '../../components/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
-import RightDrawer from '../../layouts/MainLayout/RightSidebar';
-import ColorTheme from '../../themes/ColorTheme';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import {
   OpenPropertiesTab,
@@ -23,14 +29,25 @@ import {
   setAnchorEl,
   clearAnchorEl
 } from '../../store/slices/CanvasSlice';
+import StepEdge from '../../components/custom/edges/StepEdge';
+import { Button, Tooltip, Typography, IconButton, Box, Zoom } from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditNode from '../../components/Poppers/EditNode';
-import useThrottle from '../../hooks/useThrottle';
-import CanvasToolbar from './CanvasToolbar';
-import ContextMenu from './ContextMenu';
-import { ZoomControls } from './CanvasControls';
-import { useEdgeConfig } from './EdgeConfig';
-import { onDrop } from './OnDrop';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import EditEdge from '../../components/custom/edges/EditEdge';
+import EditProperties from '../../components/Poppers/EditProperties';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import FitScreenIcon from '@mui/icons-material/FitScreen';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import DownloadIcon from '@mui/icons-material/Download';
+import RightDrawer from '../../layouts/MainLayout/RightSidebar';
+import ColorTheme from '../../themes/ColorTheme';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -67,15 +84,65 @@ const selector = (state) => ({
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges,
-  setCanvasRef: state.setCanvasRef
+  initialEdges: state.initialEdges
 });
+
+// Edge line styling
+const connectionLineStyle = {
+  stroke: '#64B5F6',
+  strokeWidth: 2,
+  strokeDasharray: '5,5'
+};
+
+const edgeOptions = {
+  type: 'step',
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
+  },
+  markerStart: {
+    type: MarkerType.ArrowClosed,
+    orient: 'auto-start-reverse',
+    width: 18,
+    height: 18,
+    color: '#64B5F6'
+  },
+  animated: true,
+  style: {
+    strokeWidth: 2,
+    stroke: '#808080',
+    start: false,
+    end: true,
+    strokeDasharray: '0'
+  },
+  properties: ['Confidentiality'],
+  data: {
+    label: 'edge',
+    style: {
+      background: 'rgba(255, 255, 255, 0.8)',
+      borderRadius: '4px',
+      padding: '2px 4px',
+      fontFamily: "'Poppins', sans-serif",
+      fontSize: '12px',
+      color: '#333333'
+    }
+  }
+};
+
+const CustomStepEdge = (props) => {
+  return <StepEdge {...props} />;
+};
+
+const edgeTypes = {
+  custom: CustomEdge,
+  step: CustomStepEdge
+};
 
 const flowKey = 'example-flow';
 
 export default function MainCanvas() {
-  // Edge line styling (now inside component)
-
   const {
     nodes,
     edges,
@@ -111,22 +178,19 @@ export default function MainCanvas() {
     setPropertiesOpen,
     isDark,
     initialNodes,
-    initialEdges,
-    setCanvasRef
+    initialEdges
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
+  // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
+  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
-  const { connectionLineStyle, edgeOptions, edgeTypes } = useEdgeConfig();
   const reactFlowWrapper = useRef(null);
-
-  // Spinner overlay during drag
-  const [isDragging, setIsDragging] = useState(false);
-  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, selectedBlock } = useSelector(
+  const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
@@ -140,44 +204,8 @@ export default function MainCanvas() {
   const nodesRef = useRef(nodes);
   const nodesRefer = useRef(nodes);
   const edgesRef = useRef(edges);
-
+  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
   const [zoomLevel, setZoomLevel] = useState(1);
-
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    setCanvasRef(canvasRef);
-
-    // Capture image before unmounting
-    return () => {
-      if (canvasRef.current) {
-        const reactFlowViewport = canvasRef.current.querySelector('.react-flow__viewport');
-        if (reactFlowViewport && nodes.length > 0) {
-          const imageWidth = 1920;
-          const imageHeight = 1080;
-          const nodesBounds = getNodesBounds(nodes);
-          const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
-
-          toPng(reactFlowViewport, {
-            backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
-            width: imageWidth,
-            height: imageHeight,
-            style: {
-              width: `${imageWidth}px`,
-              height: `${imageHeight}px`,
-              transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
-            },
-            ignoreElements: (el) => el.tagName === 'style', // Ignore style elements
-            skipFonts: true // Skip font embedding
-          })
-            .then((dataUrl) => {
-              useStore.getState().setCanvasImage(dataUrl); // Store the image
-            })
-            .catch((err) => console.error('Failed to capture image on unmount:', err));
-        }
-      }
-    };
-  }, [nodes, canvasRef, setCanvasRef, isDark]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -222,13 +250,16 @@ export default function MainCanvas() {
       });
   };
 
-  // const handleCheckForChange = () => {
-  //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-  //     return true;
-  //   }
-  //   return false;
-  // };
-  // const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
+  // useEffect(() => {
+
+  // }, []);
+  const handleCheckForChange = () => {
+    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+      return true;
+    }
+    return false;
+  };
+  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -236,11 +267,11 @@ export default function MainCanvas() {
     setNodes([]);
     setEdges([]);
     setTimeout(() => setIsReady(true), 0);
-    // return () => {
-    //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-    //     handleSaveToModel();
-    //   }
-    // };
+    return () => {
+      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+        handleSaveToModel();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -272,125 +303,218 @@ export default function MainCanvas() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nodes, edges]);
 
-  // On drag start, cache the dragged node and all its children (flattened)
+  const checkForNodes = () => {
+    const [intersectingNodesMap, nodes] = getGroupedNodes();
+    let values = Object.values(intersectingNodesMap).flat();
+    let updated = nodes.map((item1) => {
+      const match = values.find((item2) => item2.id === item1.id);
+      return match ? match : item1;
+    });
+    setNodes(updated);
+  };
+
   const onNodeDragStart = useCallback((_, node) => {
-    // Promise.resolve().then(() => setIsDragging(true));
     dragRef.current = node;
-    if (node.type === 'group') {
-      // Only call once and store the result
-      const [intersectingNodesMap, nodes] = getGroupedNodes();
-
-      // Do the merging directly here
-      const values = Object.values(intersectingNodesMap).flat();
-      const updated = nodes.map((item1) => {
-        const match = values.find((item2) => item2.id === item1.id);
-        return match ? match : item1;
-      });
-
-      setNodes(updated);
-    }
   }, []);
 
-  const throttledOnNodeDrag = useThrottle((event, node) => {
-    if (node.type !== 'group') return;
-
+  const onNodeDrag = useCallback((event, node) => {
     const prevNode = nodesRefer.current.find((n) => n.id === node.id);
     if (!prevNode) return;
 
     const deltaX = node.position.x - prevNode.position.x;
     const deltaY = node.position.y - prevNode.position.y;
 
-    if (deltaX === 0 && deltaY === 0) return;
+    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
 
-    // Step 1: Prepare a lookup for children
-    const childMap = new Map();
-    nodesRefer.current.forEach((n) => {
-      if (!childMap.has(n.parentId)) childMap.set(n.parentId, []);
-      childMap.get(n.parentId).push(n);
-    });
-
-    // Step 2: Collect updated positions recursively
+    // Use a Map to track updated positions
     const updatedPositions = new Map();
 
-    const moveNodeAndChildren = (nodeId, dx, dy) => {
-      const children = childMap.get(nodeId) || [];
-      for (const child of children) {
-        const newX = child.position.x + dx;
-        const newY = child.position.y + dy;
-        updatedPositions.set(child.id, { x: newX, y: newY });
-
-        moveNodeAndChildren(child.id, dx, dy); // recurse
-      }
+    const moveChildren = (parentId, dx, dy) => {
+      nodesRefer.current.forEach((child) => {
+        if (child.parentId === parentId) {
+          const newPos = {
+            x: child.position.x + dx,
+            y: child.position.y + dy
+          };
+          updatedPositions.set(child.id, newPos);
+          moveChildren(child.id, dx, dy);
+        }
+      });
     };
 
-    // Start with the dragged group node itself
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
-    moveNodeAndChildren(node.id, deltaX, deltaY);
+    moveChildren(node.id, deltaX, deltaY);
 
-    // Step 3: Apply updates
-    setNodes((prevNodes) => {
-      let changed = false;
-      const updated = prevNodes.map((n) => {
-        if (updatedPositions.has(n.id)) {
-          const newPos = updatedPositions.get(n.id);
-          if (n.position.x !== newPos.x || n.position.y !== newPos.y) {
-            changed = true;
-            return { ...n, position: newPos };
-          }
-        }
-        return n;
-      });
+    setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
+  }, []);
 
-      return changed ? updated : prevNodes;
-    });
-  }, 30);
-
-  const onNodeDrag = useCallback(
-    (event, node) => {
-      throttledOnNodeDrag(event, node);
-    },
-    [throttledOnNodeDrag]
-  );
-
-  // On drag stop, flush any pending updates, update refs, and clear cache
   const onNodeDragStop = useCallback(() => {
     nodesRefer.current = [...nodes]; // Update ref after drag stops
-    // Promise.resolve().then(() => setIsDragging(false));
+    getGroupedNodes();
+    checkForNodes();
   }, [nodes]);
+  function downloadImage(dataUrl) {
+    const a = document.createElement('a');
+    a.setAttribute('download', 'canvas-diagram.png');
+    a.setAttribute('href', dataUrl);
+    a.click();
+  }
 
   const imageWidth = 1920;
   const imageHeight = 1080;
 
   const handleDownload = () => {
-    const nodesBounds = getNodesBounds(nodes);
-    const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+    const nodesBounds = getRectOfNodes(nodes);
+    const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
 
     toPng(document.querySelector('.react-flow__viewport'), {
-      backgroundColor: isDark === true ? '#1E1E1E' : '#F5F5F5',
+      backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',
       width: imageWidth,
       height: imageHeight,
       style: {
+        width: imageWidth,
+        height: imageHeight,
         transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
-      },
-      ignoreElements: (el) => el.tagName === 'style' || el.tagName === 'link',
-      skipFonts: true,
-      filter: (node) => node.tagName !== 'style' && node.tagName !== 'link'
-    })
-      .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = 'Item-Defination.png';
-        link.href = dataUrl;
-        link.click();
-      })
-      .catch((error) => {
-        console.error('Error downloading image:', error);
-      });
+      }
+    }).then(downloadImage);
   };
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  const onDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      const file = event.dataTransfer.getData('application/parseFile');
+      const template = event.dataTransfer.getData('application/template');
+      const group = event.dataTransfer.getData('application/group');
+      const dragItem = event.dataTransfer.getData('application/dragItem');
+      const parsedDragItem = dragItem ? JSON.parse(dragItem) : null;
+      let parsedNode;
+      let parsedTemplate;
+      let parsedNodeItem;
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      const dropType = parsedDragItem ? 'dragItem' : file ? 'file' : group ? 'group' : 'template';
+
+      switch (dropType) {
+        case 'dragItem':
+          parsedNodeItem = parsedDragItem;
+          break;
+        case 'file':
+          parsedNode = JSON.parse(file);
+          break;
+        case 'group':
+          createGroup(position);
+          break;
+        case 'template':
+          parsedTemplate = JSON.parse(template);
+          break;
+        default:
+          console.error('Unsupported drop type');
+      }
+
+      if (parsedNode) {
+        const newNode = {
+          id: uid(),
+          type: parsedNode.type,
+          isAsset: false,
+          position,
+          properties: parsedNode.properties,
+          width: parsedNode?.width,
+          height: parsedNode?.height,
+          data: {
+            label: parsedNode.data['label'],
+            style: {
+              backgroundColor: parsedNode?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
+              ...style
+            }
+          }
+        };
+        dragAdd(newNode);
+      }
+
+      if (parsedNodeItem) {
+        const newNode = {
+          id: parsedNodeItem.id,
+          type: parsedNodeItem.type,
+          position,
+          data: {
+            label: parsedNodeItem.name,
+            nodeId: parsedNodeItem.nodeId,
+            style: {
+              backgroundColor: parsedNodeItem?.data?.style?.backgroundColor ?? '#dadada',
+              borderRadius: '8px',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: '14px',
+              padding: '8px 12px',
+              ...style
+            }
+          },
+          properties: parsedNodeItem.props || []
+        };
+        dragAdd(newNode);
+      }
+
+      if (parsedTemplate) {
+        let newNodes = [];
+        let newEdges = [];
+        const randomId = Math.floor(Math.random() * 1000);
+        const randomPos = Math.floor(Math.random() * 500);
+
+        parsedTemplate['nodes'].map((node) => {
+          newNodes.push({
+            id: `${node.id + randomId}`,
+            data: {
+              ...node?.data,
+              style: {
+                backgroundColor: node.data['bgColor'],
+                borderRadius: '8px',
+                boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '14px',
+                padding: '8px 12px',
+                ...style
+              }
+            },
+            type: node.type,
+            isAsset: false,
+            position: {
+              x: node['position']['x'] + randomPos,
+              y: node['position']['y'] + randomPos
+            },
+            properties: node.properties,
+            parentId: node.parentId ? `${node.parentId + randomId}` : null,
+            extent: node?.extent ? node?.extent : null
+          });
+        });
+
+        parsedTemplate['edges'].map((edge) =>
+          newEdges.push({
+            id: uid(),
+            source: `${edge.source + randomId}`,
+            target: `${edge.target + randomId}`,
+            ...edgeOptions
+          })
+        );
+
+        dragAddNode(newNodes, newEdges);
+      }
+      checkForNodes();
+    },
+    [reactFlowInstance]
+  );
 
   const RefreshAPI = () => {
     getAssets(model?._id).catch((err) => {
@@ -471,7 +595,8 @@ export default function MainCanvas() {
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
   };
-
+  // console.log('nodes', nodes);
+  // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
     if (!isPopperFocused) {
       dispatch(clearAnchorEl());
@@ -638,6 +763,8 @@ export default function MainCanvas() {
 
         setNodes((nds) => [...nds, newNode]);
       });
+
+      checkForNodes();
     }
 
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
@@ -709,74 +836,76 @@ export default function MainCanvas() {
     };
 
     dragAdd(newNode);
+    checkForNodes();
     setSelectedNodes([]);
   }, []);
 
   // console.log('anchorElNodeId', anchorElNodeId);
   const renderPopper = () => {
     if (anchorElNodeId) {
-      return (
-        <Suspense fallback={null}>
-          {isPropertiesOpen ? (
-            <EditProperties
-              anchorEl={anchorElNodeId}
-              handleSaveEdit={handleSaveEdit}
-              handleClosePopper={() => {
-                handleClosePopper();
-                setPropertiesOpen(false);
-              }}
-              setDetails={setDetails}
-              details={details}
-              dispatch={dispatch}
-              nodes={nodes}
-              setNodes={setNodes}
-              selectedElement={selectedElement}
-              setSelectedElement={setSelectedElement}
-            />
-          ) : (
-            <EditNode
-              anchorEl={anchorElNodeId}
-              handleSaveEdit={handleSaveEdit}
-              handleClosePopper={handleClosePopper}
-              setDetails={setDetails}
-              details={details}
-              dispatch={dispatch}
-              nodes={nodes}
-              setNodes={setNodes}
-              selectedElement={selectedElement}
-              setSelectedElement={setSelectedElement}
-            />
-          )}
-        </Suspense>
+      return isPropertiesOpen ? (
+        <EditProperties
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={() => {
+            handleClosePopper();
+            setPropertiesOpen(false);
+          }}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
+      ) : (
+        <EditNode
+          anchorEl={anchorElNodeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedElement={selectedElement}
+          setSelectedElement={setSelectedElement}
+        />
       );
     }
 
     if (anchorElEdgeId) {
       return (
-        <Suspense fallback={null}>
-          <EditEdge
-            anchorEl={anchorElEdgeId}
-            handleSaveEdit={handleSaveEdit}
-            handleClosePopper={handleClosePopper}
-            setDetails={setEdgeDetails}
-            details={edgeDetails}
-            dispatch={dispatch}
-            edges={edges}
-            setEdges={setEdges}
-          />
-        </Suspense>
+        <EditEdge
+          anchorEl={anchorElEdgeId}
+          handleSaveEdit={handleSaveEdit}
+          handleClosePopper={handleClosePopper}
+          setDetails={setEdgeDetails}
+          details={edgeDetails}
+          dispatch={dispatch}
+          edges={edges}
+          setEdges={setEdges}
+        />
       );
     }
 
     return null;
   };
 
-  const handleCanvasClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (selectedBlock && Object.keys(selectedBlock).length !== 0) {
-      dispatch(setSelectedBlock({}));
-    }
+  const handleZoomIn = () => {
+    zoomIn({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleZoomOut = () => {
+    zoomOut({ duration: 300 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 300);
+  };
+
+  const handleFitView = () => {
+    fitCanvasView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
+    setTimeout(() => setZoomLevel(reactFlowInstance.getZoom()), 500);
   };
 
   const notify = (message, status) => toast[status](message);
@@ -793,30 +922,26 @@ export default function MainCanvas() {
             isDark == true ? 'linear-gradient(145deg, #1E1E1E 0%, #121212 100%)' : 'linear-gradient(145deg, #F5F5F5 0%, #E0E0E0 100%)',
           boxShadow: isDark == true ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
           borderRadius: '12px',
-          overflow: 'hidden',
-          position: 'relative'
+          overflow: 'hidden'
         }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
         onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
-        {/* Spinner overlay during drag */}
-        {/* <CanvasSpinner open={isDragging} isDark={isDark} isDragging={isDragging} /> */}
-
         <ReactFlowProvider fitView>
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={(changes) => {
-              onNodesChange(changes);
-              // Failsafe: if no drag is happening, ensure spinner is hidden
-              if (!dragRef.current && isDragging) setIsDragging(false);
-            }}
+            onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onClick={handleCanvasClick}
+            onClick={(e) => {
+              e.preventDefault();
+              // e.stopPropagation();
+              dispatch(setSelectedBlock({}));
+            }}
             onInit={onInit}
             onLoad={onLoad}
             onNodeDrag={onNodeDrag}
@@ -824,7 +949,7 @@ export default function MainCanvas() {
             onNodeDragStop={onNodeDragStop}
             connectionLineStyle={connectionLineStyle}
             defaultEdgeOptions={edgeOptions}
-            onDrop={(event) => onDrop(event, createGroup, reactFlowInstance, dragAdd, dragAddNode)}
+            onDrop={onDrop}
             onDragOver={onDragOver}
             fitView
             connectionMode="loose"
@@ -836,33 +961,316 @@ export default function MainCanvas() {
             onNodeClick={handleSelectNodeSingleClick}
             onEdgeClick={handleSelectEdgeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
-            position={[0, 0]}
-            zoom={1}
+            defaultPosition={[0, 0]}
+            defaultZoom={1}
             onNodeContextMenu={handleNodeContextMenu}
             minZoom={0.2}
             maxZoom={2}
-            ref={canvasRef}
           >
-            <Panel position="top-left">
-              <CanvasToolbar
-                isDark={isDark}
-                Color={Color}
-                // isChanged={isChanged}
-                onRestore={onRestore}
-                handleSaveToModel={handleSaveToModel}
-                onSelectionClick={onSelectionClick}
-                selectedNodes={selectedNodes}
-                handleGroupDrag={handleGroupDrag}
-                undo={undo}
-                redo={redo}
-                undoStack={undoStack}
-                redoStack={redoStack}
-                handleDownload={handleDownload}
-                assets={assets}
-              />
+            <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Tooltip title="Restore">
+                  <IconButton
+                    onClick={() => onRestore(assets?.template)}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Restore canvas"
+                  >
+                    <RestoreIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Save">
+                  <IconButton
+                    onClick={handleSaveToModel}
+                    sx={{
+                      // color: isDark == true ? '#64B5F6' : '#2196F3',
+                      color: isChanged ? '#FF3131' : '#32CD32',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Save canvas"
+                  >
+                    <SaveIcon sx={{ fontSize: 19 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Group Selected Nodes">
+                  <IconButton
+                    onClick={(e) => onSelectionClick(e, selectedNodes)}
+                    onDragStart={(e) => handleGroupDrag(e)}
+                    draggable={true}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Group selected nodes"
+                  >
+                    <GridOnIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Undo">
+                  <IconButton
+                    onClick={undo}
+                    disabled={undoStack.length === 0}
+                    sx={{
+                      color: undoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          undoStack.length === 0
+                            ? 'transparent'
+                            : isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
+                        boxShadow:
+                          undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          undoStack.length === 0
+                            ? 'none'
+                            : isDark == true
+                            ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                            : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Undo action"
+                  >
+                    <UndoIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Redo">
+                  <span>
+                    <IconButton
+                      onClick={redo}
+                      disabled={redoStack.length === 0}
+                      sx={{
+                        color: redoStack.length === 0 ? (isDark == true ? '#616161' : '#B0BEC5') : isDark == true ? '#64B5F6' : '#2196F3',
+                        padding: '4px',
+                        '&:hover': {
+                          background:
+                            redoStack.length === 0
+                              ? 'transparent'
+                              : isDark == true
+                              ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                              : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                          transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
+                          boxShadow:
+                            redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                          filter:
+                            redoStack.length === 0
+                              ? 'none'
+                              : isDark == true
+                              ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                              : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                        },
+                        '&:focus': {
+                          outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                          outlineOffset: '2px'
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label="Redo action"
+                    >
+                      <RedoIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Download as PNG">
+                  <IconButton
+                    onClick={handleDownload}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Download canvas as PNG"
+                  >
+                    <DownloadIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Panel>
-            <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <ZoomControls isDark={isDark} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} reactFlowInstance={reactFlowInstance} />
+            <Panel position="bottom-right" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  background: Color.tabBorder,
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  padding: '2px 4px',
+                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                  alignItems: 'center'
+                }}
+              >
+                <Tooltip title="Zoom In">
+                  <IconButton
+                    onClick={handleZoomIn}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom in"
+                  >
+                    <ZoomInIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Zoom Out">
+                  <IconButton
+                    onClick={handleZoomOut}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOutIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Fit View">
+                  <IconButton
+                    onClick={handleFitView}
+                    sx={{
+                      color: isDark == true ? '#64B5F6' : '#2196F3',
+                      padding: '4px',
+                      '&:hover': {
+                        background:
+                          isDark == true
+                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+                        filter:
+                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      },
+                      '&:focus': {
+                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+                        outlineOffset: '2px'
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label="Fit view"
+                  >
+                    <FitScreenIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                <Typography
+                  sx={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: isDark == true ? '#E0E0E0' : '#333333',
+                    alignSelf: 'center',
+                    padding: '0 6px'
+                  }}
+                >
+                  {Math.round(zoomLevel * 100)}%
+                </Typography>
+              </Box>
             </Panel>
             <MiniMap
               zoomable
@@ -896,28 +1304,68 @@ export default function MainCanvas() {
             {(propertiesTabOpen || addNodeTabOpen || addDataNodeTab) && <RightDrawer />}
           </ReactFlow>
         </ReactFlowProvider>
-        <Suspense fallback={null}>
-          <ContextMenu
-            visible={contextMenu.visible}
-            x={contextMenu.x}
-            y={contextMenu.y}
-            options={contextMenu.options}
-            isDark={isDark}
-            handleMenuOptionClick={handleMenuOptionClick}
-          />
-        </Suspense>
-        <>{renderPopper()}</>
-        <Suspense fallback={null}>
-          {openTemplate && (
-            <AddLibrary
-              open={openTemplate}
-              handleClose={handleClose}
-              savedTemplate={savedTemplate}
-              setNodes={setNodes}
-              setEdges={setEdges}
-            />
-          )}
-        </Suspense>
+        {contextMenu.visible && (
+          <Zoom in={contextMenu.visible}>
+            <div
+              style={{
+                position: 'absolute',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                background: isDark == true ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
+                backdropFilter: 'blur(4px)',
+                border: 'none',
+                borderRadius: '6px',
+                boxShadow: isDark == true ? '0 3px 10px rgba(0,0,0,0.5)' : '0 3px 10px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                width: '120px',
+                padding: '6px 0',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '13px',
+                color: isDark == true ? '#E0E0E0' : '#333333'
+              }}
+            >
+              {contextMenu.options.map((option) => (
+                <div
+                  key={option}
+                  style={{
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderBottom:
+                      contextMenu.options.length > 1
+                        ? `1px solid ${isDark == true ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                        : 'none',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background:
+                        isDark == true
+                          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                      transform: 'scale(1.02)',
+                      boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+                    }
+                  }}
+                  onClick={() => handleMenuOptionClick(option)}
+                  onMouseEnter={(e) =>
+                    (e.target.style.backgroundColor = isDark == true ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)')
+                  }
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
+                >
+                  <span style={{ marginRight: '8px', color: isDark == true ? '#64B5F6' : '#2196F3' }}>
+                    {option === 'Copy' && <ContentCopyIcon sx={{ fontSize: 16 }} />}
+                    {option === 'Paste' && <ContentPasteIcon sx={{ fontSize: 16 }} />}
+                  </span>
+                  {option}
+                </div>
+              ))}
+            </div>
+          </Zoom>
+        )}
+        <>{renderPopper()}</>;
+        {openTemplate && (
+          <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
+        )}
       </div>
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
