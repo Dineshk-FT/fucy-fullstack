@@ -21,16 +21,9 @@ import { toPng } from 'html-to-image';
 import AddLibrary from '../../components/Modal/AddLibrary';
 import { useDispatch, useSelector } from 'react-redux';
 import { pageNodeTypes, style } from '../../utils/Constraints';
-import {
-  OpenPropertiesTab,
-  setSelectedBlock,
-  setDetails,
-  setEdgeDetails,
-  setAnchorEl,
-  clearAnchorEl
-} from '../../store/slices/CanvasSlice';
+import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../components/custom/edges/StepEdge';
-import { Button, Tooltip, Typography, IconButton, Box, Zoom } from '@mui/material';
+import { Tooltip, IconButton, Box, Zoom } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import toast, { Toaster } from 'react-hot-toast';
@@ -40,14 +33,12 @@ import EditNode from '../../components/Poppers/EditNode';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../components/custom/edges/EditEdge';
 import EditProperties from '../../components/Poppers/EditProperties';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import FitScreenIcon from '@mui/icons-material/FitScreen';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
 import RightDrawer from '../../layouts/MainLayout/RightSidebar';
 import ColorTheme from '../../themes/ColorTheme';
+import { ZoomControls } from './CanvasControls';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -1164,113 +1155,8 @@ export default function MainCanvas() {
                 </Tooltip>
               </Box>
             </Panel>
-            <Panel position="bottom-right" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 0.5,
-                  background: Color.tabBorder,
-                  backdropFilter: 'blur(4px)',
-                  borderRadius: '6px',
-                  padding: '2px 4px',
-                  boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                  alignItems: 'center'
-                }}
-              >
-                <Tooltip title="Zoom In">
-                  <IconButton
-                    onClick={handleZoomIn}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Zoom in"
-                  >
-                    <ZoomInIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Zoom Out">
-                  <IconButton
-                    onClick={handleZoomOut}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Zoom out"
-                  >
-                    <ZoomOutIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Fit View">
-                  <IconButton
-                    onClick={handleFitView}
-                    sx={{
-                      color: isDark == true ? '#64B5F6' : '#2196F3',
-                      padding: '4px',
-                      '&:hover': {
-                        background:
-                          isDark == true
-                            ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                            : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-                        filter:
-                          isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-                      },
-                      '&:focus': {
-                        outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-                        outlineOffset: '2px'
-                      }
-                    }}
-                    tabIndex={0}
-                    aria-label="Fit view"
-                  >
-                    <FitScreenIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-                <Typography
-                  sx={{
-                    fontFamily: "'Poppins', sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    color: isDark == true ? '#E0E0E0' : '#333333',
-                    alignSelf: 'center',
-                    padding: '0 6px'
-                  }}
-                >
-                  {Math.round(zoomLevel * 100)}%
-                </Typography>
-              </Box>
+            <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+              <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
             </Panel>
             <MiniMap
               zoomable

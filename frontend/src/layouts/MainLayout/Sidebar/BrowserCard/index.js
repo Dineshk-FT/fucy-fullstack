@@ -43,7 +43,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import { setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import toast from 'react-hot-toast';
 import { Avatar, AvatarGroup } from '@mui/material';
 import ColorTheme from '../../../../themes/ColorTheme';
@@ -55,6 +55,8 @@ import CommonModal from '../../../../components/Modal/CommonModal';
 import { threatType } from '../../../../components/Table/constraints';
 import useStore from '../../../../store/Zustand/store';
 import RenderedTreeItems from './RenderedTreeItems';
+import EditName from './EditName';
+import EditProperties from '../../../../components/Poppers/EditProperties';
 
 const imageComponents = {
   AttackIcon,
@@ -268,7 +270,8 @@ const selector = (state) => ({
   getCatalog: state.getCatalog,
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
-  deleteAttacks: state.deleteAttacks
+  deleteAttacks: state.deleteAttacks,
+  setIsNodePasted: state.setIsNodePasted
 });
 
 const Properties = {
@@ -323,7 +326,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     updateAttack,
     isDark,
     getGlobalAttackTrees,
-    deleteAttacks
+    deleteAttacks,
+    setIsNodePasted
   } = useStore(selector);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -331,7 +335,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     data: 1
   });
   const drawerwidth = 370;
-  const { selectedBlock, drawerwidthChange } = useSelector((state) => state?.canvas);
+  const { selectedBlock, drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
     attack: false,
@@ -348,6 +352,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     attack_rees: false,
     id: ''
   });
+  const anchorElId = document.querySelector(`[data="${anchorEl?.sidebar}"]`) || null;
 
   const [deleteScene, setDeleteScene] = useState({
     type: '',
@@ -504,7 +509,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     dispatch(setPreviousTab(name));
   };
 
-  // console.log('attackNodes', attackNodes);
   // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
@@ -514,21 +518,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         JSON.stringify(attackNodes) !== JSON.stringify(initialAttackNodes) ||
         JSON.stringify(attackEdges) !== JSON.stringify(initialAttackEdges)
       ) {
-        // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
         const template = {
           nodes: attackNodes,
           edges: attackEdges
         };
-
-        // console.log('template', template);
-        // Extract threatId from nodes with type: "default"
         const threatNode = attackNodes?.find((node) => node?.type === 'default' && node?.threatId) ?? {};
-        // if (!threatNode) {
-        //   notify('Threat scenario is missing', 'error');
-        //   return;
-        // }
         const { threatId = '', damageId = '', key = '' } = threatNode;
-
         const details = {
           modelId: model?._id,
           type: 'attack_trees',
@@ -572,6 +567,14 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     e.preventDefault();
   };
 
+  const RefreshAPI = () => {
+    getAssets(model?._id).catch((err) => {
+      notify('Failed to fetch assets: ' + err.message, 'error');
+    });
+    getDamageScenarios(model?._id).catch((err) => {
+      notify('Failed to fetch damage scenarios: ' + err.message, 'error');
+    });
+  };
   const handleContext = (e, name) => {
     e.preventDefault();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -701,6 +704,33 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
+  const handlePropertiesTab = (detail, type) => {
+    const selected = type === 'edge' ? edges.find((edge) => edge.id === detail?.nodeId) : nodes.find((node) => node.id === detail?.nodeId);
+    const { isAsset = false, properties, id, data } = selected;
+    dispatch(setSelectedBlock({ id, data }));
+    dispatch(setAnchorEl({ type: 'sidebar', value: id }));
+    dispatch(
+      setDetails({
+        name: data?.label ?? '',
+        properties: properties ?? [],
+        isAsset: isAsset ?? false
+      })
+    );
+  };
+
+  const handleAddNode = (type) => (e) => {
+    e.stopPropagation();
+    const nodeName = type === 'default' ? 'Node' : 'Data';
+    const nodeType = type === 'data' ? 'data' : 'node';
+
+    const nodeDetail = getNodeDetails(type, nodeName, count[nodeType]);
+    setNodes([...nodes, nodeDetail]);
+    setCount((prev) => ({ ...prev, [nodeType]: prev[nodeType] + 1 }));
+  };
+
+  const handleClosePopper = () => {
+    dispatch(clearAnchorEl());
+  };
   const handleSave = () => {
     const template = {
       nodes: nodes,
@@ -720,6 +750,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
     update(details)
       .then((res) => {
+        console.log('res', res);
         if (!res.error) {
           notify('Saved Successfully', 'success');
           handleClosePopper();
@@ -801,49 +832,63 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
         const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
 
-        const renderProperties = (properties) => {
+        const renderProperties = (properties, detail, type) => {
           // console.log('properties', properties);
           if (!properties || properties.length === 0) return null;
 
           // Extract names for processing
           const propertyNames = properties.map((prop) => prop.name);
 
-          const displayedProperties = propertyNames.slice(0, 2);
-          const remainingCount = propertyNames.length - 2;
-
+          const displayedProperties = propertyNames;
           return (
             <Tooltip
               title={
-                <Box display="flex" flexDirection="column" alignItems="start">
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'start',
+                    padding: '8px'
+                  }}
+                >
                   {propertyNames?.map((name, index) => (
-                    <Box key={index} display="flex" alignItems="center" gap={1}>
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                       <Avatar sx={{ width: 18, height: 18 }}>
                         <img src={Properties[name]} alt={name} width="100%" />
                       </Avatar>
                       <Typography variant="body2" sx={{ color: 'white' }}>
                         {name}
                       </Typography>
-                    </Box>
+                    </div>
                   ))}
-                </Box>
+                </div>
               }
               arrow
             >
-              <AvatarGroup max={3} spacing="medium">
-                {displayedProperties?.map((name, index) => (
-                  <Avatar key={index} sx={{ width: 20, height: 20 }}>
-                    <img src={Properties[name]} alt={name} width="100%" />
-                  </Avatar>
-                ))}
-                {remainingCount > 0 && (
-                  <Avatar sx={{ width: 20, height: 20, fontSize: 12, bgcolor: 'transparent' }}>+{remainingCount}</Avatar>
-                )}
-              </AvatarGroup>
+              <div
+                style={{
+                  backgroundColor: '#d7e6ff',
+                  borderRadius: '50%',
+                  width: 24,
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'medium',
+                  color: '#2196F3'
+                }}
+                onClick={() => handlePropertiesTab(detail, type)}
+              >
+                +{displayedProperties.length}
+              </div>
             </Tooltip>
           );
         };
 
         const renderSection = (nodeId, label, details, type) => {
+          const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
+
           if (!details.length) return null;
           return (
             <DraggableTreeItem
@@ -870,11 +915,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }
                   >
                     <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
-                    {(nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data) ? (
-                      <Box onClick={nodeId === 'nodes_section' ? handleAddNewNode : handleAddDataNode}>
+                    {shouldShowAddIcon && (
+                      <Box onClick={handleAddNode(nodeId === 'nodes_section' ? 'default' : 'data')}>
                         <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
                       </Box>
-                    ) : null}
+                    )}
                   </Box>
                 ) : (
                   getLabel('TopicIcon', label, null, nodeId)
@@ -888,31 +933,22 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             >
               {details?.map((detail, i) => {
                 // console.log('detail', detail);
-                return detail.name.length && detail?.props?.length > 0 ? (
+                return detail?.name?.length && detail?.props?.length > 0 ? (
                   <DraggableTreeItem
                     key={detail.nodeId}
                     nodeId={detail.nodeId}
+                    data={detail.nodeId}
                     sx={{
                       background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
                     }}
                     label={
                       <Box display="flex" alignItems="center" justifyContent="space-between">
                         <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-                          <Box
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 'fit-content'
-                            }}
-                          >
-                            {i + 1}.{' '}
-                            <Typography component="span" noWrap>
-                              {detail.name}
-                            </Typography>
-                          </Box>
+                          <span>
+                            <EditName detail={detail} index={i} onUpdate={handleSave} />
+                          </span>
                         </Tooltip>
-                        {renderProperties(detail?.props)}
+                        {renderProperties(detail?.props, detail, type)}
                       </Box>
                     }
                     onClick={(e) => {
@@ -922,6 +958,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                     onDoubleClick={(e) => {
                       e.stopPropagation();
+                      setClickedItem(detail.nodeId);
+                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+                    }}
+                    onContextMenu={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       setClickedItem(detail.nodeId);
                       dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
                       const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
@@ -1277,6 +1319,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         </CardContent>
       </CardStyle>
       <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />
+      {anchorElId && (
+        <EditProperties
+          anchorEl={anchorElId}
+          handleSaveEdit={handleSave}
+          handleClosePopper={handleClosePopper}
+          setDetails={setDetails}
+          details={details}
+          dispatch={dispatch}
+          nodes={nodes}
+          setNodes={setNodes}
+          edges={edges}
+          setEdges={setEdges}
+        />
+      )}
       <ConfirmDeleteDialog
         open={openModal?.delete}
         onClose={handleCloseDeleteModal}
