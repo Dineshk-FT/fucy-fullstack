@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -49,7 +49,7 @@ import { Avatar, AvatarGroup } from '@mui/material';
 import ColorTheme from '../../../../themes/ColorTheme';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 import { getNodeDetails } from '../../../../utils/Constraints';
-import { getNavbarHeight } from '../../../../themes/constant';
+import { drawerWidth, getNavbarHeight } from '../../../../themes/constant';
 import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
 import CommonModal from '../../../../components/Modal/CommonModal';
 import { threatType } from '../../../../components/Table/constraints';
@@ -272,7 +272,8 @@ const selector = (state) => ({
   updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
-  setIsNodePasted: state.setIsNodePasted
+  setIsNodePasted: state.setIsNodePasted,
+  setSelectedThreatIds: state.setSelectedThreatIds
 });
 
 const Properties = {
@@ -328,14 +329,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     isDark,
     getGlobalAttackTrees,
     deleteAttacks,
-    setIsNodePasted
+    setIsNodePasted,
+    setSelectedThreatIds
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
     node: 1,
     data: 1
   });
-  const drawerwidth = 370;
+  const drawerWidth = 370;
   const { selectedBlock, drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
   const { attackScene } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
@@ -361,26 +363,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   });
 
   // console.log('assets', assets);
-
-  const handleOpenDocumentDialog = () => {
-    setOpenDocumentDialog(true);
-  };
-
-  const handleCloseDocumentDialog = () => {
-    setOpenDocumentDialog(false);
-  };
-
-  const handleDoubleClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
-  };
-
-  const handleInputChange = (e) => {
-    setCurrentName(e.target.value);
-  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -463,24 +445,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setClickedItem(modelId);
   };
 
-  const handleAddNewNode = (e) => {
-    e.stopPropagation();
-    const nodeDetail = getNodeDetails('default', 'Node', count.node);
-    const list = [...nodes, nodeDetail];
-    setNodes(list);
-    setCount((prev) => ({ ...prev, node: prev.node + 1 }));
-    // dispatch(openAddNodeTab());
-  };
-
-  const handleAddDataNode = (e) => {
-    e.stopPropagation();
-    const nodeDetail = getNodeDetails('data', 'Data', count.data);
-    const list = [...nodes, nodeDetail];
-    setNodes(list);
-    setCount((prev) => ({ ...prev, data: prev.data + 1 }));
-    // dispatch(openAddDataNodeTab());
-  };
-
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
@@ -500,7 +464,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
-  const handleOpenTable = (e, id, name) => {
+  const handleOpenTable = useCallback((e, id, name) => {
     e.stopPropagation();
     setClickedItem(id);
     if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
@@ -508,7 +472,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       dispatch(setTitle(name));
     }
     dispatch(setPreviousTab(name));
-  };
+  }, []);
+
+  const handleTreeItemClick = useCallback((e, handler, ...args) => {
+    const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
+    if (isExpandIcon) {
+      e.stopPropagation();
+      return;
+    }
+    handler?.(e, ...args);
+  }, []);
 
   // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
@@ -598,7 +571,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <Box
           color={color?.sidebarContent}
           className={classes.title}
@@ -641,7 +614,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const getImageLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <div
           className={classes.labelRoot}
           style={{
@@ -671,35 +644,40 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const getLabel = (icon, name, index, id) => {
+  const getLabel = (icon, name, index, id, ids, onClick) => {
+    // console.log('onClick', onClick);
     const IconComponent = iconComponents[icon];
     return (
-      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerwidth}>
-        <div
-          className={classes.labelRoot}
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 'fit-content',
-            display: 'flex',
-            alignItems: 'center',
-            background:
-              clickedItem === id
-                ? isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
-                : 'transparent',
-            boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
-          }}
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
-        >
-          {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
-          <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
-            {index && `${index}. `}
-            {name}
-          </Typography>
+      <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
+        <div>
+          <div
+            className={classes.labelRoot}
+            style={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 'fit-content',
+              display: 'flex',
+              alignItems: 'center',
+              background:
+                clickedItem === id
+                  ? isDark == true
+                    ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
+                    : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
+                  : 'transparent',
+              boxShadow: clickedItem === id ? (isDark == true ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            }}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
+            onClick={(e) => onClick && onClick(e)}
+          >
+            {IconComponent && <IconComponent color={isDark == true ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
+            <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
+              {index && `${index}. `}
+              {name}
+              {ids && ids.length && ` [${ids.length}]`}
+            </Typography>
+          </div>
         </div>
       </Tooltip>
     );
@@ -805,7 +783,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               )}
             </Box>
           }
-          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
+          onClick={(e) => {
+            setClickedItem(sub.id);
+            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
+          }}
           // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
         >
           {additionalMapping && additionalMapping(sub)}
@@ -815,8 +796,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           key={sub.id}
           nodeId={sub.id}
           label={getLabel('TopicIcon', sub.name, null, sub.id)}
-          onClick={(e) => handleOpenTable(e, sub.id, sub.name)}
-          onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+          onClick={(e) => {
+            setClickedItem(sub.id);
+            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
+          }}
+          onContextMenu={(e) => handleTreeItemClick(e, contextMenuHandler, sub.name)}
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
@@ -944,7 +928,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                     label={
                       <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerwidth}>
+                        <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerWidth}>
                           <span>
                             <EditName detail={detail} index={i} onUpdate={handleSave} />
                           </span>
@@ -1017,7 +1001,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            if (sub.name === 'Damage Scenarios Derivations') {
+            if (sub.name === 'Damage Scenarios (DS) Derivations') {
               return sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
@@ -1056,10 +1040,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                         label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
                           detail?.damage_name
                         } [${detail?.id}]`,
-                        nodeId: prop.id.concat(detail?.rowId),
+                        nodeId: nodeDetail?.nodeId,
                         extraProps: {
                           threatId: prop?.id,
-                          damageId: detail?.rowId
+                          damageId: detail?.rowId,
+                          width: 150,
+                          height: 60,
+                          key: `TS${key.toString().padStart(3, '0')}`
                         }
                       };
                     })
@@ -1068,19 +1055,30 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     {
                       label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
                       nodeId: detail?.id,
-                      extraProps: {}
+                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
                     }
                   ]
-              ).map(({ label, nodeId, extraProps }) => (
-                <DraggableTreeItem
-                  draggable={true}
-                  key={nodeId}
-                  nodeId={nodeId}
-                  label={getLabel('TopicIcon', label, key || i + 1, nodeId)}
-                  onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ))
+              ).map(({ label, nodeId, extraProps }) => {
+                // console.log('extraProps', extraProps);
+                const onClick = (e) => {
+                  e.stopPropagation();
+                  const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
+                  setSelectedThreatIds(ids);
+                };
+                return (
+                  <DraggableTreeItem
+                    draggable={true}
+                    key={nodeId}
+                    nodeId={nodeId}
+                    label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
+                    onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedThreatIds([]);
+                    }}
+                  />
+                );
+              })
             );
           })
         );
@@ -1220,7 +1218,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           data,
           (e) => {
             e.stopPropagation();
-            handleOpenDocumentDialog();
+            setOpenDocumentDialog(true);
           },
           null,
           null
@@ -1247,7 +1245,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   return (
     <>
-      <DocumentDialog open={openDocumentDialog} onClose={handleCloseDocumentDialog} />
+      {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={() => setOpenDocumentDialog(false)} />}
 
       <CardStyle
         isCollapsed={isCollapsed}
@@ -1287,8 +1285,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 isEditing ? (
                   <TextField
                     value={currentName}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
+                    onChange={(e) => setCurrentName(e.target.value)}
+                    onBlur={() => setIsEditing(false)}
                     onKeyDown={handleKeyDown}
                     autoFocus
                     variant="outlined"
@@ -1309,12 +1307,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     }}
                   />
                 ) : (
-                  <Box onDoubleClick={handleDoubleClick}>{getTitleLabel('ModelIcon', currentName, model?._id)}</Box>
+                  <Box onDoubleClick={() => setIsEditing(true)}>{getTitleLabel('ModelIcon', currentName, model?._id)}</Box>
                 )
               }
               sx={{ '& .Mui-selected': { backgroundColor: 'transparent !important' } }}
             >
-              {scenarios.map(({ name, scene }) => renderTreeItems(scene, name))}
+              {scenarios?.map(({ name, scene }) => renderTreeItems(scene, name))}
             </TreeItem>
           </TreeView>
         </CardContent>

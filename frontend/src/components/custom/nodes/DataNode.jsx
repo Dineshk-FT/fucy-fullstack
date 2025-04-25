@@ -209,7 +209,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
         minWidth={data?.label?.length <= 15 ? 50 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 100 : 130}
         minHeight={data?.label?.length <= 15 ? 30 : data?.label?.length >= 15 && data?.label?.length <= 35 ? 50 : 80}
         onResize={handleResize}
-        onResizeStart={(e) => e.stopPropagation()}
         style={{
           pointerEvents: 'auto',
           zIndex: 10
