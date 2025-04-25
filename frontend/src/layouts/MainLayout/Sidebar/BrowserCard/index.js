@@ -1317,7 +1317,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           </TreeView>
         </CardContent>
       </CardStyle>
-      <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />
+      {openModal?.attack && <CommonModal open={openModal?.attack} handleClose={handleAttackTreeClose} name={subName} />}
       {anchorElId && (
         <EditProperties
           anchorEl={anchorElId}
@@ -1332,12 +1332,14 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           setEdges={setEdges}
         />
       )}
-      <ConfirmDeleteDialog
-        open={openModal?.delete}
-        onClose={handleCloseDeleteModal}
-        onConfirm={handleDeleteAttack}
-        type={deleteScene?.type}
-      />
+      {openModal?.delete && (
+        <ConfirmDeleteDialog
+          open={openModal?.delete}
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleDeleteAttack}
+          type={deleteScene?.type}
+        />
+      )}
     </>
   );
 };
