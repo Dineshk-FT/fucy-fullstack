@@ -1,22 +1,21 @@
 /*eslint-disable*/
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
   Paper,
   FormControl,
   MenuItem,
   Select,
   TextField,
   Typography,
-  styled,
   Tooltip,
   TablePagination,
-  ClickAwayListener,
   InputLabel,
   Button,
   Checkbox,
@@ -24,151 +23,119 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
 } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { makeStyles } from '@mui/styles';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
-import ColorTheme from '../../themes/ColorTheme';
 import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../themes/constant';
 import { AttackTableoptions as options, AttackTableHeader } from './constraints';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const selector = (state) => ({
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
-  attacks: state.attackScenarios['subs'][0]
+  attacks: state.attackScenarios['subs'][0],
 });
 
-const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
+const HtmlTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
   [`& .${tooltipClasses.tooltip}`]: {
     backgroundColor: '#f5f5f9',
     color: 'rgba(0, 0, 0, 0.87)',
     maxWidth: 220,
     fontSize: theme.typography.pxToRem(12),
-    border: '1px solid #dadde9'
-  }
+    border: '1px solid #dadde9',
+  },
 }));
-
-const column = AttackTableHeader;
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '5px',
     fontSize: 13,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '2px 8px',
     textAlign: 'center',
     verticalAlign: 'middle',
-  }
+  },
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  // '&:nth-of-type(odd)': {
-  //   backgroundColor: theme.palette.action.hover,
-  // },
-  // hide last border
+  height: '3.5em',
   '&:last-child td, &:last-child th': {
-    border: 0
+    border: 0,
   },
-  // Set a fixed height for each row to accommodate two lines of text with extra space
-  height: '3.5em' // Fixed row height
 }));
 
 const SelectableCell = ({ item, row, handleChange, name }) => {
-  const [open, setOpen] = useState(false); // Manage open state of dropdown
-  const selectRef = useRef(null); // Reference to select element
+  const [open, setOpen] = useState(false);
+  const selectRef = useRef(null);
+
   const handleContextMenu = (e) => {
-    e.preventDefault(); // Prevent the default context menu from opening
-    setOpen(true); // Open dropdown on right-click
+    e.preventDefault();
+    setOpen(true);
   };
 
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!open) {
-      setOpen(true); // Open dropdown on left-click only if not already open
-    }
+    if (!open) setOpen(true);
   };
 
   return (
-    <StyledTableCell component="th" scope="row" onClick={handleClick} onContextMenu={handleContextMenu}>
+    <StyledTableCell onClick={handleClick} onContextMenu={handleContextMenu}>
       <FormControl
         sx={{
           width: 130,
           background: 'transparent',
           '& .MuiInputBase-root': { backgroundColor: 'transparent', color: 'inherit' },
-          '& .MuiSelect-select': { 
+          '& .MuiSelect-select': {
             backgroundColor: 'transparent',
-            padding: '0 24px 0 8px', // Remove vertical padding to fit within cell
-            fontSize: '13px', // Match font size with other cells
-            lineHeight: '1.5em', // Match line height
-            height: '1.5em', // Ensure the select fits within one line
+            padding: '0 24px 0 8px',
+            fontSize: '13px',
+            lineHeight: '1.5em',
+            height: '1.5em',
             display: 'flex',
-            alignItems: 'center' // Center the content vertically
+            alignItems: 'center',
           },
           '& .MuiSvgIcon-root': { display: 'none' },
-          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+          '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
         }}
       >
-        {!row[item.name] && (
-          <InputLabel id="demo-simple-select-label" shrink={false}>
-            Select Value
-          </InputLabel>
-        )}
+        {!row[item.name] && <InputLabel shrink={false}>Select Value</InputLabel>}
         <Select
           ref={selectRef}
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
-          value={row[item.name]}
-          placeholder="Select value"
+          value={row[item.name] || ''}
           onChange={(e) => handleChange(e, row)}
-          sx={{ '& .MuiSelect-select': { color: 'inherit' } }}
           name={name}
           open={open}
-          onClose={() => setOpen(false)} // Close dropdown when focus is lost
+          onClose={() => setOpen(false)}
         >
           {options[item.name]?.map((option) => (
-            <MenuItem key={option?.value} value={option?.value}>
+            <MenuItem key={option.value} value={option.value}>
               <HtmlTooltip
                 placement="left"
                 title={
-                  <Typography
-                    sx={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      padding: '8px',
-                      borderRadius: '4px',
-                      color: 'inherit'
-                    }}
-                  >
-                    {option?.description}
+                  <Typography sx={{ fontSize: '14px', fontWeight: 600, padding: '8px', borderRadius: '4px' }}>
+                    {option.description}
                   </Typography>
                 }
               >
-                <Typography sx={{ color: 'inherit' }} variant="h5">
-                  {option?.label}
-                </Typography>
+                <Typography variant="h5">{option.label}</Typography>
               </HtmlTooltip>
             </MenuItem>
           ))}
@@ -178,139 +145,96 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
   );
 };
 
-export default function AttackTreeTable() {
-  const color = ColorTheme();
-  const classes = useStyles();
+const AttackTreeTable = () => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
-  const [page, setPage] = useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const { title } = useSelector((state) => state?.pageName);
-  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const [openFilter, setOpenFilter] = useState(false);
   const visibleColumns = useStore((state) => state.attackTreeTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
-  const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
-  }, [title, visibleColumns]);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
-  );
+  const [columnWidths, setColumnWidths] = useState({});
 
-  // Open/Close the filter modal
-  const handleOpenFilter = () => setOpenFilter(true);
-  const handleCloseFilter = () => setOpenFilter(false);
+  const Head = useMemo(() => {
+    const headers = title.includes('Derived')
+      ? [...AttackTableHeader, { id: 14, name: 'Detailed / Combined Threat Scenarios' }]
+      : AttackTableHeader;
+    return headers.filter((header) => visibleColumns.includes(header.name));
+  }, [title, visibleColumns]);
 
   useEffect(() => {
-    if (attacks['scenes']) {
-      const mod1 = attacks['scenes']?.map((dt, i) => {
-        // console.log('prp', prp);
-        return {
-          SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
-          ID: dt.id || dt?.ID,
-          Name: dt.name || dt?.Name,
-          Description: `This is the description for ${dt.Name || dt?.name}`,
-          // Approach: dt?.Approach ?? '',
-          'Elapsed Time': dt['Elapsed Time'] ?? '',
-          Expertise: dt?.Expertise ?? '',
-          'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
-          'Window of Opportunity': dt['Window of Opportunity'] ?? '',
-          Equipment: dt?.Equipment ?? '',
-          'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'].length ? dt['Attack Feasibilities Rating'] : ''
-        };
-      });
+    setColumnWidths(Object.fromEntries(Head.map((hd) => [hd.id, 180])));
+  }, [Head]);
 
-      setRows(mod1);
-      setFiltered(mod1);
+  useEffect(() => {
+    if (attacks?.scenes) {
+      const formattedRows = attacks.scenes.map((dt, i) => ({
+        SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
+        ID: dt.id || dt.ID,
+        Name: dt.name || dt.Name,
+        Description: `This is the description for ${dt.Name || dt.name}`,
+        'Elapsed Time': dt['Elapsed Time'] ?? '',
+        Expertise: dt.Expertise ?? '',
+        'Knowledge of the Item': dt['Knowledge of the Item'] ?? '',
+        'Window of Opportunity': dt['Window of Opportunity'] ?? '',
+        Equipment: dt.Equipment ?? '',
+        'Attack Feasibilities Rating': dt['Attack Feasibilities Rating'] || '',
+      }));
+      setRows(formattedRows);
     }
   }, [attacks]);
 
-  // console.log('rows', rows)
-  const handleChange = (e, row) => {
+  const filteredRows = useMemo(() => {
+    if (!searchTerm) return rows;
+    return rows.filter(
+      (rw) =>
+        rw.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rw.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
+
+  const handleChange = async (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
+    const previousRows = [...rows];
 
-    // Store previous state to rollback if needed
-    const previousRows = [...filtered];
-
-    // Optimistically update the selected category
-    const updatedRows = rows.map((r) => {
-      if (r.ID === row.ID) {
-        return { ...r, [name]: value };
-      }
-      return r;
-    });
-
-    setFiltered(updatedRows); // Update UI immediately
-
-    // Simulate average rating calculation
-    const calculateAverageRating = (row) => {
-      const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
-      let totalRating = 0;
-
-      categories.forEach((category) => {
-        const selectedOption = options[category]?.find((option) => option.value === row[category]);
-        if (selectedOption) {
-          totalRating += selectedOption.rating;
-        }
-      });
-
-      return totalRating;
-    };
+    const updatedRows = rows.map((r) => (r.ID === row.ID ? { ...r, [name]: value } : r));
+    setRows(updatedRows);
 
     const updatedRow = updatedRows.find((r) => r.ID === row.ID);
-    const averageRating = calculateAverageRating(updatedRow);
+    const averageRating = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment']
+      .reduce((total, category) => {
+        const selectedOption = options[category]?.find((opt) => opt.value === updatedRow[category]);
+        return total + (selectedOption ? selectedOption.rating : 0);
+      }, 0);
+
     updatedRow['Attack Feasibilities Rating'] = getRating(averageRating);
 
-    const details = {
-      modelId: model?._id,
-      type: 'attack',
-      id: row?.ID,
-      [`${name}`]: value,
-      'Attack Feasibilities Rating': getRating(averageRating)
-    };
-
-    // Simulate a delay before reverting the update if request fails
-    update(details)
-      .then((res) => {
-        if (res) {
-          getAttackScenario(model?._id);
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        setFiltered(previousRows); // Revert UI to previous state if request fails
+    try {
+      await update({
+        modelId: model?._id,
+        type: 'attack',
+        id: row.ID,
+        [name]: value,
+        'Attack Feasibilities Rating': getRating(averageRating),
       });
+      await getAttackScenario(model?._id);
+    } catch (err) {
+      setRows(previousRows);
+    }
   };
-
-  const handleBack = () => {
-    dispatch(closeAll());
-  };
-
-  // console.log('model', model);
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw?.Name?.toLowerCase().includes(value) || rw?.Description?.toLowerCase().includes(value)) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -322,33 +246,14 @@ export default function AttackTreeTable() {
     setPage(0);
   };
 
-  const checkforLabel = (item) => {
-    if (
-      item.name === 'Expertise' ||
-      item.name === 'Elapsed Time' ||
-      item.name === 'Knowledge of the Item' ||
-      item.name === 'Window of Opportunity' ||
-      item.name === 'Equipment'
-      // item.name === 'Approach'
-    ) {
-      return true;
-    }
-    return false;
-  };
-
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
-    e.stopPropagation();
-
     const startX = e.clientX;
-    const headerCell = e.currentTarget.parentElement;
-    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+    const startWidth = columnWidths[columnId] || 180;
 
     const handleMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(80, startWidth + delta);
-
-      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+      setColumnWidths((prev) => ({ ...prev, [columnId]: Math.max(80, startWidth + delta) }));
     };
 
     const handleMouseUp = () => {
@@ -360,116 +265,81 @@ export default function AttackTreeTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
-    const WIDTH_THRESHOLD = 250; // Threshold for switching between truncation and wrapping (in pixels)
+  const isSelectableColumn = (name) =>
+    ['Expertise', 'Elapsed Time', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'].includes(name);
+
+  const RenderTableRow = ({ row }) => {
+    const WIDTH_THRESHOLD = 250;
 
     return (
-      <>
-        <StyledTableRow
-          key={row.name}
-          data={row}
-          sx={{
-            backgroundColor: color?.sidebarBG,
-            '& .MuiTableCell-root.MuiTableCell-body': {
-              color: `${color?.sidebarContent} !important`
-            }
-          }}
-        >
-          {Head?.map((item, index) => {
-            const bgColor = RatingColor(row['Attack Feasibilities Rating']);
-            const textColor = !bgColor?.includes('yellow') ? 'white' : 'black';
-            const currentWidth = columnWidths[item.id] || 180; // Get the current width of the column
-            const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
+      <StyledTableRow sx={{ backgroundColor: theme.palette.background.default }}>
+        {Head.map((item, index) => {
+          const bgColor = RatingColor(row['Attack Feasibilities Rating']);
+          const textColor = bgColor?.includes('yellow') ? 'black' : 'white';
+          const currentWidth = columnWidths[item.id] || 180;
+          const shouldTruncate = currentWidth < WIDTH_THRESHOLD;
 
-            let cellContent;
-            switch (true) {
-              case checkforLabel(item):
-                cellContent = <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />;
-                break;
-              case item.name === 'Attack Feasibilities Rating':
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    align={'left'}
-                    sx={{
-                      backgroundColor: `${bgColor} !important`,
-                      color: `${textColor} !important`
-                    }}
-                  >
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
-              case item.name === 'Name' || item.name === 'Description':
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    style={{ width: currentWidth }}
-                    align={'left'}
-                    sx={{
-                      ...(shouldTruncate
-                        ? {
-                            whiteSpace: 'nowrap', // Truncate text into a single line
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }
-                        : {
-                            whiteSpace: 'normal', // Wrap text into two lines
-                            overflowWrap: 'break-word',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          })
-                    }}
-                  >
-                    <Tooltip title={row[item.name]} placement="top">
-                      <span>{row[item.name] ? row[item.name] : '-'}</span>
-                    </Tooltip>
-                  </StyledTableCell>
-                );
-                break;
-              default:
-                cellContent = (
-                  <StyledTableCell key={index} style={{ width: currentWidth }} align={'left'}>
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
-            }
-            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
-          })}
-        </StyledTableRow>
-      </>
+          const cellStyles = {
+            ...(shouldTruncate
+              ? {
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }
+              : {
+                  whiteSpace: 'normal',
+                  overflowWrap: 'break-word',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }),
+          };
+
+          return (
+            <React.Fragment key={index}>
+              {isSelectableColumn(item.name) ? (
+                <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
+              ) : item.name === 'Attack Feasibilities Rating' ? (
+                <StyledTableCell sx={{ backgroundColor: bgColor, color: textColor }}>
+                  {row[item.name] || '-'}
+                </StyledTableCell>
+              ) : (
+                <StyledTableCell style={{ width: currentWidth }} sx={cellStyles}>
+                  <Tooltip title={row[item.name] || '-'} placement="top">
+                    <span>{row[item.name] || '-'}</span>
+                  </Tooltip>
+                </StyledTableCell>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </StyledTableRow>
     );
   };
 
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
+        <Typography sx={{ color: theme.palette.text.primary, fontWeight: 600, fontSize: '16px' }}>
+          Attack Tree Table
+        </Typography>
         <Box display="flex" alignItems="center" gap={1}>
-          {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
           <TextField
-            id="outlined-size-small"
             placeholder="Search"
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
+            sx={{ '& .MuiInputBase-input': { border: '1px solid black' } }}
           />
           <Button
+            variant="contained"
+            onClick={() => setOpenFilter(true)}
             sx={{
               fontSize: '0.85rem',
               backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
+              ':hover': { backgroundColor: '#388e3c' },
             }}
-            variant="contained"
-            onClick={handleOpenFilter}
           >
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
@@ -477,8 +347,8 @@ export default function AttackTreeTable() {
         </Box>
       </Box>
 
-      <Dialog open={openFilter} onClose={handleCloseFilter}>
-        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+      <Dialog open={openFilter} onClose={() => setOpenFilter(false)}>
+        <DialogTitle>Column Filters</DialogTitle>
         <DialogContent>
           {AttackTableHeader.map((column) => (
             <FormControlLabel
@@ -494,7 +364,7 @@ export default function AttackTreeTable() {
           ))}
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+          <Button variant="contained" onClick={() => setOpenFilter(false)} color="warning">
             Close
           </Button>
         </DialogActions>
@@ -503,47 +373,34 @@ export default function AttackTreeTable() {
       <TableContainer
         component={Paper}
         sx={{
-          maxHeight: 440,
+          maxHeight: tableHeight,
           borderRadius: '0px',
           padding: 0.25,
           overflow: 'auto',
-          '&::-webkit-scrollbar': {
-            width: '4px'
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)'
-          },
-          maxHeight: tableHeight,
-          scrollbarWidth: 'thin'
+          '&::-webkit-scrollbar': { width: '4px' },
+          '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.1)' },
+          scrollbarWidth: 'thin',
         }}
       >
-        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
-              {Head?.map((hd) => (
+              {Head.map((hd) => (
                 <StyledTableCell
                   key={hd.id}
-                  style={{
-                    width: `${columnWidths[hd.id]}px`,
-                    position: 'relative',
-                    overflowWrap: 'break-word'
-                  }}
+                  style={{ width: columnWidths[hd.id], position: 'relative', overflowWrap: 'break-word' }}
                 >
                   {hd.name}
-                  <div
+                  <Box
                     className="resize-handle"
-                    style={{
+                    sx={{
                       position: 'absolute',
                       right: 0,
                       top: 0,
                       width: '5px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
@@ -552,29 +409,29 @@ export default function AttackTreeTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered
-              ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              ?.map((row, rowKey) => (
-                <RenderTableRow key={row?.ID} row={row} rowKey={rowKey} />
-              ))}
+            {paginatedRows.map((row) => (
+              <RenderTableRow key={row.ID} row={row} />
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
 
       <TablePagination
-        sx={{
-          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-          '& .MuiSelect-select': { color: color?.sidebarContent },
-          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
-        }}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
-        count={filtered.length}
+        count={filteredRows.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{
+          '& .MuiTablePagination-selectLabel, & .MuiSelect-select, & .MuiTablePagination-displayedRows': {
+            color: theme.palette.text.primary,
+          },
+        }}
       />
     </Box>
   );
-}
+};
+
+export default AttackTreeTable;
