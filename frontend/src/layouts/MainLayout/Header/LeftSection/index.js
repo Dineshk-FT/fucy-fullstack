@@ -96,8 +96,6 @@ const LeftSection = () => {
     }
   }, [model?._id, getSidebarNode, getTemplates, getAttackScenario]);
 
-  console.log('left sction rendre');
-
   const handleAddNewNode = useCallback(() => {
     dispatch(openAddNodeTab());
   }, [dispatch]);

@@ -248,8 +248,8 @@ export const AttackTableHeader = [
 export const RiskTreatmentHeaderTable = [
   { id: 1, name: 'SNo', w: 80, minW: 60 },
   { id: 2, name: 'Threat Scenario', w: 150, minW: 130 },
-  { id: 3, name: 'Assets', w: 80, minW: 60 },
-  { id: 4, name: 'Damage Scenarios', w: 130, minW: 110 },
+  { id: 3, name: 'Assets', w: 120, minW: 100 },
+  { id: 4, name: 'Damage Scenarios', w: 150, minW: 130 },
   { id: 5, name: 'Related UNECE Threats or Vulns', w: 120, minW: 100 },
   { id: 6, name: 'Safety Impact', w: 100, minW: 80 },
   { id: 7, name: 'Financial Impact', w: 100, minW: 80 },

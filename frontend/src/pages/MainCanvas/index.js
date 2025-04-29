@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import ReactFlow, {
   MiniMap,
-  Controls,
   Background,
   ReactFlowProvider,
   getRectOfNodes,
@@ -22,19 +21,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../components/custom/edges/StepEdge';
-import { Tooltip, IconButton, Box, Zoom } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import RestoreIcon from '@mui/icons-material/Restore';
+import { Zoom } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import EditNode from '../../components/Poppers/EditNode';
-import GridOnIcon from '@mui/icons-material/GridOn';
 import EditEdge from '../../components/custom/edges/EditEdge';
 import EditProperties from '../../components/Poppers/EditProperties';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
-import DownloadIcon from '@mui/icons-material/Download';
 import RightDrawer from '../../layouts/MainLayout/RightSidebar';
 import ColorTheme from '../../themes/ColorTheme';
 import { ZoomControls } from './CanvasControls';
@@ -188,16 +181,11 @@ export default function MainCanvas() {
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
-
-  // console.log('anchorEl', anchorEl);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
-  const [isPopperFocused, setIsPopperFocused] = useState(false);
   const nodesRef = useRef(nodes);
-  const nodesRefer = useRef(nodes);
   const edgesRef = useRef(edges);
-  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
   const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
@@ -242,17 +230,6 @@ export default function MainCanvas() {
         notify('Something went wrong', 'error');
       });
   };
-
-  // useEffect(() => {
-
-  // }, []);
-  const handleCheckForChange = () => {
-    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-      return true;
-    }
-    return false;
-  };
-  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -312,7 +289,7 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
-    const prevNode = nodesRefer.current.find((n) => n.id === node.id);
+    const prevNode = nodesRef.current.find((n) => n.id === node.id);
     if (!prevNode) return;
 
     const deltaX = node.position.x - prevNode.position.x;
@@ -324,7 +301,7 @@ export default function MainCanvas() {
     const updatedPositions = new Map();
 
     const moveChildren = (parentId, dx, dy) => {
-      nodesRefer.current.forEach((child) => {
+      nodesRef.current.forEach((child) => {
         if (child.parentId === parentId) {
           const newPos = {
             x: child.position.x + dx,
@@ -343,7 +320,7 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDragStop = useCallback(() => {
-    nodesRefer.current = [...nodes]; // Update ref after drag stops
+    nodesRef.current = [...nodes]; // Update ref after drag stops
   }, [nodes]);
 
   function downloadImage(dataUrl) {
@@ -459,9 +436,7 @@ export default function MainCanvas() {
   // console.log('nodes', nodes);
   // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
-    if (!isPopperFocused) {
-      dispatch(clearAnchorEl());
-    }
+    dispatch(clearAnchorEl());
   };
 
   const handleSelectEdge = (e, edge) => {
@@ -624,8 +599,6 @@ export default function MainCanvas() {
 
         setNodes((nds) => [...nds, newNode]);
       });
-
-      checkForNodes();
     }
 
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
@@ -772,7 +745,6 @@ export default function MainCanvas() {
         }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
-        onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -783,13 +755,14 @@ export default function MainCanvas() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onClick={(e) => {
-              e.preventDefault();
-              // e.stopPropagation();
-              dispatch(setSelectedBlock({}));
-            }}
             onInit={onInit}
             onLoad={onLoad}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setContextMenu({ visible: false, x: 0, y: 0 });
+              dispatch(setSelectedBlock({}));
+            }}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}

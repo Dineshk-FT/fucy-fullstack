@@ -236,22 +236,10 @@ export default function RiskTreatmentTable() {
     }
   }, [openSelect?.cyberType, cyber_Goals, cyber_Claims]);
 
-  // console.log('details', details);
-  // console.log('rows', rows);
-
-  const handleOpenModalTs = () => {
-    setOpenTs(true);
-  };
-
   const handleCloseTs = () => {
     setOpenTs(false);
   };
 
-  const handleBack = () => {
-    dispatch(closeAll());
-  };
-
-  // console.log('details', details);
   const onDrop = (event) => {
     // console.log('event', event);
     event.preventDefault();
@@ -422,17 +410,17 @@ export default function RiskTreatmentTable() {
                   component="th"
                   scope="row"
                   sx={{
-                    width: `${columnWidths[item.id] || 'auto'}`,
-                    textAlign: 'center', // Centers content in the table cell
-                    verticalAlign: 'middle'
+                    width: `${columnWidths[item.id] || 'auto'}`
+                    // textAlign: 'center', // Centers content in the table cell
+                    // verticalAlign: 'middle'
                   }}
                 >
                   {row[item.name] && row[item.name].length ? (
                     <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center" // Ensures overall centering
-                      justifyContent="center"
+                      // display="flex"
+                      // flexDirection="column"
+                      // alignItems="center" // Ensures overall centering
+                      // justifyContent="center"
                       flexWrap="wrap"
                       width="100%"
                     >
@@ -440,9 +428,9 @@ export default function RiskTreatmentTable() {
                         <Box
                           key={goal?.ID || i}
                           display="flex"
-                          alignItems="flex-start" // Ensures all items start at the same position
+                          alignItems="center" // Ensures all items start at the same position
+                          // justifyContent="center"
                           gap={1}
-                          justifyContent="center"
                           sx={{
                             textAlign: 'left',
                             width: '100%',
@@ -499,9 +487,9 @@ export default function RiskTreatmentTable() {
                   {
                     // row[item.name] && row[item.name].length ? (
                     // row[item.name].map((damage, i) => (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
+                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
                       <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{row[item?.name]}</span>
+                      <span style={{ textAlign: 'start', width: 'max-content' }}>{row[item?.name]}</span>
                     </span>
                     // ))
                     // ) : (
@@ -515,9 +503,9 @@ export default function RiskTreatmentTable() {
               cellContent = (
                 <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name]?.map((require, i) => (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={require?.ID}>
+                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }} key={require?.ID}>
                       <img src={CyberRequireIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{require?.Name}</span>
+                      <span style={{ textAlign: 'start', width: 'max-content' }}>{require?.Name}</span>
                     </span>
                   ))}
                 </StyledTableCell>
@@ -609,9 +597,6 @@ export default function RiskTreatmentTable() {
               }
             }}
           />
-          {/* <Button sx={{ float: 'right', mb: 2 }} variant="contained" onClick={handleOpenModalTs}>
-            Add New Scenario
-          </Button> */}
           <Button
             sx={{
               fontSize: '0.85rem',
