@@ -1,33 +1,14 @@
 /* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Box, Tooltip, Typography, IconButton, Collapse } from '@mui/material';
+import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem } from '@mui/material';
 import {
-  Add as AddIcon,
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
-  Undo as UndoIcon,
-  Redo as RedoIcon,
-  ContentCut as CutIcon,
-  ContentCopy as CopyIcon,
-  ContentPaste as PasteIcon,
-  SelectAll as SelectAllIcon,
-  Deselect as DeselectIcon,
   TableChart as TableIcon,
-  Edit as EditIcon,
   CreateNewFolder as NewFolderIcon,
   DriveFileRenameOutline as RenameIcon,
-  Assessment as AssessmentIcon,
-  Warning as WarningIcon,
-  Star as StarIcon,
-  Security as SecurityIcon,
   PlaylistAdd as AddListIcon,
   AccountTree as TreeIcon,
-  Build as BuildIcon,
-  Assignment as AssignmentIcon,
-  Shield as ShieldIcon,
-  ReportProblem as ReportIcon,
-  ListAlt as ListAltIcon,
-  Group as GroupIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
@@ -44,28 +25,32 @@ import { openAddNodeTab, openAddDataNodeTab } from '../../../../store/slices/Can
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import CommonModal from '../../../../components/Modal/CommonModal';
-import { setTitle } from '../../../../store/slices/PageSectionSlice';
+import { setModelId, setTitle } from '../../../../store/slices/PageSectionSlice';
 import PromptModal from '../../../../components/Modal/PromptModal';
 import { shallow } from 'zustand/shallow';
+import { Export, Import } from 'iconsax-react';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router';
+
+const notify = (message, status) => toast[status](message);
+
+const selector = (state) => ({
+  Models: state.Models,
+  model: state.model,
+  getModels: state.getModels,
+  deleteModels: state.deleteModels,
+  getSidebarNode: state.getSidebarNode,
+  getTemplates: state.getTemplates,
+  setClickedItem: state.setClickedItem,
+  getAttackScenario: state.getAttackScenario,
+  attackScenarios: state.attackScenarios,
+  isCollapsed: state.isCollapsed,
+  setCollapsed: state.setCollapsed,
+  exportProject: state.exportProject,
+  importProject: state.importProject
+});
 
 const LeftSection = () => {
-  const selector = useCallback(
-    (state) => ({
-      Models: state.Models,
-      model: state.model,
-      getModels: state.getModels,
-      deleteModels: state.deleteModels,
-      getSidebarNode: state.getSidebarNode,
-      getTemplates: state.getTemplates,
-      setClickedItem: state.setClickedItem,
-      getAttackScenario: state.getAttackScenario,
-      attackScenarios: state.attackScenarios,
-      isCollapsed: state.isCollapsed,
-      setCollapsed: state.setCollapsed
-    }),
-    []
-  );
-
   const { isDark } = useSelector((state) => state?.currentId);
   const color = ColorTheme();
   const {
@@ -79,7 +64,9 @@ const LeftSection = () => {
     getAttackScenario,
     attackScenarios,
     isCollapsed,
-    setCollapsed
+    setCollapsed,
+    exportProject,
+    importProject
   } = useStore(selector, shallow);
 
   const [activeTab, setActiveTab] = useState('Project');
@@ -96,8 +83,10 @@ const LeftSection = () => {
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
+  const [exportAnchorEl, setExportAnchorEl] = useState(null);
 
   useEffect(() => {
     getSidebarNode();
@@ -106,6 +95,8 @@ const LeftSection = () => {
       getAttackScenario(model._id);
     }
   }, [model?._id, getSidebarNode, getTemplates, getAttackScenario]);
+
+  console.log('left sction rendre');
 
   const handleAddNewNode = useCallback(() => {
     dispatch(openAddNodeTab());
@@ -117,6 +108,76 @@ const LeftSection = () => {
 
   const handleSystemTabClick = useCallback(() => setOpenTemplateDialog(true), []);
   const handleComponentsTabClick = useCallback(() => setOpenComponentsDialog(true), []);
+
+  const handleExportClick = (event) => {
+    setExportAnchorEl(event.currentTarget);
+  };
+
+  const handleExportClose = () => {
+    setExportAnchorEl(null);
+  };
+
+  const handleExportJSON = () => {
+    // Implement your JSON export logic here
+    console.log('Exporting as JSON');
+    exportProject({ modelId: model?._id })
+      .then((res) => {
+        if (!res.error) {
+          notify(res?.message ?? 'Exported Successfully', 'success');
+          if (res.download_url) {
+            window.open(res.download_url, '_blank');
+          }
+        } else {
+          notify(res?.error ?? 'something went wrong', 'error');
+        }
+      })
+      .catch((err) => notify(err?.message ?? 'something went wrong', 'error'));
+    handleExportClose();
+  };
+
+  const handleExportPDF = () => {
+    // Implement your PDF export logic here
+    console.log('Exporting as PDF');
+    handleExportClose();
+  };
+
+  const handleImportClick = () => {
+    const fileInput = document.createElement('input');
+    const userId = sessionStorage.getItem('user-id');
+    fileInput.type = 'file';
+    fileInput.accept = '.bson';
+
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        console.log('File selected:', file.name);
+
+        try {
+          const response = await importProject({ userId: userId, file: file });
+
+          if (!response.error) {
+            if (response.new_model_id) {
+              notify('Import successfull', 'success');
+              navigate(`/Models/${response.new_model_id}`);
+              dispatch(setModelId(response.new_model_id));
+              dispatch(closeAll());
+              getModels();
+            } else {
+              notify(response?.error ?? 'Import failed', 'error');
+            }
+          } else {
+            console.error('Import failed:', response.error);
+            notify('Import failed', 'error');
+          }
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          notify('Error uploading file', 'error');
+        }
+      }
+    };
+
+    fileInput.click();
+  };
 
   const handleTabChange = useCallback(
     (tabName) => {
@@ -203,7 +264,9 @@ const LeftSection = () => {
           { label: 'New', icon: NewFolderIcon, action: () => setOpenModal((prev) => ({ ...prev, New: true })) },
           { label: 'Rename', icon: RenameIcon, action: () => setOpenModal((prev) => ({ ...prev, Rename: true })) },
           { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal((prev) => ({ ...prev, Open: true })) },
-          { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal((prev) => ({ ...prev, Delete: true })) }
+          { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal((prev) => ({ ...prev, Delete: true })) },
+          { label: 'Export', icon: Export, action: handleExportClick },
+          { label: 'Import', icon: Import, action: handleImportClick }
         ]
       },
       {
@@ -518,6 +581,23 @@ const LeftSection = () => {
           {currentTabOptions.map(renderOptionButton)}
         </Box>
       </Collapse>
+      {/* Export Menu */}
+      <Menu
+        anchorEl={exportAnchorEl}
+        open={Boolean(exportAnchorEl)}
+        onClose={handleExportClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center'
+        }}
+      >
+        <MenuItem onClick={handleExportJSON}>Export as JSON</MenuItem>
+        <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
+      </Menu>
 
       {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={() => handleCloseModal('New')} />}
       {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={() => handleCloseModal('Rename')} Models={Models} />}

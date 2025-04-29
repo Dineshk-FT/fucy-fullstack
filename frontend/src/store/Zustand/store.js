@@ -1737,6 +1737,17 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   //Add Section
 
+  exportProject: async (details) => {
+    const url = `${configuration.apiBaseUrl}/v1/export`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
+
+  importProject: async (details) => {
+    const url = `${configuration.apiBaseUrl}/v1/import`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   addDamageScene: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/damage_scenario`;
     const res = await ADD_CALL(details, url);
