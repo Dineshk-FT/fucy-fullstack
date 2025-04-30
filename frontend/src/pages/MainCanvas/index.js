@@ -289,34 +289,40 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
-    const prevNode = nodesRef.current.find((n) => n.id === node.id);
+    const currentNodes = nodesRef.current;
+    const prevNode = currentNodes.find((n) => n.id === node.id);
     if (!prevNode) return;
 
     const deltaX = node.position.x - prevNode.position.x;
     const deltaY = node.position.y - prevNode.position.y;
+    if (deltaX === 0 && deltaY === 0) return;
 
-    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
-
-    // Use a Map to track updated positions
     const updatedPositions = new Map();
 
-    const moveChildren = (parentId, dx, dy) => {
-      nodesRef.current.forEach((child) => {
+    // Traverse all descendants recursively
+    const moveDescendants = (parentId, dx, dy) => {
+      currentNodes.forEach((child) => {
         if (child.parentId === parentId) {
-          const newPos = {
-            x: child.position.x + dx,
-            y: child.position.y + dy
-          };
+          const prev = updatedPositions.get(child.id) || child.position;
+          const newPos = { x: prev.x + dx, y: prev.y + dy };
           updatedPositions.set(child.id, newPos);
-          moveChildren(child.id, dx, dy);
+
+          moveDescendants(child.id, dx, dy); // recursive
         }
       });
     };
 
+    // Move the dragged group itself
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
-    moveChildren(node.id, deltaX, deltaY);
 
+    // Now move its children recursively
+    moveDescendants(node.id, deltaX, deltaY);
+
+    // Apply all changes
     setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
+
+    // 🔁 Update refs for all moved nodes to prevent delta drift on next frame
+    nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
   }, []);
 
   const onNodeDragStop = useCallback(() => {
