@@ -82,6 +82,22 @@ const useStore = createWithEqualityFn((set, get) => ({
   canvasRef: null,
   canvasImage: null,
 
+  subSystems: {
+    id: '6',
+    name: 'Sub Systems',
+    icon: 'SystemIcon'
+    // subs: [
+    //   {
+    //     id: '61',
+    //     name: 'Hardware Models'
+    //   },
+    //   {
+    //     id: '62',
+    //     name: 'Software Models'
+    //   }
+    // ]
+  },
+
   assets: {
     id: '1',
     name: 'Item Definition',
@@ -160,21 +176,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     ]
   },
 
-  systemDesign: {
-    id: '6',
-    name: 'System Design',
-    icon: 'SystemIcon',
-    subs: [
-      {
-        id: '61',
-        name: 'Hardware Models'
-      },
-      {
-        id: '62',
-        name: 'Software Models'
-      }
-    ]
-  },
   catalog: {
     id: '7',
     name: 'Catalogs',

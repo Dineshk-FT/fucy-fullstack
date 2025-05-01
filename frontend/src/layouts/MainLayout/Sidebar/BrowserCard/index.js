@@ -256,7 +256,7 @@ const selector = (state) => ({
   getRiskTreatment: state.getRiskTreatment,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   cybersecurity: state.cybersecurity,
-  systemDesign: state.systemDesign,
+  subSystems: state.subSystems,
   catalog: state.catalog,
   riskTreatment: state.riskTreatment,
   documents: state.documents,
@@ -312,7 +312,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getCyberSecurityScenario,
     attackScenarios,
     cybersecurity,
-    systemDesign,
+    subSystems,
     catalog,
     riskTreatment,
     documents,
@@ -428,6 +428,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   }, [model]);
 
   const scenarios = [
+    // { name: 'sub-systems', scene: subSystems },
     { name: 'assets', scene: assets },
     { name: 'damageScenarios', scene: damageScenarios },
     { name: 'threatScenarios', scene: threatScenarios },
@@ -874,7 +875,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         const renderSection = (nodeId, label, details, type) => {
           const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
 
-          if (!details.length) return null;
+          // if (!details.length) return null;
           return (
             <DraggableTreeItem
               nodeId={nodeId}
@@ -1223,7 +1224,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           null,
           null
         );
-
+      // case 'sub-systems':
+      //   return renderTreeItem(
+      //     data,
+      //     (e) => {
+      //       e.stopPropagation();
+      //     },
+      //     null,
+      //     null
+      //   );
       default:
         return renderTreeItem(
           data,
