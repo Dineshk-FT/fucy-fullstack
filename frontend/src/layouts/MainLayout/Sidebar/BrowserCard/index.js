@@ -1042,6 +1042,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                           detail?.damage_name
                         } [${detail?.id}]`,
                         nodeId: nodeDetail?.nodeId,
+                        index: key,
                         extraProps: {
                           threatId: prop?.id,
                           damageId: detail?.rowId,
@@ -1059,8 +1060,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                       extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
                     }
                   ]
-              ).map(({ label, nodeId, extraProps }) => {
-                // console.log('extraProps', extraProps);
+              ).map(({ label, nodeId, extraProps, index }) => {
                 const onClick = (e) => {
                   e.stopPropagation();
                   const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
@@ -1071,7 +1071,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     draggable={true}
                     key={nodeId}
                     nodeId={nodeId}
-                    label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
+                    label={getLabel('TopicIcon', label, index ?? i + 1, nodeId, extraProps?.threat_ids, onClick)}
                     onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1175,12 +1175,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.scenes?.map((scene) => (
+            return sub.scenes?.map((scene, i) => (
               <TreeItem
                 onClick={(e) => e.stopPropagation()}
                 key={scene.ID}
                 nodeId={scene.ID}
-                label={getLabel('TopicIcon', scene.Name, null, scene.ID)}
+                label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
               />
             ));
           })
