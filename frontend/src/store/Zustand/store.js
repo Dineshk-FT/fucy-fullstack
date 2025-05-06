@@ -81,11 +81,15 @@ const useStore = createWithEqualityFn((set, get) => ({
   selectedthreatIds: [],
   canvasRef: null,
   canvasImage: null,
-
+  subSystemName: '',
+  derivedIds: [],
+  isEditDerived: false,
+  derivationId: '',
   subSystems: {
     id: '6',
     name: 'Sub Systems',
-    icon: 'SystemIcon'
+    icon: 'SystemIcon',
+    scenes: []
     // subs: [
     //   {
     //     id: '61',
@@ -628,6 +632,24 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Setter for canvasRef and canvasImage
   setCanvasRef: (ref) => set({ canvasRef: ref }),
   setCanvasImage: (image) => set({ canvasImage: image }),
+  setSubSystemName: (value) =>
+    set((state) => ({
+      subSystemName: typeof value === 'function' ? value(state.subSystemName) : value
+    })),
+
+  // derived Edit part
+  setDerivedIds: (value) =>
+    set((state) => ({
+      derivedIds: typeof value === 'function' ? value(state.derivedIds) : value
+    })),
+  setIsEditDerived: (value) =>
+    set((state) => ({
+      isEditDerived: typeof value === 'function' ? value(state.isEditDerived) : value
+    })),
+  setDerivationId: (value) =>
+    set((state) => ({
+      derivationId: typeof value === 'function' ? value(state.derivationId) : value
+    })),
 
   // setter for propertiesPopper
   setPropertiesOpen: (value) => {
@@ -1363,6 +1385,12 @@ const useStore = createWithEqualityFn((set, get) => ({
             name: 'Cybersecurity Claims'
           }
         ]
+      },
+      subSystems: {
+        id: '6',
+        name: 'Sub Systems',
+        icon: 'SystemIcon',
+        scenes: [...res?.sub_models]
       }
     });
   },
@@ -1644,6 +1672,12 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   updateThreatScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/threat_scenario`;
+    const res = await PATCH_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+  updateDerivedThreatScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/derved_threat_scene`;
     const res = await PATCH_CALL(details, url);
     // console.log('res', res);
     return res;

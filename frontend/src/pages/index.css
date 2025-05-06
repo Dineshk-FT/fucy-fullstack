@@ -40,6 +40,9 @@ iframe#webpack-dev-server-client-overlay {
   border-radius: 50%;
   /* background-color: #784be8; */
 }
+.subsystem_handle {
+  opacity: 0;
+}
 
 /* .handleX {
   width: inherit !important;

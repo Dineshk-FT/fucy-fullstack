@@ -14,6 +14,7 @@ import {
 import AttackNode from '../components/custom/nodes/AttackNode';
 import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../components/CustomGates';
 import DataNode from '../components/custom/nodes/DataNode';
+import SubSystemNode from '../components/custom/nodes/SubstystemNode';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);
@@ -76,7 +77,8 @@ export const pageNodeTypes = {
     mcu: MicroController,
     memory: Memory,
     group: CustomGroupNode,
-    multihandle: MultiHandleNode
+    multihandle: MultiHandleNode,
+    subsystem: SubSystemNode
   },
   attackcanvas: {
     input: InputNode,

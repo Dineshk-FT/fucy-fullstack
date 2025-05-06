@@ -2,8 +2,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Button,
   TextField,
@@ -26,9 +26,7 @@ import {
   DialogTitle,
   FormControlLabel
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
@@ -58,18 +56,17 @@ const selector = (state) => ({
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
   deleteThreatScenario: state.deleteThreatScenario,
-  selectedthreatIds: state.selectedthreatIds
+  selectedthreatIds: state.selectedthreatIds,
+  updateDerivedThreatScenario: state.updateDerivedThreatScenario,
+  derivedIds: state.derivedIds,
+  isEditDerived: state.isEditDerived,
+  derivationId: state.derivationId,
+  setIsEditDerived: state.setIsEditDerived
 });
 
 const notify = (message, status) => toast[status](message);
 
 const column = TsTableHeader;
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -96,8 +93,6 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function Tstable() {
   const color = ColorTheme();
-  const classes = useStyles();
-  const dispatch = useDispatch();
   const [openModal, setOpenModal] = useState({
     threat: false,
     select: false,
@@ -119,8 +114,12 @@ export default function Tstable() {
     UserDefinedId,
     deleteThreatScenario,
     getRiskTreatment,
-    addThreatScene,
-    selectedthreatIds
+    selectedthreatIds,
+    updateDerivedThreatScenario,
+    derivedIds,
+    isEditDerived,
+    derivationId,
+    setIsEditDerived
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,11 +134,40 @@ export default function Tstable() {
   }, [title, visibleColumns]);
 
   // console.log('selectedthreatIds', selectedthreatIds);
+
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
   const [selectedRows, setSelectedRows] = useState([]);
+
+  useEffect(() => {
+    if (isEditDerived && derivedIds && filtered) {
+      // Map through derivedIds to find matching objects in filtered
+      const matchedRows = derivedIds
+        .map((derivedItem) => {
+          // Find the matching item in filtered array
+          const matched = filtered.find((item) => item.ID === derivedItem.propId);
+
+          // If found, return the merged object (preserving some original derivedIds properties if needed)
+          return matched
+            ? {
+                ...matched, // Spread all properties from filtered item
+                propId: derivedItem.propId, // Keep original propId from derivedIds
+                // Add any other properties you want to preserve from derivedItem
+                SNo: derivedItem.SNo || matched.SNo,
+                type: 'derived' // Force type if needed
+              }
+            : null;
+        })
+        .filter(Boolean); // Remove any null entries (non-matched items)
+
+      // Only update if we actually found matches
+      if (matchedRows.length > 0) {
+        setSelectedRows(matchedRows);
+      }
+    }
+  }, [isEditDerived, derivationId]); // Run when these dependencies change
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -275,6 +303,41 @@ export default function Tstable() {
 
   const handleOpenDerived = () => {
     setOpenModal((state) => ({ ...state, derived: true }));
+  };
+
+  const handleCloseEditDerived = () => {
+    setIsEditDerived(false);
+    setSelectedRows([]);
+  };
+
+  const handleUpdateDerived = () => {
+    const ids = selectedRows?.map((row) => ({
+      propId: row?.propId,
+      nodeId: row?.nodeId,
+      rowId: row?.rowId
+    }));
+    const details = {
+      'model-id': model?._id,
+      threatIds: JSON.stringify(ids),
+      'scene-id': derivationId
+    };
+    updateDerivedThreatScenario(details)
+      .then((res) => {
+        // console.log('res page', res);
+        if (!res.error) {
+          notify(res?.message ?? 'Updated the derivation', 'success');
+          setTimeout(() => {
+            handleCloseEditDerived();
+            getThreatScenario(model?._id);
+          }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        // console.log('err', err);
+        notify('Something went wrong', 'error');
+      });
   };
   const handleCloseDerived = () => {
     setOpenModal((state) => ({ ...state, derived: false }));
@@ -583,16 +646,34 @@ export default function Tstable() {
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
-          <Button
-            sx={{ fontSize: '0.85rem' }}
-            variant="contained"
-            color="primary"
-            startIcon={<CircleIcon />} // Or any appropriate icon
-            onClick={handleOpenDerived}
-            disabled={selectedRows.length === 0}
-          >
-            Derive
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              sx={{ fontSize: '0.85rem' }}
+              variant="contained"
+              color="primary"
+              startIcon={<CircleIcon />}
+              onClick={isEditDerived ? handleUpdateDerived : handleOpenDerived}
+              disabled={selectedRows.length === 0}
+            >
+              {isEditDerived ? 'Update' : 'Derive'}
+            </Button>
+
+            {isEditDerived && (
+              <IconButton
+                size="small"
+                onClick={handleCloseEditDerived}
+                sx={{
+                  marginLeft: 1,
+                  color: 'error.main',
+                  '&:hover': {
+                    backgroundColor: 'rgba(244, 67, 54, 0.08)' // light red on hover
+                  }
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           <Button
             sx={{ fontSize: '0.85rem' }}
             variant="outlined"

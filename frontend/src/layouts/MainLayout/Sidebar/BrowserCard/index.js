@@ -1,8 +1,9 @@
 /*eslint-disable*/
 import React, { useCallback, useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import EditIcon from '@mui/icons-material/Edit';
 import { useDispatch, useSelector } from 'react-redux';
 import { TreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
@@ -273,7 +274,11 @@ const selector = (state) => ({
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
   setIsNodePasted: state.setIsNodePasted,
-  setSelectedThreatIds: state.setSelectedThreatIds
+  setSelectedThreatIds: state.setSelectedThreatIds,
+  setSubSystemName: state.setSubSystemName,
+  setDerivedIds: state.setDerivedIds,
+  setIsEditDerived: state.setIsEditDerived,
+  setDerivationId: state.setDerivationId
 });
 
 const Properties = {
@@ -330,7 +335,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getGlobalAttackTrees,
     deleteAttacks,
     setIsNodePasted,
-    setSelectedThreatIds
+    setSelectedThreatIds,
+    setSubSystemName,
+    setDerivedIds,
+    setIsEditDerived,
+    setDerivationId
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -428,7 +437,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   }, [model]);
 
   const scenarios = [
-    // { name: 'sub-systems', scene: subSystems },
+    { name: 'sub-systems', scene: subSystems },
     { name: 'assets', scene: assets },
     { name: 'damageScenarios', scene: damageScenarios },
     { name: 'threatScenarios', scene: threatScenarios },
@@ -449,9 +458,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
+    if (name === 'sub-systems') {
+      return;
+    }
     if (name === 'assets') {
       dispatch(setPreviousTab(name));
       dispatch(closeAll());
+      setSubSystemName('');
     }
     const get_api = {
       assets: getAssets,
@@ -569,6 +582,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  const handleEditDerived = (id, ids) => {
+    setIsEditDerived(true);
+    setDerivedIds(ids);
+    setDerivationId(id);
+  };
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
     return (
@@ -758,55 +776,63 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   );
 
   const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
-    return subs?.map((sub) =>
-      sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
+    return subs?.map((sub) => {
+      const extraProps = additionalMapping?.(sub)?.onClick ? { onClick: additionalMapping(sub).onClick } : {};
+
+      const children = typeof additionalMapping === 'function' ? additionalMapping(sub)?.children : null;
+
+      const baseProps = {
+        key: sub.id,
+        nodeId: sub.id,
+        ...extraProps
+      };
+
+      const label =
+        sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
+            onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
+          >
+            <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
+            {hovered[sub.type] && contextMenuHandler && (
+              <Box
+                onClick={(e) => {
+                  e.stopPropagation();
+                  contextMenuHandler(e, sub.name);
+                }}
+              >
+                <ControlPointIcon color="primary" sx={{ fontSize: 19 }} />
+              </Box>
+            )}
+          </Box>
+        ) : (
+          getLabel('TopicIcon', sub.name, null, sub.id)
+        );
+
+      return (
         <TreeItem
-          key={sub.id}
-          nodeId={sub.id}
-          label={
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
-              onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
-            >
-              <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
-              {hovered[sub.type] && (
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    contextMenuHandler(e, sub.name);
-                  }}
-                >
-                  <ControlPointIcon color="primary" sx={{ fontSize: 19 }} />
-                </Box>
-              )}
-            </Box>
+          {...baseProps}
+          label={label}
+          onClick={
+            baseProps.onClick ||
+            ((e) => {
+              setClickedItem(sub.id);
+              handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
+            })
           }
-          onClick={(e) => {
-            setClickedItem(sub.id);
-            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
-          }}
-          // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
+          onContextMenu={
+            sub.name === 'Attack' || sub.name === 'Attack Trees'
+              ? undefined
+              : (e) => contextMenuHandler && handleTreeItemClick(e, contextMenuHandler, sub.name)
+          }
         >
-          {additionalMapping && additionalMapping(sub)}
+          {children}
         </TreeItem>
-      ) : (
-        <TreeItem
-          key={sub.id}
-          nodeId={sub.id}
-          label={getLabel('TopicIcon', sub.name, null, sub.id)}
-          onClick={(e) => {
-            setClickedItem(sub.id);
-            handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
-          }}
-          onContextMenu={(e) => handleTreeItemClick(e, contextMenuHandler, sub.name)}
-        >
-          {additionalMapping && additionalMapping(sub)}
-        </TreeItem>
-      )
-    );
+      );
+    });
   };
 
   const renderTreeItems = (data, type) => {
@@ -1002,8 +1028,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'damage', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+            let children = null;
+
             if (sub.name === 'Damage Scenarios (DS) Derivations') {
-              return sub.Derivations?.map((derivation, i) => (
+              children = sub.Derivations?.map((derivation, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={derivation.id}
@@ -1012,8 +1040,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 />
               ));
             }
+
             if (sub.name === 'Damage Scenarios - Impact Ratings') {
-              return sub.Details?.map((detail, i) => (
+              children = sub.Details?.map((detail, i) => (
                 <TreeItem
                   onClick={(e) => e.stopPropagation()}
                   key={detail._id}
@@ -1022,6 +1051,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 />
               ));
             }
+
+            return { children };
           })
         );
 
@@ -1031,56 +1062,121 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
           renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
-            let key = 0;
-            return sub.Details?.flatMap((detail, i) =>
-              (sub.name === 'Threat Scenarios'
-                ? detail?.Details?.flatMap((nodeDetail) =>
-                    nodeDetail?.props?.map((prop) => {
-                      key++;
-                      return {
-                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
-                          detail?.damage_name
-                        } [${detail?.id}]`,
-                        nodeId: nodeDetail?.nodeId,
-                        extraProps: {
-                          threatId: prop?.id,
-                          damageId: detail?.rowId,
-                          width: 150,
-                          height: 60,
-                          key: `TS${key.toString().padStart(3, '0')}`
+            let children = null;
+
+            if (sub.name === 'Threat Scenarios') {
+              let key = 0;
+              children = sub.Details?.flatMap((detail, i) =>
+                detail?.Details?.flatMap((nodeDetail) =>
+                  nodeDetail?.props?.map((prop) => {
+                    key++;
+                    return (
+                      <DraggableTreeItem
+                        draggable={true}
+                        key={prop?.id}
+                        nodeId={nodeDetail?.nodeId}
+                        label={getLabel(
+                          'TopicIcon',
+                          `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                            detail?.damage_name
+                          } [${detail?.id}]`,
+                          key,
+                          nodeDetail?.nodeId
+                        )}
+                        onDragStart={(e) =>
+                          onDragStart(e, {
+                            label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                              detail?.damage_name
+                            } [${detail?.id}]`,
+                            type: 'default',
+                            dragged: true,
+                            nodeId: nodeDetail?.nodeId,
+                            threatId: prop?.id,
+                            damageId: detail?.rowId,
+                            width: 150,
+                            height: 60,
+                            key: `TS${key.toString().padStart(3, '0')}`
+                          })
                         }
-                      };
-                    })
-                  )
-                : [
-                    {
-                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
-                      nodeId: detail?.id,
-                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
-                    }
-                  ]
-              ).map(({ label, nodeId, extraProps }) => {
-                // console.log('extraProps', extraProps);
-                const onClick = (e) => {
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      />
+                    );
+                  })
+                )
+              );
+            }
+            if (sub.name === 'Derived Threat Scenarios') {
+              children = sub.Details?.map((detail, i) => {
+                const labelOnClick = (e) => {
                   e.stopPropagation();
-                  const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
+                  const ids = detail?.threat_ids?.map((threat) => threat?.propId) || [];
                   setSelectedThreatIds(ids);
                 };
+
+                const hasThreatIds = detail?.threat_ids?.length > 0;
+                const isHovered = hovered.id === detail?.id;
+
                 return (
                   <DraggableTreeItem
                     draggable={true}
-                    key={nodeId}
-                    nodeId={nodeId}
-                    label={getLabel('TopicIcon', label, key || i + 1, nodeId, extraProps?.threat_ids, onClick)}
-                    onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
+                    key={detail?.id}
+                    nodeId={detail?.id}
+                    label={
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        onMouseEnter={() => setHovered((prev) => ({ ...prev, id: detail?.id }))}
+                        onMouseLeave={() => setHovered((prev) => ({ ...prev, id: '' }))}
+                      >
+                        {getLabel(
+                          'TopicIcon',
+                          `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                          i + 1,
+                          detail?.id,
+                          detail?.threat_ids,
+                          labelOnClick
+                        )}
+                        {hasThreatIds && isHovered && (
+                          <EditIcon
+                            fontSize="small"
+                            color="action"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditDerived(detail?.id, detail?.threat_ids);
+                            }}
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': { color: 'primary.main' },
+                              ml: 1 // Add some margin to separate from text
+                            }}
+                          />
+                        )}
+                      </Box>
+                    }
+                    onDragStart={(e) =>
+                      onDragStart(e, {
+                        label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+                        type: 'default',
+                        dragged: true,
+                        nodeId: detail?.id,
+                        ...detail,
+                        nodeType: 'derived',
+                        width: 150,
+                        height: 60
+                      })
+                    }
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedThreatIds([]);
                     }}
                   />
                 );
-              })
-            );
+              });
+            }
+            return { children };
           })
         );
 
@@ -1089,70 +1185,58 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           data,
           (e) => handleClick(e, model?._id, 'attack', data.id),
           null,
-          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
-            sub.scenes?.map((at_scene, i) => {
-              const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
+          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) => {
+            let children = null;
 
-              return sub.name === 'Attack' ? (
-                <DraggableTreeItem
-                  key={at_scene.ID}
-                  nodeId={at_scene.ID}
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
-                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
-                    >
-                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
-                      {hovered.id === at_scene?.ID && (
-                        <Box
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDeleteModal(sub?.type, at_scene);
-                          }}
-                        >
-                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
-                        </Box>
-                      )}
-                    </Box>
-                  }
-                  draggable
-                  onDragStart={(e) => onDragStart(e, Details)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <TreeItem
-                  key={at_scene.ID}
-                  nodeId={at_scene.ID}
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
-                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
-                    >
-                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
-                      {hovered.id === at_scene?.ID && (
-                        <Box
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDeleteModal(sub?.type, at_scene);
-                          }}
-                        >
-                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
-                        </Box>
-                      )}
-                    </Box>
-                  }
-                  onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
-                />
-              );
-            })
-          )
+            if (sub.scenes) {
+              children = sub.scenes.map((at_scene, i) => {
+                const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
+                const labelContent = (
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
+                    onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
+                  >
+                    <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
+                    {hovered.id === at_scene?.ID && (
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDeleteModal(sub?.type, at_scene);
+                        }}
+                      >
+                        <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
+                      </Box>
+                    )}
+                  </Box>
+                );
+
+                return sub.name === 'Attack' ? (
+                  <DraggableTreeItem
+                    key={at_scene.ID}
+                    nodeId={at_scene.ID}
+                    label={labelContent}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, Details)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <TreeItem
+                    key={at_scene.ID}
+                    nodeId={at_scene.ID}
+                    label={labelContent}
+                    onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
+                  />
+                );
+              });
+            }
+
+            return { children };
+          })
         );
+
       case 'riskTreatment':
         return renderTreeItem(
           data,
@@ -1169,37 +1253,40 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             ));
           })
         );
+
       case 'cybersecurity':
         return renderTreeItem(
           data,
           (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.scenes?.map((scene) => (
-              <TreeItem
-                onClick={(e) => e.stopPropagation()}
-                key={scene.ID}
-                nodeId={scene.ID}
-                label={getLabel('TopicIcon', scene.Name, null, scene.ID)}
-              />
-            ));
+            let children = null;
+
+            if (sub.scenes) {
+              children = sub.scenes.map((scene) => (
+                <TreeItem
+                  onClick={(e) => e.stopPropagation()}
+                  key={scene.ID}
+                  nodeId={scene.ID}
+                  label={getLabel('TopicIcon', scene.Name, null, scene.ID)}
+                />
+              ));
+            }
+
+            return { children };
           })
         );
-
       case 'catalog':
         return renderTreeItem(
           data,
           (e) => handleClick(e, model?._id, 'catalog', data.id),
           null,
           renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.subs_scenes?.map((scene) => (
-              <TreeItem
-                key={scene.id}
-                nodeId={scene.id}
-                label={getLabel('TopicIcon', scene.name, null, scene.id)}
-                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
-              >
-                {scene.item_name?.map((subScene) => (
+            let children = null;
+
+            if (sub.subs_scenes) {
+              children = sub.subs_scenes.map((scene) => {
+                const sceneChildren = scene.item_name?.map((subScene) => (
                   <DraggableTreeItem
                     key={subScene.id}
                     nodeId={subScene.id}
@@ -1208,12 +1295,24 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     onClick={(e) => e.stopPropagation()}
                     onDragStart={(e) => onDragStart(e, subScene)}
                   />
-                ))}
-              </TreeItem>
-            ));
+                ));
+
+                return (
+                  <TreeItem
+                    key={scene.id}
+                    nodeId={scene.id}
+                    label={getLabel('TopicIcon', scene.name, null, scene.id)}
+                    onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+                  >
+                    {sceneChildren}
+                  </TreeItem>
+                );
+              });
+            }
+
+            return { children };
           })
         );
-
       case 'documents':
         return renderTreeItem(
           data,
@@ -1224,15 +1323,25 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           null,
           null
         );
-      // case 'sub-systems':
-      //   return renderTreeItem(
-      //     data,
-      //     (e) => {
-      //       e.stopPropagation();
-      //     },
-      //     null,
-      //     null
-      //   );
+      case 'sub-systems':
+        return renderTreeItem(
+          data,
+          (e) => {
+            e.stopPropagation();
+            handleClick(e, model?._id, 'sub-systems', data.id);
+          },
+          null,
+          renderSubItems(data.scenes, null, null, (sub) => ({
+            onClick: (e) => {
+              e.stopPropagation();
+              // console.log('sub', sub);
+              setSubSystemName(sub?.name);
+              setNodes(sub?.assets[0]?.template?.nodes);
+              setEdges(sub?.assets[0]?.template?.edges);
+            },
+            children: null // don't render nested
+          }))
+        );
       default:
         return renderTreeItem(
           data,
@@ -1255,7 +1364,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   return (
     <>
       {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={() => setOpenDocumentDialog(false)} />}
-
       <CardStyle
         isCollapsed={isCollapsed}
         isNavbarClose={isNavbarClose}

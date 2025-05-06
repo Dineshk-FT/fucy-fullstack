@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../components/custom/edges/StepEdge';
-import { Zoom } from '@mui/material';
+import { Typography, Zoom } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
@@ -70,7 +70,8 @@ const selector = (state) => ({
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges
+  initialEdges: state.initialEdges,
+  subSystemName: state.subSystemName
 });
 
 // Edge line styling
@@ -164,7 +165,8 @@ export default function MainCanvas() {
     setPropertiesOpen,
     isDark,
     initialNodes,
-    initialEdges
+    initialEdges,
+    subSystemName
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -810,6 +812,13 @@ export default function MainCanvas() {
                 assets={assets}
               />
             </Panel>
+            {subSystemName && (
+              <Panel position="top-center">
+                <Typography variant="h3" sx={{ backgroundColor: '#E5EAF5', p: 1, borderRadius: 1 }}>
+                  {subSystemName}
+                </Typography>
+              </Panel>
+            )}
             <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
             </Panel>
