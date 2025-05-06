@@ -155,7 +155,8 @@ export default function CybersecurityTable() {
           ID: dt?.ID,
           Name: dt?.Name,
           Description: dt?.Description ?? `description for ${dt?.Name}`,
-          'Related Threat Scenario': dt?.threat_key ?? []
+          'Related Threat Scenario': dt?.threat_key ?? [],
+          'Related Attack Tree': dt?.attack_scene_name ?? ''
         };
       });
       setRows(scene);
