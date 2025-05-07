@@ -15,7 +15,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { toPng } from 'html-to-image';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 
@@ -23,8 +22,6 @@ const selector = (state) => ({
   template: state.assets.template,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
-  edges: state.edges,
-  canvasRef: state.canvasRef,
   canvasImage: state.canvasImage,
 });
 
@@ -57,11 +54,11 @@ const items = [
 ];
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, edges, canvasRef, canvasImage } = useStore(selector, shallow);
+  const { template, generateDocument, nodes, canvasImage } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Reset selected items when dialog opens
   useEffect(() => {
@@ -77,56 +74,9 @@ const DocumentDialog = ({ open, onClose }) => {
     );
   }, []);
 
-  // Generate canvas image
-  const generateImageFromNodesAndEdges = useCallback(async () => {
-    setIsGeneratingImage(true);
-    try {
-      if (canvasImage) return canvasImage;
-      if (!canvasRef?.current) throw new Error('Canvas reference is not available.');
-
-      const reactFlowViewport = canvasRef.current.querySelector('.react-flow__viewport');
-      if (!reactFlowViewport || !nodes?.length) throw new Error('Canvas viewport or nodes not available');
-
-      const imageWidth = 1920;
-      const imageHeight = 1080;
-
-      const getNodesBounds = (nodes) => ({
-        x: Math.min(...nodes.map((n) => n.position.x)),
-        y: Math.min(...nodes.map((n) => n.position.y)),
-        width: Math.max(...nodes.map((n) => n.position.x + (n.width || 100))) - Math.min(...nodes.map((n) => n.position.x)),
-        height: Math.max(...nodes.map((n) => n.position.y + (n.height || 50))) - Math.min(...nodes.map((n) => n.position.y)),
-      });
-
-      const getViewportForBounds = (bounds, width, height, minZoom, maxZoom) => {
-        const zoom = Math.min(width / bounds.width, height / bounds.height, maxZoom);
-        const clampedZoom = Math.max(minZoom, zoom);
-        const offsetX = (width - bounds.width * clampedZoom) / 2 - bounds.x * clampedZoom;
-        const offsetY = (height - bounds.height * clampedZoom) / 2 - bounds.y * clampedZoom;
-        return [offsetX, offsetY, clampedZoom];
-      };
-
-      const nodesBounds = getNodesBounds(nodes);
-      const transform = getViewportForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      return await toPng(reactFlowViewport, {
-        backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
-        width: imageWidth,
-        height: imageHeight,
-        style: {
-          width: `${imageWidth}px`,
-          height: `${imageHeight}px`,
-          transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
-        },
-      });
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  }, [nodes, canvasRef, canvasImage, isDark]);
-
   // Handle document download
   const handleDownload = async () => {
+    setIsGenerating(true);
     const formData = new FormData();
     formData.append('model-id', modelId);
     formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
@@ -135,12 +85,18 @@ const DocumentDialog = ({ open, onClose }) => {
     formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
 
     if (selectedItems.includes(1)) {
-      try {
-        const imageData = await generateImageFromNodesAndEdges();
-        const blob = await fetch(imageData).then((res) => res.blob());
-        formData.append('image', blob, 'itemModelImage.png');
-      } catch (error) {
-        // Optionally notify user here (e.g., with a toast)
+      if (canvasImage) {
+        try {
+          const blob = await fetch(canvasImage).then((res) => res.blob());
+          formData.append('image', blob, 'itemModelImage.png');
+        } catch (error) {
+          console.error('Error converting canvas image to blob:', error);
+          setIsGenerating(false);
+          return;
+        }
+      } else {
+        console.warn('No canvas image available for Item Definition');
+        setIsGenerating(false);
         return;
       }
     }
@@ -158,9 +114,9 @@ const DocumentDialog = ({ open, onClose }) => {
         window.URL.revokeObjectURL(url);
       }
     } catch (error) {
-      // Handle error silently or notify user via toast if needed
       console.error('Error during document generation:', error);
     } finally {
+      setIsGenerating(false);
       onClose();
     }
   };
@@ -241,10 +197,10 @@ const DocumentDialog = ({ open, onClose }) => {
                       <Checkbox
                         checked={selectedItems.includes(item.id)}
                         onChange={() => handleCheckboxChange(item.id)}
-                        disabled={item.id === 1 && isGeneratingImage}
+                        disabled={item.id === 1 && isGenerating}
                         sx={{
                           color: isDark ? '#64B5F6' : '#2196F3',
-                          '&.Mui-checked': { color: isDark ? '#64BANF5F6' : '#2196F3' },
+                          '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
                           padding: '4px',
                         }}
                       />
@@ -273,7 +229,7 @@ const DocumentDialog = ({ open, onClose }) => {
                           <Checkbox
                             checked={selectedItems.includes(sub.id)}
                             onChange={() => handleCheckboxChange(sub.id)}
-                            disabled={isGeneratingImage}
+                            disabled={isGenerating}
                             sx={{
                               color: isDark ? '#64B5F6' : '#2196F3',
                               '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
@@ -313,7 +269,7 @@ const DocumentDialog = ({ open, onClose }) => {
       >
         <Button
           onClick={onClose}
-          disabled={isGeneratingImage}
+          disabled={isGenerating}
           sx={{
             padding: '6px 12px',
             fontSize: '0.85rem',
@@ -338,7 +294,7 @@ const DocumentDialog = ({ open, onClose }) => {
         </Button>
         <Button
           onClick={handleDownload}
-          disabled={isGeneratingImage || selectedItems.length === 0}
+          disabled={isGenerating || selectedItems.length === 0}
           sx={{
             padding: '6px 12px',
             fontSize: '0.85rem',
@@ -360,7 +316,7 @@ const DocumentDialog = ({ open, onClose }) => {
             },
           }}
         >
-          {isGeneratingImage ? (
+          {isGenerating ? (
             <>
               <CircularProgress size={14} sx={{ color: '#FFFFFF', mr: 1 }} />
               Generating...
