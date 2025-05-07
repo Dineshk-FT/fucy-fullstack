@@ -173,6 +173,7 @@ export default function MainCanvas() {
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
+  const [isChanged, setIsChanged] = useState(false);
   // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
@@ -284,6 +285,7 @@ export default function MainCanvas() {
   };
 
   const onNodeDragStart = useCallback((_, node) => {
+    setIsChanged(true);
     setTimeout(() => checkForNodes(), 0);
     dragRef.current = node;
   }, []);
@@ -371,6 +373,7 @@ export default function MainCanvas() {
 
   const handleClose = () => {
     setOpenTemplate(false);
+    setIsChanged(false);
   };
 
   const onSaveInitial = useCallback((temp) => {
@@ -390,6 +393,7 @@ export default function MainCanvas() {
       } else {
         handleClear();
       }
+      setIsChanged(false);
     },
     [reactFlowInstance, assets]
   );
@@ -796,7 +800,7 @@ export default function MainCanvas() {
               <CanvasToolbar
                 isDark={isDark}
                 Color={Color}
-                // isChanged={isChanged}
+                isChanged={isChanged}
                 onRestore={onRestore}
                 handleSaveToModel={handleSaveToModel}
                 onSelectionClick={onSelectionClick}

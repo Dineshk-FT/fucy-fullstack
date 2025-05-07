@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
   Button,
@@ -26,9 +25,7 @@ import {
   DialogTitle,
   FormControlLabel
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
@@ -46,7 +43,6 @@ import CreateDerivedThreatModal from '../Modal/CreateDerivedThreatModal';
 
 const selector = (state) => ({
   model: state.model,
-  addThreatScene: state.addThreatScene,
   derived: state.threatScenarios.subs[0],
   userDefined: state.threatScenarios.subs[1],
   derivedId: state.threatScenarios['subs'][0]['_id'],
@@ -64,12 +60,6 @@ const selector = (state) => ({
 const notify = (message, status) => toast[status](message);
 
 const column = TsTableHeader;
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -96,8 +86,6 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function Tstable() {
   const color = ColorTheme();
-  const classes = useStyles();
-  const dispatch = useDispatch();
   const [openModal, setOpenModal] = useState({
     threat: false,
     select: false,
@@ -119,7 +107,6 @@ export default function Tstable() {
     UserDefinedId,
     deleteThreatScenario,
     getRiskTreatment,
-    addThreatScene,
     selectedthreatIds
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);

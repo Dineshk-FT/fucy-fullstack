@@ -52,12 +52,15 @@ import { getNodeDetails } from '../../../../utils/Constraints';
 import { drawerWidth, getNavbarHeight } from '../../../../themes/constant';
 import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
 import CommonModal from '../../../../components/Modal/CommonModal';
-import { threatType } from '../../../../components/Table/constraints';
+// import { threatType } from '../../../../components/Table/constraints';
 import useStore from '../../../../store/Zustand/store';
-import RenderedTreeItems from './RenderedTreeItems';
-import EditName from './EditName';
+// import RenderedTreeItems from './RenderedTreeItems';
+// import EditName from './EditName';
 import EditProperties from '../../../../components/Poppers/EditProperties';
 import { shallow } from 'zustand/shallow';
+import AttackScenarios from './Scenarios/AttackScenarios';
+import ThreatScenarios from './Scenarios/ThreatScenarios';
+import ItemDefinition from './Scenarios/ItemDefinition';
 
 const imageComponents = {
   AttackIcon,
@@ -275,15 +278,6 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted,
   setSelectedThreatIds: state.setSelectedThreatIds
 });
-
-const Properties = {
-  Confidentiality: ConfidentialityIcon,
-  Integrity: IntegrityIcon,
-  Authenticity: AuthenticityIcon,
-  Authorization: AuthorizationIcon,
-  'Non-repudiation': Non_repudiationIcon,
-  Availability: AvailabilityIcon
-};
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
 
@@ -813,188 +807,213 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     if (!data) return null;
 
     switch (type) {
-      case 'assets': {
-        const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
-        const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
-        const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
+      // case 'assets': {
+      //   const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
+      //   const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
+      //   const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
 
-        const renderProperties = (properties, detail, type) => {
-          // console.log('properties', properties);
-          if (!properties || properties.length === 0) return null;
+      //   const renderProperties = (properties, detail, type) => {
+      //     // console.log('properties', properties);
+      //     if (!properties || properties.length === 0) return null;
 
-          // Extract names for processing
-          const propertyNames = properties.map((prop) => prop.name);
+      //     // Extract names for processing
+      //     const propertyNames = properties.map((prop) => prop.name);
 
-          const displayedProperties = propertyNames;
-          return (
-            <Tooltip
-              title={
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'start',
-                    padding: '8px'
-                  }}
-                >
-                  {propertyNames?.map((name, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <Avatar sx={{ width: 18, height: 18 }}>
-                        <img src={Properties[name]} alt={name} width="100%" />
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: 'white' }}>
-                        {name}
-                      </Typography>
-                    </div>
-                  ))}
-                </div>
-              }
-              arrow
-            >
-              <div
-                style={{
-                  backgroundColor: '#d7e6ff',
-                  borderRadius: '50%',
-                  width: 24,
-                  height: 24,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'medium',
-                  color: '#2196F3'
-                }}
-                onClick={() => handlePropertiesTab(detail, type)}
-              >
-                +{displayedProperties.length}
-              </div>
-            </Tooltip>
-          );
-        };
+      //     const displayedProperties = propertyNames;
+      //     return (
+      //       <Tooltip
+      //         title={
+      //           <div
+      //             style={{
+      //               display: 'flex',
+      //               flexDirection: 'column',
+      //               alignItems: 'start',
+      //               padding: '8px'
+      //             }}
+      //           >
+      //             {propertyNames?.map((name, index) => (
+      //               <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+      //                 <Avatar sx={{ width: 18, height: 18 }}>
+      //                   <img src={Properties[name]} alt={name} width="100%" />
+      //                 </Avatar>
+      //                 <Typography variant="body2" sx={{ color: 'white' }}>
+      //                   {name}
+      //                 </Typography>
+      //               </div>
+      //             ))}
+      //           </div>
+      //         }
+      //         arrow
+      //       >
+      //         <div
+      //           style={{
+      //             backgroundColor: '#d7e6ff',
+      //             borderRadius: '50%',
+      //             width: 24,
+      //             height: 24,
+      //             display: 'flex',
+      //             alignItems: 'center',
+      //             justifyContent: 'center',
+      //             fontSize: '12px',
+      //             fontWeight: 'medium',
+      //             color: '#2196F3'
+      //           }}
+      //           onClick={() => handlePropertiesTab(detail, type)}
+      //         >
+      //           +{displayedProperties.length}
+      //         </div>
+      //       </Tooltip>
+      //     );
+      //   };
 
-        const renderSection = (nodeId, label, details, type) => {
-          const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
+      //   const renderSection = (nodeId, label, details, type) => {
+      //     const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
 
-          // if (!details.length) return null;
-          return (
-            <DraggableTreeItem
-              nodeId={nodeId}
-              label={
-                nodeId === 'nodes_section' || nodeId === 'data_section' ? (
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    onMouseEnter={() =>
-                      setHovered((state) => ({
-                        ...state,
-                        node: nodeId === 'nodes_section' ? true : state.node,
-                        data: nodeId === 'data_section' ? true : state.data
-                      }))
-                    }
-                    onMouseLeave={() =>
-                      setHovered((state) => ({
-                        ...state,
-                        node: nodeId === 'nodes_section' ? false : state.node,
-                        data: nodeId === 'data_section' ? false : state.data
-                      }))
-                    }
-                  >
-                    <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
-                    {shouldShowAddIcon && (
-                      <Box onClick={handleAddNode(nodeId === 'nodes_section' ? 'default' : 'data')}>
-                        <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
-                      </Box>
-                    )}
-                  </Box>
-                ) : (
-                  getLabel('TopicIcon', label, null, nodeId)
-                )
-              }
-              onClick={(e) => {
-                e.stopPropagation();
-                setClickedItem(nodeId);
-              }}
-              className={classes.template}
-            >
-              {details?.map((detail, i) => {
-                // console.log('detail', detail);
-                return detail?.name?.length && detail?.props?.length > 0 ? (
-                  <DraggableTreeItem
-                    key={detail.nodeId}
-                    nodeId={detail.nodeId}
-                    data={detail.nodeId}
-                    sx={{
-                      background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
-                    }}
-                    label={
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerWidth}>
-                          <span>
-                            <EditName detail={detail} index={i} onUpdate={handleSave} />
-                          </span>
-                        </Tooltip>
-                        {renderProperties(detail?.props, detail, type)}
-                      </Box>
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setClickedItem(detail.nodeId);
-                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                    }}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      setClickedItem(detail.nodeId);
-                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                    }}
-                    onContextMenu={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setClickedItem(detail.nodeId);
-                      dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-                      const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
-                      dispatch(
-                        setAnchorEl({
-                          type: type,
-                          value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
-                        })
-                      );
-                      dispatch(
-                        type === 'edge'
-                          ? setEdgeDetails({
-                              name: selected?.data?.label ?? '',
-                              properties: selected?.properties ?? [],
-                              isAsset: selected?.isAsset ?? false,
-                              style: selected?.style ?? {},
-                              startPoint: selected?.markerStart?.color ?? '#000000',
-                              endPoint: selected?.markerEnd?.color ?? '#000000'
-                            })
-                          : setDetails({
-                              name: selected?.data?.label ?? '',
-                              properties: selected?.properties ?? [],
-                              isAsset: selected?.isAsset ?? false
-                            })
-                      );
-                    }}
-                    onDragStart={(e) => onDragStart(e, detail)}
-                  />
-                ) : null;
-              })}
-            </DraggableTreeItem>
-          );
-        };
+      //     // if (!details.length) return null;
+      //     return (
+      //       <DraggableTreeItem
+      //         nodeId={nodeId}
+      //         label={
+      //           nodeId === 'nodes_section' || nodeId === 'data_section' ? (
+      //             <Box
+      //               display="flex"
+      //               alignItems="center"
+      //               justifyContent="space-between"
+      //               onMouseEnter={() =>
+      //                 setHovered((state) => ({
+      //                   ...state,
+      //                   node: nodeId === 'nodes_section' ? true : state.node,
+      //                   data: nodeId === 'data_section' ? true : state.data
+      //                 }))
+      //               }
+      //               onMouseLeave={() =>
+      //                 setHovered((state) => ({
+      //                   ...state,
+      //                   node: nodeId === 'nodes_section' ? false : state.node,
+      //                   data: nodeId === 'data_section' ? false : state.data
+      //                 }))
+      //               }
+      //             >
+      //               <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
+      //               {shouldShowAddIcon && (
+      //                 <Box onClick={handleAddNode(nodeId === 'nodes_section' ? 'default' : 'data')}>
+      //                   <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
+      //                 </Box>
+      //               )}
+      //             </Box>
+      //           ) : (
+      //             getLabel('TopicIcon', label, null, nodeId)
+      //           )
+      //         }
+      //         onClick={(e) => {
+      //           e.stopPropagation();
+      //           setClickedItem(nodeId);
+      //         }}
+      //         className={classes.template}
+      //       >
+      //         {details?.map((detail, i) => {
+      //           // console.log('detail', detail);
+      //           return detail?.name?.length && detail?.props?.length > 0 ? (
+      //             <DraggableTreeItem
+      //               key={detail.nodeId}
+      //               nodeId={detail.nodeId}
+      //               data={detail.nodeId}
+      //               sx={{
+      //                 background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
+      //               }}
+      //               label={
+      //                 <Box display="flex" alignItems="center" justifyContent="space-between">
+      //                   <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerWidth}>
+      //                     <span>
+      //                       <EditName detail={detail} index={i} onUpdate={handleSave} />
+      //                     </span>
+      //                   </Tooltip>
+      //                   {renderProperties(detail?.props, detail, type)}
+      //                 </Box>
+      //               }
+      //               onClick={(e) => {
+      //                 e.stopPropagation();
+      //                 setClickedItem(detail.nodeId);
+      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+      //               }}
+      //               onDoubleClick={(e) => {
+      //                 e.stopPropagation();
+      //                 setClickedItem(detail.nodeId);
+      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+      //               }}
+      //               onContextMenu={(e) => {
+      //                 e.stopPropagation();
+      //                 e.preventDefault();
+      //                 setClickedItem(detail.nodeId);
+      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
+      //                 const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
+      //                 dispatch(
+      //                   setAnchorEl({
+      //                     type: type,
+      //                     value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
+      //                   })
+      //                 );
+      //                 dispatch(
+      //                   type === 'edge'
+      //                     ? setEdgeDetails({
+      //                         name: selected?.data?.label ?? '',
+      //                         properties: selected?.properties ?? [],
+      //                         isAsset: selected?.isAsset ?? false,
+      //                         style: selected?.style ?? {},
+      //                         startPoint: selected?.markerStart?.color ?? '#000000',
+      //                         endPoint: selected?.markerEnd?.color ?? '#000000'
+      //                       })
+      //                     : setDetails({
+      //                         name: selected?.data?.label ?? '',
+      //                         properties: selected?.properties ?? [],
+      //                         isAsset: selected?.isAsset ?? false
+      //                       })
+      //                 );
+      //               }}
+      //               onDragStart={(e) => onDragStart(e, detail)}
+      //             />
+      //           ) : null;
+      //         })}
+      //       </DraggableTreeItem>
+      //     );
+      //   };
 
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'assets', data.id),
-          handleNodes,
-          <>
-            {renderSection('nodes_section', 'Components', nodesDetail, 'node')}
-            {renderSection('data_section', 'Data', dataDetail, 'data')}
-            {renderSection('edges_section', 'Connectors', edgesDetail, 'edge')}
-          </>
+      //   return renderTreeItem(
+      //     data,
+      //     (e) => handleClick(e, model?._id, 'assets', data.id),
+      //     handleNodes,
+      //     <>
+      //       {renderSection('nodes_section', 'Components', nodesDetail, 'node')}
+      //       {renderSection('data_section', 'Data', dataDetail, 'data')}
+      //       {renderSection('edges_section', 'Connectors', edgesDetail, 'edge')}
+      //     </>
+      //   );
+      // }
+
+      case 'assets':
+        return (
+          <ItemDefinition
+            data={data}
+            hovered={hovered}
+            setHovered={setHovered}
+            handleAddNode={handleAddNode}
+            handlePropertiesTab={handlePropertiesTab}
+            handleClick={handleClick}
+            handleNodes={handleNodes}
+            getLabel={getLabel}
+            setClickedItem={setClickedItem}
+            onDragStart={onDragStart}
+            drawerwidthChange={drawerwidthChange}
+            drawerWidth={drawerWidth}
+            selectedBlock={selectedBlock}
+            model={model}
+            classes={classes}
+            nodes={nodes}
+            edges={edges}
+            handleSave={handleSave}
+            renderTreeItem={renderTreeItem}
+          />
         );
-      }
 
       case 'damageScenarios':
         return renderTreeItem(
@@ -1031,56 +1050,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           (e) => handleClick(e, model?._id, 'threat', data.id),
           null,
           renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
-            let key = 0;
-            return sub.Details?.flatMap((detail, i) =>
-              (sub.name === 'Threat Scenarios'
-                ? detail?.Details?.flatMap((nodeDetail) =>
-                    nodeDetail?.props?.map((prop) => {
-                      key++;
-                      return {
-                        label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
-                          detail?.damage_name
-                        } [${detail?.id}]`,
-                        nodeId: nodeDetail?.nodeId,
-                        index: key,
-                        extraProps: {
-                          threatId: prop?.id,
-                          damageId: detail?.rowId,
-                          width: 150,
-                          height: 60,
-                          key: `TS${key.toString().padStart(3, '0')}`
-                        }
-                      };
-                    })
-                  )
-                : [
-                    {
-                      label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
-                      nodeId: detail?.id,
-                      extraProps: { ...detail, nodeType: 'derived', width: 150, height: 60 }
-                    }
-                  ]
-              ).map(({ label, nodeId, extraProps, index }) => {
-                const onClick = (e) => {
-                  e.stopPropagation();
-                  const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
-                  setSelectedThreatIds(ids);
-                };
-                return (
-                  <DraggableTreeItem
-                    draggable={true}
-                    key={nodeId}
-                    nodeId={nodeId}
-                    label={getLabel('TopicIcon', label, index ?? i + 1, nodeId, extraProps?.threat_ids, onClick)}
-                    onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedThreatIds([]);
-                    }}
-                  />
-                );
-              })
-            );
+            return sub.Details?.flatMap((detail, i) => (
+              <ThreatScenarios
+                sub={sub}
+                detail={detail}
+                i={i}
+                setSelectedThreatIds={setSelectedThreatIds}
+                onDragStart={onDragStart}
+                getLabel={getLabel}
+              />
+            ));
           })
         );
 
@@ -1091,63 +1070,17 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           null,
           renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
             sub.scenes?.map((at_scene, i) => {
-              const Details = { label: at_scene.Name, nodeId: at_scene.ID, type: 'Event', dragged: true };
-
-              return sub.name === 'Attack' ? (
-                <DraggableTreeItem
-                  key={at_scene.ID}
-                  nodeId={at_scene.ID}
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
-                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
-                    >
-                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
-                      {hovered.id === at_scene?.ID && (
-                        <Box
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDeleteModal(sub?.type, at_scene);
-                          }}
-                        >
-                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
-                        </Box>
-                      )}
-                    </Box>
-                  }
-                  draggable
-                  onDragStart={(e) => onDragStart(e, Details)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <TreeItem
-                  key={at_scene.ID}
-                  nodeId={at_scene.ID}
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
-                      onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
-                    >
-                      <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
-                      {hovered.id === at_scene?.ID && (
-                        <Box
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDeleteModal(sub?.type, at_scene);
-                          }}
-                        >
-                          <DeleteForeverIcon color="error" sx={{ fontSize: 19 }} />
-                        </Box>
-                      )}
-                    </Box>
-                  }
-                  onClick={(e) => handleOpenAttackTree(e, at_scene, sub.name)}
+              return (
+                <AttackScenarios
+                  sub={sub}
+                  at_scene={at_scene}
+                  i={i}
+                  hovered={hovered}
+                  setHovered={setHovered}
+                  handleOpenDeleteModal={handleOpenDeleteModal}
+                  onDragStart={onDragStart}
+                  handleOpenAttackTree={handleOpenAttackTree}
+                  getLabel={() => getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
                 />
               );
             })
@@ -1335,9 +1268,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           setDetails={setDetails}
           details={details}
           dispatch={dispatch}
-          nodes={nodes}
           setNodes={setNodes}
-          edges={edges}
           setEdges={setEdges}
         />
       )}

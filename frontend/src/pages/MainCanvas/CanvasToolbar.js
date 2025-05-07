@@ -10,7 +10,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 export default function CanvasToolbar({
   isDark,
   Color,
-  // isChanged,
+  isChanged,
   onRestore,
   handleSaveToModel,
   onSelectionClick,
@@ -65,8 +65,8 @@ export default function CanvasToolbar({
         <IconButton
           onClick={handleSaveToModel}
           sx={{
-            color: isDark == true ? '#64B5F6' : '#2196F3',
-            // color: isChanged ? '#FF3131' : '#32CD32',
+            // color: isDark == true ? '#64B5F6' : '#2196F3',
+            color: isChanged ? '#FF3131' : '#32CD32',
             padding: '4px',
             '&:hover': {
               background:

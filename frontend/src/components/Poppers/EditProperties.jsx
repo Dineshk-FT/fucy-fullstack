@@ -12,18 +12,7 @@ import {
   AvailabilityIcon
 } from '../../assets/icons';
 
-const EditProperties = ({
-  anchorEl,
-  handleClosePopper,
-  details,
-  setDetails,
-  dispatch,
-  handleSaveEdit,
-  setNodes,
-  nodes,
-  edges,
-  setEdges
-}) => {
+const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, dispatch, handleSaveEdit, setNodes, setEdges }) => {
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const Properties = useMemo(
     () => [
@@ -53,17 +42,20 @@ const EditProperties = ({
     (event, newValue) => {
       const updatedProperties = newValue.map((prop) => prop.name);
 
-      // Batch both state updates together
-      batch(() => {
-        // Update Redux state
-        dispatch(setDetails({ ...details, properties: updatedProperties }));
-
-        // Update local state
-        updateElement((element) => ({ ...element, properties: updatedProperties }));
-      });
+      // Only update if properties actually changed
+      if (JSON.stringify(details.properties) !== JSON.stringify(updatedProperties)) {
+        batch(() => {
+          dispatch(setDetails({ ...details, properties: updatedProperties }));
+          updateElement((element) => ({ ...element, properties: updatedProperties }));
+        });
+      }
     },
     [details, dispatch, updateElement]
   );
+  // Memoize the Autocomplete component's value
+  const autocompleteValue = useMemo(() => {
+    return details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || [];
+  }, [details?.properties]);
 
   return (
     <Popper
@@ -80,7 +72,7 @@ const EditProperties = ({
               multiple
               options={Properties}
               getOptionLabel={(option) => option.name}
-              value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
+              value={autocompleteValue}
               onChange={handleChange}
               isOptionEqualToValue={(option, value) => option?.name === value?.name}
               sx={{ minWidth: '130px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
