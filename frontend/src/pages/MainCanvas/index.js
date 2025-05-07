@@ -238,11 +238,11 @@ export default function MainCanvas() {
     setNodes([]);
     setEdges([]);
     setTimeout(() => setIsReady(true), 0);
-    return () => {
-      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-        handleSaveToModel();
-      }
-    };
+    // return () => {
+    //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+    //     handleSaveToModel();
+    //   }
+    // };
   }, []);
 
   useEffect(() => {

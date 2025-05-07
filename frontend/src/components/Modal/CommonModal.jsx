@@ -4,8 +4,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
-  DialogTitle,
   Button,
   Box,
   TextField,
@@ -16,12 +14,11 @@ import {
 } from '@mui/material';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useParams } from 'react-router';
 import ColorTheme from '../../themes/ColorTheme';
 import Draggable from 'react-draggable';
 import DialogCommonTitle from './DialogCommonTitle';
 import { AttackIcon } from '../../assets/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 function PaperComponent(props) {
   const nodeRef = React.useRef(null);
@@ -45,7 +42,6 @@ export default function CommonModal({ open, handleClose, name }) {
   const color = ColorTheme();
   // const { notify } = React.useContext(ToasterContext);
   const notify = (message, status) => toast[status](message);
-  const { id } = useParams();
   const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = React.useState({
     name: ''

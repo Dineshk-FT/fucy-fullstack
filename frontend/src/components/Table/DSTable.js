@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import CircleIcon from '@mui/icons-material/Circle';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
   Button,
@@ -25,8 +24,6 @@ import {
   Tooltip,
   InputLabel,
   IconButton,
-  Popper,
-  ClickAwayListener,
   Dialog,
   DialogActions,
   DialogContent,
@@ -35,11 +32,9 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
-import AddDamageScenarios from '../Modal/AddDamageScenario';
 import { useDispatch } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import SelectLosses from '../Modal/SelectLosses';
-import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
 import toast, { Toaster } from 'react-hot-toast';
@@ -48,6 +43,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { tableHeight } from '../../themes/constant';
 import FormPopper from '../Poppers/FormPopper';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 
 const selector = (state) => ({
   model: state.model,
@@ -61,15 +59,11 @@ const selector = (state) => ({
   Details: state.damageScenarios['subs'][0]['Details'],
   damageID: state.damageScenarios['subs'][1]['_id'],
   deleteDamageScenario: state.deleteDamageScenario,
-  updateName: state.updateName$DescriptionforDamage
+  updateName: state.updateName$DescriptionforDamage,
+  addScene: state.addDamageScene
 });
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -170,7 +164,7 @@ const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impa
         }}
       >
         {!impact && (
-          <InputLabel sx={{ width: columnWidths[item?.id] ?? 'auto' }} id="demo-simple-select-label" shrink={false}>
+          <InputLabel sx={{ width: columnWidths[item?.id] ?? 'auto', top: -16 }} id="demo-simple-select-label" shrink={false}>
             Select Impacts
           </InputLabel>
         )}
@@ -207,13 +201,12 @@ export default function DsTable() {
     updateImpact,
     deleteDamageScenario,
     updateDerived,
-    updateName
+    updateName,
+    addScene
   } = useStore(selector, shallow);
 
   const [stakeHolder] = useState(false);
-  const classes = useStyles();
   const dispatch = useDispatch();
-  const [openDs, setOpenDs] = useState(false);
   const [openCl, setOpenCl] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState({});
@@ -224,11 +217,25 @@ export default function DsTable() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false);
+  const [isAddingNewRow, setIsAddingNewRow] = useState(false);
+  const [newRowData, setNewRowData] = useState({
+    Name: '',
+    'Description/Scalability': ''
+  });
+  // console.log('details', details);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+
+  const handleAddNewRow = () => {
+    setIsAddingNewRow(true);
+    setNewRowData({
+      Name: '',
+      'Description/Scalability': ''
+    });
+  };
 
   const Head = useMemo(() => {
     if (stakeHolder) {
@@ -393,14 +400,6 @@ export default function DsTable() {
     getDamageScenarios(model?._id);
   };
 
-  const handleOpenModalDs = () => {
-    setOpenDs(true);
-  };
-
-  const handleCloseDs = () => {
-    setOpenDs(false);
-  };
-
   const handleChange = (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
@@ -443,10 +442,6 @@ export default function DsTable() {
     return false;
   };
 
-  const handleBack = () => {
-    dispatch(closeAll());
-  };
-
   const OverallImpact = useCallback((impact) => {
     const pattern = (it) => {
       return it === 'Negligible' ? 1 : it === 'Minor' ? 2 : it === 'Moderate' ? 3 : it === 'Major' ? 4 : it === 'Severe' ? 5 : 0;
@@ -481,292 +476,333 @@ export default function DsTable() {
     setPage(0);
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
-    const [hoveredField, setHoveredField] = useState(null);
-    const [editingField, setEditingField] = useState(null);
-    const [editValue, setEditValue] = useState('');
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [isPopperFocused, setIsPopperFocused] = useState(false);
-    const isSelected = selectedRows.includes(row.id);
-    const WIDTH_THRESHOLD = 250; // Threshold for switching between truncation and wrapping (in pixels)
-
-    const handleEditClick = (event, fieldName, currentValue) => {
-      event.stopPropagation();
-      setEditingField(fieldName);
-      setEditValue(currentValue || '');
-      setAnchorEl(event.currentTarget);
+  const handleSaveNewRow = () => {
+    if (!newRowData.Name.trim()) {
+      notify('Name must not be empty', 'error');
+      return;
+    }
+    const details = {
+      'model-id': model?._id,
+      Name: newRowData?.Name,
+      Description: newRowData['Description/Scalability']
     };
 
-    const handleSaveEdit = (e) => {
-      e.stopPropagation();
-      if (editingField) {
-        if (!editValue.trim()) {
-          notify('Field must not be empty', 'error');
-          return;
+    addScene(details)
+      .then((res) => {
+        // console.log('res', res);
+        if (!res.error) {
+          // setTimeout(() => {
+          getDamageScenarios(model?._id);
+          getThreatScenario(model?._id);
+          notify(res.message ?? 'Added successfully', 'success');
+          // handleClose();
+          setNewRowData({
+            name: '',
+            'Description/Scalability': ''
+          });
+          // }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
         }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
 
-        const details = {
-          id: damageID,
-          detailId: row?.id,
-          [editingField === 'Name' ? 'Name' : 'Description']: editValue
-        };
+  const RenderTableRow = useCallback(
+    ({ row, rowKey, isChild = false }) => {
+      const [hoveredField, setHoveredField] = useState(null);
+      const [editingField, setEditingField] = useState(null);
+      const [editValue, setEditValue] = useState('');
+      const [anchorEl, setAnchorEl] = useState(null);
+      const [isPopperFocused, setIsPopperFocused] = useState(false);
+      const isSelected = selectedRows.includes(row.id);
+      const WIDTH_THRESHOLD = 250; // Threshold for switching between truncation and wrapping (in pixels)
 
-        updateName(details)
-          .then((res) => {
-            if (!res.error) {
-              notify(res.message ?? 'Updated successfully', 'success');
-              getDamageScenarios(model?._id);
-              getThreatScenario(model?._id);
-              handleClosePopper();
-            } else {
-              notify(res.error ?? 'Something went wrong', 'error');
-            }
-          })
-          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
-      }
-    };
+      const handleEditClick = (event, fieldName, currentValue) => {
+        event.stopPropagation();
+        setEditingField(fieldName);
+        setEditValue(currentValue || '');
+        setAnchorEl(event.currentTarget);
+      };
 
-    const handleClosePopper = () => {
-      if (!isPopperFocused) {
-        setEditingField(null);
-        setEditValue('');
-        setAnchorEl(null);
-      }
-    };
+      const handleSaveEdit = (e) => {
+        e.stopPropagation();
+        if (editingField) {
+          if (!editValue.trim()) {
+            notify('Field must not be empty', 'error');
+            return;
+          }
 
-    return (
-      <>
-        <StyledTableRow
-          key={row.name}
-          data={row}
-          sx={{
-            backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
-            '& .MuiTableCell-root.MuiTableCell-body': {
-              color: `${color?.sidebarContent} !important`
-            }
-          }}
-        >
-          {Head?.map((item, index) => {
-            const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
-            const currentWidth = columnWidths[item.id] || item.w; // Get the current width of the column
-            const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
+          const details = {
+            id: damageID,
+            detailId: row?.id,
+            [editingField === 'Name' ? 'Name' : 'Description']: editValue
+          };
 
-            let cellContent;
-            switch (true) {
-              case isEditableField:
-                {
+          updateName(details)
+            .then((res) => {
+              if (!res.error) {
+                notify(res.message ?? 'Updated successfully', 'success');
+                getDamageScenarios(model?._id);
+                getThreatScenario(model?._id);
+                handleClosePopper();
+              } else {
+                notify(res.error ?? 'Something went wrong', 'error');
+              }
+            })
+            .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+        }
+      };
+
+      const handleClosePopper = () => {
+        if (!isPopperFocused) {
+          setEditingField(null);
+          setEditValue('');
+          setAnchorEl(null);
+        }
+      };
+
+      return (
+        <>
+          <StyledTableRow
+            key={row.name}
+            data={row}
+            sx={{
+              backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+              '& .MuiTableCell-root.MuiTableCell-body': {
+                color: `${color?.sidebarContent} !important`
+              }
+            }}
+          >
+            {Head?.map((item, index) => {
+              const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
+              const currentWidth = columnWidths[item.id] || item.w; // Get the current width of the column
+              const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
+
+              let cellContent;
+              switch (true) {
+                case isEditableField:
+                  {
+                    cellContent = (
+                      <StyledTableCell
+                        key={index}
+                        onMouseEnter={() => setHoveredField(item.name)}
+                        onMouseLeave={() => {
+                          if (!anchorEl) setHoveredField(null);
+                        }}
+                        style={{ width: currentWidth, minWidth: item?.minW }}
+                        sx={{
+                          // display: 'flex', // Use flex to align text and icon
+                          // alignItems: 'center', // Center vertically
+                          position: 'relative',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Box display="flex">
+                          <Box
+                            sx={{
+                              flex: 1, // Take up remaining space
+                              overflow: 'hidden', // Ensure overflow is handled
+                              ...(shouldTruncate
+                                ? {
+                                    whiteSpace: 'nowrap', // Truncate text into a single line
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                  }
+                                : {
+                                    whiteSpace: 'normal', // Wrap text into two lines
+                                    overflowWrap: 'break-word',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                  })
+                            }}
+                          >
+                            <Tooltip title={row[item.name]} placement="top">
+                              <span>{row[item.name] || '-'}</span>
+                            </Tooltip>
+                          </Box>
+                          {(hoveredField === item.name || editingField === item.name) && (
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                              sx={{
+                                flexShrink: 0, // Prevent icon from shrinking
+                                marginLeft: '8px',
+                                position: 'relative',
+                                bottom: '2svh'
+                              }}
+                            >
+                              <EditIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </StyledTableCell>
+                    );
+                  }
+                  break;
+                case checkforLabel(item):
+                  cellContent = (
+                    <SelectableCell
+                      key={index}
+                      item={item}
+                      row={row}
+                      handleChange={handleChange}
+                      name={item.name}
+                      options={options}
+                      columnWidths={columnWidths}
+                      colorPickerTab={colorPickerTab}
+                      impact={row?.impacts[item.name]}
+                    />
+                  );
+                  break;
+
+                case item.name === 'Losses of Cybersecurity Properties':
                   cellContent = (
                     <StyledTableCell
                       key={index}
-                      onMouseEnter={() => setHoveredField(item.name)}
-                      onMouseLeave={() => {
-                        if (!anchorEl) setHoveredField(null);
-                      }}
-                      style={{ width: currentWidth, minWidth: item?.minW }}
-                      sx={{
-                        // display: 'flex', // Use flex to align text and icon
-                        // alignItems: 'center', // Center vertically
-                        position: 'relative',
-                        cursor: 'pointer'
-                      }}
+                      component="th"
+                      scope="row"
+                      onClick={() => handleOpenCl(row)}
+                      sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
                     >
-                      <Box
-                        sx={{
-                          flex: 1, // Take up remaining space
-                          overflow: 'hidden', // Ensure overflow is handled
-                          ...(shouldTruncate
-                            ? {
-                                whiteSpace: 'nowrap', // Truncate text into a single line
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }
-                            : {
-                                whiteSpace: 'normal', // Wrap text into two lines
-                                overflowWrap: 'break-word',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              })
-                        }}
-                      >
-                        <Tooltip title={row[item.name]} placement="top">
-                          <span>{row[item.name] || '-'}</span>
-                        </Tooltip>
-                      </Box>
-                      {(hoveredField === item.name || editingField === item.name) && (
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleEditClick(e, item.name, row[item.name])}
-                          sx={{
-                            flexShrink: 0, // Prevent icon from shrinking
-                            marginLeft: '8px' // Space between text and icon
-                          }}
-                        >
-                          <EditIcon sx={{ fontSize: 14 }} />
-                        </IconButton>
+                      {row.cyberLosses.length ? (
+                        <span style={{ display: 'inline-grid' }}>
+                          {row?.cyberLosses?.map((loss) => (
+                            <div
+                              key={loss?.id}
+                              style={{
+                                marginBottom: '5px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                width: `${columnWidths[item.id] || 'auto'}`
+                              }}
+                            >
+                              <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
+                              <span>Loss of {loss?.name}</span>
+                            </div>
+                          ))}
+                        </span>
+                      ) : (
+                        <InputLabel>Select losses</InputLabel>
                       )}
                     </StyledTableCell>
                   );
-                }
-                break;
-              case checkforLabel(item):
-                cellContent = (
-                  <SelectableCell
-                    key={index}
-                    item={item}
-                    row={row}
-                    handleChange={handleChange}
-                    name={item.name}
-                    options={options}
-                    columnWidths={columnWidths}
-                    colorPickerTab={colorPickerTab}
-                    impact={row?.impacts[item.name]}
-                  />
-                );
-                break;
+                  break;
 
-              case item.name === 'Losses of Cybersecurity Properties':
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    component="th"
-                    scope="row"
-                    onClick={() => handleOpenCl(row)}
-                    sx={{ cursor: 'pointer', width: `${columnWidths[item.id] || 'auto'}` }}
-                  >
-                    {row.cyberLosses.length ? (
-                      <span style={{ display: 'inline-grid' }}>
-                        {row?.cyberLosses?.map((loss) => (
-                          <div
-                            key={loss?.id}
-                            style={{
-                              marginBottom: '5px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              width: `${columnWidths[item.id] || 'auto'}`
-                            }}
-                          >
-                            <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name) }} />
-                            <span>Loss of {loss?.name}</span>
-                          </div>
-                        ))}
-                      </span>
-                    ) : (
-                      <InputLabel>Select losses</InputLabel>
-                    )}
-                  </StyledTableCell>
-                );
-                break;
+                case item.name === 'Assets':
+                  const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean) || ['-'];
 
-              case item.name === 'Assets':
-                const assetsList = row?.cyberLosses?.map((loss) => loss?.node).filter(Boolean) || ['-'];
-              
-                // Remove duplicates from the assetsList by converting it into a Set and back into an array
-                const uniqueAssetsList = [...new Set(assetsList)];
-              
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    sx={{
-                      width: `${columnWidths[item.id] || 'auto'}`,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                    component="th"
-                    scope="row"
-                  >
-                    <Box
+                  // Remove duplicates from the assetsList by converting it into a Set and back into an array
+                  const uniqueAssetsList = [...new Set(assetsList)];
+
+                  cellContent = (
+                    <StyledTableCell
+                      key={index}
                       sx={{
-                        flex: 1,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column', // Stack items vertically
-                        gap: 1 // Add some spacing between items
+                        width: `${columnWidths[item.id] || 'auto'}`
+                        // display: 'flex',
+                        // alignItems: 'center'
+                      }}
+                      component="th"
+                      scope="row"
+                    >
+                      <Box
+                        sx={{
+                          flex: 1,
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column', // Stack items vertically
+                          gap: 1 // Add some spacing between items
+                        }}
+                      >
+                        <Tooltip title={uniqueAssetsList.join(', ')} placement="top">
+                          <Box>
+                            {uniqueAssetsList.map((asset, idx) => (
+                              <Typography key={idx} variant="body2" noWrap={!shouldTruncate} mb={0.6}>
+                                {asset}
+                              </Typography>
+                            ))}
+                          </Box>
+                        </Tooltip>
+                      </Box>
+                    </StyledTableCell>
+                  );
+
+                  break;
+                case item.name === 'Overall Impact':
+                  cellContent = (
+                    <StyledTableCell
+                      component="th"
+                      scope="row"
+                      sx={{
+                        backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`,
+                        color: '#000',
+                        width: `${columnWidths[item.id] || 'auto'}`
                       }}
                     >
-                      <Tooltip title={uniqueAssetsList.join(', ')} placement="top">
-                        <Box>
-                          {uniqueAssetsList.map((asset, idx) => (
-                            <Typography key={idx} variant="body2" noWrap={!shouldTruncate}>
-                              {asset}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </StyledTableCell>
-                );  
+                      {OverallImpact(row?.impacts)}
+                    </StyledTableCell>
+                  );
+                  break;
 
-                break;
-              case item.name === 'Overall Impact':
-                cellContent = (
-                  <StyledTableCell
-                    component="th"
-                    scope="row"
-                    sx={{
-                      backgroundColor: `${colorPickerTab(OverallImpact(row?.impacts))} !important`,
-                      color: '#000',
-                      width: `${columnWidths[item.id] || 'auto'}`
-                    }}
-                  >
-                    {OverallImpact(row?.impacts)}
-                  </StyledTableCell>
-                );
-                break;
+                case item.name.includes('Evaluated'):
+                  cellContent = (
+                    <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
+                      <Checkbox {...label} checked={row[item.name]} onChange={() => handleChecked(row[item.name], item.name, row?.id)} />
+                    </StyledTableCell>
+                  );
+                  break;
 
-              case item.name.includes('Evaluated'):
-                cellContent = (
-                  <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
-                    <Checkbox {...label} checked={row[item.name]} onChange={() => handleChecked(row[item.name], item.name, row?.id)} />
-                  </StyledTableCell>
-                );
-                break;
+                case item.name === 'ID':
+                  cellContent = (
+                    <StyledTableCell
+                      key={index}
+                      style={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
+                      align="left"
+                      onClick={() => toggleRowSelection(row.id)}
+                    >
+                      {row[item.name] ? row[item.name] : '-'}
+                    </StyledTableCell>
+                  );
+                  break;
 
-              case item.name === 'ID':
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    style={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
-                    align="left"
-                    onClick={() => toggleRowSelection(row.id)}
-                  >
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
+                case typeof row[item.name] !== 'object':
+                  cellContent = (
+                    <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
+                      {row[item.name] ? row[item.name] : '-'}
+                    </StyledTableCell>
+                  );
+                  break;
 
-              case typeof row[item.name] !== 'object':
-                cellContent = (
-                  <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
-                    {row[item.name] ? row[item.name] : '-'}
-                  </StyledTableCell>
-                );
-                break;
+                default:
+                  cellContent = null;
+                  break;
+              }
 
-              default:
-                cellContent = null;
-                break;
-            }
-
-            return <React.Fragment key={index}>{cellContent}</React.Fragment>;
-          })}
-          {anchorEl && (
-            <FormPopper
-              anchorEl={anchorEl}
-              handleSaveEdit={handleSaveEdit}
-              handleClosePopper={handleClosePopper}
-              editValue={editValue}
-              setEditValue={setEditValue}
-              editingField={editingField}
-              setIsPopperFocused={setIsPopperFocused}
-            />
-          )}
-        </StyledTableRow>
-      </>
-    );
-  };
+              return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+            })}
+            {anchorEl && (
+              <FormPopper
+                anchorEl={anchorEl}
+                handleSaveEdit={handleSaveEdit}
+                handleClosePopper={handleClosePopper}
+                editValue={editValue}
+                setEditValue={setEditValue}
+                editingField={editingField}
+                setIsPopperFocused={setIsPopperFocused}
+              />
+            )}
+          </StyledTableRow>
+        </>
+      );
+    },
+    [damageScenarios, selectedRows]
+  );
 
   return (
     <Box
@@ -807,8 +843,17 @@ export default function DsTable() {
               }
             }}
           />
-          <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
+          {/* <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
             Add New Scenario
+          </Button> */}
+          <Button
+            variant="outlined"
+            sx={{ borderRadius: 1.5 }}
+            onClick={handleAddNewRow}
+            startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
+            disabled={isAddingNewRow}
+          >
+            Add new Scenario
           </Button>
           <Button
             sx={{
@@ -909,8 +954,70 @@ export default function DsTable() {
             </TableRow>
           </TableHead>
           <TableBody>
+            {isAddingNewRow && (
+              <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                {Head?.map((item, index) => {
+                  if (index === 0) {
+                    // Move action buttons to the first column
+                    return (
+                      <StyledTableCell key={index}>
+                        <IconButton
+                          size="small"
+                          onClick={handleSaveNewRow}
+                          color="success"
+                          variant="outlined"
+                          sx={{
+                            mr: 1,
+                            height: 22,
+                            width: 22,
+                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
+                            '&:hover': { bgcolor: 'success.main', color: 'white' }
+                          }}
+                        >
+                          <CheckIcon />
+                        </IconButton>
+
+                        <IconButton
+                          onClick={() => setIsAddingNewRow(false)}
+                          color="error"
+                          variant="outlined"
+                          sx={{
+                            height: 22,
+                            width: 22,
+                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
+                            '&:hover': { bgcolor: 'error.main', color: 'white' }
+                          }}
+                        >
+                          <CloseIcon />
+                        </IconButton>
+                      </StyledTableCell>
+                    );
+                  } else if (item.name === 'Name' || item.name === 'Description/Scalability') {
+                    return (
+                      <StyledTableCell key={index}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={newRowData[item.name]}
+                          onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
+                          sx={{
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.75rem',
+                              padding: '4px 8px'
+                            }
+                          }}
+                        />
+                      </StyledTableCell>
+                    );
+                  } else {
+                    return <StyledTableCell key={index}>-</StyledTableCell>;
+                  }
+                })}
+              </StyledTableRow>
+            )}
+
             {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
+              <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
             ))}
           </TableBody>
         </Table>
@@ -931,7 +1038,6 @@ export default function DsTable() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-      {openDs && <AddDamageScenarios open={openDs} handleClose={handleCloseDs} model={model} rows={rows} notify={notify} />}
       {openCl && (
         <SelectLosses
           open={openCl}

@@ -18,7 +18,7 @@ const AttackScenarios = ({ sub, at_scene, i, hovered, setHovered, handleOpenDele
           onMouseEnter={() => setHovered((state) => ({ ...state, id: at_scene?.ID }))}
           onMouseLeave={() => setHovered((state) => ({ ...state, id: '' }))}
         >
-          <Box>{getlabel}</Box>
+          <Box>{getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}</Box>
           {hovered.id === at_scene?.ID && (
             <Box
               onClick={(e) => {

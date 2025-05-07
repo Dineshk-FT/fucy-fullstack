@@ -9,7 +9,6 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {
   ItemIcon,
   AttackIcon,
@@ -22,13 +21,7 @@ import {
   DocumentIcon,
   ReportIcon,
   LayoutIcon,
-  ModelIcon,
-  ConfidentialityIcon,
-  IntegrityIcon,
-  AuthenticityIcon,
-  AuthorizationIcon,
-  Non_repudiationIcon,
-  AvailabilityIcon
+  ModelIcon
 } from '../../../../assets/icons';
 import { makeStyles } from '@mui/styles';
 import { ReceiptItem } from 'iconsax-react';
@@ -1080,7 +1073,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   handleOpenDeleteModal={handleOpenDeleteModal}
                   onDragStart={onDragStart}
                   handleOpenAttackTree={handleOpenAttackTree}
-                  getLabel={() => getLabel('DangerousIcon', at_scene.Name, i + 1, at_scene.ID)}
+                  getLabel={getLabel}
                 />
               );
             })

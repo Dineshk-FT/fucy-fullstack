@@ -28,7 +28,6 @@ import ColorTheme from '../../themes/ColorTheme';
 import { useSelector } from 'react-redux';
 import { tableHeight } from '../../themes/constant';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
-import AddCyberSecurityModal from '../Modal/AddCyberSecurityModal';
 import EditIcon from '@mui/icons-material/Edit';
 import FormPopper from '../Poppers/FormPopper';
 import toast, { Toaster } from 'react-hot-toast';
@@ -104,7 +103,6 @@ export default function CybersecurityTable() {
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtered, setFiltered] = useState([]);
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState({});
@@ -193,7 +191,7 @@ export default function CybersecurityTable() {
         if (!res.error) {
           // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
-          notify(res.message ?? 'Deleted successfully', 'success');
+          notify(res.message ?? 'Added successfully', 'success');
           // handleClose();
           setNewRowData({
             name: '',
@@ -576,27 +574,8 @@ export default function CybersecurityTable() {
               {isAddingNewRow && (
                 <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
                   {Head?.map((item, index) => {
-                    if (item.name === 'SNo') {
-                      return <StyledTableCell key={index}>NEW</StyledTableCell>;
-                    } else if (item.name === 'Name' || item.name === 'Description') {
-                      return (
-                        <StyledTableCell key={index}>
-                          <TextField
-                            fullWidth
-                            size="small"
-                            value={newRowData[item.name]}
-                            onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
-                            sx={{
-                              '& .MuiInputBase-input': {
-                                fontSize: '0.75rem',
-                                padding: '4px 8px'
-                              }
-                            }}
-                          />
-                        </StyledTableCell>
-                      );
-                    } else if (index === Head.length - 1) {
-                      // Add action buttons in the last column
+                    if (index === 0) {
+                      // Move action buttons to the first column
                       return (
                         <StyledTableCell key={index}>
                           <IconButton
@@ -616,7 +595,6 @@ export default function CybersecurityTable() {
                           </IconButton>
 
                           <IconButton
-                            // size="small"
                             onClick={() => setIsAddingNewRow(false)}
                             color="error"
                             variant="outlined"
@@ -629,6 +607,23 @@ export default function CybersecurityTable() {
                           >
                             <CloseIcon />
                           </IconButton>
+                        </StyledTableCell>
+                      );
+                    } else if (item.name === 'Name' || item.name === 'Description') {
+                      return (
+                        <StyledTableCell key={index}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={newRowData[item.name]}
+                            onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
+                            sx={{
+                              '& .MuiInputBase-input': {
+                                fontSize: '0.75rem',
+                                padding: '4px 8px'
+                              }
+                            }}
+                          />
                         </StyledTableCell>
                       );
                     } else {
@@ -659,15 +654,6 @@ export default function CybersecurityTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
-      {open && (
-        <AddCyberSecurityModal
-          open={open}
-          handleClose={() => setOpen(false)}
-          name={title}
-          id={cybersecurity?._id}
-          type={cybersecurity?.type ?? cybersecurityType}
-        />
-      )}
       <Toaster position="top-right" reverseOrder={false} />
     </>
   );

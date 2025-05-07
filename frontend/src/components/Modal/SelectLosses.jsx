@@ -51,6 +51,7 @@ export default function SelectLosses({
 
     // Example usage:
     const updatedDetails = updateDetailsWithCyberLosses(details, selectedRow.cyberLosses);
+    console.log('updatedDetails', updatedDetails);
     // console.log('updatedDetails', updatedDetails);
     setDetails(updatedDetails);
   }, [selectedRow]);
