@@ -1,19 +1,40 @@
-/* eslint-disable */
-import React, { useState } from 'react';
-import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography, Grid } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import useStore from '../../store/Zustand/store';
-import { getNodeDetails, updatedModelState } from '../../utils/Constraints';
+/*eslint-disable*/
+import React, { useCallback, useState } from 'react';
+import {
+  Box,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  OutlinedInput,
+  MenuItem,
+  Chip,
+  Typography,
+  Grid,
+  CircularProgress,
+  FormLabel,
+} from '@mui/material';
+import { shallow } from 'zustand/shallow';
 import { v4 as uid } from 'uuid';
-import { CloseCircle } from 'iconsax-react';
+import { useTheme } from '@mui/material/styles';
 import { useDispatch, useSelector } from 'react-redux';
+import toast, { Toaster } from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
+import { getNodeDetails } from '../../utils/Constraints';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddDataNodeTab } from '../../store/slices/CanvasSlice';
-import { fontSize } from '../../themes/constant';
-import toast, { Toaster } from 'react-hot-toast';
 import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
-import { shallow } from 'zustand/shallow';
+
+const properties = [
+  'Confidentiality',
+  'Integrity',
+  'Authenticity',
+  'Authorization',
+  'Non-repudiation',
+  'Availability',
+];
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -21,188 +42,224 @@ const MenuProps = {
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 'inherit'
-    }
+      width: 'inherit',
+    },
   },
-  anchorOrigin: {
-    vertical: 'top',
-    horizontal: 'left'
-  },
-  transformOrigin: {
-    vertical: 'bottom',
-    horizontal: 'left'
-  },
-  getContentAnchorEl: null
 };
 
-const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
-
 const selector = (state) => ({
-  updateModel: state.updateModel,
   createNode: state.createNode,
   setNodes: state.setNodes,
   nodes: state.nodes,
-  edges: state.edges,
   getSidebarNode: state.getSidebarNode,
-  model: state.model,
-  update: state.updateAssets
 });
 
-function getStyles(name, nodes, theme) {
-  return {
-    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
-  };
-}
-
-const AddDataNode = ({ assets }) => {
+export default React.memo(function AddDataNode({ assets }) {
   const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
-  const notify = (message, status) => toast[status](message);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
+  const { createNode, setNodes, nodes, getSidebarNode } = useStore(selector, shallow);
   const [count, setCount] = useState(1);
   const [newNode, setNewNode] = useState({
     nodeName: `New Data ${count}`,
     type: '',
     properties: [properties[0]],
-    bgColor: ''
+    bgColor: '#dadada',
   });
+  const [loading, setLoading] = useState(false);
 
-  const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector, shallow);
-
-  const handleChange = (event) => {
-    const {
-      target: { value, name }
-    } = event;
-    if (name) {
-      setNewNode({
-        ...newNode,
-        [`${name}`]: value
-      });
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    if (name === 'properties') {
+      setNewNode((prev) => ({
+        ...prev,
+        properties: typeof value === 'string' ? value.split(',') : value,
+      }));
+    } else {
+      setNewNode((prev) => ({ ...prev, [name]: value }));
     }
-  };
+  }, []);
 
-  const CloseModel = () => {
+  const handleClose = useCallback(() => {
     dispatch(closeAddDataNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
-      nodeName: 'New Data',
-      type: '',
-      properties: [properties[0]],
-      bgColor: '#dadada'
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // const details = { id: selectedNodeGroupId, new_node: dataNode };
-
-    if (!selectedNodeGroupId) {
-      const nodeDetail = getNodeDetails('data', 'Data', count, newNode);
-      const list = [...nodes, nodeDetail];
-      setNodes(list);
-    }
-    // else {
-    //   createNode(details)
-    //     .then((res) => {
-    //       if (res.data) {
-    //         notify(res?.data?.message ?? 'Node added successfully', 'success');
-    //         getSidebarNode();
-    //         setSelectedNodeGroupId({});
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       notify('Something went wrong', 'error');
-    //     });
-    // }
-
-    // Reset only the nodeName, keeping properties intact
-    setCount((prev) => prev + 1);
-    setNewNode((prev) => ({
-      ...prev,
       nodeName: `New Data ${count + 1}`,
       type: '',
       properties: [properties[0]],
-      bgColor: '#dadada'
-    }));
-  };
+      bgColor: '#dadada',
+    });
+  }, [dispatch, count]);
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!newNode.nodeName.trim() || !newNode.properties.length) {
+        toast.error('Name and at least one property are required');
+        return;
+      }
+
+      setLoading(true);
+      if (!selectedNodeGroupId) {
+        const nodeDetail = getNodeDetails('data', 'Data', count, {
+          ...newNode,
+          nodeName: newNode.nodeName.trim(),
+        });
+        setNodes([...nodes, nodeDetail]);
+        toast.success('Node added successfully');
+        setCount((prev) => prev + 1);
+        setNewNode({
+          nodeName: `New Data ${count + 1}`,
+          type: '',
+          properties: [properties[0]],
+          bgColor: '#dadada',
+        });
+        handleClose();
+      } else {
+        const details = { id: selectedNodeGroupId, new_node: { ...newNode, id: uid() } };
+        createNode(details)
+          .then((res) => {
+            if (res.data) {
+              toast.success(res?.data?.message ?? 'Node added successfully');
+              getSidebarNode();
+              dispatch(setSelectedNodeGroupId(''));
+              setCount((prev) => prev + 1);
+              setNewNode({
+                nodeName: `New Data ${count + 1}`,
+                type: '',
+                properties: [properties[0]],
+                bgColor: '#dadada',
+              });
+              handleClose();
+            }
+          })
+          .catch(() => {
+            toast.error('Something went wrong');
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+    },
+    [
+      newNode,
+      selectedNodeGroupId,
+      nodes,
+      setNodes,
+      createNode,
+      getSidebarNode,
+      dispatch,
+      count,
+      handleClose,
+    ],
+  );
 
   return (
-    <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent, position: 'relative' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <>
+      <Box
+        sx={{
+          background: color?.sidebarBG,
+          color: color?.sidebarContent,
+          p: 2,
+          borderRadius: '8px',
+          maxWidth: '475px',
+        }}
+      >
+        <Box
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+        >
           <Typography variant="h4" color="primary">
             Add New Data Node
           </Typography>
-          <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={CloseModel}>
-            <CancelTwoToneIcon />
-          </Box>
+          <Button
+            onClick={handleClose}
+            sx={{ minWidth: 0, p: 0 }}
+            aria-label="Close"
+            disabled={loading}
+          >
+            <CancelTwoToneIcon sx={{ color: color?.iconColor }} />
+          </Button>
         </Box>
-
-        <TextField
-          size="small"
-          label="Name"
-          name="nodeName"
-          variant="outlined"
-          onChange={handleChange}
-          value={newNode.nodeName}
-          sx={{
-            fontSize: fontSize,
-            background: `${color?.sidebarBG} !important`,
-            color: color?.sidebarContent
-          }}
-        />
-
-        <Grid container spacing={1} my={1}>
-          <Grid item xs={12}>
-            <FormControl size="small" fullWidth>
-              <InputLabel notched id="demo-multiple-chip-label">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box>
+            <TextField
+              label="Name"
+              name="nodeName"
+              value={newNode.nodeName}
+              onChange={handleChange}
+              variant="outlined"
+              placeholder="Enter node name"
+              size="small"
+              fullWidth
+              required
+              aria-label="Node name"
+              sx={{ bgcolor: color?.inputBg }}
+            />
+          </Box>
+          <Box>
+            <FormControl fullWidth size="small">
+            <InputLabel notched id="demo-multiple-chip-label">
                 Properties
               </InputLabel>
               <Select
-                labelId="demo-multiple-chip-label"
-                id="demo-multiple-chip"
-                multiple
+                labelId="properties-select-label"
                 name="properties"
-                sx={{
-                  fontSize: fontSize,
-                  background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent
-                }}
+                multiple
                 value={newNode.properties}
                 onChange={handleChange}
-                input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
+                input={<OutlinedInput label="Properties" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((value) => (
-                      <Chip key={value} label={value} sx={{ fontSize: fontSize }} />
+                      <Chip key={value} label={value} />
                     ))}
                   </Box>
                 )}
                 MenuProps={MenuProps}
+                sx={{ bgcolor: color?.inputBg }}
               >
-                {properties?.map((name) => (
-                  <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
+                {properties.map((name) => (
+                  <MenuItem
+                    key={name}
+                    value={name}
+                    sx={{
+                      fontWeight:
+                        newNode.properties.indexOf(name) === -1
+                          ? theme.typography.fontWeightRegular
+                          : theme.typography.fontWeightMedium,
+                    }}
+                  >
                     {name}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-        </Grid>
-
-        <Box display="flex" justifyContent="space-between" height="30px" sx={{ mt: 2 }}>
-          <Button onClick={CloseModel} variant="outlined" color="warning">
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={!newNode.nodeName || newNode.properties.length === 0}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={loading || !newNode.nodeName.trim() || !newNode.properties.length}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Add
           </Button>
         </Box>
       </Box>
-    </Box>
+      <Toaster position="top-right" reverseOrder={false} />
+    </>
   );
-};
-
-export default AddDataNode;
+});

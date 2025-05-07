@@ -34,6 +34,7 @@ import { ZoomControls } from './CanvasControls';
 import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
+import { debounce } from 'lodash'; // Ensure lodash is installed: npm install lodash
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -70,7 +71,8 @@ const selector = (state) => ({
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges
+  initialEdges: state.initialEdges,
+  setCanvasImage: state.setCanvasImage,
 });
 
 // Edge line styling
@@ -164,7 +166,8 @@ export default function MainCanvas() {
     setPropertiesOpen,
     isDark,
     initialNodes,
-    initialEdges
+    initialEdges,
+    setCanvasImage,
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -187,6 +190,53 @@ export default function MainCanvas() {
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const [zoomLevel, setZoomLevel] = useState(1);
+
+  // Optimized: Debounced and dynamic canvas image capture
+  useEffect(() => {
+    // Debounced function to capture canvas image
+    const debouncedCapture = debounce(async () => {
+      try {
+        if (!nodes.length || !reactFlowWrapper.current) return;
+        const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
+        if (!reactFlowViewport) return;
+
+        // Get bounding box of all nodes (diagram area)
+        const nodesBounds = getRectOfNodes(nodes);
+        // Add some padding
+        const padding = 40;
+        const SCALE = 3; // Use 3x for ultra-high-DPI clarity
+        const baseWidth = nodesBounds.width + padding * 2;
+        const baseHeight = nodesBounds.height + padding * 2;
+        const imageWidth = Math.round(baseWidth * SCALE);
+        const imageHeight = Math.round(baseHeight * SCALE);
+
+        // Calculate transform to fit the diagram in the image (scale the translation by SCALE)
+        const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+
+        const image = await toPng(reactFlowViewport, {
+          backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
+          width: imageWidth,
+          height: imageHeight,
+          style: {
+            width: `${baseWidth}px`, // CSS size stays unscaled
+            height: `${baseHeight}px`,
+            transform: `translate(${transform[0] * SCALE}px, ${transform[1] * SCALE}px) scale(${transform[2]})`,
+            fontSmooth: 'always',
+            WebkitFontSmoothing: 'antialiased',
+          },
+        });
+        setCanvasImage(image);
+      } catch (error) {
+        console.error('Error capturing canvas image:', error);
+      }
+    }, 500); // 500ms debounce for better performance
+
+    debouncedCapture();
+    return () => {
+      debouncedCapture.cancel();
+    };
+  }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage]);
+
 
   useEffect(() => {
     nodesRef.current = nodes;

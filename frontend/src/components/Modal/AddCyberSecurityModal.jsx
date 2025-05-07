@@ -1,13 +1,28 @@
 /*eslint-disable*/
-import React, { useMemo, useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, Button, InputLabel, Box, TextField, Slide } from '@mui/material';
-import useStore from '../../store/Zustand/store';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  Button,
+  Box,
+  TextField,
+  Slide,
+  CircularProgress,
+  FormLabel,
+} from '@mui/material';
 import { shallow } from 'zustand/shallow';
-// import { v4 as uid } from 'uuid';
 import toast, { Toaster } from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
 import ColorTheme from '../../themes/ColorTheme';
 import PaperComponent from './PaperComponent';
-import { CyberClaimsIcon, CyberControlsIcon, CyberGoalIcon, CyberRequireIcon, CybersecurityIcon } from '../../assets/icons';
+import {
+  CyberClaimsIcon,
+  CyberControlsIcon,
+  CyberGoalIcon,
+  CyberRequireIcon,
+} from '../../assets/icons';
 import DialogCommonTitle from './DialogCommonTitle';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -17,114 +32,152 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const selector = (state) => ({
   addScene: state.addcybersecurityScene,
   model: state.model,
-  getCyberSecurityScenario: state.getCyberSecurityScenario
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
 });
 
 const notify = (message, status) => toast[status](message);
-export default function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
+
+export default React.memo(function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
   const color = ColorTheme();
   const { addScene, model, getCyberSecurityScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
     Name: '',
-    Description: ''
+    Description: '',
   });
+  const [loading, setLoading] = useState(false);
 
   const CommonIcon = useMemo(() => {
     const getIcon = {
       'Cybersecurity Goals': CyberGoalIcon,
       'Cybersecurity Requirements': CyberRequireIcon,
       'Cybersecurity Controls': CyberControlsIcon,
-      'Cybersecurity Claims': CyberClaimsIcon
+      'Cybersecurity Claims': CyberClaimsIcon,
     };
-    return getIcon[name];
+    return getIcon[name] || CyberGoalIcon;
   }, [name]);
 
-  // console.log('name', name);
-  const handleCreate = () => {
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setTemplateDetails((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    if (!templateDetails.Name.trim()) {
+      notify('Name is required', 'error');
+      return;
+    }
+
+    setLoading(true);
     const details = {
       modelId: model?._id,
-      type: type,
-      name: templateDetails?.Name,
-      description: templateDetails?.Description
+      type,
+      name: templateDetails.Name.trim(),
+      description: templateDetails.Description.trim(),
     };
-    // console.log('cyber', cyber)
-    // console.log('details', details);
+
     addScene(details)
       .then((res) => {
-        // console.log('res', res);
         if (!res.error) {
-          // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
-          notify(res.message ?? 'Deleted successfully', 'success');
-          // handleClose();
-          setTemplateDetails({
-            name: '',
-            Description: ''
-          });
-          // }, 500);
+          notify(res.message ?? 'Created successfully', 'success');
+          setTemplateDetails({ Name: '', Description: '' });
+          handleClose();
         } else {
           notify(res?.error ?? 'Something went wrong', 'error');
         }
       })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
+      .catch(() => {
+        notify('Something went wrong', 'error');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-  };
+  }, [addScene, getCyberSecurityScenario, model?._id, templateDetails, handleClose, type]);
+
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         TransitionComponent={Transition}
         keepMounted
-        PaperComponent={PaperComponent}
         onClose={handleClose}
-        aria-labelledby="draggable-dialog-title"
-        aria-describedby="draggable-dialog-slide-description"
+        PaperComponent={PaperComponent}
+        aria-labelledby="add-cybersecurity-dialog-title"
+        aria-describedby="add-cybersecurity-dialog-description"
+        maxWidth="sm"
         sx={{
           '& .MuiPaper-root': {
             background: color?.modalBg,
-            width: 475
-          }
+            width: '475px',
+            borderRadius: '8px',
+          },
         }}
       >
-        <DialogCommonTitle icon={CommonIcon} title={` Add ${name}`} />
-        <DialogContent>
-          <DialogContentText id="draggable-dialog-slide-description">
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Name :</InputLabel>
-              <TextField
-                id="outlined-basic"
-                // label="Name"
-                value={templateDetails?.Name}
-                variant="outlined"
-                placeholder="Name"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, Name: e.target.value })}
-              />
-              <InputLabel sx={{ fontWeight: 600, color: color?.title }}>Description :</InputLabel>
-              <TextField
-                id="outlined-multiline-static"
-                // label="Multiline"
-                value={templateDetails?.Description}
-                multiline
-                rows={4}
-                placeholder="Description"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, Description: e.target.value })}
-
-                // defaultValue="Default Value"
-              />
+        <DialogCommonTitle icon={CommonIcon} title={`Add ${name}`} />
+        <DialogContent sx={{ p: 2 }}>
+          <DialogContentText id="add-cybersecurity-dialog-description">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
+                  Name
+                </FormLabel>
+                <TextField
+                  name="Name"
+                  value={templateDetails.Name}
+                  onChange={handleChange}
+                  variant="outlined"
+                  placeholder="Enter name"
+                  size="small"
+                  fullWidth
+                  required
+                  aria-label="Name"
+                  sx={{ bgcolor: color?.inputBg }}
+                />
+              </Box>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }}>
+                  Description
+                </FormLabel>
+                <TextField
+                  name="Description"
+                  value={templateDetails.Description}
+                  onChange={handleChange}
+                  variant="outlined"
+                  placeholder="Enter description"
+                  size="small"
+                  multiline
+                  rows={4}
+                  fullWidth
+                  aria-label="Description"
+                  sx={{ bgcolor: color?.inputBg }}
+                />
+              </Box>
             </Box>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="error" onClick={handleClose}>
-            cancel
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
+            Cancel
           </Button>
-          <Button variant="contained" color="primary" onClick={handleCreate}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleCreate}
+            disabled={loading || !templateDetails.Name.trim()}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Create
           </Button>
         </DialogActions>
       </Dialog>
       <Toaster position="top-right" reverseOrder={false} />
-    </React.Fragment>
+    </>
   );
-}
+});

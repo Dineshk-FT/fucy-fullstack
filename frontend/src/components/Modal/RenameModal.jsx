@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -8,11 +8,14 @@ import {
   Button,
   Box,
   TextField,
-  Slide
+  Slide,
+  CircularProgress,
+  FormLabel,
 } from '@mui/material';
-import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
+import ColorTheme from '../../themes/ColorTheme';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -21,102 +24,140 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const selector = (state) => ({
   updateModelName: state.updateModelName,
   model: state.model,
-  getModels: state.getModels
+  getModels: state.getModels,
 });
 
-export default function RenameProject({ open, handleClose, Models }) {
+export default React.memo(function RenameProject({ open, handleClose, Models }) {
+  const color = ColorTheme();
   const { updateModelName, model, getModels } = useStore(selector, shallow);
-  const notify = (message, status) => toast[status](message);
+  const [newName, setNewName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // State for the new name, initialized with the current model name
-  const [newName, setNewName] = React.useState('');
-
-  // Sync newName with model.name when model changes or dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     setNewName(model?.name || '');
   }, [model, open]);
 
-  // Handle input change
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     setNewName(e.target.value);
-  };
+  }, []);
 
-  // Handle rename button click
-  const handleRename = () => {
-    if (!newName) {
-      notify('New name is required', 'error');
+  const handleRename = useCallback(() => {
+    if (!newName.trim()) {
+      toast.error('New name is required');
       return;
     }
 
-    const existingModel = Models.find((m) => m.id === model?.id); // Check based on ID
+    if (newName.trim() === model?.name) {
+      toast.error('New name must be different');
+      return;
+    }
+
+    const existingModel = Models.find((m) => m.id === model?.id);
     if (!existingModel) {
-      notify('Model not found', 'error');
+      toast.error('Model not found');
       return;
     }
 
-    // Call updateModelName with specified parameters
-    updateModelName({ 'model-id': model?._id, name: newName })
+    setLoading(true);
+    updateModelName({ 'model-id': model?._id, name: newName.trim() })
       .then((res) => {
         if (res) {
-          notify('Model renamed successfully', 'success');
-          getModels(); // Refresh models in the store
-          window.location.reload(); // Refresh the page
-          handleClose(); // Close dialog
+          toast.success('Model renamed successfully');
+          getModels();
+          handleClose();
         } else {
-          notify('Rename failed', 'error');
+          toast.error('Rename failed');
         }
       })
-      .catch(() => notify('An error occurred', 'error'));
-  };
+      .catch(() => {
+        toast.error('An error occurred');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [updateModelName, model, getModels, newName, Models, handleClose]);
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="rename-project-dialog-title"
+        aria-describedby="rename-project-dialog-description"
+        maxWidth="sm"
+        sx={{
+          '& .MuiPaper-root': {
+            background: color?.modalBg,
+            width: '475px',
+            borderRadius: '8px',
+          },
+        }}
       >
-        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Rename Project'}</DialogTitle>
-        <DialogTitle sx={{ fontSize: 14, fontFamily: 'italic', pt: 0, pb: 1 }}>
-          {'Provide the new name for your project.'}
+        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>
+          Rename Project
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              {/* Current Name (Disabled) */}
-              <TextField
-                value={model?.name || ''}
-                id="current-name"
-                label="Current Name"
-                variant="outlined"
-                disabled
-                sx={{ width: '300px' }}
-              />
-              {/* New Name (Editable by default) */}
-              <TextField
-                value={newName}
-                id="new-name"
-                label="New Name"
-                variant="outlined"
-                onChange={handleInputChange}
-                autoFocus // Automatically focus on this field when dialog opens
-                sx={{ width: '300px' }}
-              />
+        <DialogContent sx={{ p: 2 }}>
+          <DialogContentText id="rename-project-dialog-description">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }}>
+                  Current Name
+                </FormLabel>
+                <TextField
+                  value={model?.name || ''}
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  disabled
+                  aria-label="Current project name"
+                  sx={{ bgcolor: color?.inputBg }}
+                />
+              </Box>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
+                  New Name
+                </FormLabel>
+                <TextField
+                  value={newName}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  placeholder="Enter new project name"
+                  size="small"
+                  fullWidth
+                  autoFocus
+                  required
+                  aria-label="New project name"
+                  sx={{ bgcolor: color?.inputBg }}
+                />
+              </Box>
             </Box>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="error" onClick={handleClose}>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleRename}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleRename}
+            disabled={loading || !newName.trim() || newName.trim() === model?.name}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Rename
           </Button>
         </DialogActions>
       </Dialog>
       <Toaster position="top-right" reverseOrder={false} />
-    </React.Fragment>
+    </>
   );
-}
+});

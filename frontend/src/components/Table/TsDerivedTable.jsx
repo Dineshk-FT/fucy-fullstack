@@ -1,47 +1,45 @@
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from 'react';
-import useStore from '../../store/Zustand/store';
-import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
-import { tableCellClasses } from '@mui/material/TableCell';
 import {
-  Button,
-  TextField,
-  Typography,
-  styled,
-  Paper,
   Table,
   TableBody,
   TableCell,
+  tableCellClasses,
   TableContainer,
   TableHead,
   TableRow,
+  Paper,
+  TextField,
+  Typography,
+  Box,
   TablePagination,
-  InputLabel,
-  IconButton,
+  Button,
   Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  IconButton,
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { makeStyles } from '@mui/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
-import AddThreatScenarios from '../Modal/AddThreatScenario';
-import { Box } from '@mui/system';
+import useStore from '../../store/Zustand/store';
+import { shallow } from 'zustand/shallow';
 import ColorTheme from '../../themes/ColorTheme';
-import { colorPicker, threatType, TsDerivedTableHeader } from './constraints';
-import CircleIcon from '@mui/icons-material/Circle';
 import { tableHeight } from '../../themes/constant';
-import SelectDamageScenes from '../Modal/SelectDamageScenes';
-import { DamageIcon } from '../../assets/icons';
-import FormPopper from '../Poppers/FormPopper';
-import EditIcon from '@mui/icons-material/Edit';
-import toast, { Toaster } from 'react-hot-toast';
+import { TsDerivedTableHeader, colorPicker, threatType } from './constraints';
+import CircleIcon from '@mui/icons-material/Circle';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { DamageIcon } from '../../assets/icons';
+import toast, { Toaster } from 'react-hot-toast';
+import AddThreatScenarios from '../Modal/AddThreatScenario';
+import SelectDamageScenes from '../Modal/SelectDamageScenes';
+import FormPopper from '../Poppers/FormPopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -55,51 +53,39 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
-  deleteThreatScenario: state.deleteThreatScenario
+  deleteThreatScenario: state.deleteThreatScenario,
 });
 
-const notify = (message, status) => toast[status](message);
-
-const column = TsDerivedTableHeader;
-
 const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
+  div: { width: 'max-content' },
 });
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '5px',
     fontSize: 13,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '10px 8px',
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': {
-    border: 0
-  }
+  '&:last-child td, &:last-child th': { border: 0 },
 }));
 
-export default function TsDerivedTable() {
+const TsDerivedTable = () => {
   const color = ColorTheme();
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [openTs, setOpenTs] = useState(false);
-  const [openSelect, setOpenSelect] = useState(false);
-  const [selectedRow, setSelectedRow] = useState({});
-  const [details, setDetails] = useState({});
-
+  const { title } = useSelector((state) => state?.pageName);
   const {
     model,
     derived,
@@ -112,28 +98,70 @@ export default function TsDerivedTable() {
     derivedId,
     UserDefinedId,
     deleteThreatScenario,
-    getRiskTreatment
+    getRiskTreatment,
   } = useStore(selector, shallow);
-  const [rows, setRows] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
-  const { title } = useSelector((state) => state?.pageName);
-  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
-  const visibleColumns = useStore((state) => state?.threatDerivedScenTblClms);
+  const visibleColumns = useStore((state) => state.threatDerivedScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
 
-  const Head = useMemo(() => {
-    return column.filter((header) => visibleColumns.includes(header.name));
-  }, [title, visibleColumns]);
-
-  // console.log('Head', Head);
-  // Pagination state
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
+  const [openTs, setOpenTs] = useState(false);
+  const [openFilter, setOpenFilter] = useState(false);
+  const [openSelect, setOpenSelect] = useState(false);
+  const [selectedRow, setSelectedRow] = useState({});
+  const [details, setDetails] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
+  const [columnWidths, setColumnWidths] = useState(
+    Object.fromEntries(TsDerivedTableHeader.map((col) => [col.id, col.w]))
+  );
 
-  // Open/Close the filter modal
+  const Head = useMemo(() => {
+    return TsDerivedTableHeader.filter((header) => visibleColumns.includes(header.name));
+  }, [visibleColumns]);
+
+  const filteredRows = useMemo(() => {
+    if (!searchTerm.trim()) return rows;
+    return rows.filter(
+      (row) =>
+        row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
+
+  useEffect(() => {
+    if (model?._id) {
+      getDamageScenarios(model._id);
+      getThreatScenario(model._id);
+    }
+  }, [model?._id, getDamageScenarios, getThreatScenario]);
+
+  useEffect(() => {
+    if (userDefined?.Details) {
+      const mappedDetails = Array.isArray(userDefined.Details)
+        ? userDefined.Details.map((detail, i) => ({
+            SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
+            ID: detail?.id || null,
+            Name: detail?.name || '',
+            Description: detail?.description || '',
+            'Detailed / Combined Threat Scenarios': detail?.threat_ids || [],
+            type: 'User-defined',
+            'Damage Scenarios': detail?.damage_details || detail?.threat_ids || [],
+            'Losses of Cybersecurity Properties': detail?.damage_details
+              ? detail.damage_details.flatMap((damage) => damage?.cyberLosses || [])
+              : detail?.threat_ids || [],
+          }))
+        : [];
+      setRows(mappedDetails);
+      setDetails(damageScenarios);
+    }
+  }, [userDefined?.Details, damageScenarios]);
+
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
 
@@ -146,68 +174,13 @@ export default function TsDerivedTable() {
     setOpenSelect(false);
     setSelectedRow({});
   };
-  const refreshAPI = () => {
-    getThreatScenario(model?._id);
-    handleCloseSelect();
-  };
 
-  useEffect(() => {
-    getDamageScenarios(model?._id);
-  }, []);
-
-  useEffect(() => {
-    if (derived['Details']) {
-      let id = 0;
-      const mappedDetails = Array.isArray(userDefined['Details'])
-        ? userDefined['Details'].map((detail, i) => {
-            // console.log('detail', detail);
-            return detail && typeof detail === 'object'
-              ? {
-                  SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
-                  ID: detail?.id || null,
-                  Name: detail?.name || null,
-                  Description: detail?.description || null,
-                  'Detailed / Combined Threat Scenarios': detail?.threat_ids,
-                  type: 'User-defined',
-                  'Damage Scenarios': detail?.damage_details ? detail?.damage_details : detail?.threat_ids ? detail?.threat_ids : [],
-                  'Losses of Cybersecurity Properties': detail.damage_details
-                    ? detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
-                    : detail?.threat_ids
-                    ? detail?.threat_ids
-                    : []
-                }
-              : {};
-          })
-        : [];
-
-      setRows(mappedDetails);
-      setFiltered(mappedDetails);
-      setDetails(damageScenarios);
-    }
-  }, [derived, userDefined, damageScenarios]);
-
-  const handleOpenModalTs = () => {
-    setOpenTs(true);
-  };
-
-  const handleCloseTs = () => {
-    setOpenTs(false);
-  };
+  const handleOpenModalTs = () => setOpenTs(true);
+  const handleCloseTs = () => setOpenTs(false);
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw.Name.toLowerCase().includes(value.toLowerCase()) || rw.Description.toLowerCase().includes(value.toLowerCase())) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -221,14 +194,14 @@ export default function TsDerivedTable() {
 
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent unwanted bubbling
-
     const startX = e.clientX;
-    const headerCell = e.currentTarget.parentElement;
-    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+    const startWidth = columnWidths[columnId];
 
     const handleMouseMove = (event) => {
-      const newWidth = Math.max(startWidth + (event.clientX - startX), Head?.find((col) => col.id === columnId)?.minW || 50);
+      const newWidth = Math.max(
+        startWidth + (event.clientX - startX),
+        TsDerivedTableHeader.find((col) => col.id === columnId)?.minW || 50
+      );
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
 
@@ -241,26 +214,25 @@ export default function TsDerivedTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     const details = {
       'model-id': model?._id,
-      rowDetails: JSON.stringify(selectedRows)
+      rowDetails: JSON.stringify(selectedRows),
     };
-    deleteThreatScenario(details)
-      .then((res) => {
-        if (!res.error) {
-          notify(res.message ?? 'Deleted successfully', 'success');
-          getDamageScenarios(model?._id);
-          getThreatScenario(model?._id);
-          getRiskTreatment(model?._id);
-          setSelectedRows([]);
-        } else {
-          notify('Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
-      });
+    try {
+      const res = await deleteThreatScenario(details);
+      if (!res.error) {
+        toast.success(res.message || 'Deleted successfully');
+        getDamageScenarios(model?._id);
+        getThreatScenario(model?._id);
+        getRiskTreatment(model?._id);
+        setSelectedRows([]);
+      } else {
+        toast.error(res.error || 'Something went wrong');
+      }
+    } catch (err) {
+      toast.error('Something went wrong');
+    }
   };
 
   const toggleRowSelection = (row) => {
@@ -269,22 +241,23 @@ export default function TsDerivedTable() {
       SNo: row?.SNo,
       nodeId: row?.nodeId,
       rowId: row?.rowId,
-      type: row?.type
+      type: row?.type,
     };
-    setSelectedRows((prevSelectedRows) => {
-      const isSelected = prevSelectedRows.some((selectedRow) => selectedRow.SNo === shorted.SNo);
-
-      if (isSelected) {
-        // Unselect if already selected
-        return prevSelectedRows.filter((selectedRow) => selectedRow.SNo !== shorted.SNo);
-      } else {
-        // Select if not selected
-        return [...prevSelectedRows, shorted];
-      }
-    });
+    setSelectedRows((prev) =>
+      prev.some((selectedRow) => selectedRow.SNo === shorted.SNo)
+        ? prev.filter((selectedRow) => selectedRow.SNo !== shorted.SNo)
+        : [...prev, shorted]
+    );
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+  const refreshAPI = () => {
+    if (model?._id) {
+      getThreatScenario(model._id);
+      handleCloseSelect();
+    }
+  };
+
+  const RenderTableRow = React.memo(({ row }) => {
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -299,35 +272,34 @@ export default function TsDerivedTable() {
       setAnchorEl(event.currentTarget);
     };
 
-    const handleSaveEdit = (e) => {
+    const handleSaveEdit = async (e) => {
       e.stopPropagation();
-      if (editingField) {
-        if (!editValue.trim()) {
-          notify('Field must not be empty', 'error');
-          return;
+      if (!editValue.trim()) {
+        toast.error('Field must not be empty');
+        return;
+      }
+
+      const details = {
+        id: row?.type === 'derived' ? derivedId : UserDefinedId,
+        propId: row?.ID,
+        nodeId: row?.nodeId,
+        rowId: row?.rowId,
+        field: editingField,
+        value: editValue,
+        type: row?.type,
+      };
+
+      try {
+        const res = await updateName(details);
+        if (!res.error) {
+          toast.success(res.message || 'Updated successfully');
+          getThreatScenario(model?._id);
+          handleClosePopper();
+        } else {
+          toast.error(res.error || 'Something went wrong');
         }
-
-        const details = {
-          id: row?.type === 'derived' ? derivedId : UserDefinedId,
-          propId: row?.ID,
-          nodeId: row?.nodeId,
-          rowId: row?.rowId,
-          field: editingField,
-          value: editValue,
-          type: row?.type
-        };
-
-        updateName(details)
-          .then((res) => {
-            if (!res.error) {
-              handleClosePopper();
-              notify(res.message ?? 'Deleted successfully', 'success');
-              getThreatScenario(model?._id);
-            } else {
-              notify(res.error ?? 'Something went wrong', 'error');
-            }
-          })
-          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+      } catch (err) {
+        toast.error('Something went wrong');
       }
     };
 
@@ -341,151 +313,113 @@ export default function TsDerivedTable() {
 
     return (
       <StyledTableRow
-        key={row.name}
-        data={row}
         sx={{
-          backgroundColor: isSelected ? '#9FE2BF' : isChild ? '#F4F8FE' : color?.sidebarBG,
-          '& .MuiTableCell-root.MuiTableCell-body': {
-            color: `${color?.sidebarContent} !important`
-          }
+          backgroundColor: isSelected ? '#9FE2BF' : color?.sidebarBG,
+          '& .MuiTableCell-body': { color: color?.sidebarContent },
         }}
       >
-        {Head?.map((item, index) => {
-          const isEditableField = (item.name === 'Description' || item.name === 'Name');
+        {Head.map((item) => {
+          const isEditableField = item.name === 'Description' || item.name === 'Name';
           let cellContent;
-          switch (true) {
-            case isEditableField:
-              {
-                cellContent = (
-                  <StyledTableCell
-                    key={index}
-                    onMouseEnter={() => setHoveredField(item.name)}
-                    onMouseLeave={() => {
-                      if (!anchorEl) setHoveredField(null);
-                    }}
-                    style={{ position: 'relative', cursor: 'pointer' }}
-                  >
-                    {row[item.name] || '-'}
-                    {(hoveredField === item.name || editingField === item.name) && (
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleEditClick(e, item.name, row[item.name])}
-                        sx={{
-                          position: 'absolute',
-                          top: '15%',
-                          right: '-2px',
-                          transform: 'translateY(-50%)'
-                        }}
-                      >
-                        <EditIcon sx={{ fontSize: 14 }} />
-                      </IconButton>
-                    )}
-                  </StyledTableCell>
-                );
-              }
-              break;
-            case item.name === 'Detailed / Combined Threat Scenarios':
-              // console.log('row[item.name] ', row[item.name]);
-              cellContent = (
-                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
-                  {row[item.name]
-                    ? row[item.name]?.map((threat, i) => (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                          <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                            {/* {threat?.prop_key ? `[TS${(threat?.prop_key).toString().padStart(3, '0')}] ${threat?.prop_name}` : '-'} */}
-                            {threat?.prop_key
-                              ? `[TS${threat?.prop_key.toString().padStart(3, '0')}] ${threatType(threat?.prop_name)} of ${
-                                  threat?.node_name
-                                } leads to ${threat?.damage_scene}`
-                              : '-'}
-                          </span>
-                        </span>
-                      ))
-                    : '-'}
-                </StyledTableCell>
-              );
-              break;
-            case item.name === 'SNo':
-              cellContent = (
-                <StyledTableCell
-                  key={index}
-                  sx={{ width: columnWidths[item.id] || 'auto', cursor: 'pointer' }}
-                  align="left"
-                  onClick={() => toggleRowSelection(row)}
-                >
-                  {row[item.name] ? row[item.name] : '-'}
-                </StyledTableCell>
-              );
-              break;
 
-            case item.name === 'Losses of Cybersecurity Properties':
-              // console.log('row[item?.name]1', row[item?.name]);
-              cellContent = row[item?.name] && (
-                <StyledTableCell component="th" scope="row">
-                  {row[item?.name].map((loss, i) => {
-                    const name = loss?.name ? loss?.name : loss?.prop_name ? loss?.prop_name : '';
-                    return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={i}>
-                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(name) }} />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>Loss of {name}</span>
-                      </span>
-                    );
-                  })}
+          switch (item.name) {
+            case 'SNo':
+              cellContent = (
+                <StyledTableCell sx={{ cursor: 'pointer', width: columnWidths[item.id] }} onClick={() => toggleRowSelection(row)}>
+                  {row[item.name] || '-'}
                 </StyledTableCell>
               );
               break;
-            case item.name === 'Damage Scenarios':
+            case 'ID':
+              cellContent = (
+                <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name]?.slice(0, 6) || '-'}</StyledTableCell>
+              );
+              break;
+            case 'Description':
+            case 'Name':
               cellContent = (
                 <StyledTableCell
-                  component="th"
-                  scope="row"
-                  onClick={() => {
-                    if (!row[item.name].length) {
-                      handleOpenSelect(row);
-                    }
-                  }}
-                  sx={{ cursor: 'pointer' }}
+                  sx={{ position: 'relative', cursor: 'pointer', width: columnWidths[item.id] }}
+                  onMouseEnter={() => setHoveredField(item.name)}
+                  onMouseLeave={() => !anchorEl && setHoveredField(null)}
                 >
-                  {row[item.name] && row[item.name].length ? (
-                    row[item.name].map((damage, i) => (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, margin: '10px auto' }} key={i}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                          {damage?.key
-                            ? `[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`
-                            : damage?.damage_id
-                            ? `[${damage?.damage_id}] ${damage?.damage_scene}`
-                            : '-'}
-                        </span>
-                      </span>
-                    ))
-                  ) : (
-                    <InputLabel>Select Damage Scenario</InputLabel>
+                  {row[item.name] || '-'}
+                  {(hoveredField === item.name || editingField === item.name) && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                      sx={{ position: 'absolute', top: '15%', right: '-2px', transform: 'translateY(-50%)' }}
+                    >
+                      <EditIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
                   )}
                 </StyledTableCell>
               );
-
               break;
-            case item.name === 'ID':
+            case 'Detailed / Combined Threat Scenarios':
               cellContent = (
-                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
-                  {row[item.name] ? row[item.name].slice(0, 6) : '-'}
+                <StyledTableCell sx={{ width: columnWidths[item.id] }}>
+                  {row[item.name]?.length ? (
+                    row[item.name].map((threat, i) => (
+                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        <span>
+                          {threat?.prop_key
+                            ? `[TS${threat.prop_key.toString().padStart(3, '0')}] ${threatType(threat?.prop_name)} of ${
+                                threat?.node_name
+                              } leads to ${threat?.damage_scene}`
+                            : '-'}
+                        </span>
+                      </Box>
+                    ))
+                  ) : (
+                    '-'
+                  )}
                 </StyledTableCell>
               );
               break;
-
-            case typeof row[item.name] !== 'object':
+            case 'Losses of Cybersecurity Properties':
               cellContent = (
-                <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
-                  {row[item.name] ? row[item.name] : '-'}
+                <StyledTableCell>
+                  {row[item.name]?.length ? (
+                    row[item.name].map((loss, i) => (
+                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name || loss?.prop_name) }} />
+                        <span>Loss of {loss?.name || loss?.prop_name || '-'}</span>
+                      </Box>
+                    ))
+                  ) : (
+                    '-'
+                  )}
+                </StyledTableCell>
+              );
+              break;
+            case 'Damage Scenarios':
+              cellContent = (
+                <StyledTableCell sx={{ cursor: 'pointer', width: columnWidths[item.id] }} onClick={() => !row[item.name].length && handleOpenSelect(row)}>
+                  {row[item.name]?.length ? (
+                    row[item.name].map((damage, i) => (
+                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                        <span>
+                          {damage?.key
+                            ? `[DS${damage.key.toString().padStart(3, '0')}] ${damage.name}`
+                            : damage?.damage_id
+                            ? `[${damage.damage_id}] ${damage.damage_scene}`
+                            : '-'}
+                        </span>
+                      </Box>
+                    ))
+                  ) : (
+                    <span>Select Damage Scenario</span>
+                  )}
                 </StyledTableCell>
               );
               break;
             default:
-              cellContent = null;
+              cellContent = <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name] || '-'}</StyledTableCell>;
               break;
           }
-          return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+          return cellContent;
         })}
         {anchorEl && (
           <FormPopper
@@ -500,85 +434,57 @@ export default function TsDerivedTable() {
         )}
       </StyledTableRow>
     );
-  };
+  }, [Head, selectedRows, derivedId, UserDefinedId, model?._id]);
 
   return (
     <Box
       sx={{
         overflow: 'auto',
-        height: '-webkit-fill-available',
-        minHeight: 'moz-available',
+        height: '100%',
         padding: 1,
-        '&::-webkit-scrollbar': {
-          width: '4px'
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-          borderRadius: '10px'
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'rgba(0, 0, 0, 0.1)'
-        }
+        '&::-webkit-scrollbar': { width: '4px' },
+        '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '10px' },
+        '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.1)' },
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
-        </Box>
-        <Box display="flex" gap={3}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mx: 1 }}>
+        <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField
-            id="outlined-size-small"
             placeholder="Search"
             size="small"
             value={searchTerm}
             onChange={handleSearch}
-            sx={{ '& .MuiInputBase-input': { border: '1px solid black' }, justifyContent: 'center' }}
+            sx={{
+              '& .MuiInputBase-input': { fontSize: '0.75rem', padding: '0.5rem' },
+              '& .MuiOutlinedInput-root': { height: '30px' },
+            }}
           />
-          <Button sx={{ padding: '0px 8px', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalTs}>
+          <Button variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
           </Button>
           <Button
-            sx={{
-              padding: '0px 8px',
-              fontSize: '0.85rem',
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
             variant="contained"
+            sx={{ backgroundColor: '#4caf50', '&:hover': { backgroundColor: '#388e3c' } }}
             onClick={handleOpenFilter}
           >
-            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
-            Filter Columns
+            <FilterAltIcon sx={{ fontSize: 20, mr: 0.5 }} />
+            Filter
           </Button>
-          {/* <Button
-            sx={{ fontSize: '0.85rem' }}
-            variant="contained"
-            color="primary"
-            startIcon={<CircleIcon />} // Or any appropriate icon
-            // onClick={handleDeriveSelected}
-            disabled={selectedRows.length === 0}
-          >
-            Derive
-          </Button> */}
           <Button
-            sx={{ fontSize: '0.85rem' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
             onClick={handleDeleteSelected}
-            disabled={selectedRows.length === 0}
+            disabled={!selectedRows.length}
           >
             Delete
           </Button>
         </Box>
       </Box>
 
-      {/* Column Filter Dialog */}
       <Dialog open={openFilter} onClose={handleCloseFilter}>
-        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+        <DialogTitle>Column Filters</DialogTitle>
         <DialogContent>
           {TsDerivedTableHeader.map((column) => (
             <FormControlLabel
@@ -589,7 +495,7 @@ export default function TsDerivedTable() {
                   onChange={() => toggleColumnVisibility('threatDerivedScenTblClms', column.name)}
                 />
               }
-              label={column.name} // Display column name as label
+              label={column.name}
             />
           ))}
         </DialogContent>
@@ -605,30 +511,23 @@ export default function TsDerivedTable() {
         sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
         onDragOver={(e) => e.preventDefault()}
       >
-        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
-              {Head?.map((hd) => (
+              {Head.map((hd) => (
                 <StyledTableCell
                   key={hd.id}
-                  style={{
-                    width: columnWidths[hd.id] ?? hd?.w,
-                    minWidth: hd?.minW,
-                    position: 'relative',
-                    overflowWrap: 'break-word'
-                  }}
+                  sx={{ width: columnWidths[hd.id] ?? hd.w, minWidth: hd.minW, position: 'relative' }}
                 >
-                  {hd?.name}
-                  <div
-                    className="resize-handle"
-                    style={{
+                  {hd.name}
+                  <Box
+                    sx={{
                       position: 'absolute',
                       right: 0,
                       top: 0,
                       width: '5px',
                       height: '100%',
                       cursor: 'col-resize',
-                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
@@ -637,27 +536,29 @@ export default function TsDerivedTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
+            {paginatedRows.map((row, index) => (
+              <RenderTableRow key={row.SNo} row={row} />
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
       <TablePagination
         sx={{
-          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-          '& .MuiSelect-select': { color: color?.sidebarContent },
-          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          '& .MuiTablePagination-selectLabel, & .MuiSelect-select, & .MuiTablePagination-displayedRows': {
+            color: color?.sidebarContent,
+          },
         }}
         component="div"
-        count={filtered.length}
+        count={filteredRows.length}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model._id} />
+
+      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model?._id} />
       {openSelect && (
         <SelectDamageScenes
           open={openSelect}
@@ -672,4 +573,6 @@ export default function TsDerivedTable() {
       <Toaster position="top-right" reverseOrder={false} />
     </Box>
   );
-}
+};
+
+export default TsDerivedTable;

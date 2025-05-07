@@ -1,47 +1,51 @@
-/*eslint-disable*/ import React, { useState, useEffect } from 'react';
-import { List, ListItemButton, ListItemText, Button, CircularProgress, Box, Typography, Popper, Paper } from '@mui/material';
+import React, { useCallback, useState } from 'react';
+import {
+  Popper,
+  Paper,
+  Box,
+  Typography,
+  List,
+  ListItemButton,
+  ListItemText,
+  Button,
+  CircularProgress,
+} from '@mui/material';
 import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeAll, setAttackScene } from '../../store/slices/CurrentIdSlice';
-import { setTableOpen } from '../../store/slices/CurrentIdSlice';
-import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
+import useStore from '../../store/Zustand/store';
+import { closeAll, setAttackScene, setTableOpen } from '../../store/slices/CurrentIdSlice';
+import ColorTheme from '../../themes/ColorTheme';
 
 const selector = (state) => ({
   attackScenarios: state.attackScenarios,
-  getAttackScenario: state.getAttackScenario
+  getAttackScenario: state.getAttackScenario,
 });
 
-export default function AttackTreeRibbonModal({ open, handleClose, isLoading, anchorEl }) {
+export default React.memo(function AttackTreeRibbonModal({ open, handleClose, isLoading, anchorEl }) {
+  const color = ColorTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedAttackTree, setSelectedAttackTree] = useState(null);
   const { modelId } = useSelector((state) => state?.pageName);
   const { attackScenarios } = useStore(selector, shallow);
-  const currentTable = useSelector((state) => state.currentId.tableOpen); // Debug current table state
 
-  // Get all attack trees with full scene data
-  const attackTrees = attackScenarios?.subs?.flatMap((sub) => sub.scenes || []).filter((tree) => 'threat_id' in tree) || [];
+  const attackTrees =
+    attackScenarios?.subs?.flatMap((sub) => sub.scenes || []).filter((tree) => 'threat_id' in tree) || [];
 
-  const handleAttackTreeClick = (scene) => {
-    if (scene) {
-      console.log(scene);
-      // Dispatch actions synchronously
-      dispatch(closeAll()); // Close other views first
-      dispatch(setTableOpen('Attack Trees Canvas')); // Set the specific canvas
-      dispatch(setAttackScene(scene)); // Set the scene data
-
-      handleClose(); // Close the modal
-      navigate(`/Models/${modelId}`); // Navigate to attacks route
-
-      // Force a re-check after navigation (workaround for timing issues)
-      setTimeout(() => {
+  const handleAttackTreeClick = useCallback(
+    (scene) => {
+      if (scene) {
+        dispatch(closeAll());
         dispatch(setTableOpen('Attack Trees Canvas'));
-      }, 100);
-
-      setSelectedAttackTree(scene.ID); // Update visual feedback
-    }
-  };
+        dispatch(setAttackScene(scene));
+        handleClose();
+        navigate(`/Models/${modelId}`);
+        setSelectedAttackTree(scene.ID);
+      }
+    },
+    [dispatch, navigate, modelId, handleClose],
+  );
 
   return (
     <Popper
@@ -49,38 +53,29 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
       anchorEl={anchorEl}
       placement="bottom-end"
       disablePortal={false}
-      style={{ zIndex: 1500 }}
-      modifiers={[
-        {
-          name: 'offset',
-          options: {
-            offset: [0, 10]
-          }
-        }
-      ]}
+      sx={{ zIndex: 1500 }}
+      modifiers={[{ name: 'offset', options: { offset: [0, 10] } }]}
     >
       <Paper
         sx={{
           width: 220,
-          padding: 1,
+          p: 1,
           borderRadius: 2,
-          backgroundColor: 'background.paper',
+          bgcolor: color?.modalBg,
           boxShadow: 1,
-          zIndex: 1500
         }}
       >
         <Typography
           sx={{
             fontSize: 14,
             fontWeight: 600,
-            color: 'primary.main',
+            color: color?.title,
             pb: 0.5,
-            textAlign: 'center'
+            textAlign: 'center',
           }}
         >
-          Select an Attack Tree to View
+          Select an Attack Tree
         </Typography>
-
         <Box
           sx={{
             maxHeight: '150px',
@@ -88,9 +83,8 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
-            backgroundColor: '#fafafa',
-            boxShadow: 1,
-            mb: 1
+            bgcolor: color?.inputBg,
+            mb: 1,
           }}
         >
           {isLoading ? (
@@ -98,7 +92,7 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
               <CircularProgress size={20} />
             </Box>
           ) : !attackTrees.length ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ p: 1, textAlign: 'center', color: color?.sidebarContent }}>
               No attack trees available
             </Typography>
           ) : (
@@ -112,11 +106,9 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
                     py: 0.5,
                     px: 1,
                     borderRadius: 1,
-                    backgroundColor: selectedAttackTree === tree.ID ? 'primary.main' : 'transparent',
-                    color: selectedAttackTree === tree.ID ? 'white' : 'text.primary',
-                    '&:hover': {
-                      backgroundColor: 'action.hover'
-                    }
+                    bgcolor: selectedAttackTree === tree.ID ? 'primary.main' : 'transparent',
+                    color: selectedAttackTree === tree.ID ? 'white' : color?.sidebarContent,
+                    '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
                   <ListItemText primary={tree.Name} />
@@ -125,18 +117,16 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
             </List>
           )}
         </Box>
-
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
           <Button
             onClick={handleClose}
             variant="outlined"
             color="error"
             sx={{
-              fontWeight: 500,
               textTransform: 'none',
-              fontSize: 10,
-              padding: '4px 6px',
-              minWidth: 60
+              fontSize: 12,
+              minWidth: 60,
+              py: 0.5,
             }}
           >
             Close
@@ -145,4 +135,4 @@ export default function AttackTreeRibbonModal({ open, handleClose, isLoading, an
       </Paper>
     </Popper>
   );
-}
+});
