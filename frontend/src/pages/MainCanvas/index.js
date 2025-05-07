@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import ReactFlow, {
   MiniMap,
-  Controls,
   Background,
   ReactFlowProvider,
   getRectOfNodes,
@@ -22,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../components/custom/edges/StepEdge';
-import { Tooltip, IconButton, Box, Zoom } from '@mui/material';
+import { Zoom } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
@@ -185,16 +184,11 @@ export default function MainCanvas() {
   );
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
-
-  // console.log('anchorEl', anchorEl);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
-  const [isPopperFocused, setIsPopperFocused] = useState(false);
   const nodesRef = useRef(nodes);
-  const nodesRefer = useRef(nodes);
   const edgesRef = useRef(edges);
-  const { zoomIn, zoomOut, fitView: fitCanvasView } = useReactFlow();
   const [zoomLevel, setZoomLevel] = useState(1);
 
   // Optimized: Debounced and dynamic canvas image capture
@@ -287,17 +281,6 @@ export default function MainCanvas() {
       });
   };
 
-  // useEffect(() => {
-
-  // }, []);
-  const handleCheckForChange = () => {
-    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-      return true;
-    }
-    return false;
-  };
-  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
-
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
     setNodeTypes(newNodeTypes);
@@ -356,38 +339,44 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
-    const prevNode = nodesRefer.current.find((n) => n.id === node.id);
+    const currentNodes = nodesRef.current;
+    const prevNode = currentNodes.find((n) => n.id === node.id);
     if (!prevNode) return;
 
     const deltaX = node.position.x - prevNode.position.x;
     const deltaY = node.position.y - prevNode.position.y;
+    if (deltaX === 0 && deltaY === 0) return;
 
-    if (deltaX === 0 && deltaY === 0) return; // No movement, return early
-
-    // Use a Map to track updated positions
     const updatedPositions = new Map();
 
-    const moveChildren = (parentId, dx, dy) => {
-      nodesRefer.current.forEach((child) => {
+    // Traverse all descendants recursively
+    const moveDescendants = (parentId, dx, dy) => {
+      currentNodes.forEach((child) => {
         if (child.parentId === parentId) {
-          const newPos = {
-            x: child.position.x + dx,
-            y: child.position.y + dy
-          };
+          const prev = updatedPositions.get(child.id) || child.position;
+          const newPos = { x: prev.x + dx, y: prev.y + dy };
           updatedPositions.set(child.id, newPos);
-          moveChildren(child.id, dx, dy);
+
+          moveDescendants(child.id, dx, dy); // recursive
         }
       });
     };
 
+    // Move the dragged group itself
     updatedPositions.set(node.id, { x: node.position.x, y: node.position.y });
-    moveChildren(node.id, deltaX, deltaY);
 
+    // Now move its children recursively
+    moveDescendants(node.id, deltaX, deltaY);
+
+    // Apply all changes
     setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
+
+    // 🔁 Update refs for all moved nodes to prevent delta drift on next frame
+    nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
   }, []);
 
   const onNodeDragStop = useCallback(() => {
-    nodesRefer.current = [...nodes]; // Update ref after drag stops
+    nodesRef.current = [...nodes]; // Update ref after drag stops
   }, [nodes]);
 
   function downloadImage(dataUrl) {
@@ -503,9 +492,7 @@ export default function MainCanvas() {
   // console.log('nodes', nodes);
   // console.log('selectedNodes', selectedNodes);
   const handleClosePopper = () => {
-    if (!isPopperFocused) {
-      dispatch(clearAnchorEl());
-    }
+    dispatch(clearAnchorEl());
   };
 
   const handleSelectEdge = (e, edge) => {
@@ -668,8 +655,6 @@ export default function MainCanvas() {
 
         setNodes((nds) => [...nds, newNode]);
       });
-
-      checkForNodes();
     }
 
     setContextMenu({ visible: false, x: 0, y: 0, targetGroup: null, node: null });
@@ -816,7 +801,6 @@ export default function MainCanvas() {
         }}
         ref={reactFlowWrapper}
         onContextMenu={handleCanvasContextMenu}
-        onClick={() => setContextMenu({ visible: false, x: 0, y: 0 })}
       >
         <ReactFlowProvider fitView>
           <ReactFlow
@@ -827,13 +811,14 @@ export default function MainCanvas() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onClick={(e) => {
-              e.preventDefault();
-              // e.stopPropagation();
-              dispatch(setSelectedBlock({}));
-            }}
             onInit={onInit}
             onLoad={onLoad}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setContextMenu({ visible: false, x: 0, y: 0 });
+              dispatch(setSelectedBlock({}));
+            }}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}

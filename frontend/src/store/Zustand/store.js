@@ -82,6 +82,22 @@ const useStore = createWithEqualityFn((set, get) => ({
   canvasRef: null,
   canvasImage: null,
 
+  subSystems: {
+    id: '6',
+    name: 'Sub Systems',
+    icon: 'SystemIcon'
+    // subs: [
+    //   {
+    //     id: '61',
+    //     name: 'Hardware Models'
+    //   },
+    //   {
+    //     id: '62',
+    //     name: 'Software Models'
+    //   }
+    // ]
+  },
+
   assets: {
     id: '1',
     name: 'Item Definition',
@@ -160,21 +176,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     ]
   },
 
-  systemDesign: {
-    id: '6',
-    name: 'System Design',
-    icon: 'SystemIcon',
-    subs: [
-      {
-        id: '61',
-        name: 'Hardware Models'
-      },
-      {
-        id: '62',
-        name: 'Software Models'
-      }
-    ]
-  },
   catalog: {
     id: '7',
     name: 'Catalogs',
@@ -1030,41 +1031,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
 
     if (groups) {
-      groups.forEach((group) => {
-        const groupArea = {
-          x: group?.position?.x,
-          y: group?.position?.y,
-          width: group?.width,
-          height: group?.height
-        };
-
-        const intersectingNodes = nodes
-          .filter((node) => {
-            if (node.id !== group.id) {
-              const nodeRect = {
-                x: node.position.x,
-                y: node.position.y,
-                width: node.width,
-                height: node.height
-              };
-              return calculateOverlapArea(groupArea, nodeRect) >= (node.width * node.height) / 2;
-            }
-            return false;
-          })
-          .map((node) => ({
-            ...node,
-            parentId: group.id // Assign parentId to the enclosing group
-          }));
-
-        intersectingNodesMap[group.id] = intersectingNodes;
-
-        group.data = {
-          ...group.data,
-          nodeCount: intersectingNodes.length
-        };
-      });
-
-      // **Assign parentId only if a group is fully enclosed inside another**
+      // First: assign parentId to groups if they are fully enclosed inside other groups
       groups.forEach((group) => {
         const enclosingGroup = groups.find((outerGroup) => {
           if (outerGroup.id === group.id) return false;
@@ -1083,20 +1050,16 @@ const useStore = createWithEqualityFn((set, get) => ({
           return isFullyInside(outerRect, groupRect);
         });
 
-        if (enclosingGroup) {
-          group.parentId = enclosingGroup.id;
-        } else {
-          group.parentId = null; // Ensure top-level groups have no parent
-        }
+        group.parentId = enclosingGroup ? enclosingGroup.id : null;
       });
 
-      // **Sort groups by depth so outer groups get lowest zIndex**
+      // Second: compute zIndex for groups (nesting depth)
       function computeZIndex() {
         const depthMap = new Map();
 
         function getDepth(group) {
-          if (!group.parentId) return 0; // Top-level groups have zIndex = 0
-          if (depthMap.has(group.id)) return depthMap.get(group.id); // Return cached depth
+          if (!group.parentId) return 0;
+          if (depthMap.has(group.id)) return depthMap.get(group.id);
 
           const parentGroup = groups.find((g) => g.id === group.parentId);
           const depth = parentGroup ? getDepth(parentGroup) + 1 : 0;
@@ -1109,19 +1072,50 @@ const useStore = createWithEqualityFn((set, get) => ({
         });
       }
 
-      computeZIndex(); // Call function to update zIndex
+      computeZIndex();
 
-      // Remove parentId from nodes not inside any group
-      nodes = nodes.map((node) => {
-        const isInGroup = Object.values(intersectingNodesMap)
-          .flat()
-          .some((n) => n.id === node.id);
+      // Third: assign each node to its innermost intersecting group
+      nodes.forEach((node) => {
+        if (node.type === 'group') return; // Skip groups
 
-        if (!isInGroup && node.parentId) {
-          const { parentId, ...rest } = node;
-          return rest;
+        const nodeRect = {
+          x: node.position.x,
+          y: node.position.y,
+          width: node.width,
+          height: node.height
+        };
+
+        const overlappingGroups = groups.filter((group) => {
+          const groupRect = {
+            x: group.position.x,
+            y: group.position.y,
+            width: group.width,
+            height: group.height
+          };
+
+          return calculateOverlapArea(groupRect, nodeRect) >= (node.width * node.height) / 2;
+        });
+
+        if (overlappingGroups.length > 0) {
+          const innermostGroup = overlappingGroups.reduce((a, b) => (a.zIndex > b.zIndex ? a : b));
+          node.parentId = innermostGroup.id;
+
+          if (!intersectingNodesMap[innermostGroup.id]) {
+            intersectingNodesMap[innermostGroup.id] = [];
+          }
+
+          intersectingNodesMap[innermostGroup.id].push(node);
+        } else {
+          delete node.parentId; // Not inside any group
         }
-        return node;
+      });
+
+      // Fourth: update group data with node counts
+      groups.forEach((group) => {
+        group.data = {
+          ...group.data,
+          nodeCount: intersectingNodesMap[group.id]?.length || 0
+        };
       });
     }
 
@@ -1737,6 +1731,17 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   //Add Section
 
+  exportProject: async (details) => {
+    const url = `${configuration.apiBaseUrl}/v1/export`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
+
+  importProject: async (details) => {
+    const url = `${configuration.apiBaseUrl}/v1/import`;
+    const res = await ADD_CALL(details, url);
+    return res;
+  },
   addDamageScene: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/add/damage_scenario`;
     const res = await ADD_CALL(details, url);

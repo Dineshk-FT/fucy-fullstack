@@ -229,6 +229,7 @@ export default function AttackBlock({ attackScene, color }) {
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
 
+  // console.log('attackScene', attackScene);
   // console.log('nodes', nodes);
   useEffect(() => {
     nodesRef.current = nodes;
@@ -336,7 +337,7 @@ export default function AttackBlock({ attackScene, color }) {
   // console.log('attackScene', attackScene);
 
   useEffect(() => {
-    const newNodeTypes = pageNodeTypes['attackcanvas'] || {};
+    const newNodeTypes = pageNodeTypes?.attackcanvas || {};
     setNodeTypes(newNodeTypes);
     setNodes([]);
     setEdges([]);
@@ -449,7 +450,9 @@ export default function AttackBlock({ attackScene, color }) {
           threatId,
           type: 'attack',
           attackId: selectedNode?.id,
-          name: selectedNode?.data?.label
+          name: selectedNode?.data?.label,
+          attackSceneId: attackScene?.ID,
+          attackSceneName: attackScene?.Name
         };
         addAttackScene(details).then((res) => {
           if (!res.error) {
@@ -466,7 +469,9 @@ export default function AttackBlock({ attackScene, color }) {
           threatKey: key,
           type: 'cybersecurity_requirements',
           id: selectedNode?.id,
-          name: selectedNode?.data?.label
+          name: selectedNode?.data?.label,
+          attackSceneId: attackScene?.ID,
+          attackSceneName: attackScene?.Name
         };
         addcybersecurityScene(detail).then((res) => {
           if (!res.error) {
