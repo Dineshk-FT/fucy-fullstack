@@ -34,6 +34,7 @@ import { ZoomControls } from './CanvasControls';
 import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
+import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -70,7 +71,9 @@ const selector = (state) => ({
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges
+  initialEdges: state.initialEdges,
+  isChanged: state.isChanged,
+  setIsChanged: state.setIsChanged
 });
 
 // Edge line styling
@@ -164,7 +167,9 @@ export default function MainCanvas() {
     setPropertiesOpen,
     isDark,
     initialNodes,
-    initialEdges
+    initialEdges,
+    isChanged,
+    setIsChanged
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -173,13 +178,13 @@ export default function MainCanvas() {
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
-  const [isChanged, setIsChanged] = useState(false);
   // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
+  const { previousTab, currentTab } = useSelector((state) => state.currentId);
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
@@ -188,6 +193,8 @@ export default function MainCanvas() {
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [openSave, setOpenSave] = useState(false);
+  const anchorRef = useRef(null);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -200,6 +207,8 @@ export default function MainCanvas() {
     // notify('Canvas cleared', 'success');
   };
 
+  // console.log('previousTab', previousTab);
+  // console.log('currentTab', currentTab);
   const handleSaveToModel = () => {
     const template = {
       nodes: nodesRef.current,
@@ -235,8 +244,13 @@ export default function MainCanvas() {
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
     setNodeTypes(newNodeTypes);
-    setNodes([]);
-    setEdges([]);
+    if (!isChanged) {
+      setNodes([]);
+      setEdges([]);
+    }
+    if (isChanged && currentTab === 'assets' && previousTab !== 'assets') {
+      setOpenSave(true);
+    }
     setTimeout(() => setIsReady(true), 0);
     // return () => {
     //   if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
@@ -249,7 +263,9 @@ export default function MainCanvas() {
     const template = assets?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
-    onRestore(template);
+    if (!isChanged) {
+      onRestore(template);
+    }
   }, [assets]);
 
   useEffect(() => {
@@ -797,22 +813,24 @@ export default function MainCanvas() {
             maxZoom={2}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <CanvasToolbar
-                isDark={isDark}
-                Color={Color}
-                isChanged={isChanged}
-                onRestore={onRestore}
-                handleSaveToModel={handleSaveToModel}
-                onSelectionClick={onSelectionClick}
-                selectedNodes={selectedNodes}
-                handleGroupDrag={handleGroupDrag}
-                undo={undo}
-                redo={redo}
-                undoStack={undoStack}
-                redoStack={redoStack}
-                handleDownload={handleDownload}
-                assets={assets}
-              />
+              <span ref={anchorRef}>
+                <CanvasToolbar
+                  isDark={isDark}
+                  Color={Color}
+                  isChanged={isChanged}
+                  onRestore={onRestore}
+                  handleSaveToModel={handleSaveToModel}
+                  onSelectionClick={onSelectionClick}
+                  selectedNodes={selectedNodes}
+                  handleGroupDrag={handleGroupDrag}
+                  undo={undo}
+                  redo={redo}
+                  undoStack={undoStack}
+                  redoStack={redoStack}
+                  handleDownload={handleDownload}
+                  assets={assets}
+                />
+              </span>
             </Panel>
             <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
@@ -912,6 +930,7 @@ export default function MainCanvas() {
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
       </div>
+      <AutoSavePopper open={openSave} handleClose={() => setOpenSave(false)} anchorRef={anchorRef} handleSave={handleSaveToModel} />
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );

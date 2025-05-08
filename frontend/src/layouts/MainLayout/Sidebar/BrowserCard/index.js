@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, ClickAwayListener, MenuItem, Paper, Popper, Typography, TextField, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TreeView } from '@mui/x-tree-view/TreeView';
@@ -38,17 +38,13 @@ import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../..
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
 import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
 import toast from 'react-hot-toast';
-import { Avatar, AvatarGroup } from '@mui/material';
 import ColorTheme from '../../../../themes/ColorTheme';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 import { getNodeDetails } from '../../../../utils/Constraints';
-import { drawerWidth, getNavbarHeight } from '../../../../themes/constant';
+import { getNavbarHeight } from '../../../../themes/constant';
 import DocumentDialog from '../../../../components/DocumentDialog/DocumentDialog';
 import CommonModal from '../../../../components/Modal/CommonModal';
-// import { threatType } from '../../../../components/Table/constraints';
 import useStore from '../../../../store/Zustand/store';
-// import RenderedTreeItems from './RenderedTreeItems';
-// import EditName from './EditName';
 import EditProperties from '../../../../components/Poppers/EditProperties';
 import { shallow } from 'zustand/shallow';
 import AttackScenarios from './Scenarios/AttackScenarios';
@@ -269,7 +265,9 @@ const selector = (state) => ({
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
   setIsNodePasted: state.setIsNodePasted,
-  setSelectedThreatIds: state.setSelectedThreatIds
+  setSelectedThreatIds: state.setSelectedThreatIds,
+  isChanged: state.isChanged,
+  setIsChanged: state.setIsChanged
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -317,7 +315,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getGlobalAttackTrees,
     deleteAttacks,
     setIsNodePasted,
-    setSelectedThreatIds
+    setSelectedThreatIds,
+    isChanged,
+    setIsChanged
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -326,7 +326,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   });
   const drawerWidth = 370;
   const { selectedBlock, drawerwidthChange, anchorEl, details } = useSelector((state) => state?.canvas);
-  const { attackScene } = useSelector((state) => state?.currentId);
+  const { attackScene, previousTab } = useSelector((state) => state?.currentId);
   const [openModal, setOpenModal] = useState({
     attack: false,
     delete: false
@@ -350,7 +350,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   });
 
   // console.log('assets', assets);
+  // console.log('previousTab', previousTab);
+  // console.log('nodes', nodes);
 
+  // console.log('isChanged', isChanged);
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       setIsEditing(false);
@@ -436,10 +439,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
+
     if (name === 'assets') {
       dispatch(setPreviousTab(name));
       dispatch(closeAll());
+
+      if (isChanged) {
+        return; // Don't call getAssets if there are unsaved changes
+      }
     }
+
     const get_api = {
       assets: getAssets,
       damage: getDamageScenarios,
@@ -449,6 +458,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       cybersecurity: getCyberSecurityScenario,
       catalog: getCatalog
     };
+
     await get_api[name](ModelId);
   };
 
@@ -663,7 +673,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
               {index && `${index}. `}
               {name}
-              {ids && ids.length && ` [${ids.length}]`}
+              {ids && ids?.length > 0 && ` [${ids?.length}]`}
             </Typography>
           </div>
         </div>
@@ -687,6 +697,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   const handleAddNode = (type) => (e) => {
     e.stopPropagation();
+    setIsChanged(true);
     const nodeName = type === 'default' ? 'Node' : 'Data';
     const nodeType = type === 'data' ? 'data' : 'node';
 
@@ -717,7 +728,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
     update(details)
       .then((res) => {
-        console.log('res', res);
+        // console.log('res', res);
         if (!res.error) {
           notify('Saved Successfully', 'success');
           handleClosePopper();
@@ -800,189 +811,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     if (!data) return null;
 
     switch (type) {
-      // case 'assets': {
-      //   const edgesDetail = data.Details?.filter((detail) => detail?.nodeId?.includes('reactflow__edge')) || [];
-      //   const nodesDetail = data.Details?.filter((detail) => !detail?.nodeId?.includes('reactflow__edge') && detail.type !== 'data') || [];
-      //   const dataDetail = data.Details?.filter((detail) => detail.type === 'data') || [];
-
-      //   const renderProperties = (properties, detail, type) => {
-      //     // console.log('properties', properties);
-      //     if (!properties || properties.length === 0) return null;
-
-      //     // Extract names for processing
-      //     const propertyNames = properties.map((prop) => prop.name);
-
-      //     const displayedProperties = propertyNames;
-      //     return (
-      //       <Tooltip
-      //         title={
-      //           <div
-      //             style={{
-      //               display: 'flex',
-      //               flexDirection: 'column',
-      //               alignItems: 'start',
-      //               padding: '8px'
-      //             }}
-      //           >
-      //             {propertyNames?.map((name, index) => (
-      //               <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-      //                 <Avatar sx={{ width: 18, height: 18 }}>
-      //                   <img src={Properties[name]} alt={name} width="100%" />
-      //                 </Avatar>
-      //                 <Typography variant="body2" sx={{ color: 'white' }}>
-      //                   {name}
-      //                 </Typography>
-      //               </div>
-      //             ))}
-      //           </div>
-      //         }
-      //         arrow
-      //       >
-      //         <div
-      //           style={{
-      //             backgroundColor: '#d7e6ff',
-      //             borderRadius: '50%',
-      //             width: 24,
-      //             height: 24,
-      //             display: 'flex',
-      //             alignItems: 'center',
-      //             justifyContent: 'center',
-      //             fontSize: '12px',
-      //             fontWeight: 'medium',
-      //             color: '#2196F3'
-      //           }}
-      //           onClick={() => handlePropertiesTab(detail, type)}
-      //         >
-      //           +{displayedProperties.length}
-      //         </div>
-      //       </Tooltip>
-      //     );
-      //   };
-
-      //   const renderSection = (nodeId, label, details, type) => {
-      //     const shouldShowAddIcon = (nodeId === 'nodes_section' && hovered.node) || (nodeId === 'data_section' && hovered.data);
-
-      //     // if (!details.length) return null;
-      //     return (
-      //       <DraggableTreeItem
-      //         nodeId={nodeId}
-      //         label={
-      //           nodeId === 'nodes_section' || nodeId === 'data_section' ? (
-      //             <Box
-      //               display="flex"
-      //               alignItems="center"
-      //               justifyContent="space-between"
-      //               onMouseEnter={() =>
-      //                 setHovered((state) => ({
-      //                   ...state,
-      //                   node: nodeId === 'nodes_section' ? true : state.node,
-      //                   data: nodeId === 'data_section' ? true : state.data
-      //                 }))
-      //               }
-      //               onMouseLeave={() =>
-      //                 setHovered((state) => ({
-      //                   ...state,
-      //                   node: nodeId === 'nodes_section' ? false : state.node,
-      //                   data: nodeId === 'data_section' ? false : state.data
-      //                 }))
-      //               }
-      //             >
-      //               <Box>{getLabel('TopicIcon', label, null, nodeId)}</Box>
-      //               {shouldShowAddIcon && (
-      //                 <Box onClick={handleAddNode(nodeId === 'nodes_section' ? 'default' : 'data')}>
-      //                   <ControlPointIcon color="primary" sx={{ fontSize: 18 }} />
-      //                 </Box>
-      //               )}
-      //             </Box>
-      //           ) : (
-      //             getLabel('TopicIcon', label, null, nodeId)
-      //           )
-      //         }
-      //         onClick={(e) => {
-      //           e.stopPropagation();
-      //           setClickedItem(nodeId);
-      //         }}
-      //         className={classes.template}
-      //       >
-      //         {details?.map((detail, i) => {
-      //           // console.log('detail', detail);
-      //           return detail?.name?.length && detail?.props?.length > 0 ? (
-      //             <DraggableTreeItem
-      //               key={detail.nodeId}
-      //               nodeId={detail.nodeId}
-      //               data={detail.nodeId}
-      //               sx={{
-      //                 background: selectedBlock?.id === detail?.nodeId ? 'wheat' : 'inherit'
-      //               }}
-      //               label={
-      //                 <Box display="flex" alignItems="center" justifyContent="space-between">
-      //                   <Tooltip title={detail?.name} disableHoverListener={drawerwidthChange >= drawerWidth}>
-      //                     <span>
-      //                       <EditName detail={detail} index={i} onUpdate={handleSave} />
-      //                     </span>
-      //                   </Tooltip>
-      //                   {renderProperties(detail?.props, detail, type)}
-      //                 </Box>
-      //               }
-      //               onClick={(e) => {
-      //                 e.stopPropagation();
-      //                 setClickedItem(detail.nodeId);
-      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-      //               }}
-      //               onDoubleClick={(e) => {
-      //                 e.stopPropagation();
-      //                 setClickedItem(detail.nodeId);
-      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-      //               }}
-      //               onContextMenu={(e) => {
-      //                 e.stopPropagation();
-      //                 e.preventDefault();
-      //                 setClickedItem(detail.nodeId);
-      //                 dispatch(setSelectedBlock({ id: detail?.nodeId, name: detail.name }));
-      //                 const selected = (type === 'node' ? nodes : edges).find((item) => item.id === detail?.nodeId);
-      //                 dispatch(
-      //                   setAnchorEl({
-      //                     type: type,
-      //                     value: type === 'edge' ? `rf__edge-${selected.id}` : selected?.id
-      //                   })
-      //                 );
-      //                 dispatch(
-      //                   type === 'edge'
-      //                     ? setEdgeDetails({
-      //                         name: selected?.data?.label ?? '',
-      //                         properties: selected?.properties ?? [],
-      //                         isAsset: selected?.isAsset ?? false,
-      //                         style: selected?.style ?? {},
-      //                         startPoint: selected?.markerStart?.color ?? '#000000',
-      //                         endPoint: selected?.markerEnd?.color ?? '#000000'
-      //                       })
-      //                     : setDetails({
-      //                         name: selected?.data?.label ?? '',
-      //                         properties: selected?.properties ?? [],
-      //                         isAsset: selected?.isAsset ?? false
-      //                       })
-      //                 );
-      //               }}
-      //               onDragStart={(e) => onDragStart(e, detail)}
-      //             />
-      //           ) : null;
-      //         })}
-      //       </DraggableTreeItem>
-      //     );
-      //   };
-
-      //   return renderTreeItem(
-      //     data,
-      //     (e) => handleClick(e, model?._id, 'assets', data.id),
-      //     handleNodes,
-      //     <>
-      //       {renderSection('nodes_section', 'Components', nodesDetail, 'node')}
-      //       {renderSection('data_section', 'Data', dataDetail, 'data')}
-      //       {renderSection('edges_section', 'Connectors', edgesDetail, 'edge')}
-      //     </>
-      //   );
-      // }
-
       case 'assets':
         return (
           <ItemDefinition
