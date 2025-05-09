@@ -34,7 +34,7 @@ import { ZoomControls } from './CanvasControls';
 import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
-import { debounce } from 'lodash'; // Ensure lodash is installed: npm install lodash
+import { debounce } from 'lodash';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -67,7 +67,7 @@ const selector = (state) => ({
   isNodePasted: state.isNodePasted,
   setIsNodePasted: state.setIsNodePasted,
   selectedElement: state.selectedElement,
-  setSelectedElement: state.setSelectedElement,
+  setSelectedElement: state.selectedElement,
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
@@ -112,9 +112,10 @@ const edgeOptions = {
       background: 'rgba(255, 255, 255, 0.8)',
       borderRadius: '4px',
       padding: '2px 4px',
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Poppins', Arial, sans-serif",
       fontSize: '12px',
-      color: '#333333'
+      color: '#000000', // Higher contrast for clarity
+      fontWeight: '500' // Slightly bolder for better legibility
     }
   }
 };
@@ -172,11 +173,9 @@ export default function MainCanvas() {
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
-  // const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
-  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
@@ -191,6 +190,8 @@ export default function MainCanvas() {
   const edgesRef = useRef(edges);
   const [zoomLevel, setZoomLevel] = useState(1);
 
+  const notify = (message, status) => toast[status](message);
+
   // Optimized: Debounced and dynamic canvas image capture
   useEffect(() => {
     // Debounced function to capture canvas image
@@ -200,43 +201,140 @@ export default function MainCanvas() {
         const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
         if (!reactFlowViewport) return;
 
-        // Get bounding box of all nodes (diagram area)
-        const nodesBounds = getRectOfNodes(nodes);
-        // Add some padding
-        const padding = 40;
-        const SCALE = 3; // Use 3x for ultra-high-DPI clarity
-        const baseWidth = nodesBounds.width + padding * 2;
-        const baseHeight = nodesBounds.height + padding * 2;
-        const imageWidth = Math.round(baseWidth * SCALE);
-        const imageHeight = Math.round(baseHeight * SCALE);
+        // Calculate bounding box to include nodes and edges
+        const nodesBounds = getRectOfNodes(nodes, { includeHiddenNodes: true });
 
-        // Calculate transform to fit the diagram in the image (scale the translation by SCALE)
-        const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+        // Adjust bounding box to include edges
+        let minX = nodesBounds.x;
+        let minY = nodesBounds.y;
+        let maxX = nodesBounds.x + nodesBounds.width;
+        let maxY = nodesBounds.y + nodesBounds.height;
+
+        edges.forEach((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          const targetNode = nodes.find((n) => n.id === edge.target);
+          if (sourceNode && targetNode) {
+            const sourceX = sourceNode.position.x;
+            const sourceY = sourceNode.position.y;
+            const targetX = targetNode.position.x;
+            const targetY = targetNode.position.y;
+            const sourceWidth = sourceNode.width || 100;
+            const sourceHeight = sourceNode.height || 100;
+            const targetWidth = targetNode.width || 100;
+            const targetHeight = targetNode.height || 100;
+
+            minX = Math.min(minX, sourceX, targetX);
+            minY = Math.min(minY, sourceY, targetY);
+            maxX = Math.max(maxX, sourceX + sourceWidth, targetX + targetWidth);
+            maxY = Math.max(maxY, sourceY + sourceHeight, targetY + targetHeight);
+          }
+        });
+
+        // Add extra padding to account for edge markers and labels
+        const padding = 100;
+        const baseWidth = maxX - minX + padding * 2;
+        const baseHeight = maxY - minY + padding * 2;
+
+        // Use ultra-high scale factor for maximum clarity
+        const SCALE = 5; // 5x resolution for ultra-sharp text
+        const maxDimension = 8192; // Cap to avoid browser memory limits
+        const imageWidth = Math.min(Math.round(baseWidth * SCALE), maxDimension);
+        const imageHeight = Math.min(Math.round(baseHeight * SCALE), maxDimension);
+
+        // Log bounding box and image dimensions for debugging
+        console.log('Bounding Box:', { minX, minY, maxX, maxY, baseWidth, baseHeight });
+        console.log('Image Dimensions:', { imageWidth, imageHeight });
+
+        // Calculate transform to fit all content
+        const transform = getTransformForBounds(
+          { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+          baseWidth,
+          baseHeight,
+          0.5,
+          2
+        );
+
+        // Temporarily scale up font sizes and optimize text rendering
+        const textElements = reactFlowViewport.querySelectorAll('text');
+        const originalTextStyles = Array.from(textElements).map((el) => {
+          const computedStyle = window.getComputedStyle(el);
+          const fontSize = computedStyle.fontSize;
+          const fontWeight = computedStyle.fontWeight;
+          const letterSpacing = computedStyle.letterSpacing;
+          el.style.fontSize = `${parseFloat(fontSize) * 2}px`; // 2x font size
+          el.style.fontWeight = '600'; // Bolder for clarity
+          el.style.letterSpacing = '0.02em'; // Slight spacing for legibility
+          return { element: el, fontSize, fontWeight, letterSpacing };
+        });
+
+        // Log text styles for debugging
+        textElements.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          console.log('Text Style:', {
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily,
+            fontWeight: style.fontWeight,
+            letterSpacing: style.letterSpacing,
+            textRendering: style.textRendering,
+          });
+        });
+
+        // Ensure all elements are rendered before capture
+        await new Promise((resolve) => setTimeout(resolve, 300)); // 300ms delay for rendering
+
+        // Temporarily adjust viewport to ensure all content is rendered
+        const originalTransform = reactFlowViewport.style.transform;
+        reactFlowViewport.style.transform = `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`;
 
         const image = await toPng(reactFlowViewport, {
           backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
           width: imageWidth,
           height: imageHeight,
+          pixelRatio: SCALE,
+          quality: 1.0, // Maximum PNG quality
           style: {
-            width: `${baseWidth}px`, // CSS size stays unscaled
+            width: `${baseWidth}px`,
             height: `${baseHeight}px`,
-            transform: `translate(${transform[0] * SCALE}px, ${transform[1] * SCALE}px) scale(${transform[2]})`,
+            transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+            transformOrigin: 'top left',
             fontSmooth: 'always',
             WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
+            imageRendering: 'pixelated',
+            textRendering: 'geometricPrecision',
+            willChange: 'transform, contents',
+            shapeRendering: 'crispEdges', // Ensure sharp vector edges
+          },
+          filter: (node) => {
+            // Exclude controls, minimap, and panels
+            return !node.classList?.contains('react-flow__controls') &&
+                   !node.classList?.contains('react-flow__minimap') &&
+                   !node.classList?.contains('react-flow__panel');
           },
         });
+
+        // Restore original text styles
+        originalTextStyles.forEach(({ element, fontSize, fontWeight, letterSpacing }) => {
+          element.style.fontSize = fontSize;
+          element.style.fontWeight = fontWeight;
+          element.style.letterSpacing = letterSpacing;
+        });
+
+        // Restore original transform
+        reactFlowViewport.style.transform = originalTransform;
+
         setCanvasImage(image);
       } catch (error) {
         console.error('Error capturing canvas image:', error);
+        notify('Failed to capture canvas image', 'error');
       }
-    }, 500); // 500ms debounce for better performance
+    }, 500); // 500ms debounce
 
     debouncedCapture();
     return () => {
       debouncedCapture.cancel();
     };
-  }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage]);
-
+  }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage, notify]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -246,7 +344,6 @@ export default function MainCanvas() {
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
-    // notify('Canvas cleared', 'success');
   };
 
   const handleSaveToModel = () => {
@@ -301,12 +398,19 @@ export default function MainCanvas() {
     onRestore(template);
   }, [assets]);
 
+  // Auto-fit canvas view on mount and when nodes/edges change
   useEffect(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance?.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
-      setZoomLevel(reactFlowInstance?.getZoom());
+    if (reactFlowInstance && nodes.length > 0) {
+        reactFlowInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: true,
+          minZoom: 0.2,
+          maxZoom: 2,
+          duration: 500,
+        });
+        setZoomLevel(reactFlowInstance.getZoom());
     }
-  }, [reactFlowInstance, nodes?.length]);
+  }, [reactFlowInstance, nodes, edges]);
 
   const onInit = (rf) => {
     setReactFlowInstance(rf);
@@ -371,7 +475,7 @@ export default function MainCanvas() {
     // Apply all changes
     setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
 
-    // 🔁 Update refs for all moved nodes to prevent delta drift on next frame
+    // Update refs for all moved nodes to prevent delta drift on next frame
     nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
   }, []);
 
@@ -467,7 +571,6 @@ export default function MainCanvas() {
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
-    // console.log('Clicked Node:', node);
     e.stopPropagation(); // Prevent bubbling up
 
     if (e.shiftKey) {
@@ -477,11 +580,8 @@ export default function MainCanvas() {
       });
     }
 
-    // if (node.type === 'group') {
-    // Ensure nested group selection
     dispatch(setSelectedBlock(node));
     setSelectedElement(node);
-    // }
   };
 
   const handleSelectEdgeSingleClick = (e, edge) => {
@@ -489,8 +589,7 @@ export default function MainCanvas() {
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
   };
-  // console.log('nodes', nodes);
-  // console.log('selectedNodes', selectedNodes);
+
   const handleClosePopper = () => {
     dispatch(clearAnchorEl());
   };
@@ -566,16 +665,14 @@ export default function MainCanvas() {
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
     if (node.type === 'group') {
-      // If it's a group, don’t set it as the copied node; prepare for pasting inside
       setContextMenu({
         visible: true,
         x: event.clientX,
         y: event.clientY,
         options: copiedNode && copiedNode.length > 0 ? ['Copy', 'Paste'] : ['Copy'],
-        targetGroup: node // Pass the group as the target for pasting
+        targetGroup: node
       });
     } else {
-      // Regular node: set it as the copied node
       setCopiedNode([node]);
       setContextMenu({
         visible: true,
@@ -666,11 +763,8 @@ export default function MainCanvas() {
         setContextMenu({ visible: false, x: 0, y: 0 });
       } else if (event.type === 'keydown') {
         if (event.key === 'Escape') {
-          dispatch(setSelectedBlock({})); // Deselect selected block
+          dispatch(setSelectedBlock({}));
         }
-        // else if (['Delete', 'Backspace'].includes(event.key)) {
-        //   removeSelectedBlock(); // Remove selected block
-        // }
       }
     };
 
@@ -730,7 +824,6 @@ export default function MainCanvas() {
     setSelectedNodes([]);
   }, []);
 
-  // console.log('anchorElNodeId', anchorElNodeId);
   const renderPopper = () => {
     if (anchorElNodeId) {
       return isPropertiesOpen ? (
@@ -782,8 +875,6 @@ export default function MainCanvas() {
 
     return null;
   };
-
-  const notify = (message, status) => toast[status](message);
 
   if (!isReady) return null;
 
@@ -846,7 +937,6 @@ export default function MainCanvas() {
               <CanvasToolbar
                 isDark={isDark}
                 Color={Color}
-                // isChanged={isChanged}
                 onRestore={onRestore}
                 handleSaveToModel={handleSaveToModel}
                 onSelectionClick={onSelectionClick}
