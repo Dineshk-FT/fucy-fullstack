@@ -82,6 +82,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   canvasRef: null,
   canvasImage: null,
   isChanged: false,
+  isAttackChanged: false,
 
   subSystems: {
     id: '6',
@@ -647,6 +648,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       isChanged: typeof value === 'function' ? value(state.isChanged) : value
     }));
   },
+  setIsAttackChanged: (value) => {
+    set((state) => ({
+      isAttackChanged: typeof value === 'function' ? value(state.isAttackChanged) : value
+    }));
+  },
   // setter for isCollapsed
   setCollapsed: (value) =>
     set((state) => ({
@@ -844,7 +850,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   onConnectAttack: (connection) => {
-    const { nodes, edges } = useStore.getState(); // Access Zustand state
+    const { attackNodes: nodes, attackEdges: edges } = useStore.getState(); // Access Zustand state
 
     // Extract source and target nodes from the connection
     const sourceNode = nodes.find((node) => node.id === connection.source);
@@ -969,11 +975,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   onAttackEdgesChange: (changes) => {
     set({
+      isAttackChanged: true,
       attackEdges: applyEdgeChanges(changes, get().attackEdges)
     });
   },
   onAttackConnect: (connection) => {
     set({
+      isAttackChanged: true,
       attackEdges: addEdge(connection, get().attackEdges)
     });
   },

@@ -267,7 +267,8 @@ const selector = (state) => ({
   setIsNodePasted: state.setIsNodePasted,
   setSelectedThreatIds: state.setSelectedThreatIds,
   isChanged: state.isChanged,
-  setIsChanged: state.setIsChanged
+  setIsChanged: state.setIsChanged,
+  setIsAttackChanged: state.setIsAttackChanged
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -317,7 +318,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setIsNodePasted,
     setSelectedThreatIds,
     isChanged,
-    setIsChanged
+    setIsChanged,
+    setIsAttackChanged
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -513,6 +515,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               notify('Saved Successfully', 'success');
               getAttackScenario(model?._id);
               getCyberSecurityScenario(model?._id);
+              setIsAttackChanged(false);
               setTimeout(() => {
                 dispatch(setAttackScene(scene));
               }, 300);

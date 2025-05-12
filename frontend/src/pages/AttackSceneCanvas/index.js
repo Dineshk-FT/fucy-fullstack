@@ -17,7 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree';
-import _ from 'lodash';
+import RestoreIcon from '@mui/icons-material/Restore';
 
 const elk = new ELK();
 
@@ -145,8 +145,6 @@ const selector = (state) => ({
   dragAdd: state.dragAddAttackTemplate,
   setNodes: state.setAttackNodes,
   setEdges: state.setAttackEdges,
-  setInitialNodes: state.setInitialAttackNodes,
-  setInitialEdges: state.setInitialAttackEdges,
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
@@ -157,8 +155,8 @@ const selector = (state) => ({
   removeAttacks: state.removeAttacks,
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
-  initialNodes: state.initialAttackNodes,
-  initialEdges: state.initialAttackEdges
+  setIsChanged: state.setIsAttackChanged,
+  isChanged: state.isAttackChanged
 });
 
 // Edge line styling
@@ -190,8 +188,6 @@ export default function AttackBlock({ attackScene, color }) {
   const {
     nodes,
     edges,
-    initialEdges,
-    initialNodes,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -199,8 +195,6 @@ export default function AttackBlock({ attackScene, color }) {
     addEdge,
     dragAdd,
     setNodes,
-    setInitialNodes,
-    setInitialEdges,
     setEdges,
     model,
     update,
@@ -211,9 +205,10 @@ export default function AttackBlock({ attackScene, color }) {
     deleteCybersecurity,
     removeAttacks,
     attacks,
-    requirements
+    requirements,
+    isChanged,
+    setIsChanged
   } = useStore(selector, shallow);
-  const dispatch = useDispatch();
   const notify = (message, status) => toast[status](message);
   const [nodeTypes, setNodeTypes] = useState({});
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -224,10 +219,11 @@ export default function AttackBlock({ attackScene, color }) {
   const { isDark } = useSelector((state) => state?.currentId);
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
-  const prevAttackSceneRef = useRef(attackScene);
   const flowWrapper = useRef(null);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+
+  // console.log('isChanged', isChanged);
 
   // console.log('attackScene', attackScene);
   // console.log('nodes', nodes);
@@ -245,8 +241,6 @@ export default function AttackBlock({ attackScene, color }) {
   }
 
   const handleSave = (sceneId) => {
-    const prevNodes = nodesRef.current;
-    const prevEdges = edgesRef.current;
     // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
     const template = {
       nodes: nodes,
@@ -279,85 +273,37 @@ export default function AttackBlock({ attackScene, color }) {
             notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
             getCyberSecurityScenario(model?._id);
-            setInitialNodes(prevNodes);
-            setInitialEdges(prevEdges);
-          }, 300);
+          }, 200);
+          setIsChanged(false);
         } else {
           notify(res?.error ?? 'Something Went Wrong', 'error');
         }
       })
       .catch((err) => {
         if (err) {
+          console.log('err', err);
           notify('Something Went Wrong', 'error');
         }
       });
   };
 
-  const handleCheckForChange = () => {
-    if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-      return true;
-    }
-    return false;
-  };
-  const isChanged = useMemo(() => handleCheckForChange(), [nodes, initialNodes, edges, initialEdges]);
-
   // Save before switching attackScene
   useEffect(() => {
-    // const prevSceneId = prevAttackSceneRef.current?.ID;
-
-    // Only save if the previous scene ID exists and has different nodes or edges
-    // if (
-    //   prevSceneId &&
-    //   prevSceneId !== attackScene.ID &&
-    //   (JSON.stringify(prevAttackSceneRef.current?.templates.nodes) !== JSON.stringify(attackScene.templates.nodes) ||
-    //     JSON.stringify(prevAttackSceneRef.current?.templates.edges) !== JSON.stringify(attackScene.templates.edges))
-    // ) {
-    //   handleSave(prevSceneId);
-    // }
-
     setNodes(attackScene.templates.nodes || []);
     setEdges(attackScene.templates.edges || []);
-    setInitialNodes(attackScene.templates.nodes || []);
-    setInitialEdges(attackScene.templates.edges || []);
-
     // prevAttackSceneRef.current = attackScene;
   }, [attackScene]);
-
-  // Save before unmounting
-  // useEffect(() => {
-  //   return () => {
-  //     const prevNodes = nodesRef.current;
-  //     const prevEdges = edgesRef.current;
-  //     if (!_.isEqual(prevNodes, initialNodes) || !_.isEqual(prevEdges, initialEdges)) {
-  //       handleSave(prevAttackSceneRef?.current?.ID);
-  //     }
-  //   };
-  // }, []);
-
-  // console.log('attackScene', attackScene);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes?.attackcanvas || {};
     setNodeTypes(newNodeTypes);
-    setNodes([]);
-    setEdges([]);
-    setInitialEdges([]);
-    setInitialNodes([]);
+    if (!isChanged) {
+      setNodes([]);
+      setEdges([]);
+    }
     setTimeout(() => setIsReady(true), 0); // Defer rendering
   }, []);
   // Prevent rendering until ready
-
-  // useEffect(() => {
-  //   if (attackScene.templates) {
-  //     const { nodes, edges } = attackScene?.templates;
-  //     setTimeout(() => {
-  //       setNodes(nodes ?? []);
-  //       setEdges(edges ?? []);
-  //       setInitialNodes(nodes ?? []);
-  //       setInitialEdges(edges ?? []);
-  //     }, 300);
-  //   }
-  // }, [attackScene]);
 
   const centerLayout = () => {
     if (reactFlowInstance) {
@@ -552,6 +498,17 @@ export default function AttackBlock({ attackScene, color }) {
     }
   };
 
+  const onRestore = useCallback(
+    (temp) => {
+      if (temp) {
+        setNodes(temp.nodes);
+        setEdges(temp.edges);
+      }
+      setIsChanged(false);
+    },
+    [reactFlowInstance, attackScene]
+  );
+
   useEffect(() => {
     const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0 });
     document.addEventListener('click', handleClickOutside);
@@ -636,13 +593,11 @@ export default function AttackBlock({ attackScene, color }) {
       if (connectedEdge) {
         const sourceNode = nodes.find((node) => node.id === connectedEdge.source);
         if (sourceNode) {
-          const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
-          const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
-
+          // const distanceX = Math.abs(sourceNode.position.x - draggedNode.position.x);
+          // const distanceY = Math.abs(sourceNode.position.y - draggedNode.position.y);
           // if (distanceX > 550 || distanceY > 550) {
           //   const updatedEdges = edges.filter((edge) => edge.target !== draggedNode.id);
           //   setEdges(updatedEdges);
-
           //   const updatedNodes = nodes.map((node) => {
           //     if (node.data?.connections) {
           //       return {
@@ -655,7 +610,6 @@ export default function AttackBlock({ attackScene, color }) {
           //     }
           //     return node;
           //   });
-
           //   setNodes(updatedNodes);
           // }
         }
@@ -766,6 +720,7 @@ export default function AttackBlock({ attackScene, color }) {
         dragAdd(newNodes, newEdges);
       }
       centerLayout();
+      setIsChanged(true);
     },
     [reactFlowInstance, nodes, addNode, addEdge, dragAdd]
   );
@@ -793,6 +748,7 @@ export default function AttackBlock({ attackScene, color }) {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          onNodeDragStart={() => setIsChanged(true)}
           connectionLineStyle={connectionLineStyle}
           defaultEdgeOptions={edgeOptions}
           onInit={setReactFlowInstance}
@@ -824,6 +780,16 @@ export default function AttackBlock({ attackScene, color }) {
             </Button>
             <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
               auto-align
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => onRestore(attackScene?.templates)}
+              startIcon={<RestoreIcon />}
+              sx={{
+                ...buttonStyle
+              }}
+            >
+              {'Restore'}
             </Button>
             {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
               Horizontal
