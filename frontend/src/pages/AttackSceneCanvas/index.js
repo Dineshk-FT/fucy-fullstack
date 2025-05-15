@@ -6,7 +6,7 @@ import 'reactflow/dist/style.css';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { CustomEdge } from '../../components/custom';
-import { Button, Checkbox } from '@mui/material';
+import { Button, Checkbox, IconButton } from '@mui/material';
 import { v4 as uid } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
@@ -18,6 +18,36 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree';
 import RestoreIcon from '@mui/icons-material/Restore';
+import Joyride from 'react-joyride';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const steps = [
+  {
+    target: '#control-panel',
+    content: 'You can Save, restore or Align the diagram with the help of Control panel.',
+    disableBeacon: true
+  },
+  {
+    target: '.react-flow__controls',
+    content: 'Zoom In & out and centering can be done with the controls.'
+  },
+  {
+    target: '.react-flow__minimap',
+    content: 'You can see the overall circuit with the help of mini-map .'
+  },
+  {
+    target: '#resize-handle',
+    content: 'You can resize the canvas for better visibility.'
+  },
+  {
+    target: '#attack-tree',
+    content: 'You can drag and drop the event or other gates into the canvas.'
+  },
+  {
+    target: '#global-tree',
+    content: 'You can drag and drop a whole template of pre-saved attacks from the global library.'
+  }
+];
 
 const elk = new ELK();
 
@@ -222,6 +252,14 @@ export default function AttackBlock({ attackScene, color }) {
   const flowWrapper = useRef(null);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+  const [runTour, setRunTour] = useState(false);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
 
   // console.log('isChanged', isChanged);
 
@@ -289,8 +327,8 @@ export default function AttackBlock({ attackScene, color }) {
 
   // Save before switching attackScene
   useEffect(() => {
-    setNodes(attackScene.templates.nodes || []);
-    setEdges(attackScene.templates.edges || []);
+    setNodes(attackScene?.templates?.nodes || []);
+    setEdges(attackScene?.templates?.edges || []);
     // prevAttackSceneRef.current = attackScene;
   }, [attackScene]);
 
@@ -739,121 +777,151 @@ export default function AttackBlock({ attackScene, color }) {
   if (!isReady) return null;
 
   return (
-    <div ref={flowWrapper} style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
-      <ReactFlowProvider>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          onNodeDragStart={() => setIsChanged(true)}
-          connectionLineStyle={connectionLineStyle}
-          defaultEdgeOptions={edgeOptions}
-          onInit={setReactFlowInstance}
-          edgeTypes={edgeTypes}
-          onDrop={onDrop}
-          deleteKeyCode={['Delete', 'Backspace']}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'move';
-          }}
-          onNodeDrag={onNodeDrag}
-          // onNodeDragStop={onNodeDragStop}
-          onNodeContextMenu={handleNodeContextMenu}
-          fitView
-        >
-          <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
-            <Button
-              variant="outlined"
-              onClick={() => handleSave(attackScene?.ID)}
-              startIcon={<SaveIcon sx={{ color: isChanged ? '#FF3131' : '#32CD32' }} />}
-              sx={{
-                ...buttonStyle,
-                color: isChanged ? '#FF3131' : '#32CD32',
-                borderColor: isChanged ? '#FF3131' : '#32CD32',
-                transition: 'color 1.5s'
-              }}
-            >
-              {'Save'}
-            </Button>
-            <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
-              auto-align
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => onRestore(attackScene?.templates)}
-              startIcon={<RestoreIcon />}
-              sx={{
-                ...buttonStyle
-              }}
-            >
-              {'Restore'}
-            </Button>
-            {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
+    <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
+      <div ref={flowWrapper} style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
+        <ReactFlowProvider>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            onNodeDragStart={() => setIsChanged(true)}
+            connectionLineStyle={connectionLineStyle}
+            defaultEdgeOptions={edgeOptions}
+            onInit={setReactFlowInstance}
+            edgeTypes={edgeTypes}
+            onDrop={onDrop}
+            deleteKeyCode={['Delete', 'Backspace']}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = 'move';
+            }}
+            onNodeDrag={onNodeDrag}
+            // onNodeDragStop={onNodeDragStop}
+            onNodeContextMenu={handleNodeContextMenu}
+            fitView
+          >
+            <Panel id="control-panel" position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
+              <Button
+                variant="outlined"
+                onClick={() => handleSave(attackScene?.ID)}
+                startIcon={<SaveIcon sx={{ color: isChanged ? '#FF3131' : '#32CD32' }} />}
+                sx={{
+                  ...buttonStyle,
+                  color: isChanged ? '#FF3131' : '#32CD32',
+                  borderColor: isChanged ? '#FF3131' : '#32CD32',
+                  transition: 'color 1.5s'
+                }}
+              >
+                {'Save'}
+              </Button>
+              <Button onClick={() => onLayout({ direction: 'DOWN' })} variant="outlined" sx={buttonStyle}>
+                auto-align
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => onRestore(attackScene?.templates)}
+                startIcon={<RestoreIcon />}
+                sx={{
+                  ...buttonStyle
+                }}
+              >
+                {'Restore'}
+              </Button>
+              {/* <Button onClick={() => onLayout({ direction: 'RIGHT' })} variant="outlined" sx={buttonStyle}>
               Horizontal
             </Button> */}
-          </Panel>
-          <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
-          <Controls />
-          <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
-        </ReactFlow>
-      </ReactFlowProvider>
-      {contextMenu?.visible && (
-        <div
-          style={{
-            position: 'absolute',
-            top: contextMenu.y,
-            left: contextMenu.x,
-            background: 'white',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
-            zIndex: 1000,
-            width: 'fit-content', // Defined width for consistency
-            padding: '8px 0',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '12px'
-          }}
-        >
-          {contextMenu?.options.map((option) => (
-            <div
-              key={option}
-              style={{
-                padding: '4px 8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between', // Space between text/icon and checkbox
-                borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
-                transition: 'background-color 0.2s ease' // Smooth transition for hover effect
-              }}
-              onClick={(e) => handleMenuOptionClick(e, option)}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
-              onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
-            >
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                {option === 'Copy' && <ContentCopyIcon />}
-                {option === 'Paste' && <ContentPasteIcon />}
-                {option.includes('Attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
-                {option.includes('Requirement') && <img src={CybersecurityIcon} alt="requirement" height="20px" width="20px" />}
-                <span style={{ marginLeft: '8px' }}>{option}</span>
-              </span>
-              {/* Add MUI Checkbox for "Attack" and "Requirement" */}
-              {['Attack', 'Requirement'].includes(option) && (
-                <Checkbox
-                  checked={option === 'Attack' ? isAttack : option === 'Requirement' ? isRequirement : false}
-                  onChange={(e) => handleCheckboxChange(e, option, e.target.checked)}
-                  color="primary"
-                  sx={{ marginLeft: 'auto', p: 0 }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      <Toaster position="top-right" reverseOrder={false} />
-    </div>
+            </Panel>
+            <Panel position="top-right">
+              <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            </Panel>
+            <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
+            <Controls id="controls" />
+            <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
+          </ReactFlow>
+        </ReactFlowProvider>
+        {contextMenu?.visible && (
+          <div
+            style={{
+              position: 'absolute',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Increased shadow for better contrast
+              zIndex: 1000,
+              width: 'fit-content', // Defined width for consistency
+              padding: '8px 0',
+              fontFamily: 'Arial, sans-serif',
+              fontSize: '12px'
+            }}
+          >
+            {contextMenu?.options.map((option) => (
+              <div
+                key={option}
+                style={{
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between', // Space between text/icon and checkbox
+                  borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
+                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+                }}
+                onClick={(e) => handleMenuOptionClick(e, option)}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
+                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  {option === 'Copy' && <ContentCopyIcon />}
+                  {option === 'Paste' && <ContentPasteIcon />}
+                  {option.includes('Attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
+                  {option.includes('Requirement') && <img src={CybersecurityIcon} alt="requirement" height="20px" width="20px" />}
+                  <span style={{ marginLeft: '8px' }}>{option}</span>
+                </span>
+                {/* Add MUI Checkbox for "Attack" and "Requirement" */}
+                {['Attack', 'Requirement'].includes(option) && (
+                  <Checkbox
+                    checked={option === 'Attack' ? isAttack : option === 'Requirement' ? isRequirement : false}
+                    onChange={(e) => handleCheckboxChange(e, option, e.target.checked)}
+                    color="primary"
+                    sx={{ marginLeft: 'auto', p: 0 }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <Toaster position="top-right" reverseOrder={false} />
+      </div>
+    </>
   );
 }

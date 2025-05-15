@@ -1,8 +1,8 @@
 /* eslint-disable */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
+import Joyride from 'react-joyride';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
   Button,
@@ -23,11 +23,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  IconButton
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
@@ -41,7 +41,43 @@ import { RiskTreatmentHeaderTable } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { tableHeight } from '../../themes/constant';
 import SelectCatalog from '../Modal/SelectCatalog';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
+const steps = [
+  {
+    target: '#search-input',
+    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    disableBeacon: true
+  },
+  {
+    target: '#drag_drop',
+    content: 'Drag a threat scenario and drop in the table to view the details.'
+  },
+  {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
+    target: '#delete-scenario',
+    content: 'Click the Sno column to select the rows to be deleted.'
+  },
+  {
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#select-catalogs',
+    content: 'Click here to select the catalogs.'
+  },
+  {
+    target: '#select-claims',
+    content: 'Click here to select the Cybersecurity Claims from the saved list.'
+  },
+  {
+    target: '#select-goals',
+    content: 'Click here to select the Cybersecurity Goals from the saved list.'
+  }
+];
 const selector = (state) => ({
   model: state.model,
   getModel: state.getModelById,
@@ -57,12 +93,6 @@ const selector = (state) => ({
 });
 
 const column = RiskTreatmentHeaderTable;
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -90,8 +120,6 @@ const StyledTableRow = styled(TableRow)(() => ({
 export default function RiskTreatmentTable() {
   const color = ColorTheme();
   const notify = (message, status) => toast[status](message);
-  const classes = useStyles();
-  const dispatch = useDispatch();
   const [openTs, setOpenTs] = useState(false);
   const [openSelect, setOpenSelect] = useState({
     GoalsModal: false,
@@ -122,6 +150,29 @@ export default function RiskTreatmentTable() {
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.riskTreatmentTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const [runTour, setRunTour] = useState(false);
+  const tableRef = useRef(null);
+
+  // useEffect(() => {
+  //   if (runTour) {
+  //     document.body.classList.add('joyride-active');
+  //   } else {
+  //     document.body.classList.remove('joyride-active');
+  //   }
+  // }, [runTour]);
+
+  const handleJoyrideCallback = (data) => {
+    const { status, step } = data;
+    if (step.target === '#select-claims' || step.target === '#select-goals') {
+      tableRef.current.scrollLeft = 2500;
+    } else {
+      tableRef.current.scrollLeft = 0;
+    }
+
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
 
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
@@ -407,6 +458,7 @@ export default function RiskTreatmentTable() {
               // console.log('row', item.name);
               cellContent = (
                 <StyledTableCell
+                  id={item.name === 'Cybersecurity Goals' ? 'select-goals' : 'select-claims'}
                   component="th"
                   scope="row"
                   sx={{
@@ -462,6 +514,7 @@ export default function RiskTreatmentTable() {
             case item.name === 'Related UNECE Threats or Vulns':
               cellContent = (
                 <StyledTableCell
+                  id="select-catalogs"
                   component="th"
                   scope="row"
                   onClick={() => handleOpenCatalog(row)}
@@ -556,196 +609,237 @@ export default function RiskTreatmentTable() {
   });
 
   return (
-    <Box
-      sx={{
-        overflow: 'auto',
-        height: '-webkit-fill-available',
-        minHeight: 'moz-available',
-        padding: 1,
-        '&::-webkit-scrollbar': {
-          width: '4px'
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-          borderRadius: '10px'
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'rgba(0, 0, 0, 0.1)'
-        }
-      }}
-    >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} /> */}
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
-        </Box>
-        <Box display="flex" gap={3}>
-          <TextField
-            id="outlined-size-small"
-            placeholder="Search"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearch}
-            sx={{
-              padding: 0.5, // Reduce padding
-              '& .MuiInputBase-input': {
-                fontSize: '0.75rem', // Smaller font size
-                padding: '0.5rem' // Adjust padding inside input
-              },
-              '& .MuiOutlinedInput-root': {
-                height: '30px' // Reduce overall height
-              }
-            }}
-          />
-          <Button
-            sx={{
-              fontSize: '0.85rem',
-
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
-            variant="contained"
-            onClick={handleOpenFilter}
-          >
-            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
-            Filter Columns
-          </Button>
-          <Button
-            sx={{ fontSize: '0.85rem' }}
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDeleteSelected}
-            disabled={selectedRows.length === 0}
-          >
-            Delete
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Column Filter Dialog */}
-      <Dialog open={openFilter} onClose={handleCloseFilter}>
-        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
-        <DialogContent>
-          {RiskTreatmentHeaderTable.map((column) => (
-            <FormControlLabel
-              key={column.id}
-              control={
-                <Checkbox
-                  checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('riskTreatmentTblClms', column.name)}
-                />
-              }
-              label={column.name} // Display column name as label
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={handleCloseFilter} color="warning">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <TableContainer
-        component={Paper}
-        sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
-        onDrop={onDrop}
-        onDragOver={(e) => e.preventDefault()}
-      >
-        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {Head?.map((hd) => (
-                <StyledTableCell
-                  key={hd.id}
-                  style={{
-                    width: columnWidths[hd.id] ?? hd?.w,
-                    minWidth: hd?.minW,
-                    position: 'relative',
-                    overflowWrap: 'break-word'
-                  }}
-                >
-                  {hd.name}
-                  <div
-                    className="resize-handle"
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 0,
-                      width: '5px',
-                      height: '100%',
-                      cursor: 'col-resize',
-                      backgroundColor: 'transparent'
-                    }}
-                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                  />
-                </StyledTableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowKey) => (
-              <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
-            ))}
-          </TableBody>
-        </Table>
-        {!rows?.length && (
-          <Box display="flex">
-            <Typography variant="h5">Note </Typography>: drag the threat & drop in the header
-          </Box>
-        )}
-      </TableContainer>
-
-      <TablePagination
-        sx={{
-          position: 'absolute',
-          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-          '& .MuiSelect-select': { color: color?.sidebarContent },
-          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+    <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
         }}
-        component="div"
-        count={filtered.length}
-        rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        disableOverlayClose
+        disableScrolling
       />
-      <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model?._id} />
-      {openSelect.GoalsModal && (
-        <SelectCyberGoals
-          riskTreatment={riskTreatment}
-          type={openSelect?.cyberType}
-          open={openSelect.GoalsModal}
-          handleClose={handleCloseSelect}
-          details={details}
-          selectedScenes={selectedScenes}
-          setSelectedScenes={setSelectedScenes}
-          updateRiskTreatment={updateRiskTable}
-          refreshAPI={refreshAPI}
-          selectedRow={selectedRow}
-          model={model}
+      <Box
+        sx={{
+          overflow: 'auto !important',
+          height: '-webkit-fill-available',
+          minHeight: 'moz-available',
+          padding: 1,
+          '&::-webkit-scrollbar': {
+            width: '4px'
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '10px'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', color: color?.title }} onClick={handleBack} /> */}
+            <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title} Table</Typography>
+          </Box>
+          <Box display="flex" gap={3}>
+            <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
+            <TextField
+              id="search-input"
+              placeholder="Search"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearch}
+              sx={{
+                padding: 0.5, // Reduce padding
+                '& .MuiInputBase-input': {
+                  fontSize: '0.75rem', // Smaller font size
+                  padding: '0.5rem' // Adjust padding inside input
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px' // Reduce overall height
+                }
+              }}
+            />
+            <Button
+              id="filter-columns-btn"
+              sx={{
+                fontSize: '0.85rem',
+
+                backgroundColor: '#4caf50',
+                ':hover': {
+                  backgroundColor: '#388e3c'
+                }
+              }}
+              variant="contained"
+              onClick={handleOpenFilter}
+            >
+              <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
+              Filter Columns
+            </Button>
+            <Button
+              id="delete-scenario"
+              sx={{ fontSize: '0.85rem' }}
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+              disabled={selectedRows.length === 0}
+            >
+              Delete
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Column Filter Dialog */}
+        <Dialog open={openFilter} onClose={handleCloseFilter}>
+          <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+          <DialogContent>
+            {RiskTreatmentHeaderTable.map((column) => (
+              <FormControlLabel
+                key={column.id}
+                control={
+                  <Checkbox
+                    checked={visibleColumns.includes(column.name)}
+                    onChange={() => toggleColumnVisibility('riskTreatmentTblClms', column.name)}
+                  />
+                }
+                label={column.name} // Display column name as label
+              />
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseFilter} color="warning">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <TableContainer
+          ref={tableRef}
+          component={Paper}
+          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                {Head?.map((hd) => (
+                  <StyledTableCell
+                    key={hd.id}
+                    id="drag_drop"
+                    style={{
+                      width: columnWidths[hd.id] ?? hd?.w,
+                      minWidth: hd?.minW,
+                      position: 'relative',
+                      overflowWrap: 'break-word'
+                    }}
+                  >
+                    {hd.name}
+                    <div
+                      className="resize-handle"
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: '5px',
+                        height: '100%',
+                        cursor: 'col-resize',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                    />
+                  </StyledTableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowKey) => (
+                <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
+              ))}
+            </TableBody>
+          </Table>
+          {!rows?.length && (
+            <Box display="flex">
+              <Typography variant="h5">Note </Typography>: drag the threat & drop in the header
+            </Box>
+          )}
+        </TableContainer>
+
+        <TablePagination
+          sx={{
+            position: 'absolute',
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
+          component="div"
+          count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
         />
-      )}
-      {openSelect.catalogModal && (
-        <SelectCatalog
-          catalog={catalog}
-          catalogDetails={catalogDetails}
-          open={openSelect.catalogModal}
-          handleClose={handleCloseCatalog}
-          details={details}
-          selectedScenes={selectedScenes}
-          setSelectedScenes={setSelectedScenes}
-          updateRiskTreatment={updateRiskTable}
-          getRiskTreatment={getRiskTreatment}
-          selectedRow={selectedRow}
-          model={model}
-        />
-      )}
-      <Toaster position="top-right" reverseOrder={false} />
-    </Box>
+        <AddThreatScenarios open={openTs} handleClose={handleCloseTs} id={model?._id} />
+        {openSelect.GoalsModal && (
+          <SelectCyberGoals
+            riskTreatment={riskTreatment}
+            type={openSelect?.cyberType}
+            open={openSelect.GoalsModal}
+            handleClose={handleCloseSelect}
+            details={details}
+            selectedScenes={selectedScenes}
+            setSelectedScenes={setSelectedScenes}
+            updateRiskTreatment={updateRiskTable}
+            refreshAPI={refreshAPI}
+            selectedRow={selectedRow}
+            model={model}
+          />
+        )}
+        {openSelect.catalogModal && (
+          <SelectCatalog
+            catalog={catalog}
+            catalogDetails={catalogDetails}
+            open={openSelect.catalogModal}
+            handleClose={handleCloseCatalog}
+            details={details}
+            selectedScenes={selectedScenes}
+            setSelectedScenes={setSelectedScenes}
+            updateRiskTreatment={updateRiskTable}
+            getRiskTreatment={getRiskTreatment}
+            selectedRow={selectedRow}
+            model={model}
+          />
+        )}
+        <Toaster position="top-right" reverseOrder={false} />
+      </Box>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+        `}
+      </style>
+    </>
   );
 }

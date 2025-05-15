@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { pageNodeTypes, style } from '../../utils/Constraints';
 import { setSelectedBlock, setDetails, setEdgeDetails, setAnchorEl, clearAnchorEl } from '../../store/slices/CanvasSlice';
 import StepEdge from '../../components/custom/edges/StepEdge';
-import { Zoom } from '@mui/material';
+import { IconButton, Zoom } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
@@ -35,7 +35,24 @@ import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
+import Joyride from 'react-joyride';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
+const steps = [
+  {
+    target: '#control-panel',
+    content: 'Save, restore or download the diagram with the help of Control panel.',
+    disableBeacon: true
+  },
+  {
+    target: '#controls',
+    content: 'Zoom In & out and centering can be done with the controls.'
+  },
+  {
+    target: '.react-flow__minimap',
+    content: 'You can see the overall circuit with the help of mini-map .'
+  }
+];
 // Define the selector function for Zustand
 const selector = (state) => ({
   nodes: state.nodes,
@@ -195,6 +212,14 @@ export default function MainCanvas() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [openSave, setOpenSave] = useState(false);
   const anchorRef = useRef(null);
+  const [runTour, setRunTour] = useState(false);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -754,6 +779,29 @@ export default function MainCanvas() {
 
   return (
     <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
       <div
         style={{
           width: '100%',
@@ -807,7 +855,7 @@ export default function MainCanvas() {
             minZoom={0.2}
             maxZoom={2}
           >
-            <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel id="control-panel" position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <span ref={anchorRef}>
                 <CanvasToolbar
                   isDark={isDark}
@@ -827,7 +875,12 @@ export default function MainCanvas() {
                 />
               </span>
             </Panel>
-            <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel position="top-right">
+              <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            </Panel>
+            <Panel id="controls" position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
             </Panel>
             <MiniMap

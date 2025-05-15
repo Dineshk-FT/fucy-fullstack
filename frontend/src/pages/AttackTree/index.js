@@ -64,6 +64,7 @@ const AttackTree = () => {
 
             {/* Resize Handle */}
             <Box
+              id="resize-handle"
               sx={{
                 width: '6px',
                 height: '100%',

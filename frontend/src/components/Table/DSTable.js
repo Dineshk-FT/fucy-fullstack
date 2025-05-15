@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
+import Joyride from 'react-joyride';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
@@ -30,10 +31,45 @@ import {
   DialogTitle,
   FormControlLabel
 } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const steps = [
+  {
+    target: '#search-input',
+    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    disableBeacon: true
+  },
+  {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#add-scenario',
+    content: 'Click to add a new scenario to the table directly, You can fill the name and description and click the tick to add new row'
+  },
+  {
+    target: '#delete-scenario',
+    content: 'Click the Sno column to select the rows to be deleted.'
+  },
+  {
+    target: '#column-editer',
+    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.'
+  },
+  {
+    target: '#select-losses',
+    content: 'Click here to select the cyberecurity losses.'
+  },
+  {
+    target: '#select-impacts',
+    content: 'Click here to assign the impacts for the scene.'
+  }
+];
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
-import { useDispatch } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
 import SelectLosses from '../Modal/SelectLosses';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
@@ -125,7 +161,7 @@ const renderMenuItem = (option, name) => (
   </MenuItem>
 );
 
-const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impact, name, columnWidths }) => {
+const SelectableCell = ({ id, row, item, options, handleChange, colorPickerTab, impact, name, columnWidths }) => {
   const [open, setOpen] = useState(false);
   const selectRef = useRef(null);
 
@@ -138,7 +174,13 @@ const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impa
   };
 
   return (
-    <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
+    <StyledTableCell
+      id="select-impacts"
+      component="th"
+      scope="row"
+      onClick={handleClick}
+      sx={{ background: `${colorPickerTab(impact)} !important` }}
+    >
       <FormControl
         sx={{
           width: columnWidths[item?.id] ?? 'auto',
@@ -206,7 +248,6 @@ export default function DsTable() {
   } = useStore(selector, shallow);
 
   const [stakeHolder] = useState(false);
-  const dispatch = useDispatch();
   const [openCl, setOpenCl] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState({});
@@ -222,6 +263,14 @@ export default function DsTable() {
     Name: '',
     'Description/Scalability': ''
   });
+  const [runTour, setRunTour] = useState(false);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
   // console.log('details', details);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -587,6 +636,7 @@ export default function DsTable() {
                   {
                     cellContent = (
                       <StyledTableCell
+                        id="column-editer"
                         key={index}
                         onMouseEnter={() => setHoveredField(item.name)}
                         onMouseLeave={() => {
@@ -663,6 +713,7 @@ export default function DsTable() {
                 case item.name === 'Losses of Cybersecurity Properties':
                   cellContent = (
                     <StyledTableCell
+                      id="select-losses"
                       key={index}
                       component="th"
                       scope="row"
@@ -805,254 +856,294 @@ export default function DsTable() {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'auto'
-      }}
-    >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography
-            sx={{
-              color: color?.title,
-              fontWeight: 600,
-              fontSize: '16px'
-            }}
-          >
-            Damage Scenario Table
-          </Typography>
-        </Box>
-        <Box display="flex" gap={2}>
-          <TextField
-            id="outlined-size-small"
-            placeholder="Search"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearch}
-            sx={{
-              justifyContent: 'center',
-              padding: 0.5,
-              '& .MuiInputBase-input': {
-                fontSize: '0.75rem',
-                padding: '0.5rem'
-              },
-              '& .MuiOutlinedInput-root': {
-                height: '30px'
-              }
-            }}
-          />
-          {/* <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
-            Add New Scenario
-          </Button> */}
-          <Button
-            variant="outlined"
-            sx={{ borderRadius: 1.5 }}
-            onClick={handleAddNewRow}
-            startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
-            disabled={isAddingNewRow}
-          >
-            Add new Scenario
-          </Button>
-          <Button
-            sx={{
-              alignSelf: 'center',
-              fontSize: '0.85rem',
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
-            variant="contained"
-            onClick={handleOpenFilter}
-          >
-            <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
-            Filter Columns
-          </Button>
-          <Button
-            sx={{ fontSize: '0.85rem' }}
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDeleteSelected}
-            disabled={selectedRows.length === 0}
-          >
-            Delete
-          </Button>
-        </Box>
-      </Box>
-
-      <Dialog open={openFilter} onClose={handleCloseFilter}>
-        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
-        <DialogContent>
-          {DSTableHeader.map((column) => (
-            <FormControlLabel
-              key={column.id}
-              control={
-                <Checkbox
-                  checked={visibleColumns.includes(column.name)}
-                  onChange={() => toggleColumnVisibility('dmgScenTblClms', column.name)}
-                />
-              }
-              label={column.name}
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={handleCloseFilter} color="warning">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <TableContainer
-        component={Paper}
+    <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
+      <Box
         sx={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          borderRadius: '0px',
-          padding: 0.25,
-          '&::-webkit-scrollbar': {
-            width: '4px'
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)'
-          },
-          maxHeight: tableHeight,
-          scrollbarWidth: 'thin'
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'auto'
         }}
       >
-        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {Head?.map((hd, i) => (
-                <StyledTableCell
-                  key={hd?.id ?? i}
-                  style={{ width: columnWidths[hd.id] || 'auto', position: 'relative', overflowWrap: 'break-word' }}
-                >
-                  {hd?.name}
-                  <div
-                    className="resize-handle"
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 0,
-                      width: '10px',
-                      height: '100%',
-                      cursor: 'col-resize',
-                      backgroundColor: 'rgba(0, 0, 0, 0.1)'
-                    }}
-                    onMouseDown={(e) => handleResizeStart(e, hd.id)}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography
+              sx={{
+                color: color?.title,
+                fontWeight: 600,
+                fontSize: '16px'
+              }}
+            >
+              Damage Scenario Table
+            </Typography>
+          </Box>
+          <Box display="flex" gap={2}>
+            <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
+            <TextField
+              id="search-input"
+              placeholder="Search"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearch}
+              sx={{
+                justifyContent: 'center',
+                padding: 0.5,
+                '& .MuiInputBase-input': {
+                  fontSize: '0.75rem',
+                  padding: '0.5rem'
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: '30px'
+                }
+              }}
+            />
+            {/* <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
+            Add New Scenario
+          </Button> */}
+            <Button
+              id="add-scenario"
+              variant="outlined"
+              sx={{ borderRadius: 1.5 }}
+              onClick={handleAddNewRow}
+              startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
+              disabled={isAddingNewRow}
+            >
+              Add new Scenario
+            </Button>
+            <Button
+              id="filter-columns-btn"
+              sx={{
+                alignSelf: 'center',
+                fontSize: '0.85rem',
+                backgroundColor: '#4caf50',
+                ':hover': {
+                  backgroundColor: '#388e3c'
+                }
+              }}
+              variant="contained"
+              onClick={handleOpenFilter}
+            >
+              <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
+              Filter Columns
+            </Button>
+            <Button
+              id="delete-scenario"
+              sx={{ fontSize: '0.85rem' }}
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+              disabled={selectedRows.length === 0}
+            >
+              Delete
+            </Button>
+          </Box>
+        </Box>
+
+        <Dialog open={openFilter} onClose={handleCloseFilter}>
+          <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+          <DialogContent>
+            {DSTableHeader.map((column) => (
+              <FormControlLabel
+                key={column.id}
+                control={
+                  <Checkbox
+                    checked={visibleColumns.includes(column.name)}
+                    onChange={() => toggleColumnVisibility('dmgScenTblClms', column.name)}
                   />
-                </StyledTableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isAddingNewRow && (
-              <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                {Head?.map((item, index) => {
-                  if (index === 0) {
-                    // Move action buttons to the first column
-                    return (
-                      <StyledTableCell key={index}>
-                        <IconButton
-                          size="small"
-                          onClick={handleSaveNewRow}
-                          color="success"
-                          variant="outlined"
-                          sx={{
-                            mr: 1,
-                            height: 22,
-                            width: 22,
-                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
-                            '&:hover': { bgcolor: 'success.main', color: 'white' }
-                          }}
-                        >
-                          <CheckIcon />
-                        </IconButton>
-
-                        <IconButton
-                          onClick={() => setIsAddingNewRow(false)}
-                          color="error"
-                          variant="outlined"
-                          sx={{
-                            height: 22,
-                            width: 22,
-                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
-                            '&:hover': { bgcolor: 'error.main', color: 'white' }
-                          }}
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                      </StyledTableCell>
-                    );
-                  } else if (item.name === 'Name' || item.name === 'Description/Scalability') {
-                    return (
-                      <StyledTableCell key={index}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          value={newRowData[item.name]}
-                          onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
-                          sx={{
-                            '& .MuiInputBase-input': {
-                              fontSize: '0.75rem',
-                              padding: '4px 8px'
-                            }
-                          }}
-                        />
-                      </StyledTableCell>
-                    );
-                  } else {
-                    return <StyledTableCell key={index}>-</StyledTableCell>;
-                  }
-                })}
-              </StyledTableRow>
-            )}
-
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
+                }
+                label={column.name}
+              />
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseFilter} color="warning">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <TablePagination
-        sx={{
-          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-          '& .MuiSelect-select': { color: color?.sidebarContent },
-          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
-        }}
-        component="div"
-        count={filtered.length}
-        rowsPerPageOptions={[5, 10, 25, 50, 100]}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+        <TableContainer
+          component={Paper}
+          sx={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            borderRadius: '0px',
+            padding: 0.25,
+            '&::-webkit-scrollbar': {
+              width: '4px'
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: '10px'
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'rgba(0, 0, 0, 0.1)'
+            },
+            maxHeight: tableHeight,
+            scrollbarWidth: 'thin'
+          }}
+        >
+          <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                {Head?.map((hd, i) => (
+                  <StyledTableCell
+                    key={hd?.id ?? i}
+                    style={{ width: columnWidths[hd.id] || 'auto', position: 'relative', overflowWrap: 'break-word' }}
+                  >
+                    {hd?.name}
+                    <div
+                      className="resize-handle"
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: '10px',
+                        height: '100%',
+                        cursor: 'col-resize',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                      }}
+                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                    />
+                  </StyledTableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isAddingNewRow && (
+                <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                  {Head?.map((item, index) => {
+                    if (index === 0) {
+                      // Move action buttons to the first column
+                      return (
+                        <StyledTableCell key={index}>
+                          <IconButton
+                            size="small"
+                            onClick={handleSaveNewRow}
+                            color="success"
+                            variant="outlined"
+                            sx={{
+                              mr: 1,
+                              height: 22,
+                              width: 22,
+                              '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
+                              '&:hover': { bgcolor: 'success.main', color: 'white' }
+                            }}
+                          >
+                            <CheckIcon />
+                          </IconButton>
 
-      {openCl && (
-        <SelectLosses
-          open={openCl}
-          details={details}
-          setDetails={setDetails}
-          damageID={damageID}
-          refreshAPI={refreshAPI}
-          handleClose={handleCloseCl}
-          model={model}
-          selectedRow={selectedRow}
-          update={update}
-          getThreatScenario={getThreatScenario}
+                          <IconButton
+                            onClick={() => setIsAddingNewRow(false)}
+                            color="error"
+                            variant="outlined"
+                            sx={{
+                              height: 22,
+                              width: 22,
+                              '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
+                              '&:hover': { bgcolor: 'error.main', color: 'white' }
+                            }}
+                          >
+                            <CloseIcon />
+                          </IconButton>
+                        </StyledTableCell>
+                      );
+                    } else if (item.name === 'Name' || item.name === 'Description/Scalability') {
+                      return (
+                        <StyledTableCell key={index}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={newRowData[item.name]}
+                            onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
+                            sx={{
+                              '& .MuiInputBase-input': {
+                                fontSize: '0.75rem',
+                                padding: '4px 8px'
+                              }
+                            }}
+                          />
+                        </StyledTableCell>
+                      );
+                    } else {
+                      return <StyledTableCell key={index}>-</StyledTableCell>;
+                    }
+                  })}
+                </StyledTableRow>
+              )}
+
+              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+                <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <TablePagination
+          sx={{
+            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
+            '& .MuiSelect-select': { color: color?.sidebarContent },
+            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          }}
+          component="div"
+          count={filtered.length}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
         />
-      )}
-      <Toaster position="top-right" reverseOrder={false} />
-    </Box>
+
+        {openCl && (
+          <SelectLosses
+            open={openCl}
+            details={details}
+            setDetails={setDetails}
+            damageID={damageID}
+            refreshAPI={refreshAPI}
+            handleClose={handleCloseCl}
+            model={model}
+            selectedRow={selectedRow}
+            update={update}
+            getThreatScenario={getThreatScenario}
+          />
+        )}
+        <Toaster position="top-right" reverseOrder={false} />
+      </Box>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+        `}
+      </style>
+    </>
   );
 }

@@ -1,18 +1,30 @@
 /* eslint-disable */
-import React, { useState } from 'react';
-import { Button, TextField, Box, OutlinedInput, InputLabel, MenuItem, FormControl, Select, Chip, Typography, Grid } from '@mui/material';
+import React, { useState, useRef } from 'react';
+import Joyride from 'react-joyride';
+import {
+  Button,
+  TextField,
+  Box,
+  OutlinedInput,
+  InputLabel,
+  MenuItem,
+  FormControl,
+  Select,
+  Chip,
+  Typography,
+  Grid,
+  IconButton
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useStore from '../../store/Zustand/store';
-import { getNodeDetails, updatedModelState } from '../../utils/Constraints';
-import { v4 as uid } from 'uuid';
-import { CloseCircle } from 'iconsax-react';
+import { getNodeDetails } from '../../utils/Constraints';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddDataNodeTab } from '../../store/slices/CanvasSlice';
 import { fontSize } from '../../themes/constant';
-import toast, { Toaster } from 'react-hot-toast';
 import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { shallow } from 'zustand/shallow';
 
 const ITEM_HEIGHT = 48;
@@ -38,14 +50,8 @@ const MenuProps = {
 const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
-  updateModel: state.updateModel,
-  createNode: state.createNode,
   setNodes: state.setNodes,
-  nodes: state.nodes,
-  edges: state.edges,
-  getSidebarNode: state.getSidebarNode,
-  model: state.model,
-  update: state.updateAssets
+  nodes: state.nodes
 });
 
 function getStyles(name, nodes, theme) {
@@ -54,11 +60,30 @@ function getStyles(name, nodes, theme) {
   };
 }
 
+const steps = [
+  {
+    target: '#data-node-name-input',
+    content: 'Enter a name for your new data node here.',
+    disableBeacon: true
+  },
+  {
+    target: '#data-node-properties-select',
+    content: 'Select one or more security properties for this data node from the dropdown.'
+  },
+  {
+    target: '#add-data-node-btn',
+    content: 'Click here to create the data node with the specified properties.'
+  },
+  {
+    target: '#cancel-data-node-btn',
+    content: 'Click here to cancel data node creation and close the form.'
+  }
+];
+
 const AddDataNode = ({ assets }) => {
   const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
-  const notify = (message, status) => toast[status](message);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState(1);
   const [newNode, setNewNode] = useState({
@@ -68,7 +93,40 @@ const AddDataNode = ({ assets }) => {
     bgColor: ''
   });
 
-  const { createNode, updateModel, setNodes, nodes, edges, model, update, getSidebarNode } = useStore(selector, shallow);
+  const [runTour, setRunTour] = useState(false);
+  const nameInputRef = useRef(null);
+  const hasTriggeredTour = useRef(false);
+
+  const { setNodes, nodes } = useStore(selector, shallow);
+
+  React.useEffect(() => {
+    if (!hasTriggeredTour.current) {
+      hasTriggeredTour.current = true;
+
+      // Focus the name input field
+      const focusTimer = setTimeout(() => {
+        if (nameInputRef.current) {
+          nameInputRef.current.focus();
+        }
+      }, 300);
+
+      return () => {
+        clearTimeout(focusTimer);
+      };
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
+
+  const handleTourStart = () => {
+    setRunTour(true);
+  };
 
   const handleChange = (event) => {
     const {
@@ -96,28 +154,12 @@ const AddDataNode = ({ assets }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // const details = { id: selectedNodeGroupId, new_node: dataNode };
-
     if (!selectedNodeGroupId) {
       const nodeDetail = getNodeDetails('data', 'Data', count, newNode);
       const list = [...nodes, nodeDetail];
       setNodes(list);
     }
-    // else {
-    //   createNode(details)
-    //     .then((res) => {
-    //       if (res.data) {
-    //         notify(res?.data?.message ?? 'Node added successfully', 'success');
-    //         getSidebarNode();
-    //         setSelectedNodeGroupId({});
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       notify('Something went wrong', 'error');
-    //     });
-    // }
 
-    // Reset only the nodeName, keeping properties intact
     setCount((prev) => prev + 1);
     setNewNode((prev) => ({
       ...prev,
@@ -130,17 +172,65 @@ const AddDataNode = ({ assets }) => {
 
   return (
     <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent, position: 'relative' }}>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+        floaterProps={{
+          styles: {
+            arrow: {
+              color: '#1976d2'
+            }
+          }
+        }}
+      />
+
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h4" color="primary">
             Add New Data Node
           </Typography>
-          <Box sx={{ cursor: 'pointer', float: 'right' }} onClick={CloseModel}>
-            <CancelTwoToneIcon />
+          <Box display="flex" alignItems="center">
+            <IconButton
+              onClick={handleTourStart}
+              sx={{
+                color: '#1976d2',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.1)'
+                },
+                mr: 1,
+                mb: 1
+              }}
+            >
+              <HelpOutlineIcon />
+            </IconButton>
+            <Box sx={{ cursor: 'pointer' }} onClick={CloseModel}>
+              <CancelTwoToneIcon />
+            </Box>
           </Box>
         </Box>
 
         <TextField
+          inputRef={nameInputRef}
+          id="data-node-name-input"
           size="small"
           label="Name"
           name="nodeName"
@@ -161,8 +251,8 @@ const AddDataNode = ({ assets }) => {
                 Properties
               </InputLabel>
               <Select
+                id="data-node-properties-select"
                 labelId="demo-multiple-chip-label"
-                id="demo-multiple-chip"
                 multiple
                 name="properties"
                 sx={{
@@ -193,14 +283,38 @@ const AddDataNode = ({ assets }) => {
         </Grid>
 
         <Box display="flex" justifyContent="space-between" height="30px" sx={{ mt: 2 }}>
-          <Button onClick={CloseModel} variant="outlined" color="warning">
+          <Button id="cancel-data-node-btn" onClick={CloseModel} variant="outlined" color="error">
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={!newNode.nodeName || newNode.properties.length === 0}>
+          <Button
+            id="add-data-node-btn"
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={!newNode.nodeName || newNode.properties.length === 0}
+          >
             Add
           </Button>
         </Box>
       </Box>
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(1.3);
+              opacity: 0.7;
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </Box>
   );
 };

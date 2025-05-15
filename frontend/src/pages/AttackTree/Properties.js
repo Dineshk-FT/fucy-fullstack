@@ -45,6 +45,7 @@ const Properties = () => {
   return (
     <>
       <TreeView
+        id="attack-tree"
         aria-label="file system navigator"
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}

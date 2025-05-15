@@ -1,20 +1,28 @@
 /*eslint-disable*/
 import React, { useCallback, useMemo, useState } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Typography } from '@mui/material';
 import { ArrowSquareDown, ArrowSquareUp } from 'iconsax-react';
-import ColorTheme from '../../../../themes/ColorTheme';
 import { LightMode as LightModeIcon, NightsStay as NightsStayIcon, PowerSettingsNew as PowerSettingsNewIcon } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeMode, navbarSlide } from '../../../../store/slices/CurrentIdSlice';
 import { logout } from '../../../../store/slices/UserDetailsSlice';
 import { useNavigate } from 'react-router';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpPopper from '../../../../components/Poppers/HelpPopper';
 
 function RightSection() {
   const [open, setOpen] = useState(false);
-  const color = ColorTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null);
+  const handleHelpClick = (event) => {
+    setHelpAnchorEl((prev) => (prev ? null : event.currentTarget));
+  };
+  const handleHelpClose = () => {
+    setHelpAnchorEl(null);
+  };
+  const isHelpOpen = Boolean(helpAnchorEl);
 
   const handleChangeMode = useCallback(() => {
     dispatch(changeMode());
@@ -61,6 +69,9 @@ function RightSection() {
   return (
     <>
       <Box display="flex" gap={1.5} alignItems="center" justifyContent="flex-end" mr={2}>
+        <IconButton sx={{ color: '#1976d2', ml: 1 }} onClick={handleHelpClick} size="small">
+          <HelpOutlineIcon fontSize="small" />
+        </IconButton>
         <Box onClick={handleChangeMode} sx={iconButtonStyles}>
           {isDark ? <NightsStayIcon sx={{ color: iconColor, fontSize: 20 }} /> : <LightModeIcon sx={{ color: iconColor, fontSize: 20 }} />}
         </Box>
@@ -99,6 +110,7 @@ function RightSection() {
           </Button>
         </DialogActions>
       </Dialog>
+      <HelpPopper open={isHelpOpen} anchorEl={helpAnchorEl} onClose={handleHelpClose} />
     </>
   );
 }

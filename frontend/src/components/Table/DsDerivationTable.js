@@ -1,6 +1,7 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
 import Table from '@mui/material/Table';
+import Joyride from 'react-joyride';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -9,7 +10,6 @@ import TableRow from '@mui/material/TableRow';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/system';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import {
   TextField,
   Typography,
@@ -22,23 +22,40 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  IconButton
 } from '@mui/material';
 import ColorTheme from '../../themes/ColorTheme';
-import { makeStyles } from '@mui/styles';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
-import { useDispatch } from 'react-redux';
 import { tableHeight } from '../../themes/constant';
 import { DsDerivationHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const steps = [
+  {
+    target: '#search-input',
+    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    disableBeacon: true
+  },
+  {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
+    target: '#column-header',
+    content: 'Click the checkbox to select/deselect all rows. Drag column edges to resize.'
+  },
+  {
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#checklist-header',
+    content: 'Use checkboxes to select individual rows or select all using the header checkbox.'
+  }
+];
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -72,8 +89,6 @@ const selector = (state) => ({
 
 export default function DsDerivationTable() {
   const color = ColorTheme();
-  const dispatch = useDispatch();
-  const classes = useStyles();
   const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
   const [rows, setRows] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -85,7 +100,14 @@ export default function DsDerivationTable() {
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state.DsTable);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const [runTour, setRunTour] = useState(false);
 
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
@@ -173,10 +195,6 @@ export default function DsDerivationTable() {
     setSearchTerm(value);
   };
 
-  const handleBack = () => {
-    dispatch(closeAll());
-  };
-
   // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -239,7 +257,7 @@ export default function DsDerivationTable() {
           switch (true) {
             case item.name === 'Checked':
               cellContent = (
-                <StyledTableCell component="th" scope="row">
+                <StyledTableCell component="th" scope="row" id="checklist-header">
                   <Checkbox {...label} checked={row[item.name]} onChange={() => handleChange(row[item.name], row?.id)} />
                 </StyledTableCell>
               );
@@ -281,6 +299,29 @@ export default function DsDerivationTable() {
 
   return (
     <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
       <Box
         sx={{
           overflow: 'auto',
@@ -304,8 +345,11 @@ export default function DsDerivationTable() {
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
           <Box display="flex" justifyContent="center" gap={1}>
+            <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
             <TextField
-              id="outlined-size-small"
+              id="search-input"
               placeholder="Search"
               size="small"
               value={searchTerm}
@@ -322,6 +366,7 @@ export default function DsDerivationTable() {
               }}
             />
             <Button
+              id="filter-columns-btn"
               sx={{
                 padding: '0px 8px',
                 fontSize: '0.85rem',
@@ -380,7 +425,7 @@ export default function DsDerivationTable() {
                 {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
                     {hd?.name === 'Checked' ? (
-                      <Box display="flex" alignItems="center">
+                      <Box display="flex" alignItems="center" id="column-header">
                         <Checkbox
                           {...label}
                           checked={filtered.length > 0 && filtered.every((row) => row.Checked)}
@@ -434,6 +479,15 @@ export default function DsDerivationTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+        `}
+      </style>
     </>
   );
 }

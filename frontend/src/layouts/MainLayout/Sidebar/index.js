@@ -17,6 +17,49 @@ import BrowserCard from './BrowserCard';
 import { setDrawerwidth } from '../../../store/slices/CanvasSlice';
 import { getNavbarHeight } from '../../../themes/constant';
 import ColorTheme from '../../../themes/ColorTheme';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import Joyride from 'react-joyride';
+
+const steps = [
+  {
+    target: '#item-definition',
+    content:
+      'You can add Components & Data  by clicking the add icon when you move the mouse over the components and Data and assign properties for them.',
+    disableBeacon: true
+  },
+  {
+    target: '#damage-scene',
+    content: 'The Damage scenes are created by the properties of Components, Data & Connectors Properties that we choose.'
+  },
+  {
+    target: '#threat-scene',
+    content:
+      'By adding cyberlosses in the "Damage scenario - impact Ratings" table these scenarios are created, you can select and derive them to make derived scenarios.'
+  },
+  {
+    target: '#attack-scene',
+    content:
+      'These shows the possible attacks and attack trees based on the threat scenes. we can add them by simply move the mouse above the attack or attack to see the add icon and you can also add attack templates from the global trees.'
+  },
+  {
+    target: '#cybersecurity',
+    content:
+      'These part will showcase the Goals, claims, controls &Requirements that can be used in the attack trees and in the risk treatment. '
+  },
+  {
+    target: '#catalog',
+    content: 'Here you can refer the UNICE standards .'
+  },
+  {
+    target: '#risk-treatment',
+    content:
+      'This will be the final outcome from the threat scenarios and the othres connected with them. You can simply drag & drop a threat scenario to see the results.'
+  },
+  {
+    target: '#reporting',
+    content: 'Here You can download the desired data in a PDF format.'
+  }
+];
 
 export const ToasterContext = createContext();
 
@@ -37,7 +80,15 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const notify = (message, status) => toast[status](message);
   // State to track the width of the ResizableBox
   const [sidebarWidth, setSidebarWidth] = useState(draweropen ? 400 : 0);
+  const [runTour, setRunTour] = useState(false);
 
+  const handleJoyrideCallback = (data) => {
+    // console.log('data', data);
+    const { status, step } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
   useEffect(() => {
     fetchModels();
     dispatch(clearProperties());
@@ -69,6 +120,27 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             />
           </PerfectScrollbar>
           <IconButton
+            sx={{
+              position: 'absolute',
+              border: `1px solid ${color?.title}`,
+              marginTop: 2.5,
+              marginRight: 2.5,
+              padding: '0px',
+              width: '0.8em',
+              height: '0.8em',
+              top: 5,
+              right: 30,
+              color: '#1976d2',
+              zIndex: 1400,
+              '&:hover': { transform: 'scale(1.1)' },
+              transition: 'transform 0.2s ease'
+            }}
+            onClick={() => setRunTour(true)}
+            size="small"
+          >
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+          <IconButton
             onClick={handleDrawerToggle}
             sx={{
               position: 'absolute',
@@ -78,7 +150,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
               padding: '0px',
               width: '0.8em',
               height: '0.8em',
-              top: 0,
+              top: 3,
               right: 0,
               color: color?.iconColor,
               zIndex: 1400,
@@ -103,95 +175,121 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const values = { notify };
 
   return (
-    <ToasterContext.Provider value={values}>
-      <ResizableBox
-        width={sidebarWidth}
-        height={Infinity}
-        axis="x"
-        minConstraints={[250, 0]}
-        maxConstraints={[650, Infinity]}
-        onResize={handleResize}
-        handle={
-          <span
-            className="custom-handle"
-            style={{
-              position: 'absolute',
-              right: '-8px',
-              top: 0,
-              bottom: 0,
-              cursor: 'ew-resize',
-              width: '10px',
-              backgroundColor: 'transparent'
-            }}
-          />
-        }
-        handleSize={[8, Infinity]}
-        style={{ height: '100%' }}
-      >
-        <Box
-          component="nav"
-          sx={{
-            flexShrink: { md: 0 },
-            width: sidebarWidth,
-            height: '100%',
-            background: color?.sidebarBG,
-            mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px'
-          }}
-          aria-label="mailbox folders"
-        >
-          {!draweropen && (
-            <IconButton
-              onClick={handleDrawerToggle}
-              sx={{
-                position: 'absolute',
-                border: `1px solid ${color?.title}`,
-                padding: '0px',
-                width: '0.8em',
-                height: '0.8em',
-                left: '5px',
-                top: 5,
-                marginTop: `${getNavbarHeight(isCollapsed)}px`,
-                color: color?.iconColor,
-                zIndex: 1400,
-                '&:hover': { transform: 'scale(1.1)' },
-                transition: 'transform 0.2s ease'
-              }}
-            >
-              {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-            </IconButton>
-          )}
+    <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
 
-          <Drawer
-            container={container}
-            variant={matchUpMd ? 'persistent' : 'temporary'}
-            anchor="left"
-            open={draweropen}
-            id="sidebar_drawer"
-            onClose={handleDrawerToggle} // Use handleDrawerToggle here
+      <ToasterContext.Provider value={values}>
+        <ResizableBox
+          width={sidebarWidth}
+          height={Infinity}
+          axis="x"
+          minConstraints={[250, 0]}
+          maxConstraints={[650, Infinity]}
+          onResize={handleResize}
+          handle={
+            <span
+              className="custom-handle"
+              style={{
+                position: 'absolute',
+                right: '-8px',
+                top: 0,
+                bottom: 0,
+                cursor: 'ew-resize',
+                width: '10px',
+                backgroundColor: 'transparent'
+              }}
+            />
+          }
+          handleSize={[8, Infinity]}
+          style={{ height: '100%' }}
+        >
+          <Box
+            component="nav"
             sx={{
-              '& .MuiDrawer-paper': {
-                height: '-webkit-fill-available',
-                width: sidebarWidth, // Apply the dynamic width
-                background: color?.sidebarBG,
-                color: theme.palette.text.primary,
-                [theme.breakpoints.up('md')]: {
-                  top: !isNavbarClose ? getNavbarHeight(isCollapsed) : '0px'
-                }
-              },
-              '& .MuiCardContent-root': {
-                padding: '0px',
-                flexGrow: 1
-              }
+              flexShrink: { md: 0 },
+              width: sidebarWidth,
+              height: '100%',
+              background: color?.sidebarBG,
+              mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px'
             }}
-            ModalProps={{ keepMounted: true }}
-            color="inherit"
+            aria-label="mailbox folders"
           >
-            {drawer}
-          </Drawer>
-          <Toaster position="top-right" reverseOrder={false} />
-        </Box>
-      </ResizableBox>
-    </ToasterContext.Provider>
+            {!draweropen && (
+              <IconButton
+                onClick={handleDrawerToggle}
+                sx={{
+                  position: 'absolute',
+                  border: `1px solid ${color?.title}`,
+                  padding: '0px',
+                  width: '0.8em',
+                  height: '0.8em',
+                  left: '5px',
+                  top: 5,
+                  marginTop: `${getNavbarHeight(isCollapsed)}px`,
+                  color: color?.iconColor,
+                  zIndex: 1400,
+                  '&:hover': { transform: 'scale(1.1)' },
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+              </IconButton>
+            )}
+
+            <Drawer
+              container={container}
+              variant={matchUpMd ? 'persistent' : 'temporary'}
+              anchor="left"
+              open={draweropen}
+              id="sidebar_drawer"
+              onClose={handleDrawerToggle} // Use handleDrawerToggle here
+              sx={{
+                '& .MuiDrawer-paper': {
+                  height: '-webkit-fill-available',
+                  width: sidebarWidth, // Apply the dynamic width
+                  background: color?.sidebarBG,
+                  color: theme.palette.text.primary,
+                  [theme.breakpoints.up('md')]: {
+                    top: !isNavbarClose ? getNavbarHeight(isCollapsed) : '0px'
+                  }
+                },
+                '& .MuiCardContent-root': {
+                  padding: '0px',
+                  flexGrow: 1
+                }
+              }}
+              ModalProps={{ keepMounted: true }}
+              color="inherit"
+            >
+              {drawer}
+            </Drawer>
+            <Toaster position="top-right" reverseOrder={false} />
+          </Box>
+        </ResizableBox>
+      </ToasterContext.Provider>
+    </>
   );
 };
 

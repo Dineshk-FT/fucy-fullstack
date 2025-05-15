@@ -230,3 +230,7 @@ iframe#webpack-dev-server-client-overlay {
     z-index: 1;
     box-shadow: 0px 0px 4px 2px #90caf9;
 } */
+
+.joyride-active {
+  overflow-x: auto !important;
+}

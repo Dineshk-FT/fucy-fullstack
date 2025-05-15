@@ -14,6 +14,7 @@ const GlobalAttackTreeList = ({ globalAttackTrees }) => {
   return (
     <>
       <TreeView
+        id="global-tree"
         aria-label="file system navigator"
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}

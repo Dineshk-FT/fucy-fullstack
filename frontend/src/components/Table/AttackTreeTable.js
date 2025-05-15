@@ -1,6 +1,7 @@
 /*eslint-disable*/
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Table from '@mui/material/Table';
+import Joyride from 'react-joyride';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -40,6 +41,31 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import toast from 'react-hot-toast';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const steps = [
+  {
+    target: '#add-btn',
+    content: 'Click  here to add new attack to the table.',
+    disableBeacon: true
+  },
+  {
+    target: '#search-input',
+    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.'
+  },
+  {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#select-value',
+    content: 'The cells with the select Value can be selected by clicking the cell and selecting the value in the list.'
+  }
+];
 
 const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
@@ -109,7 +135,7 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
   };
 
   return (
-    <StyledTableCell component="th" scope="row" onClick={handleClick} onContextMenu={handleContextMenu}>
+    <StyledTableCell id="select-value" component="th" scope="row" onClick={handleClick} onContextMenu={handleContextMenu}>
       <FormControl
         sx={{
           width: 130,
@@ -192,6 +218,14 @@ export default function AttackTreeTable() {
     Name: '',
     Description: ''
   });
+  const [runTour, setRunTour] = useState(false);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+    }
+  };
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
@@ -482,14 +516,41 @@ export default function AttackTreeTable() {
   };
 
   return (
-    <Box>
+    <>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 1300,
+            beacon: {
+              backgroundColor: '#1976d2',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              animation: 'pulse 1.5s infinite'
+            }
+          }
+        }}
+        disableOverlayClose
+        disableScrolling
+      />
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
           {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
           <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         </Box>
         <Box display="flex" alignItems="center">
+          <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
           <Button
+            id="add-btn"
             variant="outlined"
             sx={{ borderRadius: 1.5 }}
             onClick={handleAddNewRow}
@@ -499,7 +560,7 @@ export default function AttackTreeTable() {
             Add new
           </Button>
           <TextField
-            id="outlined-size-small"
+            id="search-input"
             placeholder="Search"
             size="small"
             value={searchTerm}
@@ -507,6 +568,7 @@ export default function AttackTreeTable() {
             sx={{ padding: 1, '& .MuiInputBase-input': { border: '1px solid black' } }}
           />
           <Button
+            id="filter-columns-btn"
             sx={{
               fontSize: '0.85rem',
               backgroundColor: '#4caf50',
@@ -681,6 +743,15 @@ export default function AttackTreeTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-    </Box>
+      <style>
+        {`
+       @keyframes pulse {
+         0% { transform: scale(1); opacity: 1; }
+         50% { transform: scale(1.3); opacity: 0.7; }
+         100% { transform: scale(1); opacity: 1; }
+       }
+     `}
+      </style>
+    </>
   );
 }

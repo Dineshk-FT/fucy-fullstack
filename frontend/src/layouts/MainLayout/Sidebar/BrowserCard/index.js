@@ -816,170 +816,200 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     switch (type) {
       case 'assets':
         return (
-          <ItemDefinition
-            data={data}
-            hovered={hovered}
-            setHovered={setHovered}
-            handleAddNode={handleAddNode}
-            handlePropertiesTab={handlePropertiesTab}
-            handleClick={handleClick}
-            handleNodes={handleNodes}
-            getLabel={getLabel}
-            setClickedItem={setClickedItem}
-            onDragStart={onDragStart}
-            drawerwidthChange={drawerwidthChange}
-            drawerWidth={drawerWidth}
-            selectedBlock={selectedBlock}
-            model={model}
-            classes={classes}
-            nodes={nodes}
-            edges={edges}
-            handleSave={handleSave}
-            renderTreeItem={renderTreeItem}
-          />
+          <span id="item-definition">
+            <ItemDefinition
+              data={data}
+              hovered={hovered}
+              setHovered={setHovered}
+              handleAddNode={handleAddNode}
+              handlePropertiesTab={handlePropertiesTab}
+              handleClick={handleClick}
+              handleNodes={handleNodes}
+              getLabel={getLabel}
+              setClickedItem={setClickedItem}
+              onDragStart={onDragStart}
+              drawerwidthChange={drawerwidthChange}
+              drawerWidth={drawerWidth}
+              selectedBlock={selectedBlock}
+              model={model}
+              classes={classes}
+              nodes={nodes}
+              edges={edges}
+              handleSave={handleSave}
+              renderTreeItem={renderTreeItem}
+            />
+          </span>
         );
 
       case 'damageScenarios':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'damage', data.id),
-          null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            if (sub.name === 'Damage Scenarios (DS) Derivations') {
-              return sub.Derivations?.map((derivation, i) => (
-                <TreeItem
-                  onClick={(e) => e.stopPropagation()}
-                  key={derivation.id}
-                  nodeId={derivation.id}
-                  label={getLabel('TopicIcon', derivation.name, i + 1, derivation.id)}
-                />
-              ));
-            }
-            if (sub.name === 'Damage Scenarios - Impact Ratings') {
-              return sub.Details?.map((detail, i) => (
-                <TreeItem
-                  onClick={(e) => e.stopPropagation()}
-                  key={detail._id}
-                  nodeId={detail._id}
-                  label={getLabel('DangerousIcon', detail.Name, i + 1, detail._id)}
-                />
-              ));
-            }
-          })
+        return (
+          <span id="damage-scene">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'damage', data.id),
+              null,
+              renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+                if (sub.name === 'Damage Scenarios (DS) Derivations') {
+                  return sub.Derivations?.map((derivation, i) => (
+                    <TreeItem
+                      onClick={(e) => e.stopPropagation()}
+                      key={derivation.id}
+                      nodeId={derivation.id}
+                      label={getLabel('TopicIcon', derivation.name, i + 1, derivation.id)}
+                    />
+                  ));
+                }
+                if (sub.name === 'Damage Scenarios - Impact Ratings') {
+                  return sub.Details?.map((detail, i) => (
+                    <TreeItem
+                      onClick={(e) => e.stopPropagation()}
+                      key={detail._id}
+                      nodeId={detail._id}
+                      label={getLabel('DangerousIcon', detail.Name, i + 1, detail._id)}
+                    />
+                  ));
+                }
+              })
+            )}
+          </span>
         );
 
       case 'threatScenarios':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'threat', data.id),
-          null,
-          renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
-            return sub.Details?.flatMap((detail, i) => (
-              <ThreatScenarios
-                sub={sub}
-                detail={detail}
-                i={i}
-                setSelectedThreatIds={setSelectedThreatIds}
-                onDragStart={onDragStart}
-                getLabel={getLabel}
-              />
-            ));
-          })
+        return (
+          <span id="threat-scene">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'threat', data.id),
+              null,
+              renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
+                return sub.Details?.flatMap((detail, i) => (
+                  <ThreatScenarios
+                    sub={sub}
+                    detail={detail}
+                    i={i}
+                    setSelectedThreatIds={setSelectedThreatIds}
+                    onDragStart={onDragStart}
+                    getLabel={getLabel}
+                  />
+                ));
+              })
+            )}
+          </span>
         );
 
       case 'attackScenarios':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'attack', data.id),
-          null,
-          renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
-            sub.scenes?.map((at_scene, i) => {
-              return (
-                <AttackScenarios
-                  sub={sub}
-                  at_scene={at_scene}
-                  i={i}
-                  hovered={hovered}
-                  setHovered={setHovered}
-                  handleOpenDeleteModal={handleOpenDeleteModal}
-                  onDragStart={onDragStart}
-                  handleOpenAttackTree={handleOpenAttackTree}
-                  getLabel={getLabel}
-                />
-              );
-            })
-          )
+        return (
+          <span id="attack-scene">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'attack', data.id),
+              null,
+              renderSubItems(data.subs, handleOpenTable, handleContext, (sub) =>
+                sub.scenes?.map((at_scene, i) => {
+                  return (
+                    <AttackScenarios
+                      sub={sub}
+                      at_scene={at_scene}
+                      i={i}
+                      hovered={hovered}
+                      setHovered={setHovered}
+                      handleOpenDeleteModal={handleOpenDeleteModal}
+                      onDragStart={onDragStart}
+                      handleOpenAttackTree={handleOpenAttackTree}
+                      getLabel={getLabel}
+                    />
+                  );
+                })
+              )
+            )}
+          </span>
         );
       case 'riskTreatment':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'risks', data.id),
-          null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.Derivations?.map((derivation) => (
-              <TreeItem
-                onClick={(e) => e.stopPropagation()}
-                key={derivation.id}
-                nodeId={derivation.id}
-                label={getLabel('TopicIcon', derivation.name, null, derivation.id)}
-              />
-            ));
-          })
+        return (
+          <span id="risk-treatment">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'risks', data.id),
+              null,
+              renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+                return sub.Derivations?.map((derivation) => (
+                  <TreeItem
+                    onClick={(e) => e.stopPropagation()}
+                    key={derivation.id}
+                    nodeId={derivation.id}
+                    label={getLabel('TopicIcon', derivation.name, null, derivation.id)}
+                  />
+                ));
+              })
+            )}
+          </span>
         );
       case 'cybersecurity':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
-          null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.scenes?.map((scene, i) => (
-              <TreeItem
-                onClick={(e) => e.stopPropagation()}
-                key={scene.ID}
-                nodeId={scene.ID}
-                label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
-              />
-            ));
-          })
+        return (
+          <span id="cybersecurity">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
+              null,
+              renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+                return sub.scenes?.map((scene, i) => (
+                  <TreeItem
+                    onClick={(e) => e.stopPropagation()}
+                    key={scene.ID}
+                    nodeId={scene.ID}
+                    label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
+                  />
+                ));
+              })
+            )}
+          </span>
         );
 
       case 'catalog':
-        return renderTreeItem(
-          data,
-          (e) => handleClick(e, model?._id, 'catalog', data.id),
-          null,
-          renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-            return sub.subs_scenes?.map((scene) => (
-              <TreeItem
-                key={scene.id}
-                nodeId={scene.id}
-                label={getLabel('TopicIcon', scene.name, null, scene.id)}
-                onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
-              >
-                {scene.item_name?.map((subScene) => (
-                  <DraggableTreeItem
-                    key={subScene.id}
-                    nodeId={subScene.id}
-                    label={getLabel('TopicIcon', subScene.name, null, subScene.id)}
-                    draggable={true}
-                    onClick={(e) => e.stopPropagation()}
-                    onDragStart={(e) => onDragStart(e, subScene)}
-                  />
-                ))}
-              </TreeItem>
-            ));
-          })
+        return (
+          <span id="catalog">
+            {renderTreeItem(
+              data,
+              (e) => handleClick(e, model?._id, 'catalog', data.id),
+              null,
+              renderSubItems(data.subs, handleOpenTable, null, (sub) => {
+                return sub.subs_scenes?.map((scene) => (
+                  <TreeItem
+                    key={scene.id}
+                    nodeId={scene.id}
+                    label={getLabel('TopicIcon', scene.name, null, scene.id)}
+                    onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
+                  >
+                    {scene.item_name?.map((subScene) => (
+                      <DraggableTreeItem
+                        key={subScene.id}
+                        nodeId={subScene.id}
+                        label={getLabel('TopicIcon', subScene.name, null, subScene.id)}
+                        draggable={true}
+                        onClick={(e) => e.stopPropagation()}
+                        onDragStart={(e) => onDragStart(e, subScene)}
+                      />
+                    ))}
+                  </TreeItem>
+                ));
+              })
+            )}
+          </span>
         );
 
       case 'documents':
-        return renderTreeItem(
-          data,
-          (e) => {
-            e.stopPropagation();
-            setOpenDocumentDialog(true);
-          },
-          null,
-          null
+        return (
+          <span id="reporting">
+            {renderTreeItem(
+              data,
+              (e) => {
+                e.stopPropagation();
+                setOpenDocumentDialog(true);
+              },
+              null,
+              null
+            )}
+          </span>
         );
       // case 'sub-systems':
       //   return renderTreeItem(
