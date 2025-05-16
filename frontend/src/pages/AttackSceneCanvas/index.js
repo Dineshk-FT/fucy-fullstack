@@ -8,7 +8,7 @@ import { shallow } from 'zustand/shallow';
 import { CustomEdge } from '../../components/custom';
 import { Button, Checkbox, IconButton } from '@mui/material';
 import { v4 as uid } from 'uuid';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import { pageNodeTypes, style } from '../../utils/Constraints';
@@ -20,6 +20,7 @@ import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree
 import RestoreIcon from '@mui/icons-material/Restore';
 import Joyride from 'react-joyride';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
 
 const steps = [
   {
@@ -186,7 +187,9 @@ const selector = (state) => ({
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
   setIsChanged: state.setIsAttackChanged,
-  isChanged: state.isAttackChanged
+  isChanged: state.isAttackChanged,
+  openSave: state.openSave,
+  setOpenSave: state.setOpenSave
 });
 
 // Edge line styling
@@ -237,7 +240,9 @@ export default function AttackBlock({ attackScene, color }) {
     attacks,
     requirements,
     isChanged,
-    setIsChanged
+    setIsChanged,
+    openSave,
+    setOpenSave
   } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
   const [nodeTypes, setNodeTypes] = useState({});
@@ -252,6 +257,7 @@ export default function AttackBlock({ attackScene, color }) {
   const flowWrapper = useRef(null);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+  const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
 
   const handleJoyrideCallback = (data) => {
@@ -278,7 +284,7 @@ export default function AttackBlock({ attackScene, color }) {
     return scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId;
   }
 
-  const handleSave = (sceneId) => {
+  const handleSave = () => {
     // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
     const template = {
       nodes: nodes,
@@ -296,7 +302,7 @@ export default function AttackBlock({ attackScene, color }) {
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
-      id: sceneId,
+      id: attackScene?.ID,
       templates: JSON.stringify(template),
       threatId: threatId ?? '',
       damageId: damageId ?? '',
@@ -359,11 +365,17 @@ export default function AttackBlock({ attackScene, color }) {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
         centerLayout();
+        if (
+          JSON.stringify(nodes) !== JSON.stringify(attackScene?.templates?.nodes) ||
+          JSON.stringify(edges) !== JSON.stringify(attackScene?.templates?.edges)
+        ) {
+          setIsChanged(true);
+        }
       } catch (error) {
         console.error('Error during layout:', error);
       }
     },
-    [nodes, edges, setNodes, setEdges]
+    [nodes, edges, setNodes, setEdges, isChanged]
   );
   useEffect(() => {
     centerLayout();
@@ -535,16 +547,23 @@ export default function AttackBlock({ attackScene, color }) {
         break;
     }
   };
+  const handleClear = () => {
+    setNodes([]);
+    setEdges([]);
+    // notify('Canvas cleared', 'success');
+  };
 
   const onRestore = useCallback(
     (temp) => {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
+      } else {
+        handleClear();
       }
       setIsChanged(false);
     },
-    [reactFlowInstance, attackScene]
+    [reactFlowInstance, attackScene, isChanged]
   );
 
   useEffect(() => {
@@ -772,6 +791,12 @@ export default function AttackBlock({ attackScene, color }) {
   const buttonStyle = {
     background: color?.canvasBG
   };
+
+  const handleCloseSave = () => {
+    setOpenSave(false);
+    // onRestore(attackScene?.templates);
+    setIsChanged(false);
+  };
   // console.log('nodes', nodes);
   // console.log('edges', edges);
   if (!isReady) return null;
@@ -828,8 +853,9 @@ export default function AttackBlock({ attackScene, color }) {
           >
             <Panel id="control-panel" position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
               <Button
+                ref={anchorRef}
                 variant="outlined"
-                onClick={() => handleSave(attackScene?.ID)}
+                onClick={handleSave}
                 startIcon={<SaveIcon sx={{ color: isChanged ? '#FF3131' : '#32CD32' }} />}
                 sx={{
                   ...buttonStyle,
@@ -921,6 +947,7 @@ export default function AttackBlock({ attackScene, color }) {
           </div>
         )}
         <Toaster position="top-right" reverseOrder={false} />
+        <AutoSavePopper open={openSave} handleClose={handleCloseSave} anchorRef={anchorRef} handleSave={handleSave} />
       </div>
     </>
   );

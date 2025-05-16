@@ -39,7 +39,7 @@ const Customization = () => {
         ref={buttonRef}
         sx={{
           position: 'fixed',
-          bottom: '2%',
+          bottom: '5mm',
           right: 10,
           zIndex: 1200,
           cursor: 'grab'

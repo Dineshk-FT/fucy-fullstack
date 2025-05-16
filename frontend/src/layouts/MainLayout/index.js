@@ -23,6 +23,7 @@ import { navbarSlide } from '../../store/slices/CurrentIdSlice';
 import HeaderSection from '../../Website/pages/Landing/HeaderSection';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
+import FloatingHelper from '../FloatingHelper';
 
 const selector = (state) => ({
   isCollapsed: state.isCollapsed
@@ -134,6 +135,7 @@ const MainLayout = ({ children }) => {
         <Main theme={theme} open={leftDrawerOpened} isclose={isCollapsed} color={color} draweropenstr={String(leftDrawerOpened)}>
           <Breadcrumbs separator={<ArrowSquareDown size="12" />} navigation={navigation} icon title rightAlign />
           <Customization />
+          <FloatingHelper />
           <Outlet />
         </Main>
       </Box>

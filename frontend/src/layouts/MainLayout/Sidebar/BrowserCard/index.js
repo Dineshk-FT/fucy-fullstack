@@ -232,10 +232,6 @@ const selector = (state) => ({
   getModelById: state.getModelById,
   nodes: state.nodes,
   edges: state.edges,
-  attackNodes: state.attackNodes,
-  attackEdges: state.attackEdges,
-  initialAttackNodes: state.initialAttackNodes,
-  initialAttackEdges: state.initialAttackEdges,
   model: state.model,
   assets: state.assets,
   damageScenarios: state.damageScenarios,
@@ -261,14 +257,14 @@ const selector = (state) => ({
   setNodes: state.setNodes,
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
-  updateAttack: state.updateAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
   setIsNodePasted: state.setIsNodePasted,
   setSelectedThreatIds: state.setSelectedThreatIds,
   isChanged: state.isChanged,
   setIsChanged: state.setIsChanged,
-  setIsAttackChanged: state.setIsAttackChanged
+  isAttackChanged: state.isAttackChanged,
+  setOpenSave: state.setOpenSave
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -281,10 +277,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getModels,
     nodes,
     edges,
-    attackNodes,
-    attackEdges,
-    initialAttackNodes,
-    initialAttackEdges,
     model,
     getModelById,
     assets,
@@ -311,7 +303,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setNodes,
     setEdges,
     getCatalog,
-    updateAttack,
     isDark,
     getGlobalAttackTrees,
     deleteAttacks,
@@ -319,7 +310,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setSelectedThreatIds,
     isChanged,
     setIsChanged,
-    setIsAttackChanged
+    isAttackChanged,
+    setOpenSave
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -464,15 +456,22 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
-  const handleOpenTable = useCallback((e, id, name) => {
-    e.stopPropagation();
-    setClickedItem(id);
-    if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
-      dispatch(setTableOpen(name));
-      dispatch(setTitle(name));
-    }
-    dispatch(setPreviousTab(name));
-  }, []);
+  const handleOpenTable = useCallback(
+    (e, id, name) => {
+      e.stopPropagation();
+      if (isChanged || isAttackChanged) {
+        setOpenSave(true);
+        return;
+      }
+      setClickedItem(id);
+      if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
+        dispatch(setTableOpen(name));
+        dispatch(setTitle(name));
+      }
+      dispatch(setPreviousTab(name));
+    },
+    [isChanged, isAttackChanged]
+  );
 
   const handleTreeItemClick = useCallback((e, handler, ...args) => {
     const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
@@ -486,54 +485,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
-    const prevSceneId = attackScene?.ID;
+    if (isChanged || isAttackChanged) {
+      setOpenSave(true);
+      return;
+    }
     if (name === 'Attack Trees') {
-      if (
-        JSON.stringify(attackNodes) !== JSON.stringify(initialAttackNodes) ||
-        JSON.stringify(attackEdges) !== JSON.stringify(initialAttackEdges)
-      ) {
-        const template = {
-          nodes: attackNodes,
-          edges: attackEdges
-        };
-        const threatNode = attackNodes?.find((node) => node?.type === 'default' && node?.threatId) ?? {};
-        const { threatId = '', damageId = '', key = '' } = threatNode;
-        const details = {
-          modelId: model?._id,
-          type: 'attack_trees',
-          id: prevSceneId,
-          templates: JSON.stringify(template),
-          threatId: threatId ?? '',
-          damageId: damageId ?? '',
-          key: key ?? ''
-        };
-
-        updateAttack(details)
-          .then((res) => {
-            if (!res.error) {
-              // console.log('res', res);
-              notify('Saved Successfully', 'success');
-              getAttackScenario(model?._id);
-              getCyberSecurityScenario(model?._id);
-              setIsAttackChanged(false);
-              setTimeout(() => {
-                dispatch(setAttackScene(scene));
-              }, 300);
-            } else {
-              notify(res?.error ?? 'Something Went Wrong', 'error');
-            }
-          })
-          .catch((err) => {
-            if (err) {
-              notify('Something Went Wrong', 'error');
-            }
-          });
-
-        // handleSave(prevSceneId);
-      } else {
-        dispatch(setAttackScene(scene));
-      }
-      // console.log('later');
+      dispatch(setAttackScene(scene));
       dispatch(setTableOpen('Attack Trees Canvas'));
     }
   };

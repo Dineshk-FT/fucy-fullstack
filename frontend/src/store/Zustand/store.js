@@ -83,6 +83,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   canvasImage: null,
   isChanged: false,
   isAttackChanged: false,
+  openSave: false,
 
   subSystems: {
     id: '6',
@@ -658,6 +659,10 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       isCollapsed: typeof value === 'function' ? value(state.isCollapsed) : value
     })),
+  setOpenSave: (value) =>
+    set((state) => ({
+      openSave: typeof value === 'function' ? value(state.openSave) : value
+    })),
 
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
@@ -835,7 +840,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
       // redoStack: [],
-      isChanged: true,
+      // isChanged: true,
       edges: updatedEdges // set the updated edges
     }));
   },

@@ -64,8 +64,6 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
-  setInitialNodes: state.setInitialNodes,
-  setInitialEdges: state.setInitialEdges,
   selectedNodes: state.selectedNodes,
   setSelectedNodes: state.setSelectedNodes,
   model: state.model,
@@ -87,10 +85,10 @@ const selector = (state) => ({
   setSelectedElement: state.setSelectedElement,
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
-  initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges,
   isChanged: state.isChanged,
-  setIsChanged: state.setIsChanged
+  setIsChanged: state.setIsChanged,
+  openSave: state.openSave,
+  setOpenSave: state.setOpenSave
 });
 
 // Edge line styling
@@ -159,8 +157,6 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
-    setInitialNodes,
-    setInitialEdges,
     selectedNodes,
     setSelectedNodes,
     model,
@@ -183,10 +179,10 @@ export default function MainCanvas() {
     isPropertiesOpen,
     setPropertiesOpen,
     isDark,
-    initialNodes,
-    initialEdges,
     isChanged,
-    setIsChanged
+    setIsChanged,
+    openSave,
+    setOpenSave
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -210,7 +206,6 @@ export default function MainCanvas() {
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [openSave, setOpenSave] = useState(false);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
 
@@ -272,9 +267,6 @@ export default function MainCanvas() {
     if (!isChanged) {
       setNodes([]);
       setEdges([]);
-    }
-    if (isChanged && currentTab === 'assets' && previousTab !== 'assets') {
-      setOpenSave(true);
     }
     setTimeout(() => setIsReady(true), 0);
   }, []);
@@ -424,15 +416,19 @@ export default function MainCanvas() {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
-        setInitialNodes(temp.nodes);
-        setInitialEdges(temp.edges);
       } else {
         handleClear();
       }
       setIsChanged(false);
     },
-    [reactFlowInstance, assets]
+    [reactFlowInstance, assets, isChanged]
   );
+
+  const handleCloseSave = () => {
+    setOpenSave(false);
+    onRestore(assets?.template);
+    setIsChanged(false);
+  };
 
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
@@ -978,7 +974,7 @@ export default function MainCanvas() {
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
       </div>
-      <AutoSavePopper open={openSave} handleClose={() => setOpenSave(false)} anchorRef={anchorRef} handleSave={handleSaveToModel} />
+      <AutoSavePopper open={openSave} handleClose={handleCloseSave} anchorRef={anchorRef} handleSave={handleSaveToModel} />
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );
