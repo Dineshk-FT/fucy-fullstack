@@ -241,10 +241,6 @@ export default function MainCanvas() {
         const imageWidth = Math.min(Math.round(baseWidth * SCALE), maxDimension);
         const imageHeight = Math.min(Math.round(baseHeight * SCALE), maxDimension);
 
-        // Log bounding box and image dimensions for debugging
-        console.log('Bounding Box:', { minX, minY, maxX, maxY, baseWidth, baseHeight });
-        console.log('Image Dimensions:', { imageWidth, imageHeight });
-
         // Calculate transform to fit all content
         const transform = getTransformForBounds(
           { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
@@ -265,18 +261,6 @@ export default function MainCanvas() {
           el.style.fontWeight = '600'; // Bolder for clarity
           el.style.letterSpacing = '0.02em'; // Slight spacing for legibility
           return { element: el, fontSize, fontWeight, letterSpacing };
-        });
-
-        // Log text styles for debugging
-        textElements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          console.log('Text Style:', {
-            fontSize: style.fontSize,
-            fontFamily: style.fontFamily,
-            fontWeight: style.fontWeight,
-            letterSpacing: style.letterSpacing,
-            textRendering: style.textRendering,
-          });
         });
 
         // Ensure all elements are rendered before capture
@@ -325,7 +309,6 @@ export default function MainCanvas() {
 
         setCanvasImage(image);
       } catch (error) {
-        console.error('Error capturing canvas image:', error);
         notify('Failed to capture canvas image', 'error');
       }
     }, 500); // 500ms debounce
@@ -401,6 +384,7 @@ export default function MainCanvas() {
   // Auto-fit canvas view on mount and when nodes/edges change
   useEffect(() => {
     if (reactFlowInstance && nodes.length > 0) {
+      const debouncedFitView = debounce(() => {
         reactFlowInstance.fitView({
           padding: 0.2,
           includeHiddenNodes: true,
@@ -409,8 +393,17 @@ export default function MainCanvas() {
           duration: 500,
         });
         setZoomLevel(reactFlowInstance.getZoom());
+      }, 5000);
+  
+      // Call the debounced function
+      debouncedFitView();
+  
+      // Clean up the debounce on unmount or when dependencies change
+      return () => {
+        debouncedFitView.cancel();
+      };
     }
-  }, [reactFlowInstance, nodes, edges]);
+  }, [reactFlowInstance, nodes, edges, setZoomLevel]);
 
   const onInit = (rf) => {
     setReactFlowInstance(rf);
@@ -694,7 +687,7 @@ export default function MainCanvas() {
         options: ['Copy', 'Paste']
       });
     } else {
-      console.log('No copied node available');
+      notify('No copied node available', 'error');
     }
   };
 
@@ -706,7 +699,7 @@ export default function MainCanvas() {
 
     if (option === 'Paste') {
       if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
-        console.error('No valid copied node found');
+        notify('No valid copied node found', 'error');
         return;
       }
 
