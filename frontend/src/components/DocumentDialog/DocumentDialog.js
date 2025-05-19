@@ -90,12 +90,12 @@ const DocumentDialog = ({ open, onClose }) => {
           const blob = await fetch(canvasImage).then((res) => res.blob());
           formData.append('image', blob, 'itemModelImage.png');
         } catch (error) {
-          console.error('Error converting canvas image to blob:', error);
+          notify('Error converting canvas image to blob:', error);
           setIsGenerating(false);
           return;
         }
       } else {
-        console.warn('No canvas image available for Item Definition');
+        notify('No canvas image available for Item Definition');
         setIsGenerating(false);
         return;
       }
