@@ -37,22 +37,8 @@ import { shallow } from 'zustand/shallow';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
 import Joyride from 'react-joyride';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { canvasSteps } from '../../utils/Steps';
 
-const steps = [
-  {
-    target: '#control-panel',
-    content: 'Save, restore or download the diagram with the help of Control panel.',
-    disableBeacon: true
-  },
-  {
-    target: '#controls',
-    content: 'Zoom In & out and centering can be done with the controls.'
-  },
-  {
-    target: '.react-flow__minimap',
-    content: 'You can see the overall circuit with the help of mini-map .'
-  }
-];
 // Define the selector function for Zustand
 const selector = (state) => ({
   nodes: state.nodes,
@@ -776,7 +762,7 @@ export default function MainCanvas() {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={canvasSteps}
         run={runTour}
         continuous
         scrollToFirstStep

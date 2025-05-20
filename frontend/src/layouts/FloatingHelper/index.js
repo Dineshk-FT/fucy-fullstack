@@ -99,7 +99,6 @@ const FloatingHelper = () => {
   const buttonRef = useRef(null); // Reference for Popper positioning
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [questionAnchor, setQuestionAnchor] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleToggle = (e) => {
     // e.stopProgation();
@@ -197,7 +196,7 @@ const FloatingHelper = () => {
       {/* Popper for chatbot messages */}
       <Popper open={open} anchorEl={buttonRef.current} placement="left-start" sx={{ zIndex: 1300 }}>
         <ClickAwayListener onClickAway={() => setOpen(false)}>
-          <Paper sx={{ p: 2, width: 300, bgcolor: 'background.paper', boxShadow: 3, borderRadius: 2 }}>
+          <Paper sx={{ p: 2, width: 350, bgcolor: 'background.paper', boxShadow: 3, borderRadius: 2 }}>
             <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
               How can I help?
             </Typography>
@@ -208,28 +207,38 @@ const FloatingHelper = () => {
           </Paper>
         </ClickAwayListener>
       </Popper>
-      <Popper open={Boolean(selectedQuestion)} anchorEl={questionAnchor} placement="top-start" sx={{ zIndex: 1400 }}>
+      <Popper
+        open={Boolean(selectedQuestion)}
+        anchorEl={questionAnchor}
+        placement="top-start"
+        modifiers={[
+          {
+            name: 'offset',
+            options: {
+              offset: [-10, 0] // [horizontal, vertical] — adjust this value as needed
+            }
+          }
+        ]}
+        sx={{ zIndex: 1400 }}
+      >
         <ClickAwayListener
           onClickAway={() => {
-            if (!isDragging) handleCloseGifPopper();
+            handleCloseGifPopper();
           }}
         >
-          <Draggable cancel="img,button" onStart={() => setIsDragging(true)} onStop={() => setIsDragging(false)}>
-            <Paper
-              sx={{
-                p: 1,
-                maxWidth: 300,
-                cursor: 'move',
-                borderRadius: 1,
-                bgcolor: 'background.paper'
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {selectedQuestion?.label}
-              </Typography>
-              <Box component="img" src={selectedQuestion?.gif} alt={selectedQuestion?.label} sx={{ width: '100%', borderRadius: 1 }} />
-            </Paper>
-          </Draggable>
+          <Paper
+            sx={{
+              p: 1,
+              maxWidth: 300,
+              borderRadius: 1,
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              {selectedQuestion?.label}
+            </Typography>
+            <Box component="img" src={selectedQuestion?.gif} alt={selectedQuestion?.label} sx={{ width: '100%', borderRadius: 1 }} />
+          </Paper>
         </ClickAwayListener>
       </Popper>
     </>

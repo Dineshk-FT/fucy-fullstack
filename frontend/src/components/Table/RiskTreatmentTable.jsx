@@ -42,42 +42,8 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { tableHeight } from '../../themes/constant';
 import SelectCatalog from '../Modal/SelectCatalog';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { riskSteps } from '../../utils/Steps';
 
-const steps = [
-  {
-    target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
-    disableBeacon: true
-  },
-  {
-    target: '#drag_drop',
-    content: 'Drag a threat scenario and drop in the table to view the details.'
-  },
-  {
-    target: '#filter-columns-btn',
-    content: 'Click here to select which columns to display in the table.'
-  },
-  {
-    target: '#delete-scenario',
-    content: 'Click the Sno column to select the rows to be deleted.'
-  },
-  {
-    target: '.resize-handle',
-    content: 'Drag these handles to adjust column widths for better visibility.'
-  },
-  {
-    target: '#select-catalogs',
-    content: 'Click here to select the catalogs.'
-  },
-  {
-    target: '#select-claims',
-    content: 'Click here to select the Cybersecurity Claims from the saved list.'
-  },
-  {
-    target: '#select-goals',
-    content: 'Click here to select the Cybersecurity Goals from the saved list.'
-  }
-];
 const selector = (state) => ({
   model: state.model,
   getModel: state.getModelById,
@@ -611,7 +577,7 @@ export default function RiskTreatmentTable() {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={riskSteps}
         run={runTour}
         continuous
         scrollToFirstStep

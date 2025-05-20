@@ -231,6 +231,7 @@ iframe#webpack-dev-server-client-overlay {
     box-shadow: 0px 0px 4px 2px #90caf9;
 } */
 
-.joyride-active {
-  overflow-x: auto !important;
+.react-joyride__tooltip {
+  max-width: 300px; /* or whatever suits your layout */
+  word-break: break-word;
 }

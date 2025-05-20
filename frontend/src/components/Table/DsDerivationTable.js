@@ -30,30 +30,7 @@ import { tableHeight } from '../../themes/constant';
 import { DsDerivationHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-
-const steps = [
-  {
-    target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
-    disableBeacon: true
-  },
-  {
-    target: '#filter-columns-btn',
-    content: 'Click here to select which columns to display in the table.'
-  },
-  {
-    target: '#column-header',
-    content: 'Click the checkbox to select/deselect all rows. Drag column edges to resize.'
-  },
-  {
-    target: '.resize-handle',
-    content: 'Drag these handles to adjust column widths for better visibility.'
-  },
-  {
-    target: '#checklist-header',
-    content: 'Use checkboxes to select individual rows or select all using the header checkbox.'
-  }
-];
+import { DsDerivedSteps } from '../../utils/Steps';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -300,7 +277,7 @@ export default function DsDerivationTable() {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={DsDerivedSteps}
         run={runTour}
         continuous
         scrollToFirstStep

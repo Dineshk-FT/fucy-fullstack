@@ -42,30 +42,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import toast from 'react-hot-toast';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-
-const steps = [
-  {
-    target: '#add-btn',
-    content: 'Click  here to add new attack to the table.',
-    disableBeacon: true
-  },
-  {
-    target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.'
-  },
-  {
-    target: '#filter-columns-btn',
-    content: 'Click here to select which columns to display in the table.'
-  },
-  {
-    target: '.resize-handle',
-    content: 'Drag these handles to adjust column widths for better visibility.'
-  },
-  {
-    target: '#select-value',
-    content: 'The cells with the select Value can be selected by clicking the cell and selecting the value in the list.'
-  }
-];
+import { attackTableSteps } from '../../utils/Steps';
 
 const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
@@ -518,7 +495,7 @@ export default function AttackTreeTable() {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={attackTableSteps}
         run={runTour}
         continuous
         scrollToFirstStep

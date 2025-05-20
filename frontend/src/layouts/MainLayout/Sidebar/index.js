@@ -19,47 +19,7 @@ import { getNavbarHeight } from '../../../themes/constant';
 import ColorTheme from '../../../themes/ColorTheme';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Joyride from 'react-joyride';
-
-const steps = [
-  {
-    target: '#item-definition',
-    content:
-      'You can add Components & Data  by clicking the add icon when you move the mouse over the components and Data and assign properties for them.',
-    disableBeacon: true
-  },
-  {
-    target: '#damage-scene',
-    content: 'The Damage scenes are created by the properties of Components, Data & Connectors Properties that we choose.'
-  },
-  {
-    target: '#threat-scene',
-    content:
-      'By adding cyberlosses in the "Damage scenario - impact Ratings" table these scenarios are created, you can select and derive them to make derived scenarios.'
-  },
-  {
-    target: '#attack-scene',
-    content:
-      'These shows the possible attacks and attack trees based on the threat scenes. we can add them by simply move the mouse above the attack or attack to see the add icon and you can also add attack templates from the global trees.'
-  },
-  {
-    target: '#cybersecurity',
-    content:
-      'These part will showcase the Goals, claims, controls &Requirements that can be used in the attack trees and in the risk treatment. '
-  },
-  {
-    target: '#catalog',
-    content: 'Here you can refer the UNICE standards .'
-  },
-  {
-    target: '#risk-treatment',
-    content:
-      'This will be the final outcome from the threat scenarios and the othres connected with them. You can simply drag & drop a threat scenario to see the results.'
-  },
-  {
-    target: '#reporting',
-    content: 'Here You can download the desired data in a PDF format.'
-  }
-];
+import { sidebarSteps } from '../../../utils/Steps';
 
 export const ToasterContext = createContext();
 
@@ -177,7 +137,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={sidebarSteps}
         run={runTour}
         continuous
         scrollToFirstStep

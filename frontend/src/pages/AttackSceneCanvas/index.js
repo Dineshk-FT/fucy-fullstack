@@ -21,34 +21,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import Joyride from 'react-joyride';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
-
-const steps = [
-  {
-    target: '#control-panel',
-    content: 'You can Save, restore or Align the diagram with the help of Control panel.',
-    disableBeacon: true
-  },
-  {
-    target: '.react-flow__controls',
-    content: 'Zoom In & out and centering can be done with the controls.'
-  },
-  {
-    target: '.react-flow__minimap',
-    content: 'You can see the overall circuit with the help of mini-map .'
-  },
-  {
-    target: '#resize-handle',
-    content: 'You can resize the canvas for better visibility.'
-  },
-  {
-    target: '#attack-tree',
-    content: 'You can drag and drop the event or other gates into the canvas.'
-  },
-  {
-    target: '#global-tree',
-    content: 'You can drag and drop a whole template of pre-saved attacks from the global library.'
-  }
-];
+import { attackCanvasSteps } from '../../utils/Steps';
 
 const elk = new ELK();
 
@@ -804,7 +777,7 @@ export default function AttackBlock({ attackScene, color }) {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={attackCanvasSteps}
         run={runTour}
         continuous
         scrollToFirstStep

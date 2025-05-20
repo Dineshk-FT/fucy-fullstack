@@ -22,7 +22,6 @@ const AttackTree = () => {
   const color = ColorTheme();
   const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector, shallow);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
-  const dispatch = useDispatch();
 
   // State to track the split percentage (0-100)
   const [splitPercentage, setSplitPercentage] = useState(75); // Initial 75% for left panel

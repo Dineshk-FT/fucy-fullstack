@@ -33,41 +33,6 @@ import {
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
-const steps = [
-  {
-    target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
-    disableBeacon: true
-  },
-  {
-    target: '#filter-columns-btn',
-    content: 'Click here to select which columns to display in the table.'
-  },
-  {
-    target: '.resize-handle',
-    content: 'Drag these handles to adjust column widths for better visibility.'
-  },
-  {
-    target: '#add-scenario',
-    content: 'Click to add a new scenario to the table directly, You can fill the name and description and click the tick to add new row'
-  },
-  {
-    target: '#delete-scenario',
-    content: 'Click the Sno column to select the rows to be deleted.'
-  },
-  {
-    target: '#column-editer',
-    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.'
-  },
-  {
-    target: '#select-losses',
-    content: 'Click here to select the cyberecurity losses.'
-  },
-  {
-    target: '#select-impacts',
-    content: 'Click here to assign the impacts for the scene.'
-  }
-];
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import SelectLosses from '../Modal/SelectLosses';
@@ -82,6 +47,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { DsSteps } from '../../utils/Steps';
 
 const selector = (state) => ({
   model: state.model,
@@ -858,7 +824,7 @@ export default function DsTable() {
   return (
     <>
       <Joyride
-        steps={steps}
+        steps={DsSteps}
         run={runTour}
         continuous
         scrollToFirstStep

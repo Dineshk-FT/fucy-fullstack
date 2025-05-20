@@ -47,7 +47,10 @@ const selector = (state) => ({
   isCollapsed: state.isCollapsed,
   setCollapsed: state.setCollapsed,
   exportProject: state.exportProject,
-  importProject: state.importProject
+  importProject: state.importProject,
+  isChanged: state.isChanged,
+  isAttackChanged: state.isAttackChanged,
+  setOpenSave: state.setOpenSave
 });
 
 const LeftSection = () => {
@@ -66,7 +69,10 @@ const LeftSection = () => {
     isCollapsed,
     setCollapsed,
     exportProject,
-    importProject
+    importProject,
+    isChanged,
+    isAttackChanged,
+    setOpenSave
   } = useStore(selector, shallow);
 
   const [activeTab, setActiveTab] = useState('Project');
@@ -179,6 +185,10 @@ const LeftSection = () => {
 
   const handleTabChange = useCallback(
     (tabName) => {
+      if (isChanged || isAttackChanged) {
+        setOpenSave(true);
+        return;
+      }
       dispatch(setPreviousTab(tabName));
       setActiveTab(tabName);
       const actions = {
@@ -191,7 +201,7 @@ const LeftSection = () => {
       };
       actions[tabName]?.();
     },
-    [dispatch]
+    [dispatch, isChanged, isAttackChanged]
   );
 
   const handleToggleCollapse = useCallback(() => {
@@ -213,12 +223,16 @@ const LeftSection = () => {
 
   const handleClick = useCallback(
     (name, number) => {
+      if (isChanged || isAttackChanged) {
+        setOpenSave(true);
+        return;
+      }
       setClickedItem(number);
       dispatch(setPreviousTab(name));
       dispatch(setTitle(name));
       dispatch(setTableOpen(name));
     },
-    [dispatch, setClickedItem]
+    [dispatch, setClickedItem, isChanged, isAttackChanged]
   );
 
   const handleModelDefinationClick = useCallback(() => {
