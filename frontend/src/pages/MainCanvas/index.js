@@ -173,6 +173,7 @@ export default function MainCanvas() {
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
+  const { fitView: fitViewDirect } = useReactFlow(); // Added useReactFlow hook to get fitView directly
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
@@ -349,6 +350,18 @@ export default function MainCanvas() {
     update(details)
       .then((res) => {
         if (!res.error) {
+          const debouncedFitView = debounce(() => {
+            reactFlowInstance.fitView({
+              padding: 0.2,
+              includeHiddenNodes: true,
+              minZoom: 0.2,
+              maxZoom: 2,
+              duration: 500,
+            });
+            setZoomLevel(reactFlowInstance.getZoom());
+          });
+
+          debouncedFitView();
           notify('Saved Successfully', 'success');
           handleClose();
           RefreshAPI();
@@ -382,28 +395,26 @@ export default function MainCanvas() {
   }, [assets]);
 
   // Auto-fit canvas view on mount and when nodes/edges change
-  useEffect(() => {
-    if (reactFlowInstance && nodes.length > 0) {
-      const debouncedFitView = debounce(() => {
-        reactFlowInstance.fitView({
-          padding: 0.2,
-          includeHiddenNodes: true,
-          minZoom: 0.2,
-          maxZoom: 2,
-          duration: 500,
-        });
-        setZoomLevel(reactFlowInstance.getZoom());
-      }, 5000);
-  
-      // Call the debounced function
-      debouncedFitView();
-  
-      // Clean up the debounce on unmount or when dependencies change
-      return () => {
-        debouncedFitView.cancel();
-      };
-    }
-  }, [reactFlowInstance, nodes, edges, setZoomLevel]);
+  // useEffect(() => {
+  //   if (reactFlowInstance && nodes.length > 0) {
+  //     const debouncedFitView = debounce(() => {
+  //       reactFlowInstance.fitView({
+  //         padding: 0.2,
+  //         includeHiddenNodes: true,
+  //         minZoom: 0.2,
+  //         maxZoom: 2,
+  //         duration: 500,
+  //       });
+  //       setZoomLevel(reactFlowInstance.getZoom());
+  //     }, 5000);
+
+  //     debouncedFitView();
+
+  //     return () => {
+  //       debouncedFitView.cancel();
+  //     };
+  //   }
+  // }, [reactFlowInstance, nodes, edges, setZoomLevel]);
 
   const onInit = (rf) => {
     setReactFlowInstance(rf);
@@ -731,13 +742,13 @@ export default function MainCanvas() {
           isCopied: true,
           position: targetGroup
             ? {
-                x: pastePosition.x - (targetGroup.positionAbsolute?.x ?? targetGroup.position.x),
-                y: pastePosition.y - (targetGroup.positionAbsolute?.y ?? targetGroup.position.y)
-              }
+              x: pastePosition.x - (targetGroup.positionAbsolute?.x ?? targetGroup.position.x),
+              y: pastePosition.y - (targetGroup.positionAbsolute?.y ?? targetGroup.position.y)
+            }
             : {
-                x: pastePosition.x,
-                y: pastePosition.y
-              },
+              x: pastePosition.x,
+              y: pastePosition.y
+            },
           parentId: targetGroup ? targetGroup.id : undefined,
           extent: targetGroup ? 'parent' : undefined,
           selected: false
