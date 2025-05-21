@@ -1917,6 +1917,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
+  deleteGlobalAttackTrees: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/globalAttackTree`;
+    const res = await DELETE_CALL(details, url);
+    return res;
+  },
 
   deleteCybersecurity: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/cybersecurity`;

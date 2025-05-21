@@ -10,19 +10,27 @@ import ColorTheme from '../../themes/ColorTheme';
 import useStore from '../../store/Zustand/store';
 import GlobalAttackTreeList from './GlobalAttackTreeList';
 import { shallow } from 'zustand/shallow';
+import toast from 'react-hot-toast';
+import PromptModal from '../../components/Modal/PromptModal';
 
 const selector = (state) => ({
   model: state.model,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   isCollapsed: state.isCollapsed,
-  globalAttackTrees: state.globalAttackTrees
+  globalAttackTrees: state.globalAttackTrees,
+  deleteGlobal: state.deleteGlobalAttackTrees,
+  getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 
 const AttackTree = () => {
   const color = ColorTheme();
-  const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees } = useStore(selector, shallow);
+  const { model, getCyberSecurityScenario, isCollapsed, globalAttackTrees, deleteGlobal, getGlobalAttackTrees } = useStore(
+    selector,
+    shallow
+  );
+  const [openModal, setOpenModal] = useState(false);
   const { attackScene, isLevelOpen } = useSelector((state) => state?.currentId);
-
+  const notify = (message, status) => toast[status](message);
   // State to track the split percentage (0-100)
   const [splitPercentage, setSplitPercentage] = useState(75); // Initial 75% for left panel
   const [isResizing, setIsResizing] = useState(false);
@@ -37,6 +45,22 @@ const AttackTree = () => {
 
   const handleResizeStop = () => {
     setIsResizing(false);
+  };
+
+  const onDelete = (id) => {
+    deleteGlobal({ 'attack-id': id })
+      .then((res) => {
+        if (!res.error) {
+          // console.log('res', res);
+          notify(res.message ?? 'Deleted Successfully', 'success');
+          getGlobalAttackTrees(model?._id);
+        } else {
+          notify(res.error, 'error');
+        }
+      })
+      .catch((err) => {
+        notify('Something went wrong', 'error');
+      });
   };
 
   return (
@@ -89,7 +113,7 @@ const AttackTree = () => {
               }}
             >
               <Properties color={color} />
-              <GlobalAttackTreeList globalAttackTrees={globalAttackTrees} />
+              <GlobalAttackTreeList globalAttackTrees={globalAttackTrees} onDelete={onDelete} onAdd={() => setOpenModal(true)} />
             </Box>
 
             {/* Invisible resize tracker */}
@@ -120,6 +144,7 @@ const AttackTree = () => {
           </Box>
         </Paper>
       </Box>
+      {openModal && <PromptModal open={openModal} handleClose={() => setOpenModal(false)} />}
     </>
   );
 };
