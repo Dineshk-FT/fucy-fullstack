@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react';
+/*eslint-disable*/
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -16,26 +17,44 @@ import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import ColorTheme from '../../themes/ColorTheme';
 import PaperComponent from './PaperComponent';
+import {
+  CyberClaimsIcon,
+  CyberControlsIcon,
+  CyberGoalIcon,
+  CyberRequireIcon,
+} from '../../assets/icons';
 import DialogCommonTitle from './DialogCommonTitle';
-import { ThreatIcon } from '../../assets/icons';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const selector = (state) => ({
-  addScene: state.addThreatScene,
-  getThreatScenario: state.getThreatScenario,
+  addScene: state.addcybersecurityScene,
+  model: state.model,
+  getCyberSecurityScenario: state.getCyberSecurityScenario,
 });
 
-export default React.memo(function AddThreatScenarios({ open, handleClose, id }) {
+const notify = (message, status) => toast[status](message);
+
+export default React.memo(function AddCyberSecurityModal({ open, handleClose, name, id, type }) {
   const color = ColorTheme();
-  const { addScene, getThreatScenario } = useStore(selector, shallow);
+  const { addScene, model, getCyberSecurityScenario } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
-    name: '',
+    Name: '',
     Description: '',
   });
   const [loading, setLoading] = useState(false);
+
+  const CommonIcon = useMemo(() => {
+    const getIcon = {
+      'Cybersecurity Goals': CyberGoalIcon,
+      'Cybersecurity Requirements': CyberRequireIcon,
+      'Cybersecurity Controls': CyberControlsIcon,
+      'Cybersecurity Claims': CyberClaimsIcon,
+    };
+    return getIcon[name] || CyberGoalIcon;
+  }, [name]);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -43,34 +62,37 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!templateDetails.name.trim()) {
-      toast.error('Name is required');
+    if (!templateDetails.Name.trim()) {
+      notify('Name is required', 'error');
       return;
     }
 
     setLoading(true);
     const details = {
-      name: templateDetails.name.trim(),
-      Description: templateDetails.Description.trim(),
-      'model-id': id,
+      modelId: model?._id,
+      type,
+      name: templateDetails.Name.trim(),
+      description: templateDetails.Description.trim(),
     };
 
     addScene(details)
       .then((res) => {
-        if (res) {
-          toast.success(res?.message ?? 'Threat scenario created');
-          getThreatScenario(id);
-          setTemplateDetails({ name: '', Description: '' });
+        if (!res.error) {
+          getCyberSecurityScenario(model?._id);
+          notify(res.message ?? 'Created successfully', 'success');
+          setTemplateDetails({ Name: '', Description: '' });
           handleClose();
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
         }
       })
       .catch(() => {
-        toast.error('Something went wrong');
+        notify('Something went wrong', 'error');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [addScene, getThreatScenario, id, templateDetails, handleClose]);
+  }, [addScene, getCyberSecurityScenario, model?._id, templateDetails, handleClose, type]);
 
   return (
     <>
@@ -80,8 +102,8 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
         keepMounted
         onClose={handleClose}
         PaperComponent={PaperComponent}
-        aria-labelledby="add-threat-scenario-dialog-title"
-        aria-describedby="add-threat-scenario-dialog-description"
+        aria-labelledby="add-cybersecurity-dialog-title"
+        aria-describedby="add-cybersecurity-dialog-description"
         maxWidth="sm"
         sx={{
           '& .MuiPaper-root': {
@@ -91,17 +113,17 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
           },
         }}
       >
-        <DialogCommonTitle icon={ThreatIcon} title="Add Threat Scenario" />
+        <DialogCommonTitle icon={CommonIcon} title={`Add ${name}`} />
         <DialogContent sx={{ p: 2 }}>
-          <DialogContentText id="add-threat-scenario-dialog-description">
+          <DialogContentText id="add-cybersecurity-dialog-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
                 <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
                   Name
                 </FormLabel>
                 <TextField
-                  name="name"
-                  value={templateDetails.name}
+                  name="Name"
+                  value={templateDetails.Name}
                   onChange={handleChange}
                   variant="outlined"
                   placeholder="Enter name"
@@ -147,7 +169,7 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
             variant="contained"
             color="primary"
             onClick={handleCreate}
-            disabled={loading || !templateDetails.name.trim()}
+            disabled={loading || !templateDetails.Name.trim()}
             sx={{ textTransform: 'none', minWidth: '80px' }}
             startIcon={loading && <CircularProgress size={16} />}
           >

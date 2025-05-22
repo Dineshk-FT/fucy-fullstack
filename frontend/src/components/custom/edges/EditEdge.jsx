@@ -5,16 +5,12 @@ import {
   Avatar,
   Box,
   Button,
-  Checkbox,
   Chip,
   ClickAwayListener,
-  FormControlLabel,
   Grid,
   InputLabel,
-  MenuItem,
   Paper,
   Popper,
-  Select,
   Tab,
   Tabs,
   TextField
@@ -64,6 +60,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [tabValue, setTabValue] = useState(0);
 
+  console.log('selectedBlock', selectedBlock);
   // Improved update function using functional update
   const updateEdge = (updates) => {
     setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? { ...edge, ...updates } : edge)));
@@ -91,8 +88,11 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
 
     if (name === 'startPoint' || name === 'endPoint') {
       const markerType = name === 'startPoint' ? 'markerStart' : 'markerEnd';
+      const defaultMarker = { type: 'arrow', color: '#000000' }; // Ensure type is defined
+
       updates = {
         [markerType]: {
+          ...defaultMarker,
           ...selectedBlock?.[markerType],
           color: value
         }
@@ -274,4 +274,4 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   );
 };
 
-export default EditEdge;
+export default React.memo(EditEdge);

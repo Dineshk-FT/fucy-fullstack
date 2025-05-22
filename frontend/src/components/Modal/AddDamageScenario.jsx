@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, { useCallback, useState } from 'react';
 import {
   Dialog,
@@ -16,24 +17,26 @@ import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import ColorTheme from '../../themes/ColorTheme';
 import PaperComponent from './PaperComponent';
+import { DamageIcon } from '../../assets/icons';
 import DialogCommonTitle from './DialogCommonTitle';
-import { ThreatIcon } from '../../assets/icons';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const selector = (state) => ({
-  addScene: state.addThreatScene,
-  getThreatScenario: state.getThreatScenario,
+  addDamageScene: state.addDamageScene,
+  getDamageScenarios: state.getDamageScenarios,
 });
 
-export default React.memo(function AddThreatScenarios({ open, handleClose, id }) {
+const notify = (message, status) => toast[status](message);
+
+export default React.memo(function AddDamageScenarios({ open, handleClose, model, rows }) {
   const color = ColorTheme();
-  const { addScene, getThreatScenario } = useStore(selector, shallow);
+  const { addDamageScene, getDamageScenarios } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
-    name: '',
-    Description: '',
+    Name: '',
+    'Description/ Scalability': '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -43,34 +46,36 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!templateDetails.name.trim()) {
-      toast.error('Name is required');
+    if (!templateDetails.Name.trim()) {
+      notify('Name is required', 'error');
       return;
     }
 
     setLoading(true);
     const details = {
-      name: templateDetails.name.trim(),
-      Description: templateDetails.Description.trim(),
-      'model-id': id,
+      'model-id': model?._id,
+      Name: templateDetails.Name.trim(),
+      Description: templateDetails['Description/ Scalability'].trim(),
     };
 
-    addScene(details)
+    addDamageScene(details)
       .then((res) => {
-        if (res) {
-          toast.success(res?.message ?? 'Threat scenario created');
-          getThreatScenario(id);
-          setTemplateDetails({ name: '', Description: '' });
+        if (res.message) {
+          notify(res.message, 'success');
+          getDamageScenarios(model?._id);
+          setTemplateDetails({ Name: '', 'Description/ Scalability': '' });
           handleClose();
+        } else {
+          notify('Something went wrong', 'error');
         }
       })
       .catch(() => {
-        toast.error('Something went wrong');
+        notify('Something went wrong', 'error');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [addScene, getThreatScenario, id, templateDetails, handleClose]);
+  }, [addDamageScene, getDamageScenarios, model?._id, templateDetails, handleClose]);
 
   return (
     <>
@@ -80,8 +85,8 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
         keepMounted
         onClose={handleClose}
         PaperComponent={PaperComponent}
-        aria-labelledby="add-threat-scenario-dialog-title"
-        aria-describedby="add-threat-scenario-dialog-description"
+        aria-labelledby="add-damage-scenario-dialog-title"
+        aria-describedby="add-damage-scenario-dialog-description"
         maxWidth="sm"
         sx={{
           '& .MuiPaper-root': {
@@ -91,17 +96,17 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
           },
         }}
       >
-        <DialogCommonTitle icon={ThreatIcon} title="Add Threat Scenario" />
+        <DialogCommonTitle icon={DamageIcon} title="Add Damage Scenario" />
         <DialogContent sx={{ p: 2 }}>
-          <DialogContentText id="add-threat-scenario-dialog-description">
+          <DialogContentText id="add-damage-scenario-dialog-description">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
                 <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
                   Name
                 </FormLabel>
                 <TextField
-                  name="name"
-                  value={templateDetails.name}
+                  name="Name"
+                  value={templateDetails.Name}
                   onChange={handleChange}
                   variant="outlined"
                   placeholder="Enter name"
@@ -117,8 +122,8 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
                   Description
                 </FormLabel>
                 <TextField
-                  name="Description"
-                  value={templateDetails.Description}
+                  name="Description/ Scalability"
+                  value={templateDetails['Description/ Scalability']}
                   onChange={handleChange}
                   variant="outlined"
                   placeholder="Enter description"
@@ -147,7 +152,7 @@ export default React.memo(function AddThreatScenarios({ open, handleClose, id })
             variant="contained"
             color="primary"
             onClick={handleCreate}
-            disabled={loading || !templateDetails.name.trim()}
+            disabled={loading || !templateDetails.Name.trim()}
             sx={{ textTransform: 'none', minWidth: '80px' }}
             startIcon={loading && <CircularProgress size={16} />}
           >

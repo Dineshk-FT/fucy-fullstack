@@ -22,7 +22,7 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen
 });
 
-export default function DefaultNode({ id, data, isConnectable, type }) {
+export default React.memo(function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector, shallow);
@@ -41,7 +41,6 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
   const isSelected = checkSelection();
 
   // console.log('isSelected', isSelected);
-
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   useEffect(() => {
     setLabelValue(data?.label || '');
@@ -120,18 +119,18 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     }
   };
 
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'F3' && isSelected) {
-        setIsEditing(true);
-      }
-    };
+  // useEffect(() => {
+  //   const handleKeyPress = (e) => {
+  //     if (e.key === 'F3' && isSelected) {
+  //       setIsEditing(true);
+  //     }
+  //   };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [id, selectedBlock]);
+  //   window.addEventListener('keydown', handleKeyPress);
+  //   return () => {
+  //     window.removeEventListener('keydown', handleKeyPress);
+  //   };
+  // }, [id, selectedBlock]);
 
   useEffect(() => {
     if (isEditing && labelRef.current) {
@@ -144,7 +143,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
     }
   }, [isEditing]);
 
-  const handleInfoClick = () => {
+  const handleInfoClick = (e) => {
     setPropertiesOpen(false);
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
@@ -159,6 +158,7 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
       })
     );
   };
+  // console.log('setSelectedBlock', setSelectedBlock);
 
   const handleDetailClick = () => {
     setPropertiesOpen(true);
@@ -385,4 +385,4 @@ export default function DefaultNode({ id, data, isConnectable, type }) {
       </Dialog>
     </>
   );
-}
+});

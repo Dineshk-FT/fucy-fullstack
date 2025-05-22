@@ -1,8 +1,10 @@
-/*eslint-disable*/
+/* eslint-disable */
 import React, { useCallback, useMemo } from 'react';
-import { Autocomplete, Chip, InputLabel, TextField, Box, Popper, Paper, ClickAwayListener, Button, Avatar } from '@mui/material';
-import { fontSize } from '../../themes/constant';
+import { Autocomplete, Avatar, Box, Button, Chip, ClickAwayListener, InputLabel, Paper, Popper, TextField } from '@mui/material';
 import { useSelector, batch } from 'react-redux';
+import toast from 'react-hot-toast';
+import ColorTheme from '../../themes/ColorTheme';
+import { fontSize } from '../../themes/constant';
 import {
   ConfidentialityIcon,
   IntegrityIcon,
@@ -12,97 +14,147 @@ import {
   AvailabilityIcon
 } from '../../assets/icons';
 
+const PROPERTY_OPTIONS = [
+  { name: 'Confidentiality', image: ConfidentialityIcon },
+  { name: 'Integrity', image: IntegrityIcon },
+  { name: 'Authenticity', image: AuthenticityIcon },
+  { name: 'Authorization', image: AuthorizationIcon },
+  { name: 'Non-repudiation', image: Non_repudiationIcon },
+  { name: 'Availability', image: AvailabilityIcon }
+];
+
 const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, dispatch, handleSaveEdit, setNodes, setEdges }) => {
-  const { selectedBlock } = useSelector((state) => state?.canvas);
-  const Properties = useMemo(
-    () => [
-      { name: 'Confidentiality', image: ConfidentialityIcon },
-      { name: 'Integrity', image: IntegrityIcon },
-      { name: 'Authenticity', image: AuthenticityIcon },
-      { name: 'Authorization', image: AuthorizationIcon },
-      { name: 'Non-repudiation', image: Non_repudiationIcon },
-      { name: 'Availability', image: AvailabilityIcon }
-    ],
-    []
-  );
+  const color = ColorTheme();
+  const { selectedBlock } = useSelector((state) => state.canvas);
+
   const updateElement = useCallback(
     (updateFn) => {
-      if (!selectedBlock?.id.includes('reactflow__edge')) {
-        setNodes((prevNodes) => prevNodes.map((node) => (node?.id === selectedBlock?.id ? updateFn(node) : node)));
-      } else {
-        setEdges((prevEdges) => prevEdges.map((edge) => (edge?.id === selectedBlock?.id ? updateFn(edge) : edge)));
-      }
+      const updater = selectedBlock?.id.includes('reactflow__edge') ? setEdges : setNodes;
+      updater((prev) => prev.map((item) => (item?.id === selectedBlock?.id ? updateFn(item) : item)));
     },
-    [selectedBlock?.id]
+    [selectedBlock?.id, setNodes, setEdges]
   );
 
-  // console.log('edges', edges);
+  const selectedValues = useMemo(
+    () => details?.properties?.map((prop) => PROPERTY_OPTIONS.find((p) => p.name === prop) || { name: prop }) || [],
+    [details?.properties]
+  );
 
   const handleChange = useCallback(
     (event, newValue) => {
-      const updatedProperties = newValue.map((prop) => prop.name);
-
-      // Only update if properties actually changed
-      if (JSON.stringify(details.properties) !== JSON.stringify(updatedProperties)) {
-        batch(() => {
-          dispatch(setDetails({ ...details, properties: updatedProperties }));
-          updateElement((element) => ({ ...element, properties: updatedProperties }));
-        });
-      }
+      event.stopPropagation();
+      const updatedProps = newValue.map((prop) => prop.name);
+      batch(() => {
+        dispatch(setDetails({ ...details, properties: updatedProps }));
+        updateElement((el) => ({ ...el, properties: updatedProps }));
+      });
     },
-    [details, dispatch, updateElement]
+    [details, dispatch, updateElement, setNodes]
   );
-  // Memoize the Autocomplete component's value
-  const autocompleteValue = useMemo(() => {
-    return details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || [];
-  }, [details?.properties]);
+
+  const handleSave = useCallback(
+    (e) => {
+      if (!details?.properties?.length) {
+        toast.error('At least one property is required');
+        return;
+      }
+      handleSaveEdit(e);
+    },
+    [details?.properties, handleSaveEdit]
+  );
+
+  const renderOption = (props, option) => (
+    <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: '4px' }}>
+      <Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />
+      {option?.name}
+    </Box>
+  );
+
+  const renderTags = (value, getTagProps) =>
+    value.map((option, index) => (
+      <Chip
+        key={option?.name}
+        avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 16, height: 16 }} />}
+        variant="outlined"
+        label={option?.name}
+        {...getTagProps({ index })}
+        sx={{
+          fontSize: '12px',
+          height: '24px',
+          bgcolor: color.inputBg,
+          borderColor: color.border
+        }}
+      />
+    ));
 
   return (
     <Popper
       open={Boolean(anchorEl)}
       anchorEl={anchorEl}
       placement="bottom-start"
-      sx={{ width: 250, boxShadow: '0px 0px 4px black', borderRadius: '8px', zIndex: 1200 }}
+      sx={{
+        width: '300px',
+        maxWidth: '90vw',
+        zIndex: 1300,
+        borderRadius: 2,
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+      }}
     >
       <ClickAwayListener onClickAway={handleClosePopper}>
-        <Paper sx={{ padding: 1, display: 'flex', flexDirection: 'column', gap: 1, alignContent: 'center' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <Paper
+          sx={{
+            p: 2,
+            bgcolor: color.modalBg,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2
+          }}
+        >
+          <Box display="flex" flexDirection="column" gap={1}>
             <InputLabel sx={{ fontSize: fontSize - 2, fontWeight: 600 }}>Properties :</InputLabel>
             <Autocomplete
               multiple
-              options={Properties}
+              options={PROPERTY_OPTIONS}
               getOptionLabel={(option) => option.name}
-              value={autocompleteValue}
+              value={selectedValues}
               onChange={handleChange}
-              isOptionEqualToValue={(option, value) => option?.name === value?.name}
-              sx={{ minWidth: '130px', maxWidth: '240px', '& .MuiOutlinedInput-root': { padding: '4px' } }}
-              renderOption={(props, option) => (
-                <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1, padding: '4px' }}>
-                  <Avatar src={option?.image} alt={option?.name} sx={{ width: 24, height: 24 }} />
-                  {option?.name}
-                </Box>
+              isOptionEqualToValue={(option, value) => option.name === value.name}
+              renderOption={renderOption}
+              renderTags={renderTags}
+              sx={{
+                bgcolor: color.inputBg,
+                '& .MuiOutlinedInput-root': { p: '2px', borderRadius: '4px' },
+                '& .MuiInputBase-input': { fontSize: '14px' }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  onClick={(e) => e.stopPropagation()}
+                  variant="outlined"
+                  size="small"
+                  placeholder="Select properties"
+                  aria-label="Element properties"
+                />
               )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={option?.name}
-                    avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />}
-                    variant="outlined"
-                    label={option?.name}
-                    {...getTagProps({ index })}
-                    sx={{ '& .MuiChip-label': { fontSize: 10 } }}
-                  />
-                ))
-              }
-              renderInput={(params) => <TextField {...params} variant="outlined" />}
             />
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
-            <Button variant="outlined" color="error" onClick={handleClosePopper} sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+          <Box display="flex" justifyContent="flex-end" gap={1}>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleClosePopper}
+              sx={{ textTransform: 'none', fontSize: 14, px: 2, py: 0.5 }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} color="primary" variant="contained" sx={{ fontSize: fontSize - 2, padding: '4px 8px' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              disabled={!details?.properties?.length}
+              sx={{ textTransform: 'none', fontSize: 14, px: 2, py: 0.5 }}
+            >
               Update
             </Button>
           </Box>

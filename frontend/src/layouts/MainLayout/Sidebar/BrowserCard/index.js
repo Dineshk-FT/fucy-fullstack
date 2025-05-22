@@ -354,7 +354,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   // console.log('assets', assets);
   // console.log('previousTab', previousTab);
   // console.log('nodes', nodes);
-
+  // console.log('sidebar5 rendered');
   // console.log('isChanged', isChanged);
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {

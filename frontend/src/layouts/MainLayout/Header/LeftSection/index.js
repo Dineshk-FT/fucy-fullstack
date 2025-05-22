@@ -194,9 +194,13 @@ const LeftSection = () => {
     [dispatch]
   );
 
-  const handleToggleCollapse = useCallback(() => {
-    setCollapsed((prev) => !prev);
-  }, [setCollapsed]);
+  const handleToggleCollapse = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCollapsed((prev) => !prev);
+    },
+    [setCollapsed]
+  );
 
   const handleContext = useCallback((name, event) => {
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -254,15 +258,21 @@ const LeftSection = () => {
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
+  const handleOpenModal = (modalKey, e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+    setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
+  };
+
   const tabs = useMemo(
     () => [
       {
         name: 'Project',
         options: [
-          { label: 'New', icon: NewFolderIcon, action: () => setOpenModal((prev) => ({ ...prev, New: true })) },
-          { label: 'Rename', icon: RenameIcon, action: () => setOpenModal((prev) => ({ ...prev, Rename: true })) },
-          { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal((prev) => ({ ...prev, Open: true })) },
-          { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal((prev) => ({ ...prev, Delete: true })) },
+          { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
+          { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
+          { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
+          { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick }
         ]
@@ -371,7 +381,8 @@ const LeftSection = () => {
     [handleAddDataNode, handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
   );
 
-  const handleCloseModal = useCallback((modalName) => {
+  const handleCloseModal = useCallback((e, modalName) => {
+    e.stopPropagation();
     setOpenModal((prev) => ({ ...prev, [modalName]: false }));
   }, []);
 
@@ -597,17 +608,18 @@ const LeftSection = () => {
         <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
       </Menu>
 
-      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={() => handleCloseModal('New')} />}
-      {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={() => handleCloseModal('Rename')} Models={Models} />}
-      {openModal.Open && <SelectProject open={openModal.Open} handleClose={() => handleCloseModal('Open')} Models={Models} />}
+      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={(e) => handleCloseModal(e, 'New')} />}
+      {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={(e) => handleCloseModal(e, 'Rename')} Models={Models} />}
+      {openModal.Open && <SelectProject open={openModal.Open} handleClose={(e) => handleCloseModal(e, 'Open')} Models={Models} />}
       {openModal.Delete && (
         <DeleteProject
           open={openModal.Delete}
           model={model}
-          handleClose={() => handleCloseModal('Delete')}
+          handleClose={(e) => handleCloseModal(e, 'Delete')}
           Models={Models}
           deleteModels={deleteModels}
           getModels={getModels}
+          anchorEl={anchorEl}
         />
       )}
       {openModal.AIModal && (
@@ -619,7 +631,7 @@ const LeftSection = () => {
       {openModal.AttackModal && (
         <AttackTreeRibbonModal
           open={openModal.AttackModal}
-          handleClose={() => handleCloseModal('AttackModal')}
+          handleClose={(e) => handleCloseModal(e, 'AttackModal')}
           isLoading={isLoading}
           anchorEl={anchorEl}
           attackScenarios={attackScenarios}

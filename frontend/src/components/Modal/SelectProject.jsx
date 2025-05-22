@@ -11,7 +11,8 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
   const [selectedModel, setSelectedModel] = useState(null);
   const { modelId } = useSelector((state) => state?.pageName);
   const handleModelClick = (id) => setSelectedModel(id);
-  const handleClick = () => {
+  const handleClick = (e) => {
+    e.stopPropagation();
     if (selectedModel && modelId !== selectedModel) {
       navigate(`/Models/${selectedModel}`);
       dispatch(setModelId(selectedModel));
@@ -73,7 +74,10 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
                 <ListItemButton
                   key={model?._id}
                   selected={selectedModel === model?._id}
-                  onClick={() => handleModelClick(model?._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleModelClick(model?._id);
+                  }}
                   sx={{
                     py: 0.5, // Reduced padding for list items
                     px: 1, // Reduced horizontal padding

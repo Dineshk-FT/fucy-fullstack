@@ -34,7 +34,7 @@ import { ZoomControls } from './CanvasControls';
 import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
-import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
+import { debounce } from 'lodash';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -72,8 +72,7 @@ const selector = (state) => ({
   setPropertiesOpen: state.setPropertiesOpen,
   initialNodes: state.initialNodes,
   initialEdges: state.initialEdges,
-  isChanged: state.isChanged,
-  setIsChanged: state.setIsChanged
+  setCanvasImage: state.setCanvasImage
 });
 
 // Edge line styling
@@ -113,9 +112,10 @@ const edgeOptions = {
       background: 'rgba(255, 255, 255, 0.8)',
       borderRadius: '4px',
       padding: '2px 4px',
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Poppins', Arial, sans-serif",
       fontSize: '12px',
-      color: '#333333'
+      color: '#000000', // Higher contrast for clarity
+      fontWeight: '500' // Slightly bolder for better legibility
     }
   }
 };
@@ -168,51 +168,166 @@ export default function MainCanvas() {
     isDark,
     initialNodes,
     initialEdges,
-    isChanged,
-    setIsChanged
+    setCanvasImage
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
-  // const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const { fitView: fitViewDirect } = useReactFlow(); // Added useReactFlow hook to get fitView directly
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
-  // const [selectedElement, setSelectedElement] = useState({});
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
-  const { previousTab, currentTab } = useSelector((state) => state.currentId);
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
-  const nodesRef = useRef(nodes);
-  const edgesRef = useRef(edges);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRef = useRef(null);
+  const latestNodesRef = useRef(nodes);
 
-  useEffect(() => {
-    nodesRef.current = nodes;
-    edgesRef.current = edges;
-  }, [nodes, edges]);
+  const notify = (message, status) => toast[status](message);
+
+  // Optimized: Debounced and dynamic canvas image capture
+  // useEffect(() => {
+  //   // Debounced function to capture canvas image
+  //   const debouncedCapture = debounce(async () => {
+  //     try {
+  //       if (!nodes.length || !reactFlowWrapper.current) return;
+  //       const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
+  //       if (!reactFlowViewport) return;
+
+  //       // Calculate bounding box to include nodes and edges
+  //       const nodesBounds = getRectOfNodes(nodes, { includeHiddenNodes: true });
+
+  //       // Adjust bounding box to include edges
+  //       let minX = nodesBounds.x;
+  //       let minY = nodesBounds.y;
+  //       let maxX = nodesBounds.x + nodesBounds.width;
+  //       let maxY = nodesBounds.y + nodesBounds.height;
+
+  //       edges.forEach((edge) => {
+  //         const sourceNode = nodes.find((n) => n.id === edge.source);
+  //         const targetNode = nodes.find((n) => n.id === edge.target);
+  //         if (sourceNode && targetNode) {
+  //           const sourceX = sourceNode.position.x;
+  //           const sourceY = sourceNode.position.y;
+  //           const targetX = targetNode.position.x;
+  //           const targetY = targetNode.position.y;
+  //           const sourceWidth = sourceNode.width || 100;
+  //           const sourceHeight = sourceNode.height || 100;
+  //           const targetWidth = targetNode.width || 100;
+  //           const targetHeight = targetNode.height || 100;
+
+  //           minX = Math.min(minX, sourceX, targetX);
+  //           minY = Math.min(minY, sourceY, targetY);
+  //           maxX = Math.max(maxX, sourceX + sourceWidth, targetX + targetWidth);
+  //           maxY = Math.max(maxY, sourceY + sourceHeight, targetY + targetHeight);
+  //         }
+  //       });
+
+  //       // Add extra padding to account for edge markers and labels
+  //       const padding = 100;
+  //       const baseWidth = maxX - minX + padding * 2;
+  //       const baseHeight = maxY - minY + padding * 2;
+
+  //       // Use ultra-high scale factor for maximum clarity
+  //       const SCALE = 5; // 5x resolution for ultra-sharp text
+  //       const maxDimension = 8192; // Cap to avoid browser memory limits
+  //       const imageWidth = Math.min(Math.round(baseWidth * SCALE), maxDimension);
+  //       const imageHeight = Math.min(Math.round(baseHeight * SCALE), maxDimension);
+
+  //       // Calculate transform to fit all content
+  //       const transform = getTransformForBounds(
+  //         { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+  //         baseWidth,
+  //         baseHeight,
+  //         0.5,
+  //         2
+  //       );
+
+  //       // Temporarily scale up font sizes and optimize text rendering
+  //       const textElements = reactFlowViewport.querySelectorAll('text');
+  //       const originalTextStyles = Array.from(textElements).map((el) => {
+  //         const computedStyle = window.getComputedStyle(el);
+  //         const fontSize = computedStyle.fontSize;
+  //         const fontWeight = computedStyle.fontWeight;
+  //         const letterSpacing = computedStyle.letterSpacing;
+  //         el.style.fontSize = `${parseFloat(fontSize) * 2}px`; // 2x font size
+  //         el.style.fontWeight = '600'; // Bolder for clarity
+  //         el.style.letterSpacing = '0.02em'; // Slight spacing for legibility
+  //         return { element: el, fontSize, fontWeight, letterSpacing };
+  //       });
+
+  //       // Ensure all elements are rendered before capture
+  //       await new Promise((resolve) => setTimeout(resolve, 300)); // 300ms delay for rendering
+
+  //       // Temporarily adjust viewport to ensure all content is rendered
+  //       const originalTransform = reactFlowViewport.style.transform;
+  //       reactFlowViewport.style.transform = `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`;
+
+  //       const image = await toPng(reactFlowViewport, {
+  //         backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
+  //         width: imageWidth,
+  //         height: imageHeight,
+  //         pixelRatio: SCALE,
+  //         quality: 1.0, // Maximum PNG quality
+  //         style: {
+  //           width: `${baseWidth}px`,
+  //           height: `${baseHeight}px`,
+  //           transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+  //           transformOrigin: 'top left',
+  //           fontSmooth: 'always',
+  //           WebkitFontSmoothing: 'antialiased',
+  //           MozOsxFontSmoothing: 'grayscale',
+  //           imageRendering: 'pixelated',
+  //           textRendering: 'geometricPrecision',
+  //           willChange: 'transform, contents',
+  //           shapeRendering: 'crispEdges', // Ensure sharp vector edges
+  //         },
+  //         filter: (node) => {
+  //           // Exclude controls, minimap, and panels
+  //           return !node.classList?.contains('react-flow__controls') &&
+  //                  !node.classList?.contains('react-flow__minimap') &&
+  //                  !node.classList?.contains('react-flow__panel');
+  //         },
+  //       });
+
+  //       // Restore original text styles
+  //       originalTextStyles.forEach(({ element, fontSize, fontWeight, letterSpacing }) => {
+  //         element.style.fontSize = fontSize;
+  //         element.style.fontWeight = fontWeight;
+  //         element.style.letterSpacing = letterSpacing;
+  //       });
+
+  //       // Restore original transform
+  //       reactFlowViewport.style.transform = originalTransform;
+
+  //       setCanvasImage(image);
+  //     } catch (error) {
+  //       notify('Failed to capture canvas image', 'error');
+  //     }
+  //   }, 500); // 500ms debounce
+
+  //   debouncedCapture();
+  //   return () => {
+  //     debouncedCapture.cancel();
+  //   };
+  // }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage, notify]);
 
   const handleClear = () => {
     setNodes([]);
     setEdges([]);
-    // notify('Canvas cleared', 'success');
   };
 
-  // console.log('previousTab', previousTab);
-  // console.log('currentTab', currentTab);
   const handleSaveToModel = () => {
     const template = {
-      nodes: nodesRef.current,
-      edges: edgesRef.current
+      nodes: nodes,
+      edges: edges
     };
     nodes.forEach((node) => {
       if (node.isCopied == true) {
@@ -229,6 +344,18 @@ export default function MainCanvas() {
     update(details)
       .then((res) => {
         if (!res.error) {
+          const debouncedFitView = debounce(() => {
+            reactFlowInstance.fitView({
+              padding: 0.2,
+              includeHiddenNodes: true,
+              minZoom: 0.2,
+              maxZoom: 2,
+              duration: 500
+            });
+            setZoomLevel(reactFlowInstance.getZoom());
+          });
+
+          debouncedFitView();
           notify('Saved Successfully', 'success');
           handleClose();
           RefreshAPI();
@@ -244,46 +371,60 @@ export default function MainCanvas() {
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
     setNodeTypes(newNodeTypes);
-    if (!isChanged) {
-      setNodes([]);
-      setEdges([]);
-    }
-    if (isChanged && currentTab === 'assets' && previousTab !== 'assets') {
-      setOpenSave(true);
-    }
+    setNodes([]);
+    setEdges([]);
     setTimeout(() => setIsReady(true), 0);
+    return () => {
+      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
+        handleSaveToModel();
+      }
+    };
   }, []);
 
   useEffect(() => {
     const template = assets?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
-    if (!isChanged) {
-      onRestore(template);
-    }
+    onRestore(template);
   }, [assets]);
 
-  useEffect(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance?.fitView({ padding: 0.2, includeHiddenNodes: true, minZoom: 0.5, maxZoom: 2, duration: 500 });
-      setZoomLevel(reactFlowInstance?.getZoom());
-    }
-  }, [reactFlowInstance, nodes?.length]);
+  // Auto-fit canvas view on mount and when nodes/edges change
+  // useEffect(() => {
+  //   if (reactFlowInstance && nodes.length > 0) {
+  //     const debouncedFitView = debounce(() => {
+  //       reactFlowInstance.fitView({
+  //         padding: 0.2,
+  //         includeHiddenNodes: true,
+  //         minZoom: 0.2,
+  //         maxZoom: 2,
+  //         duration: 500,
+  //       });
+  //       setZoomLevel(reactFlowInstance.getZoom());
+  //     }, 5000);
+
+  //     debouncedFitView();
+
+  //     return () => {
+  //       debouncedFitView.cancel();
+  //     };
+  //   }
+  // }, [reactFlowInstance, nodes, edges, setZoomLevel]);
 
   const onInit = (rf) => {
     setReactFlowInstance(rf);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault();
-        handleSaveToModel();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, edges]);
+  // useEffect(() => {
+  //   console.log('useEffect 4');
+  //   const handleKeyDown = (event) => {
+  //     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+  //       event.preventDefault();
+  //       handleSaveToModel();
+  //     }
+  //   };
+  //   window.addEventListener('keydown', handleKeyDown);
+  //   return () => window.removeEventListener('keydown', handleKeyDown);
+  // }, [nodes, edges]);
 
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
@@ -296,13 +437,12 @@ export default function MainCanvas() {
   };
 
   const onNodeDragStart = useCallback((_, node) => {
-    setIsChanged(true);
     setTimeout(() => checkForNodes(), 0);
     dragRef.current = node;
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
-    const currentNodes = nodesRef.current;
+    const currentNodes = latestNodesRef.current;
     const prevNode = currentNodes.find((n) => n.id === node.id);
     if (!prevNode) return;
 
@@ -334,12 +474,12 @@ export default function MainCanvas() {
     // Apply all changes
     setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
 
-    // 🔁 Update refs for all moved nodes to prevent delta drift on next frame
-    nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
+    // Update refs for all moved nodes to prevent delta drift on next frame
+    // nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
   }, []);
 
   const onNodeDragStop = useCallback(() => {
-    nodesRef.current = [...nodes]; // Update ref after drag stops
+    latestNodesRef.current = [...nodes]; // Update ref after drag stops
   }, [nodes]);
 
   function downloadImage(dataUrl) {
@@ -384,7 +524,6 @@ export default function MainCanvas() {
 
   const handleClose = () => {
     setOpenTemplate(false);
-    setIsChanged(false);
   };
 
   const onSaveInitial = useCallback((temp) => {
@@ -404,7 +543,6 @@ export default function MainCanvas() {
       } else {
         handleClear();
       }
-      setIsChanged(false);
     },
     [reactFlowInstance, assets]
   );
@@ -432,7 +570,6 @@ export default function MainCanvas() {
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
-    // console.log('Clicked Node:', node);
     e.stopPropagation(); // Prevent bubbling up
 
     if (e.shiftKey) {
@@ -442,22 +579,22 @@ export default function MainCanvas() {
       });
     }
 
-    // if (node.type === 'group') {
-    // Ensure nested group selection
     dispatch(setSelectedBlock(node));
     setSelectedElement(node);
-    // }
   };
 
   const handleSelectEdgeSingleClick = (e, edge) => {
-    e.stopPropagation(); // Prevent event bubbling
+    // e.stopPropagation(); // Prevent event bubbling
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
   };
-  // console.log('nodes', nodes);
-  // console.log('selectedNodes', selectedNodes);
-  const handleClosePopper = () => {
+
+  const handleClosePopper = (e) => {
+    console.log('close popper');
+    e.stopPropagation();
+    setPropertiesOpen(false);
     dispatch(clearAnchorEl());
+    setSelectedBlock({});
   };
 
   const handleSelectEdge = (e, edge) => {
@@ -481,6 +618,7 @@ export default function MainCanvas() {
 
   const handleSaveEdit = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     const template = {
       nodes: nodes,
       edges: edges
@@ -531,16 +669,14 @@ export default function MainCanvas() {
   const handleNodeContextMenu = (event, node) => {
     event.preventDefault();
     if (node.type === 'group') {
-      // If it's a group, don’t set it as the copied node; prepare for pasting inside
       setContextMenu({
         visible: true,
         x: event.clientX,
         y: event.clientY,
         options: copiedNode && copiedNode.length > 0 ? ['Copy', 'Paste'] : ['Copy'],
-        targetGroup: node // Pass the group as the target for pasting
+        targetGroup: node
       });
     } else {
-      // Regular node: set it as the copied node
       setCopiedNode([node]);
       setContextMenu({
         visible: true,
@@ -562,7 +698,7 @@ export default function MainCanvas() {
         options: ['Copy', 'Paste']
       });
     } else {
-      console.log('No copied node available');
+      notify('No copied node available', 'error');
     }
   };
 
@@ -574,7 +710,7 @@ export default function MainCanvas() {
 
     if (option === 'Paste') {
       if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
-        console.error('No valid copied node found');
+        notify('No valid copied node found', 'error');
         return;
       }
 
@@ -631,11 +767,9 @@ export default function MainCanvas() {
         setContextMenu({ visible: false, x: 0, y: 0 });
       } else if (event.type === 'keydown') {
         if (event.key === 'Escape') {
-          dispatch(setSelectedBlock({})); // Deselect selected block
+          console.log('escape');
+          dispatch(setSelectedBlock({}));
         }
-        // else if (['Delete', 'Backspace'].includes(event.key)) {
-        //   removeSelectedBlock(); // Remove selected block
-        // }
       }
     };
 
@@ -695,17 +829,14 @@ export default function MainCanvas() {
     setSelectedNodes([]);
   }, []);
 
-  // console.log('anchorElNodeId', anchorElNodeId);
-  const renderPopper = () => {
+  const popperComponent = useMemo(() => {
+    // console.log('nodes', nodes);
     if (anchorElNodeId) {
       return isPropertiesOpen ? (
         <EditProperties
           anchorEl={anchorElNodeId}
           handleSaveEdit={handleSaveEdit}
-          handleClosePopper={() => {
-            handleClosePopper();
-            setPropertiesOpen(false);
-          }}
+          handleClosePopper={handleClosePopper}
           setDetails={setDetails}
           details={details}
           dispatch={dispatch}
@@ -726,6 +857,7 @@ export default function MainCanvas() {
           setNodes={setNodes}
           selectedElement={selectedElement}
           setSelectedElement={setSelectedElement}
+          selectedBlock={selectedBlock}
         />
       );
     }
@@ -746,9 +878,18 @@ export default function MainCanvas() {
     }
 
     return null;
-  };
-
-  const notify = (message, status) => toast[status](message);
+  }, [
+    selectedElement,
+    anchorElNodeId,
+    anchorElEdgeId,
+    handleSaveEdit,
+    nodes,
+    selectedBlock,
+    details,
+    setDetails,
+    edgeDetails,
+    setSelectedElement
+  ]);
 
   if (!isReady) return null;
 
@@ -782,7 +923,9 @@ export default function MainCanvas() {
               e.preventDefault();
               e.stopPropagation();
               setContextMenu({ visible: false, x: 0, y: 0 });
-              dispatch(setSelectedBlock({}));
+              if (!isPropertiesOpen && !anchorElNodeId && !anchorElEdgeId) {
+                dispatch(setSelectedBlock({}));
+              }
             }}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
@@ -808,24 +951,21 @@ export default function MainCanvas() {
             maxZoom={2}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <span ref={anchorRef}>
-                <CanvasToolbar
-                  isDark={isDark}
-                  Color={Color}
-                  isChanged={isChanged}
-                  onRestore={onRestore}
-                  handleSaveToModel={handleSaveToModel}
-                  onSelectionClick={onSelectionClick}
-                  selectedNodes={selectedNodes}
-                  handleGroupDrag={handleGroupDrag}
-                  undo={undo}
-                  redo={redo}
-                  undoStack={undoStack}
-                  redoStack={redoStack}
-                  handleDownload={handleDownload}
-                  assets={assets}
-                />
-              </span>
+              <CanvasToolbar
+                isDark={isDark}
+                Color={Color}
+                onRestore={onRestore}
+                handleSaveToModel={handleSaveToModel}
+                onSelectionClick={onSelectionClick}
+                selectedNodes={selectedNodes}
+                handleGroupDrag={handleGroupDrag}
+                undo={undo}
+                redo={redo}
+                undoStack={undoStack}
+                redoStack={redoStack}
+                handleDownload={handleDownload}
+                assets={assets}
+              />
             </Panel>
             <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
@@ -920,12 +1060,11 @@ export default function MainCanvas() {
             </div>
           </Zoom>
         )}
-        <>{renderPopper()}</>;
+        <>{popperComponent}</>;
         {openTemplate && (
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
       </div>
-      <AutoSavePopper open={openSave} handleClose={() => setOpenSave(false)} anchorRef={anchorRef} handleSave={handleSaveToModel} />
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );

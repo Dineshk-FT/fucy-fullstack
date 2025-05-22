@@ -835,7 +835,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
       // redoStack: [],
-      isChanged: true,
+      // isChanged: true,
       edges: updatedEdges // set the updated edges
     }));
   },
@@ -907,8 +907,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   setSelectedElement: (newNode) => {
-    set(() => ({
-      selectedElement: newNode
+    set((state) => ({
+      selectedElement: typeof newNode === 'function' ? newNode(state.selectedElement) : newNode
     }));
   },
   setNodes: (newNodes) => {

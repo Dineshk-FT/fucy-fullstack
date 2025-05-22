@@ -3,49 +3,40 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import CircleIcon from '@mui/icons-material/Circle';
-import { tableCellClasses } from '@mui/material/TableCell';
 import {
-  Button,
-  Checkbox,
-  FormControl,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-  styled,
-  Paper,
   Table,
   TableBody,
   TableCell,
+  tableCellClasses,
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
-  Tooltip,
-  InputLabel,
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Button,
   IconButton,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  TablePagination,
+  styled
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import { useDispatch } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
 import SelectLosses from '../Modal/SelectLosses';
-import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
-import toast, { Toaster } from 'react-hot-toast';
-import { colorPicker, colorPickerTab, DSTableHeader, options, stakeHeader } from './constraints';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { tableHeight } from '../../themes/constant';
-import FormPopper from '../Poppers/FormPopper';
+import DeleteIcon from '@mui/icons-material/Delete';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { DSTableHeader } from './constraints';
 
 const selector = (state) => ({
   model: state.model,
@@ -132,35 +123,25 @@ const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impa
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!open) {
-      setOpen(true);
-    }
+    setOpen(true);
   };
 
   return (
-    <StyledTableCell component="th" scope="row" onClick={handleClick} sx={{ background: `${colorPickerTab(impact)} !important` }}>
+    <StyledTableCell onClick={handleClick} sx={{ backgroundColor: colorPickerTab(impact) }}>
       <FormControl
         sx={{
           width: columnWidths[item?.id] ?? 'auto',
-          background: 'transparent',
-          '& .MuiInputBase-root': {
-            backgroundColor: 'transparent'
-          },
-          '& .MuiSelect-select': {
+          '& .MuiInputBase-root, & .MuiSelect-select': {
             backgroundColor: 'transparent',
-            padding: '0 24px 0 8px', // Remove vertical padding to fit within cell
-            fontSize: '13px', // Match font size with other cells
-            lineHeight: '1.5em', // Match line height
-            height: '1.5em', // Ensure the select fits within one line
+            padding: '0 24px 0 8px',
+            fontSize: '13px',
+            lineHeight: '1.5em',
+            height: '1.5em',
             display: 'flex',
-            alignItems: 'center' // Center the content vertically
+            alignItems: 'center'
           },
-          '& .MuiSvgIcon-root': {
-            display: 'none'
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none'
-          }
+          '& .MuiSvgIcon-root': { display: 'none' },
+          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
         }}
       >
         {!impact && (
@@ -170,24 +151,30 @@ const SelectableCell = ({ row, item, options, handleChange, colorPickerTab, impa
         )}
         <Select
           ref={selectRef}
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
           name={name}
-          value={impact}
+          value={impact || ''}
           onChange={(e) => handleChange(e, row)}
           open={open}
           onClose={() => setOpen(false)}
         >
-          {options?.map((option) => renderMenuItem(option, name))}
+          {options.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              <HtmlTooltip
+                placement="left"
+                title={<Typography sx={{ fontSize: '14px', fontWeight: 600, padding: '8px' }}>{option.description[name]}</Typography>}
+              >
+                <span>{option.label}</span>
+              </HtmlTooltip>
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
     </StyledTableCell>
   );
 };
 
-const notify = (message, status) => toast[status](message);
-
-export default function DsTable() {
+const DsTable = () => {
+  const theme = useTheme();
   const color = ColorTheme();
   const {
     model,
@@ -211,7 +198,6 @@ export default function DsTable() {
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -225,9 +211,7 @@ export default function DsTable() {
   // console.log('details', details);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
-
-  const handleOpenFilter = () => setOpenFilter(true);
-  const handleCloseFilter = () => setOpenFilter(false);
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(DSTableHeader.map((col) => [col.id, col.w])));
 
   const handleAddNewRow = () => {
     setIsAddingNewRow(true);
@@ -238,19 +222,51 @@ export default function DsTable() {
   };
 
   const Head = useMemo(() => {
-    if (stakeHolder) {
-      return stakeHeader;
-    } else {
-      return DSTableHeader.filter((header) => visibleColumns.includes(header.name));
-    }
+    return DSTableHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
-  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(DSTableHeader.map((col) => [col.id, col.w])));
+  useEffect(() => {
+    if (damageScenarios?.Details) {
+      const scene = damageScenarios.Details.map((ls, i) => ({
+        id: ls._id,
+        ID: `DS${ls?.key?.toString().padStart(3, '0') ?? (i + 1).toString().padStart(3, '0')}`,
+        Name: ls?.Name,
+        'Description/Scalability': ls.Description,
+        cyberLosses: ls?.cyberLosses || [],
+        'Asset is Evaluated': ls?.is_asset_evaluated === 'true',
+        'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true',
+        impacts: {
+          'Financial Impact': ls?.impacts?.['Financial Impact'] || '',
+          'Safety Impact': ls?.impacts?.['Safety Impact'] || '',
+          'Operational Impact': ls?.impacts?.['Operational Impact'] || '',
+          'Privacy Impact': ls?.impacts?.['Privacy Impact'] || ''
+        }
+      }));
+      setRows(scene);
+      setDetails(Details?.filter((detail) => detail?.props?.length) || []);
+    } else {
+      setRows([]);
+      setDetails([]);
+    }
+  }, [damageScenarios, Details]);
+
+  const filteredRows = useMemo(() => {
+    if (!searchTerm.trim()) return rows;
+    return rows.filter(
+      (row) =>
+        row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row['Description/Scalability']?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
     const startX = e.clientX;
-    const startWidth = columnWidths[columnId];
+    const startWidth = columnWidths[columnId] || 100;
 
     const handleMouseMove = (event) => {
       const newWidth = Math.max(startWidth + (event.clientX - startX), DSTableHeader.find((col) => col.id === columnId)?.minW || 50);
@@ -266,108 +282,55 @@ export default function DsTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleChecked = (value, item, rowId) => {
-    setFiltered((prevFiltered) =>
-      prevFiltered.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              [item]: !value
-            }
-          : row
-      )
-    );
+  const handleChecked = async (value, item, rowId) => {
+    const previousRows = [...rows];
+    const updatedRows = rows.map((row) => (row.id === rowId ? { ...row, [item]: !value } : row));
+    setRows(updatedRows);
 
     const details = {
       id: damageScenarios?._id,
-      'detail-id': rowId
+      'detail-id': rowId,
+      [item === 'Asset is Evaluated' ? 'isAssetEvaluated' : 'isCybersecurityEvaluated']: !value
     };
 
-    if (item === 'Asset is Evaluated') {
-      details.isAssetEvaluated = !value;
-    } else {
-      details.isCybersecurityEvaluated = !value;
+    try {
+      const res = await updateDerived(details);
+      if (res) {
+        await getDamageScenarios(model?._id);
+      }
+    } catch (err) {
+      console.error('Error updating row:', err);
+      setRows(previousRows);
+      toast.error('Failed to update evaluation status');
     }
-
-    updateDerived(details)
-      .then((res) => {
-        if (res) {
-          getDamageScenarios(model?._id);
-        }
-      })
-      .catch((err) => {
-        console.error('Error updating row:', err);
-        setFiltered((prevFiltered) =>
-          prevFiltered.map((row) =>
-            row.id === rowId
-              ? {
-                  ...row,
-                  [item]: value
-                }
-              : row
-          )
-        );
-      });
   };
 
-  const handleDeleteSelected = () => {
-    const details = {
-      'model-id': model?._id,
-      id: damageID,
-      detailId: selectedRows
-    };
-    deleteDamageScenario(details)
-      .then((res) => {
-        if (!res.error) {
-          notify(res.message ?? 'Deleted successfully', 'success');
-          getDamageScenarios(model?._id);
-          getThreatScenario(model?._id);
-          getRiskTreatment(model?._id);
-          setSelectedRows([]);
-        } else {
-          notify('Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
+  const handleDeleteSelected = async () => {
+    try {
+      const res = await deleteDamageScenario({
+        'model-id': model?._id,
+        id: damageID,
+        detailId: selectedRows
       });
+      if (!res.error) {
+        toast.success(res.message ?? 'Deleted successfully');
+        await Promise.all([getDamageScenarios(model?._id), getThreatScenario(model?._id), getRiskTreatment(model?._id)]);
+        setSelectedRows([]);
+      } else {
+        toast.error(res.error ?? 'Something went wrong');
+      }
+    } catch (err) {
+      toast.error('Something went wrong');
+    }
   };
 
   const toggleRowSelection = (rowId) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rowId) ? prevSelectedRows.filter((id) => id !== rowId) : [...prevSelectedRows, rowId]
-    );
-  };
-
-  const handleOpenCl = (row) => {
-    setSelectedRow(row);
-    setOpenCl(true);
-  };
-
-  const handleCloseCl = () => {
-    setOpenCl(false);
-    setSelectedRow({});
-    const details = Details?.filter((detail) => detail?.props?.length) ?? [];
-    setDetails(details);
+    setSelectedRows((prev) => (prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]));
   };
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (
-          rw.Name.toLowerCase().includes(value.toLowerCase()) ||
-          rw['Description/Scalability']?.toLowerCase().includes(value.toLowerCase())
-        ) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   useEffect(() => {
@@ -396,75 +359,38 @@ export default function DsTable() {
     }
   }, [damageScenarios]);
 
-  const refreshAPI = () => {
-    getDamageScenarios(model?._id);
-  };
-
-  const handleChange = (e, row) => {
+  const handleChange = async (e, row) => {
     e.stopPropagation();
     const { name, value } = e.target;
     const prevValue = row.impacts[name];
-
-    setFiltered((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r)));
-
-    const updatedRow = JSON.parse(JSON.stringify(row));
-    updatedRow.impacts[name] = value;
+    const updatedRows = rows.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r));
+    setRows(updatedRows);
 
     const info = {
       id: damageID,
-      detailId: updatedRow.id,
-      impacts: JSON.stringify(updatedRow.impacts)
+      detailId: row.id,
+      impacts: JSON.stringify({ ...row.impacts, [name]: value })
     };
 
-    updateImpact(info)
-      .then((res) => {
-        if (res) {
-          refreshAPI();
-        }
-      })
-      .catch((err) => {
-        console.error('Error updating impact:', err);
-        setFiltered((prevFiltered) =>
-          prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r))
-        );
-      });
-  };
-
-  const checkforLabel = (item) => {
-    if (
-      item.name === 'Safety Impact' ||
-      item.name === 'Financial Impact' ||
-      item.name === 'Operational Impact' ||
-      item.name === 'Privacy Impact'
-    ) {
-      return true;
+    try {
+      const res = await updateImpact(info);
+      if (!res.error) {
+        getDamageScenarios(model?._id);
+      }
+    } catch (err) {
+      console.error('Error updating impact:', err);
+      setRows(rows.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r)));
+      toast.error('Failed to update impact');
     }
-    return false;
   };
 
   const OverallImpact = useCallback((impact) => {
-    const pattern = (it) => {
-      return it === 'Negligible' ? 1 : it === 'Minor' ? 2 : it === 'Moderate' ? 3 : it === 'Major' ? 4 : it === 'Severe' ? 5 : 0;
-    };
-
-    const impactLabel = (value) => {
-      return value === 1
-        ? 'Negligible'
-        : value === 2
-        ? 'Minor'
-        : value === 3
-        ? 'Moderate'
-        : value === 4
-        ? 'Major'
-        : value === 5
-        ? 'Severe'
-        : '';
-    };
-
-    const val = Object.values(impact)?.map((it) => pattern(it));
-    const maxImpactValue = val.length ? Math.max(...val) : 0;
-
-    return impactLabel(maxImpactValue);
+    const pattern = (it) =>
+      it === 'Negligible' ? 1 : it === 'Minor' ? 2 : it === 'Moderate' ? 3 : it === 'Major' ? 4 : it === 'Severe' ? 5 : 0;
+    const impactLabel = (value) =>
+      value === 1 ? 'Negligible' : value === 2 ? 'Minor' : value === 3 ? 'Moderate' : value === 4 ? 'Major' : value === 5 ? 'Severe' : '';
+    const val = Object.values(impact || {}).map(pattern);
+    return impactLabel(val.length ? Math.max(...val) : 0);
   }, []);
 
   const handleChangePage = (event, newPage) => {
@@ -805,42 +731,18 @@ export default function DsTable() {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'auto'
-      }}
-    >
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} mx={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography
-            sx={{
-              color: color?.title,
-              fontWeight: 600,
-              fontSize: '16px'
-            }}
-          >
-            Damage Scenario Table
-          </Typography>
-        </Box>
-        <Box display="flex" gap={2}>
+        <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Table</Typography>
+        <Box display="flex" gap={1}>
           <TextField
-            id="outlined-size-small"
             placeholder="Search"
             size="small"
             value={searchTerm}
             onChange={handleSearch}
             sx={{
-              justifyContent: 'center',
-              padding: 0.5,
-              '& .MuiInputBase-input': {
-                fontSize: '0.75rem',
-                padding: '0.5rem'
-              },
-              '& .MuiOutlinedInput-root': {
-                height: '30px'
-              }
+              '& .MuiInputBase-input': { fontSize: '0.75rem', padding: '0.5rem' },
+              '& .MuiOutlinedInput-root': { height: '30px' }
             }}
           />
           {/* <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
@@ -856,22 +758,17 @@ export default function DsTable() {
             Add new Scenario
           </Button>
           <Button
-            sx={{
-              alignSelf: 'center',
-              fontSize: '0.85rem',
-              backgroundColor: '#4caf50',
-              ':hover': {
-                backgroundColor: '#388e3c'
-              }
-            }}
             variant="contained"
-            onClick={handleOpenFilter}
+            onClick={() => setOpenFilter(true)}
+            sx={{
+              backgroundColor: '#4caf50',
+              ':hover': { backgroundColor: '#388e3c' }
+            }}
           >
             <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
             Filter Columns
           </Button>
           <Button
-            sx={{ fontSize: '0.85rem' }}
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
@@ -883,8 +780,8 @@ export default function DsTable() {
         </Box>
       </Box>
 
-      <Dialog open={openFilter} onClose={handleCloseFilter}>
-        <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
+      <Dialog open={openFilter} onClose={() => setOpenFilter(false)}>
+        <DialogTitle>Column Filters</DialogTitle>
         <DialogContent>
           {DSTableHeader.map((column) => (
             <FormControlLabel
@@ -900,7 +797,7 @@ export default function DsTable() {
           ))}
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={handleCloseFilter} color="warning">
+          <Button variant="contained" onClick={() => setOpenFilter(false)} color="warning">
             Close
           </Button>
         </DialogActions>
@@ -910,35 +807,24 @@ export default function DsTable() {
         component={Paper}
         sx={{
           flexGrow: 1,
-          overflowY: 'auto',
           borderRadius: '0px',
           padding: 0.25,
-          '&::-webkit-scrollbar': {
-            width: '4px'
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)'
-          },
           maxHeight: tableHeight,
-          scrollbarWidth: 'thin'
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '4px' },
+          '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.1)' }
         }}
       >
-        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+        <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
-              {Head?.map((hd, i) => (
-                <StyledTableCell
-                  key={hd?.id ?? i}
-                  style={{ width: columnWidths[hd.id] || 'auto', position: 'relative', overflowWrap: 'break-word' }}
-                >
-                  {hd?.name}
-                  <div
+              {Head.map((hd) => (
+                <StyledTableCell key={hd.id} sx={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                  {hd.name}
+                  <Box
                     className="resize-handle"
-                    style={{
+                    sx={{
                       position: 'absolute',
                       right: 0,
                       top: 0,
@@ -1025,12 +911,12 @@ export default function DsTable() {
 
       <TablePagination
         sx={{
-          '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-          '& .MuiSelect-select': { color: color?.sidebarContent },
-          '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
+          '& .MuiTablePagination-selectLabel, & .MuiSelect-select, & .MuiTablePagination-displayedRows': {
+            color: color?.sidebarContent
+          }
         }}
         component="div"
-        count={filtered.length}
+        count={filteredRows.length}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}
         page={page}
         onPageChange={handleChangePage}
@@ -1044,8 +930,12 @@ export default function DsTable() {
           details={details}
           setDetails={setDetails}
           damageID={damageID}
-          refreshAPI={refreshAPI}
-          handleClose={handleCloseCl}
+          refreshAPI={() => getDamageScenarios(model?._id)}
+          handleClose={() => {
+            setOpenCl(false);
+            setSelectedRow({});
+            setDetails(Details?.filter((detail) => detail?.props?.length) || []);
+          }}
           model={model}
           selectedRow={selectedRow}
           update={update}
@@ -1055,4 +945,6 @@ export default function DsTable() {
       <Toaster position="top-right" reverseOrder={false} />
     </Box>
   );
-}
+};
+
+export default DsTable;

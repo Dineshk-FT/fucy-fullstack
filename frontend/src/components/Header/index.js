@@ -1,9 +1,8 @@
 /* eslint-disable */
 import { makeStyles } from '@mui/styles';
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Button, Slider } from '@mui/material';
 import React, { useEffect, useState, useCallback } from 'react';
 import { BrushBig } from 'iconsax-react';
-import FormatShapesIcon from '@mui/icons-material/FormatShapes';
 import FontSizeSelector from './FontResizer';
 import FontSelector from './FontSelector';
 import CreateIcon from '@mui/icons-material/Create';
@@ -12,270 +11,564 @@ import BorderOuterIcon from '@mui/icons-material/BorderOuter';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
+import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
+import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
+import LineStyleIcon from '@mui/icons-material/LineStyle';
+import LineWeightIcon from '@mui/icons-material/LineWeight';
+import OpacityIcon from '@mui/icons-material/Opacity';
+import { useDispatch } from 'react-redux';
+import { closeHeader } from '../../store/slices/CanvasSlice';
 
 const useStyles = makeStyles(() => ({
   header: {
-    // width: 300,
     height: 'auto',
     display: 'flex',
     alignItems: 'center',
-    // rowGap: 20,
-    // padding: '0 1rem',
-    flexWrap: 'wrap', // Ensures wrapping
-    overflowX: 'hidden', // Hides horizontal scroll
-    overflowY: 'auto', // Allows vertical scrolling if needed
+    gap: '8px',
+    padding: '8px',
+    backgroundColor: '#f5f5f5',
+    borderRadius: '4px',
+    flexWrap: 'wrap',
+    overflowX: 'auto',
     scrollbarWidth: 'none',
-    justifyContent: 'space-between'
+    justifyContent: 'flex-start'
   },
-
-  icons: {
-    fontSize: '20px'
+  styleGroup: {
+    display: 'flex',
+    gap: '4px',
+    padding: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '4px'
+  },
+  colorGroup: {
+    display: 'flex',
+    gap: '4px',
+    padding: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '4px'
+  },
+  borderGroup: {
+    display: 'flex',
+    gap: '4px',
+    padding: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '4px'
+  },
+  opacityGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    width: '120px'
+  },
+  icon: {
+    fontSize: '18px',
+    padding: '2px',
+    borderRadius: '4px',
+    cursor: 'pointer'
   }
 }));
-export default function Header({ selectedElement, nodes, setSelectedElement, setNodes }) {
+
+export default function Header({ selectedElement, setSelectedElement, setNodes }) {
   const color = ColorTheme();
   const classes = useStyles();
   const { iconColor } = color;
-  // console.log('nodes', nodes);
-  // console.log('selectedElement', selectedElement);
+  const dispatch = useDispatch();
   const [highlight, setHighlight] = useState({
     bold: false,
     italic: false,
-    decor: false
+    decor: false,
+    alignLeft: false,
+    alignCenter: true,
+    alignRight: false,
+    boxShadow: false
   });
   const [styles, setStyles] = useState({
     backgroundColor: '',
     fontSize: 12,
     fontFamily: '',
     fontStyle: '',
-    textAlign: '',
+    textAlign: 'center',
     color: '',
     fontWeight: 0,
     textDecoration: '',
     borderColor: '',
-    borderWidth: '',
-    borderStyle: ''
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    opacity: 1,
+    boxShadow: ''
   });
+
   const number = useCallback((size) => {
-    let sum = size?.slice(0, size.indexOf('p'));
-    return Number(sum);
+    if (!size) return 12;
+    return parseInt(size, 10);
   }, []);
 
   useEffect(() => {
-    setStyles({
-      ...styles,
-      backgroundColor: selectedElement?.data?.style?.backgroundColor,
-      fontSize: selectedElement?.data?.style?.fontSize ? number(selectedElement?.data?.style?.fontSize) : 12,
-      fontFamily: selectedElement?.data?.style?.fontFamily ?? 'Inter',
-      fontStyle: selectedElement?.data?.style?.fontStyle ?? 'normal',
-      textAlign: selectedElement?.data?.style?.textAlign ?? 'center',
-      color: selectedElement?.data?.style?.color ?? 'white',
-      fontWeight: selectedElement?.data?.style?.fontWeight ?? 500,
-      textDecoration: selectedElement?.data?.style?.textDecoration ?? 'none',
-      borderColor: selectedElement?.data?.style?.borderColor ?? 'none',
-      borderWidth: selectedElement?.data?.style?.borderWidth ?? '2px',
-      borderStyle: selectedElement?.data?.style?.borderStyle ?? 'solid'
-    });
-    setHighlight({
-      ...highlight,
-      bold: selectedElement?.data?.style?.fontWeight === 700 ? true : false,
+    if (selectedElement?.data?.style) {
+      setStyles({
+        backgroundColor: selectedElement.data.style.backgroundColor || '',
+        fontSize: number(selectedElement.data.style.fontSize) || 12,
+        fontFamily: selectedElement.data.style.fontFamily || 'Inter',
+        fontStyle: selectedElement.data.style.fontStyle || 'normal',
+        textAlign: selectedElement.data.style.textAlign || 'center',
+        color: selectedElement.data.style.color || 'white',
+        fontWeight: parseInt(selectedElement.data.style.fontWeight, 10) || 500,
+        textDecoration: selectedElement.data.style.textDecoration || 'none',
+        borderColor: selectedElement.data.style.borderColor || 'none',
+        borderWidth: selectedElement.data.style.borderWidth || '2px',
+        borderStyle: selectedElement.data.style.borderStyle || 'solid',
+        opacity: selectedElement.data.style.opacity || 1,
+        boxShadow: selectedElement.data.style.boxShadow || ''
+      });
+      setHighlight({
+        bold: parseInt(selectedElement.data.style.fontWeight, 10) === 700,
+        italic: selectedElement.data.style.fontStyle === 'italic',
+        decor: selectedElement.data.style.textDecoration === 'underline',
+        alignLeft: selectedElement.data.style.textAlign === 'left',
+        alignCenter: selectedElement.data.style.textAlign === 'center',
+        alignRight: selectedElement.data.style.textAlign === 'right',
+        boxShadow: !!selectedElement.data.style.boxShadow
+      });
+    }
+  }, [selectedElement, number]);
 
-      italic: selectedElement?.data?.style?.fontStyle === 'italic' ? true : false,
-      decor: selectedElement?.data?.style?.textDecoration === 'underline' ? true : false
-    });
-  }, [selectedElement]);
-  // console.log('style', styles)
-
-  const handleFontStyle = (name) => {
-    const list = JSON.parse(JSON.stringify(nodes));
-    const nodeIndex = list.findIndex((nd) => nd?.id === selectedElement?.id);
-
-    if (nodeIndex === -1) return; // Exit if no matching node is found
-
-    const node = list[nodeIndex];
-    const { style } = node.data;
-
-    const styleUpdates = {
-      bold: { key: 'fontWeight', values: [700, 500] },
-      italic: { key: 'fontStyle', values: ['italic', 'normal'] },
-      underline: { key: 'textDecoration', values: ['underline', 'none'] }
-    };
-
+  const handleFontStyle = (e, name) => {
+    e.stopPropagation();
+    // console.log('name', name);
+    if (!selectedElement?.id) return;
     const highlightKey = {
       bold: 'bold',
       italic: 'italic',
-      underline: 'decor'
+      underline: 'decor',
+      alignLeft: 'alignLeft',
+      alignCenter: 'alignCenter',
+      alignRight: 'alignRight',
+      boxShadow: 'boxShadow'
     };
 
-    const currentHighlight = highlight[highlightKey[name]];
-    if (styleUpdates[name]) {
-      const { key, values } = styleUpdates[name];
-      style[key] = currentHighlight ? values[1] : values[0];
-      setStyles((state) => ({ ...state, [key]: style[key] }));
-      setHighlight((state) => ({
-        ...state,
-        [highlightKey[name]]: !currentHighlight
-      }));
-    }
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        const style = { ...node.data.style };
+        const styleUpdates = {
+          bold: { key: 'fontWeight', values: [700, 500] },
+          italic: { key: 'fontStyle', values: ['italic', 'normal'] },
+          underline: { key: 'textDecoration', values: ['underline', 'none'] },
+          alignLeft: { key: 'textAlign', value: 'left' },
+          alignCenter: { key: 'textAlign', value: 'center' },
+          alignRight: { key: 'textAlign', value: 'right' },
+          boxShadow: { key: 'boxShadow', values: ['0 2px 4px rgba(0,0,0,0.2)', ''] }
+        };
+        const currentHighlight = highlight[highlightKey[name]];
+        if (styleUpdates[name]) {
+          const update = styleUpdates[name];
+          if (update.value) {
+            style[update.key] = update.value;
+            setHighlight((prev) => ({
+              ...prev,
+              alignLeft: name === 'alignLeft',
+              alignCenter: name === 'alignCenter',
+              alignRight: name === 'alignRight'
+            }));
+          } else {
+            style[update.key] = currentHighlight ? update.values[1] : update.values[0];
+            setHighlight((prev) => ({ ...prev, [highlightKey[name]]: !currentHighlight }));
+          }
+          setStyles((prev) => ({ ...prev, [update.key]: style[update.key] }));
+        }
 
-    setSelectedElement(node);
-    list[nodeIndex] = node;
-    setNodes(list);
+        return {
+          ...node,
+          data: { ...node.data, style }
+        };
+      })
+    );
+
+    setSelectedElement((prev) => {
+      const styleUpdates = {
+        bold: { key: 'fontWeight', values: [700, 500] },
+        italic: { key: 'fontStyle', values: ['italic', 'normal'] },
+        underline: { key: 'textDecoration', values: ['underline', 'none'] },
+        alignLeft: { key: 'textAlign', value: 'left' },
+        alignCenter: { key: 'textAlign', value: 'center' },
+        alignRight: { key: 'textAlign', value: 'right' },
+        boxShadow: { key: 'boxShadow', values: ['0 2px 4px rgba(0,0,0,0.2)', ''] }
+      };
+      const update = styleUpdates[name];
+      const newStyle = { ...prev.data.style };
+      if (update.value) {
+        newStyle[update.key] = update.value;
+      } else {
+        newStyle[update.key] = highlight[highlightKey[name]] ? update.values[1] : update.values[0];
+      }
+      return {
+        ...prev,
+        data: { ...prev.data, style: newStyle }
+      };
+    });
   };
 
-  // console.log('fontSize', typeof styles?.fontSize);
-  const handleFontSizeChange = (event) => {
-    const list = JSON.parse(JSON.stringify(nodes));
-    const node = list?.find((nd) => nd?.id === selectedElement?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
-    const { style } = node.data;
-    setStyles((state) => ({ ...state, fontSize: parseInt(event.target.value, 10) }));
-    style.fontSize = event.target.value;
-    setSelectedElement(node);
-    list[Index] = node;
-    setNodes(list);
+  const handleFontSizeChange = (e) => {
+    e.stopPropagation();
+    const newFontSize = e.target.value.replace('px', '');
+
+    if (!selectedElement?.id) return;
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            style: {
+              ...node.data.style,
+              fontSize: `${newFontSize}px`
+            }
+          }
+        };
+      })
+    );
+
+    setStyles((prev) => ({ ...prev, fontSize: newFontSize }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        style: {
+          ...prev.data.style,
+          fontSize: `${newFontSize}px`
+        }
+      }
+    }));
   };
 
-  const changeFontSize = (name) => {
-    const list = JSON.parse(JSON.stringify(nodes));
-    const node = list?.find((nd) => nd?.id === selectedElement?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
+  const changeFontSize = (e, name) => {
+    e.stopPropagation();
+    if (!selectedElement?.id) return;
 
-    if (!node) return;
+    const currentFontSize = styles.fontSize || 16;
+    const newFontSize = name === 'inc' ? Math.min(currentFontSize + 2, 48) : Math.max(currentFontSize - 2, 12);
 
-    const { style } = node.data;
-    let newFontSize = parseInt(style.fontSize, 10) || 16; // Default size if undefined
-
-    if (name === 'inc') {
-      newFontSize = Math.min(newFontSize + 2, 48);
-    } else {
-      newFontSize = Math.max(newFontSize - 2, 12);
-    }
-
-    setStyles((state) => ({ ...state, fontSize: newFontSize }));
-    style.fontSize = `${newFontSize}px`;
-
-    setSelectedElement(node);
-    list[Index] = node;
-    setNodes(list);
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: { ...node.data, style: { ...node.data.style, fontSize: `${newFontSize}px` } }
+        };
+      })
+    );
+    setStyles((prev) => ({ ...prev, fontSize: newFontSize }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        style: { ...prev.data.style, fontSize: `${newFontSize}px` }
+      }
+    }));
   };
 
-  //   console.log('nodes', nodes)
+  const handleBorderWidthChange = (e) => {
+    e.stopPropagation();
+    const newWidth = e.target.value.replace('px', '');
+    if (!selectedElement?.id) return;
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            style: {
+              ...node.data.style,
+              borderWidth: `${newWidth}px`
+            }
+          }
+        };
+      })
+    );
+
+    setStyles((prev) => ({ ...prev, borderWidth: `${newWidth}px` }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        style: {
+          ...prev.data.style,
+          borderWidth: `${newWidth}px`
+        }
+      }
+    }));
+  };
+
+  const changeBorderWidth = (name) => {
+    if (!selectedElement?.id) return;
+
+    const currentWidth = number(styles.borderWidth) || 2;
+    const newWidth = name === 'inc' ? Math.min(currentWidth + 1, 10) : Math.max(currentWidth - 1, 1);
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: { ...node.data, style: { ...node.data.style, borderWidth: `${newWidth}px` } }
+        };
+      })
+    );
+    setStyles((prev) => ({ ...prev, borderWidth: `${newWidth}px` }));
+    setSelectedElement((prev) => ({
+      ...hypothetical,
+      data: { ...prev.data, style: { ...prev.data.style, borderWidth: `${newWidth}px` } }
+    }));
+  };
+
+  const handleBorderStyle = (e, borderStyle) => {
+    e.stopPropagation();
+    if (!selectedElement?.id) return;
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: { ...node.data, style: { ...node.data.style, borderStyle } }
+        };
+      })
+    );
+    setStyles((prev) => ({ ...prev, borderStyle }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: { ...prev.data, style: { ...prev.data.style, borderStyle } }
+    }));
+  };
+
+  const handleOpacityChange = (event, newValue) => {
+    if (!selectedElement?.id) return;
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        return {
+          ...node,
+          data: { ...node.data, style: { ...node.data.style, opacity: newValue } }
+        };
+      })
+    );
+    setStyles((prev) => ({ ...prev, opacity: newValue }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: { ...prev.data, style: { ...prev.data.style, opacity: newValue } }
+    }));
+  };
 
   const handleChange = (event, name) => {
-    // console.log('event', event.target.value)
-    // console.log('name', name)
-    const list = JSON.parse(JSON.stringify(nodes));
-    const node = list?.find((nd) => nd?.id === selectedElement?.id);
-    const Index = list?.findIndex((nd) => nd?.id === selectedElement?.id);
-    const { style } = node.data;
-    if (name === 'font') {
-      setStyles((state) => ({ ...state, fontFamily: event.target.value }));
-      style.fontFamily = event.target.value;
-    } else if (name === 'border') {
-      setStyles({ ...styles, borderColor: event.target.value });
-      style.borderColor = event.target.value;
-    } else if (name === 'bgColor') {
-      setStyles({ ...styles, backgroundColor: event.target.value });
-      style.backgroundColor = event.target.value;
-    } else {
-      setStyles({ ...styles, color: event.target.value });
-      style.color = event.target.value;
-    }
-    setSelectedElement(node);
-    list[Index] = node;
-    setNodes(list);
+    if (!selectedElement?.id) return;
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        const style = { ...node.data.style };
+        if (name === 'font') {
+          style.fontFamily = event.target.value;
+        } else if (name === 'border') {
+          style.borderColor = event.target.value;
+        } else if (name === 'bgColor') {
+          style.backgroundColor = event.target.value;
+        } else {
+          style.color = event.target.value;
+        }
+        return { ...node, data: { ...node.data, style } };
+      })
+    );
+    setStyles((prev) => ({
+      ...prev,
+      [name === 'font' ? 'fontFamily' : name === 'border' ? 'borderColor' : name === 'bgColor' ? 'backgroundColor' : 'color']:
+        event.target.value
+    }));
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        style: {
+          ...prev.data.style,
+          [name === 'font' ? 'fontFamily' : name === 'border' ? 'borderColor' : name === 'bgColor' ? 'backgroundColor' : 'color']:
+            event.target.value
+        }
+      }
+    }));
   };
 
-  const handleDragStart = (event, item) => {
-    const parseFile = JSON.stringify(item?.title);
-    event.dataTransfer.setData('application/group', parseFile);
-    event.dataTransfer.effectAllowed = 'move';
+  const handleClose = () => {
+    dispatch(closeHeader());
   };
+  const handleInputClick = (e) => e.stopPropagation();
 
-  // console.log('highlight', highlight);
   return (
-    <>
-      <Box className={classes.header} sx={{ background: color?.canvasBG }}>
-        {/* <Back size="20" color={iconColor} />
-                <ArrowForward color={iconColor} /> */}
-        <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
-        <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
-        {/* <AddIcon /> */}
-        <FormatBoldIcon
-          onClick={() => handleFontStyle('bold')}
-          sx={{
-            backgroundColor: highlight?.bold ? '#5fc9f3' : 'transparent',
-            opacity: 0.8,
-            border: highlight?.bold ? '1px solid #2772db' : 'none',
-            padding: '1px',
-            color: highlight?.bold ? 'black' : iconColor,
-            fontWeight: highlight?.bold ? 700 : 500
-          }}
-        />
-        <FormatUnderlinedIcon
-          onClick={() => handleFontStyle('underline')}
-          sx={{
-            backgroundColor: highlight?.decor ? '#5fc9f3' : 'transparent',
-            opacity: 0.8,
-            border: highlight?.decor ? '1px solid #2772db' : 'none',
-            padding: '1px',
-            color: highlight?.decor ? 'black' : iconColor,
-            fontWeight: highlight?.decor ? 700 : 500
-          }}
-        />
-        <FormatItalicIcon
-          onClick={() => handleFontStyle('italic')}
-          sx={{
-            backgroundColor: highlight?.italic ? '#5fc9f3' : 'transparent',
-            opacity: 0.8,
-            border: highlight?.italic ? '1px solid #2772db' : 'none',
-            padding: '1px',
-            color: highlight?.italic ? 'black' : iconColor,
-            fontWeight: highlight?.italic ? 700 : 500
-          }}
-        />
-        <FormatAlignJustifyIcon sx={{ color: iconColor }} />
-        <label htmlFor="color" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', marginTop: '1.8rem' }}>
-          <CreateIcon color={iconColor} sx={{ fontSize: '1.3rem' }} />
-          <span
-            style={{
-              height: '5px',
-              width: '1.1rem',
-              backgroundColor: styles.color,
-              border: '0.5px solid black'
+    <Box className={classes.header} sx={{ background: color?.canvasBG }}>
+      {/* Font Size Selector */}
+      <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
+
+      {/* Font Family Selector */}
+      <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
+
+      {/* Text Style Buttons Group */}
+      <Box className={classes.styleGroup}>
+        <Tooltip title="Bold">
+          <FormatBoldIcon
+            onClick={(e) => handleFontStyle(e, 'bold')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.bold ? '#5fc9f3' : 'transparent',
+              color: highlight?.bold ? 'black' : iconColor,
+              fontWeight: highlight?.bold ? 700 : 500
             }}
-          ></span>
-          <input type="color" id="color" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'color')} />
-        </label>
-        <label htmlFor="bgColor" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', marginTop: '1.8rem' }}>
-          <BrushBig size="20" color={iconColor} />
-          <span
-            style={{
-              height: '5px',
-              width: '1.1rem',
-              backgroundColor: styles?.backgroundColor,
-              border: '0.5px solid black'
+          />
+        </Tooltip>
+        <Tooltip title="Italic">
+          <FormatItalicIcon
+            onClick={(e) => handleFontStyle(e, 'italic')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.italic ? '#5fc9f3' : 'transparent',
+              color: highlight?.italic ? 'black' : iconColor,
+              fontWeight: highlight?.italic ? 700 : 500
             }}
-          ></span>
-          <input type="color" id="bgColor" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'bgColor')} />
-        </label>
-        <FormatShapesIcon className={classes.icons} sx={{ color: iconColor }} />
-        {/* <Edit2 size="20" color="#555555" /> */}
-        <label htmlFor="border" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', marginTop: '1.8rem' }}>
-          <BorderOuterIcon className={classes.icons} sx={{ color: iconColor }} />
-          <span
-            style={{
-              height: '5px',
-              width: '1.1rem',
-              backgroundColor: styles?.borderColor,
-              border: '0.5px solid black'
+          />
+        </Tooltip>
+        <Tooltip title="Underline">
+          <FormatUnderlinedIcon
+            onClick={(e) => handleFontStyle(e, 'underline')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.decor ? '#5fc9f3' : 'transparent',
+              color: highlight?.decor ? 'black' : iconColor,
+              fontWeight: highlight?.decor ? 700 : 500
             }}
-          ></span>
-          <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
-        </label>
+          />
+        </Tooltip>
       </Box>
-    </>
+
+      {/* Text Alignment Group */}
+      <Box className={classes.styleGroup}>
+        <Tooltip title="Align Left">
+          <FormatAlignLeftIcon
+            onClick={(e) => handleFontStyle(e, 'alignLeft')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.alignLeft ? '#5fc9f3' : 'transparent',
+              color: highlight?.alignLeft ? 'black' : iconColor
+            }}
+          />
+        </Tooltip>
+        <Tooltip title="Align Center">
+          <FormatAlignCenterIcon
+            onClick={(e) => handleFontStyle(e, 'alignCenter')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.alignCenter ? '#5fc9f3' : 'transparent',
+              color: highlight?.alignCenter ? 'black' : iconColor
+            }}
+          />
+        </Tooltip>
+        <Tooltip title="Align Right">
+          <FormatAlignRightIcon
+            onClick={(e) => handleFontStyle(e, 'alignRight')}
+            className={classes.icon}
+            sx={{
+              backgroundColor: highlight?.alignRight ? '#5fc9f3' : 'transparent',
+              color: highlight?.alignRight ? 'black' : iconColor
+            }}
+          />
+        </Tooltip>
+      </Box>
+
+      {/* Color Pickers Group */}
+      <Box className={classes.colorGroup}>
+        <Tooltip title="Text Color">
+          <label htmlFor="color" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
+            <CreateIcon
+              className={classes.icon}
+              sx={{
+                color: iconColor,
+                border: `2px solid ${styles.color || '#000'}`,
+                borderRadius: '4px'
+              }}
+            />
+            <input type="color" id="color" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'color')} />
+          </label>
+        </Tooltip>
+        <Tooltip title="Background Color">
+          <label htmlFor="bgColor" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
+            <BrushBig
+              size="18"
+              className={classes.icon}
+              style={{
+                color: iconColor,
+                border: `2px solid ${styles.backgroundColor || '#000'}`,
+                borderRadius: '4px'
+              }}
+            />
+            <input type="color" id="bgColor" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'bgColor')} />
+          </label>
+        </Tooltip>
+        <Tooltip title="Border Color">
+          <label htmlFor="border" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
+            <BorderOuterIcon
+              className={classes.icon}
+              sx={{
+                color: iconColor,
+                border: `2px solid ${styles.borderColor || '#000'}`,
+                borderRadius: '4px'
+              }}
+            />
+            <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
+          </label>
+        </Tooltip>
+      </Box>
+
+      {/* Border Style and Width Group */}
+      <Box className={classes.borderGroup}>
+        <Tooltip title="Border Style">
+          <Box sx={{ display: 'flex', gap: '4px' }}>
+            <LineStyleIcon
+              className={classes.icon}
+              sx={{ color: styles.borderStyle === 'solid' ? '#5fc9f3' : iconColor }}
+              onClick={(e) => handleBorderStyle(e, 'solid')}
+            />
+            <LineStyleIcon
+              className={classes.icon}
+              sx={{ color: styles.borderStyle === 'dashed' ? '#5fc9f3' : iconColor, transform: 'rotate(90deg)' }}
+              onClick={(e) => handleBorderStyle(e, 'dashed')}
+            />
+            <LineStyleIcon
+              className={classes.icon}
+              sx={{ color: styles.borderStyle === 'dotted' ? '#5fc9f3' : iconColor, transform: 'rotate(45deg)' }}
+              onClick={(e) => handleBorderStyle(e, 'dotted')}
+            />
+          </Box>
+        </Tooltip>
+        <Tooltip title="Border Width">
+          <FontSizeSelector
+            fontSize={number(styles.borderWidth)}
+            handleFontSizeChange={handleBorderWidthChange}
+            changeFontSize={changeBorderWidth}
+          />
+        </Tooltip>
+      </Box>
+
+      {/* Opacity Slider */}
+      <Box className={classes.opacityGroup}>
+        <Tooltip title="Opacity">
+          <OpacityIcon className={classes.icon} sx={{ color: iconColor }} />
+        </Tooltip>
+        <Slider value={styles.opacity} onChange={handleOpacityChange} min={0} max={1} step={0.1} sx={{ width: '80px' }} />
+      </Box>
+    </Box>
   );
 }

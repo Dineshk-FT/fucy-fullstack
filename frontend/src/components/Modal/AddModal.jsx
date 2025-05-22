@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -8,14 +8,15 @@ import {
   Button,
   Box,
   TextField,
-  Slide
-  // useTheme
+  Slide,
+  CircularProgress,
+  FormLabel,
 } from '@mui/material';
-import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
+import useStore from '../../store/Zustand/store';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { setModelId } from '../../store/slices/PageSectionSlice';
 
@@ -24,140 +25,118 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const selector = (state) => ({
-  create: state.createModel
+  create: state.createModel,
 });
-// const ITEM_HEIGHT = 48;
-// const ITEM_PADDING_TOP = 8;
-// const MenuProps = {
-//     PaperProps: {
-//         style: {
-//             maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-//             width: 300
-//         }
-//     }
-// };
 
-// function getStyles(name, nodes, theme) {
-//     return {
-//         fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
-//     };
-// }
-// const Properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
-
-export default function AddModel({ open, handleClose, getModels }) {
+export default React.memo(function AddModel({ open, handleClose, getModels }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userDetails } = useSelector((state) => state?.userDetails);
   const { create } = useStore(selector, shallow);
-  const notify = (message, status) => toast[status](message);
-  // const theme = useTheme();
-  const [templateDetails, setTemplateDetails] = React.useState({
-    name: ''
-    // properties: []
-  });
-  // const handleChange = (event) => {
-  //     const {
-  //         target: { value }
-  //     } = event;
-  //     setTemplateDetails({
-  //         ...templateDetails,
-  //         properties: typeof value === 'string' ? value.split(',') : value
-  //     });
-  // };
+  const [templateDetails, setTemplateDetails] = useState({ name: '' });
+  const [loading, setLoading] = useState(false);
 
-  const handleCreate = () => {
-    const newModel = {
-      ...templateDetails
-    };
+  const handleChange = useCallback((e) => {
+    setTemplateDetails((prev) => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    if (!templateDetails.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+
+    setLoading(true);
+    const newModel = { name: templateDetails.name.trim() };
 
     create(newModel, userDetails?.username)
       .then((res) => {
         if (res) {
-          // setTimeout(() => {
-          notify(res.message ?? 'Model created successfully', 'success');
+          toast.success(res.message ?? 'Model created successfully');
           navigate(`/Models/${res?.model_id}`);
           dispatch(setModelId(res?.model_id));
           dispatch(closeAll());
-          // window.location.href = `/Modals/${id}`;
           getModels();
           handleClose();
-          // }, 500);
+          setTemplateDetails({ name: '' });
         }
       })
-      .catch((err) => {
-        console.log('err', err);
-        notify('Something Went Wrong', 'error');
+      .catch(() => {
+        toast.error('Something went wrong');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    setTemplateDetails((state) => ({
-      ...state,
-      name: ''
-    }));
-  };
-  // console.log('templateDetails', templateDetails);
+  }, [create, userDetails?.username, navigate, dispatch, getModels, handleClose, templateDetails]);
+
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="add-model-dialog-title"
+        aria-describedby="add-model-dialog-description"
+        maxWidth="sm"
+        sx={{
+          '& .MuiPaper-root': {
+            width: '475px',
+            borderRadius: '8px',
+          },
+        }}
       >
-        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb:0 }}>{'Add Project'}</DialogTitle>
-        <DialogTitle sx={{ fontSize: 14, fontFamily: 'italic', pt:0, pb:1 }}>{'Name of your project to create a new model.'}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-              <TextField
-                value={templateDetails?.name}
-                id="outlined-basic"
-                label="Name"
-                variant="outlined"
-                onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
-                sx={{
-                  width: '300px'
-                }}
-              />
-              {/* <FormControl sx={{ width: 350 }}>
-                                <InputLabel notched id="demo-multiple-chip-label">
-                                    Properties
-                                </InputLabel>
-                                <Select
-                                    labelId="demo-multiple-chip-label"
-                                    id="demo-multiple-chip"
-                                    multiple
-                                    value={templateDetails.properties}
-                                    onChange={handleChange}
-                                    input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
-                                    renderValue={(selected) => (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                            {selected.map((value) => (
-                                                <Chip key={value} label={value} />
-                                            ))}
-                                        </Box>
-                                    )}
-                                    MenuProps={MenuProps}
-                                >
-                                    {Properties.map((name) => (
-                                        <MenuItem key={name} value={name} style={getStyles(name, templateDetails.properties, theme)}>
-                                            {name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl> */}
+        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>
+          Add Project
+        </DialogTitle>
+        <DialogTitle sx={{ fontSize: 14, fontStyle: 'italic', pt: 0, pb: 1 }}>
+          Name of your project to create a new model.
+        </DialogTitle>
+        <DialogContent sx={{ p: 2 }}>
+          <DialogContentText id="add-model-dialog-description">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, mb: 1 }} required>
+                  Name
+                </FormLabel>
+                <TextField
+                  name="name"
+                  value={templateDetails.name}
+                  onChange={handleChange}
+                  variant="outlined"
+                  placeholder="Enter project name"
+                  size="small"
+                  fullWidth
+                  required
+                  aria-label="Project name"
+                />
+              </Box>
             </Box>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="error" onClick={handleClose}>
-            cancel
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
+            Cancel
           </Button>
-          <Button variant="contained" onClick={handleCreate}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleCreate}
+            disabled={loading || !templateDetails.name.trim()}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Create
           </Button>
         </DialogActions>
       </Dialog>
       <Toaster position="top-right" reverseOrder={false} />
-    </React.Fragment>
+    </>
   );
-}
+});
