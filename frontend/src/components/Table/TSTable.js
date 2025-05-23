@@ -456,9 +456,9 @@ const Tstable = () => {
               '& .MuiOutlinedInput-root': { height: '30px' }
             }}
           />
-          <Button variant="contained" onClick={handleOpenModalTs}>
+          {/* <Button variant="contained" onClick={handleOpenModalTs}>
             Add New Scenario
-          </Button>
+          </Button> */}
           <Button
             variant="contained"
             sx={{ backgroundColor: '#4caf50', '&:hover': { backgroundColor: '#388e3c' } }}
