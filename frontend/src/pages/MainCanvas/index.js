@@ -287,14 +287,16 @@ export default function MainCanvas() {
   //           imageRendering: 'pixelated',
   //           textRendering: 'geometricPrecision',
   //           willChange: 'transform, contents',
-  //           shapeRendering: 'crispEdges', // Ensure sharp vector edges
+  //           shapeRendering: 'crispEdges' // Ensure sharp vector edges
   //         },
   //         filter: (node) => {
   //           // Exclude controls, minimap, and panels
-  //           return !node.classList?.contains('react-flow__controls') &&
-  //                  !node.classList?.contains('react-flow__minimap') &&
-  //                  !node.classList?.contains('react-flow__panel');
-  //         },
+  //           return (
+  //             !node.classList?.contains('react-flow__controls') &&
+  //             !node.classList?.contains('react-flow__minimap') &&
+  //             !node.classList?.contains('react-flow__panel')
+  //           );
+  //         }
   //       });
 
   //       // Restore original text styles
@@ -317,7 +319,7 @@ export default function MainCanvas() {
   //   return () => {
   //     debouncedCapture.cancel();
   //   };
-  // }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage, notify]);
+  // }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage]);
 
   const handleClear = () => {
     setNodes([]);
