@@ -19,6 +19,7 @@ import Draggable from 'react-draggable';
 import DialogCommonTitle from './DialogCommonTitle';
 import { AttackIcon } from '../../assets/icons';
 import toast from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
 
 function PaperComponent(props) {
   const nodeRef = React.useRef(null);

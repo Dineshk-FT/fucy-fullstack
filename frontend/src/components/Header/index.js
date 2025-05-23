@@ -368,6 +368,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
   };
 
   const handleChange = (event, name) => {
+    event.stopPropagation();
     if (!selectedElement?.id) return;
 
     setNodes((prevNodes) =>
@@ -404,9 +405,6 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     }));
   };
 
-  const handleClose = () => {
-    dispatch(closeHeader());
-  };
   const handleInputClick = (e) => e.stopPropagation();
 
   return (
@@ -415,7 +413,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
       <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
 
       {/* Font Family Selector */}
-      <FontSelector font={styles?.fontFamily} handleChange={handleChange} />
+      <FontSelector font={styles?.fontFamily} handleChange={handleChange} handleInputClick={handleInputClick} />
 
       {/* Text Style Buttons Group */}
       <Box className={classes.styleGroup}>

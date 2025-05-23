@@ -20,7 +20,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton,
+  IconButton
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { makeStyles } from '@mui/styles';
@@ -53,11 +53,11 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios['subs'][1],
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
-  deleteThreatScenario: state.deleteThreatScenario,
+  deleteThreatScenario: state.deleteThreatScenario
 });
 
 const useStyles = makeStyles({
-  div: { width: 'max-content' },
+  div: { width: 'max-content' }
 });
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -67,18 +67,18 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '5px',
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
     borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '10px 8px',
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': { border: 0 },
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 const TsDerivedTable = () => {
@@ -98,7 +98,7 @@ const TsDerivedTable = () => {
     derivedId,
     UserDefinedId,
     deleteThreatScenario,
-    getRiskTreatment,
+    getRiskTreatment
   } = useStore(selector, shallow);
   const visibleColumns = useStore((state) => state.threatDerivedScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -113,9 +113,7 @@ const TsDerivedTable = () => {
   const [selectedRow, setSelectedRow] = useState({});
   const [details, setDetails] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(TsDerivedTableHeader.map((col) => [col.id, col.w]))
-  );
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(TsDerivedTableHeader.map((col) => [col.id, col.w])));
 
   const Head = useMemo(() => {
     return TsDerivedTableHeader.filter((header) => visibleColumns.includes(header.name));
@@ -125,8 +123,7 @@ const TsDerivedTable = () => {
     if (!searchTerm.trim()) return rows;
     return rows.filter(
       (row) =>
-        row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+        row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [rows, searchTerm]);
 
@@ -154,7 +151,7 @@ const TsDerivedTable = () => {
             'Damage Scenarios': detail?.damage_details || detail?.threat_ids || [],
             'Losses of Cybersecurity Properties': detail?.damage_details
               ? detail.damage_details.flatMap((damage) => damage?.cyberLosses || [])
-              : detail?.threat_ids || [],
+              : detail?.threat_ids || []
           }))
         : [];
       setRows(mappedDetails);
@@ -198,10 +195,7 @@ const TsDerivedTable = () => {
     const startWidth = columnWidths[columnId];
 
     const handleMouseMove = (event) => {
-      const newWidth = Math.max(
-        startWidth + (event.clientX - startX),
-        TsDerivedTableHeader.find((col) => col.id === columnId)?.minW || 50
-      );
+      const newWidth = Math.max(startWidth + (event.clientX - startX), TsDerivedTableHeader.find((col) => col.id === columnId)?.minW || 50);
       setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
     };
 
@@ -217,7 +211,7 @@ const TsDerivedTable = () => {
   const handleDeleteSelected = async () => {
     const details = {
       'model-id': model?._id,
-      rowDetails: JSON.stringify(selectedRows),
+      rowDetails: JSON.stringify(selectedRows)
     };
     try {
       const res = await deleteThreatScenario(details);
@@ -241,7 +235,7 @@ const TsDerivedTable = () => {
       SNo: row?.SNo,
       nodeId: row?.nodeId,
       rowId: row?.rowId,
-      type: row?.type,
+      type: row?.type
     };
     setSelectedRows((prev) =>
       prev.some((selectedRow) => selectedRow.SNo === shorted.SNo)
@@ -257,184 +251,184 @@ const TsDerivedTable = () => {
     }
   };
 
-  const RenderTableRow = React.memo(({ row }) => {
-    const [hoveredField, setHoveredField] = useState(null);
-    const [editingField, setEditingField] = useState(null);
-    const [editValue, setEditValue] = useState('');
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [isPopperFocused, setIsPopperFocused] = useState(false);
-    const isSelected = selectedRows.some((selectedRow) => selectedRow.SNo === row.SNo);
+  const RenderTableRow = React.memo(
+    ({ row }) => {
+      const [hoveredField, setHoveredField] = useState(null);
+      const [editingField, setEditingField] = useState(null);
+      const [editValue, setEditValue] = useState('');
+      const [anchorEl, setAnchorEl] = useState(null);
+      const [isPopperFocused, setIsPopperFocused] = useState(false);
+      const isSelected = selectedRows.some((selectedRow) => selectedRow.SNo === row.SNo);
 
-    const handleEditClick = (event, fieldName, currentValue) => {
-      event.stopPropagation();
-      setEditingField(fieldName);
-      setEditValue(currentValue || '');
-      setAnchorEl(event.currentTarget);
-    };
-
-    const handleSaveEdit = async (e) => {
-      e.stopPropagation();
-      if (!editValue.trim()) {
-        toast.error('Field must not be empty');
-        return;
-      }
-
-      const details = {
-        id: row?.type === 'derived' ? derivedId : UserDefinedId,
-        propId: row?.ID,
-        nodeId: row?.nodeId,
-        rowId: row?.rowId,
-        field: editingField,
-        value: editValue,
-        type: row?.type,
+      const handleEditClick = (event, fieldName, currentValue) => {
+        event.stopPropagation();
+        setEditingField(fieldName);
+        setEditValue(currentValue || '');
+        setAnchorEl(event.currentTarget);
       };
 
-      try {
-        const res = await updateName(details);
-        if (!res.error) {
-          toast.success(res.message || 'Updated successfully');
-          getThreatScenario(model?._id);
-          handleClosePopper();
-        } else {
-          toast.error(res.error || 'Something went wrong');
+      const handleSaveEdit = async (e) => {
+        e.stopPropagation();
+        if (!editValue.trim()) {
+          toast.error('Field must not be empty');
+          return;
         }
-      } catch (err) {
-        toast.error('Something went wrong');
-      }
-    };
 
-    const handleClosePopper = () => {
-      if (!isPopperFocused) {
-        setEditingField(null);
-        setEditValue('');
-        setAnchorEl(null);
-      }
-    };
+        const details = {
+          id: row?.type === 'derived' ? derivedId : UserDefinedId,
+          propId: row?.ID,
+          nodeId: row?.nodeId,
+          rowId: row?.rowId,
+          field: editingField,
+          value: editValue,
+          type: row?.type
+        };
 
-    return (
-      <StyledTableRow
-        sx={{
-          backgroundColor: isSelected ? '#9FE2BF' : color?.sidebarBG,
-          '& .MuiTableCell-body': { color: color?.sidebarContent },
-        }}
-      >
-        {Head.map((item) => {
-          const isEditableField = item.name === 'Description' || item.name === 'Name';
-          let cellContent;
-
-          switch (item.name) {
-            case 'SNo':
-              cellContent = (
-                <StyledTableCell sx={{ cursor: 'pointer', width: columnWidths[item.id] }} onClick={() => toggleRowSelection(row)}>
-                  {row[item.name] || '-'}
-                </StyledTableCell>
-              );
-              break;
-            case 'ID':
-              cellContent = (
-                <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name]?.slice(0, 6) || '-'}</StyledTableCell>
-              );
-              break;
-            case 'Description':
-            case 'Name':
-              cellContent = (
-                <StyledTableCell
-                  sx={{ position: 'relative', cursor: 'pointer', width: columnWidths[item.id] }}
-                  onMouseEnter={() => setHoveredField(item.name)}
-                  onMouseLeave={() => !anchorEl && setHoveredField(null)}
-                >
-                  {row[item.name] || '-'}
-                  {(hoveredField === item.name || editingField === item.name) && (
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleEditClick(e, item.name, row[item.name])}
-                      sx={{ position: 'absolute', top: '15%', right: '-2px', transform: 'translateY(-50%)' }}
-                    >
-                      <EditIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  )}
-                </StyledTableCell>
-              );
-              break;
-            case 'Detailed / Combined Threat Scenarios':
-              cellContent = (
-                <StyledTableCell sx={{ width: columnWidths[item.id] }}>
-                  {row[item.name]?.length ? (
-                    row[item.name].map((threat, i) => (
-                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                        <span>
-                          {threat?.prop_key
-                            ? `[TS${threat.prop_key.toString().padStart(3, '0')}] ${threatType(threat?.prop_name)} of ${
-                                threat?.node_name
-                              } leads to ${threat?.damage_scene}`
-                            : '-'}
-                        </span>
-                      </Box>
-                    ))
-                  ) : (
-                    '-'
-                  )}
-                </StyledTableCell>
-              );
-              break;
-            case 'Losses of Cybersecurity Properties':
-              cellContent = (
-                <StyledTableCell>
-                  {row[item.name]?.length ? (
-                    row[item.name].map((loss, i) => (
-                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                        <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name || loss?.prop_name) }} />
-                        <span>Loss of {loss?.name || loss?.prop_name || '-'}</span>
-                      </Box>
-                    ))
-                  ) : (
-                    '-'
-                  )}
-                </StyledTableCell>
-              );
-              break;
-            case 'Damage Scenarios':
-              cellContent = (
-                <StyledTableCell sx={{ cursor: 'pointer', width: columnWidths[item.id] }} onClick={() => !row[item.name].length && handleOpenSelect(row)}>
-                  {row[item.name]?.length ? (
-                    row[item.name].map((damage, i) => (
-                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                        <span>
-                          {damage?.key
-                            ? `[DS${damage.key.toString().padStart(3, '0')}] ${damage.name}`
-                            : damage?.damage_id
-                            ? `[${damage.damage_id}] ${damage.damage_scene}`
-                            : '-'}
-                        </span>
-                      </Box>
-                    ))
-                  ) : (
-                    <span>Select Damage Scenario</span>
-                  )}
-                </StyledTableCell>
-              );
-              break;
-            default:
-              cellContent = <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name] || '-'}</StyledTableCell>;
-              break;
+        try {
+          const res = await updateName(details);
+          if (!res.error) {
+            toast.success(res.message || 'Updated successfully');
+            getThreatScenario(model?._id);
+            handleClosePopper();
+          } else {
+            toast.error(res.error || 'Something went wrong');
           }
-          return cellContent;
-        })}
-        {anchorEl && (
-          <FormPopper
-            anchorEl={anchorEl}
-            handleSaveEdit={handleSaveEdit}
-            handleClosePopper={handleClosePopper}
-            editValue={editValue}
-            setEditValue={setEditValue}
-            editingField={editingField}
-            setIsPopperFocused={setIsPopperFocused}
-          />
-        )}
-      </StyledTableRow>
-    );
-  }, [Head, selectedRows, derivedId, UserDefinedId, model?._id]);
+        } catch (err) {
+          toast.error('Something went wrong');
+        }
+      };
+
+      const handleClosePopper = () => {
+        if (!isPopperFocused) {
+          setEditingField(null);
+          setEditValue('');
+          setAnchorEl(null);
+        }
+      };
+
+      return (
+        <StyledTableRow
+          sx={{
+            backgroundColor: isSelected ? '#9FE2BF' : color?.sidebarBG,
+            '& .MuiTableCell-body': { color: color?.sidebarContent }
+          }}
+        >
+          {Head.map((item) => {
+            const isEditableField = item.name === 'Description' || item.name === 'Name';
+            let cellContent;
+
+            switch (item.name) {
+              case 'SNo':
+                cellContent = (
+                  <StyledTableCell sx={{ cursor: 'pointer', width: columnWidths[item.id] }} onClick={() => toggleRowSelection(row)}>
+                    {row[item.name] || '-'}
+                  </StyledTableCell>
+                );
+                break;
+              case 'ID':
+                cellContent = <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name]?.slice(0, 6) || '-'}</StyledTableCell>;
+                break;
+              case 'Description':
+              case 'Name':
+                cellContent = (
+                  <StyledTableCell
+                    sx={{ position: 'relative', cursor: 'pointer', width: columnWidths[item.id] }}
+                    onMouseEnter={() => setHoveredField(item.name)}
+                    onMouseLeave={() => !anchorEl && setHoveredField(null)}
+                  >
+                    {row[item.name] || '-'}
+                    {(hoveredField === item.name || editingField === item.name) && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEditClick(e, item.name, row[item.name])}
+                        sx={{ position: 'absolute', top: '15%', right: '-2px', transform: 'translateY(-50%)' }}
+                      >
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    )}
+                  </StyledTableCell>
+                );
+                break;
+              case 'Detailed / Combined Threat Scenarios':
+                cellContent = (
+                  <StyledTableCell sx={{ width: columnWidths[item.id] }}>
+                    {row[item.name]?.length
+                      ? row[item.name].map((threat, i) => (
+                          <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <span>
+                              {threat?.prop_key
+                                ? `[TS${threat.prop_key.toString().padStart(3, '0')}] ${threatType(threat?.prop_name)} of ${
+                                    threat?.node_name
+                                  } leads to ${threat?.damage_scene}`
+                                : '-'}
+                            </span>
+                          </Box>
+                        ))
+                      : '-'}
+                  </StyledTableCell>
+                );
+                break;
+              case 'Losses of Cybersecurity Properties':
+                cellContent = (
+                  <StyledTableCell>
+                    {row[item.name]?.length
+                      ? row[item.name].map((loss, i) => (
+                          <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <CircleIcon sx={{ fontSize: 14, color: colorPicker(loss?.name || loss?.prop_name) }} />
+                            <span>Loss of {loss?.name || loss?.prop_name || '-'}</span>
+                          </Box>
+                        ))
+                      : '-'}
+                  </StyledTableCell>
+                );
+                break;
+              case 'Damage Scenarios':
+                cellContent = (
+                  <StyledTableCell
+                    sx={{ cursor: 'pointer', width: columnWidths[item.id] }}
+                    onClick={() => !row[item.name].length && handleOpenSelect(row)}
+                  >
+                    {row[item.name]?.length ? (
+                      row[item.name].map((damage, i) => (
+                        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                          <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                          <span>
+                            {damage?.key
+                              ? `[DS${damage.key.toString().padStart(3, '0')}] ${damage.name}`
+                              : damage?.damage_id
+                              ? `[${damage.damage_id}] ${damage.damage_scene}`
+                              : '-'}
+                          </span>
+                        </Box>
+                      ))
+                    ) : (
+                      <span>Select Damage Scenario</span>
+                    )}
+                  </StyledTableCell>
+                );
+                break;
+              default:
+                cellContent = <StyledTableCell sx={{ width: columnWidths[item.id] }}>{row[item.name] || '-'}</StyledTableCell>;
+                break;
+            }
+            return cellContent;
+          })}
+          {anchorEl && (
+            <FormPopper
+              anchorEl={anchorEl}
+              handleSaveEdit={handleSaveEdit}
+              handleClosePopper={handleClosePopper}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              editingField={editingField}
+              setIsPopperFocused={setIsPopperFocused}
+            />
+          )}
+        </StyledTableRow>
+      );
+    },
+    [Head, selectedRows, derivedId, UserDefinedId, model?._id]
+  );
 
   return (
     <Box
@@ -444,7 +438,7 @@ const TsDerivedTable = () => {
         padding: 1,
         '&::-webkit-scrollbar': { width: '4px' },
         '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '10px' },
-        '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.1)' },
+        '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.1)' }
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mx: 1 }}>
@@ -457,7 +451,7 @@ const TsDerivedTable = () => {
             onChange={handleSearch}
             sx={{
               '& .MuiInputBase-input': { fontSize: '0.75rem', padding: '0.5rem' },
-              '& .MuiOutlinedInput-root': { height: '30px' },
+              '& .MuiOutlinedInput-root': { height: '30px' }
             }}
           />
           <Button variant="contained" onClick={handleOpenModalTs}>
@@ -515,10 +509,7 @@ const TsDerivedTable = () => {
           <TableHead>
             <TableRow>
               {Head.map((hd) => (
-                <StyledTableCell
-                  key={hd.id}
-                  sx={{ width: columnWidths[hd.id] ?? hd.w, minWidth: hd.minW, position: 'relative' }}
-                >
+                <StyledTableCell key={hd.id} sx={{ width: columnWidths[hd.id] ?? hd.w, minWidth: hd.minW, position: 'relative' }}>
                   {hd.name}
                   <Box
                     sx={{
@@ -527,7 +518,7 @@ const TsDerivedTable = () => {
                       top: 0,
                       width: '5px',
                       height: '100%',
-                      cursor: 'col-resize',
+                      cursor: 'col-resize'
                     }}
                     onMouseDown={(e) => handleResizeStart(e, hd.id)}
                   />
@@ -546,8 +537,8 @@ const TsDerivedTable = () => {
       <TablePagination
         sx={{
           '& .MuiTablePagination-selectLabel, & .MuiSelect-select, & .MuiTablePagination-displayedRows': {
-            color: color?.sidebarContent,
-          },
+            color: color?.sidebarContent
+          }
         }}
         component="div"
         count={filteredRows.length}

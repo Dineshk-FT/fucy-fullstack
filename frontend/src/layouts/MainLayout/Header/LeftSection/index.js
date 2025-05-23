@@ -96,13 +96,13 @@ const LeftSection = () => {
     }
   }, [model?._id, getSidebarNode, getTemplates, getAttackScenario]);
 
-  const handleAddNewNode = useCallback(() => {
-    dispatch(openAddNodeTab());
-  }, [dispatch]);
-
-  const handleAddDataNode = useCallback(() => {
-    dispatch(openAddDataNodeTab());
-  }, [dispatch]);
+  const handleAddNewNode = useCallback(
+    (e, name) => {
+      e.stopPropagation();
+      name == 'node' ? dispatch(openAddNodeTab()) : dispatch(openAddDataNodeTab());
+    },
+    [dispatch]
+  );
 
   const handleSystemTabClick = useCallback(() => setOpenTemplateDialog(true), []);
   const handleComponentsTabClick = useCallback(() => setOpenComponentsDialog(true), []);
@@ -111,13 +111,13 @@ const LeftSection = () => {
     setExportAnchorEl(event.currentTarget);
   };
 
-  const handleExportClose = () => {
+  const handleExportClose = (e) => {
+    e.stopPropagation();
     setExportAnchorEl(null);
   };
 
   const handleExportJSON = () => {
     // Implement your JSON export logic here
-    console.log('Exporting as JSON');
     exportProject({ modelId: model?._id })
       .then((res) => {
         if (!res.error) {
@@ -134,8 +134,6 @@ const LeftSection = () => {
   };
 
   const handleExportPDF = () => {
-    // Implement your PDF export logic here
-    console.log('Exporting as PDF');
     handleExportClose();
   };
 
@@ -178,7 +176,8 @@ const LeftSection = () => {
   };
 
   const handleTabChange = useCallback(
-    (tabName) => {
+    (e, tabName) => {
+      e.stopPropagation();
       dispatch(setPreviousTab(tabName));
       setActiveTab(tabName);
       const actions = {
@@ -203,6 +202,7 @@ const LeftSection = () => {
   );
 
   const handleContext = useCallback((name, event) => {
+    event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
       setOpenAttackModal(true);
       setSubName(name);
@@ -280,13 +280,13 @@ const LeftSection = () => {
       {
         name: 'Item Definition',
         options: [
-          { label: 'New Data', icon: NewFolderIcon, action: handleAddDataNode },
+          { label: 'New Data', icon: NewFolderIcon, action: (e) => handleAddNewNode(e, 'data') },
           {
             label: 'New Component',
             icon: () => (
               <img src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000" style={{ width: 24, height: 24 }} />
             ),
-            action: handleAddNewNode
+            action: (e) => handleAddNewNode(e, 'node')
           },
           {
             label: 'Group',
@@ -378,7 +378,7 @@ const LeftSection = () => {
         ]
       }
     ],
-    [handleAddDataNode, handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
   );
 
   const handleCloseModal = useCallback((e, modalName) => {
@@ -526,7 +526,7 @@ const LeftSection = () => {
           {tabs.map((tab) => (
             <Box key={tab.name} sx={{ position: 'relative', display: 'inline-block' }}>
               <Typography
-                onClick={() => handleTabChange(tab.name)}
+                onClick={(e) => handleTabChange(e, tab.name)}
                 sx={{
                   ...tabStyles,
                   ...(activeTab === tab.name ? activeTabStyles : {}),

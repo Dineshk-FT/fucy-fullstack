@@ -23,31 +23,25 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
-  IconButton
+  FormControlLabel
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { useSelector } from 'react-redux';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { useDispatch, useSelector } from 'react-redux';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { Box } from '@mui/system';
 import { RatingColor, getRating } from './constraints';
 import { tableHeight } from '../../themes/constant';
 import { AttackTableoptions as options, AttackTableHeader } from './constraints';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import ControlPointIcon from '@mui/icons-material/ControlPoint';
-import toast from 'react-hot-toast';
 
-const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
-  attacks: state.attackScenarios['subs'][0],
-  addScene: state.addAttackScene
+  attacks: state.attackScenarios['subs'][0]
 });
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -59,8 +53,6 @@ const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} clas
     border: '1px solid #dadde9'
   }
 }));
-
-const column = AttackTableHeader;
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -123,7 +115,7 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
         }}
       >
         {!row[item.name] && (
-          <InputLabel id="demo-simple-select-label" shrink={false} sx={{ top: -16 }}>
+          <InputLabel sx={{ top: -16 }} shrink={false}>
             Select Value
           </InputLabel>
         )}
@@ -155,9 +147,9 @@ const SelectableCell = ({ item, row, handleChange, name }) => {
   );
 };
 
-export default function AttackTreeTable() {
-  const color = ColorTheme();
-  const { model, update, attacks, getAttackScenario, addScene } = useStore(selector, shallow);
+const AttackTreeTable = () => {
+  const theme = useTheme();
+  const { model, update, attacks, getAttackScenario } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -166,35 +158,14 @@ export default function AttackTreeTable() {
   const [openFilter, setOpenFilter] = useState(false);
   const visibleColumns = useStore((state) => state.attackTreeTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
-  const [isAddingNewRow, setIsAddingNewRow] = useState(false);
-  const [newRowData, setNewRowData] = useState({
-    Name: '',
-    Description: ''
-  });
+  const [columnWidths, setColumnWidths] = useState({});
+
   const Head = useMemo(() => {
-    if (title.includes('Derived')) {
-      const col = [...column];
-      col.splice(4, 0, { id: 14, name: 'Detailed / Combined Threat Scenarios' });
-      return col.filter((header) => visibleColumns.includes(header.name));
-    } else {
-      return column.filter((header) => visibleColumns.includes(header.name));
-    }
+    const headers = title.includes('Derived')
+      ? [...AttackTableHeader, { id: 14, name: 'Detailed / Combined Threat Scenarios' }]
+      : AttackTableHeader;
+    return headers.filter((header) => visibleColumns.includes(header.name));
   }, [title, visibleColumns]);
-  const [columnWidths, setColumnWidths] = useState(
-    Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
-  );
-
-  const handleAddNewRow = () => {
-    setIsAddingNewRow(true);
-    setNewRowData({
-      Name: '',
-      Description: ''
-    });
-  };
-
-  // Open/Close the filter modal
-  const handleOpenFilter = () => setOpenFilter(true);
-  const handleCloseFilter = () => setOpenFilter(false);
 
   useEffect(() => {
     setColumnWidths(Object.fromEntries(Head.map((hd) => [hd.id, 180])));
@@ -261,41 +232,6 @@ export default function AttackTreeTable() {
       setRows(previousRows);
     }
   };
-  const handleSaveNewRow = () => {
-    if (!newRowData.Name.trim()) {
-      notify('Name must not be empty', 'error');
-      return;
-    }
-    const details = {
-      modelId: model?._id,
-      type: 'attack',
-      name: newRowData?.Name,
-      description: newRowData?.Description
-    };
-
-    addScene(details)
-      .then((res) => {
-        // console.log('res', res);
-        if (!res.error) {
-          // setTimeout(() => {
-          getAttackScenario(model?._id);
-          notify(res.message ?? 'Added successfully', 'success');
-          // handleClose();
-          setNewRowData({
-            name: '',
-            Description: ''
-          });
-          // }, 500);
-        } else {
-          notify(res?.error ?? 'Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
-      });
-  };
-
-  // console.log('model', model);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -344,63 +280,38 @@ export default function AttackTreeTable() {
           const currentWidth = columnWidths[item.id] || 180;
           const shouldTruncate = currentWidth < WIDTH_THRESHOLD;
 
-          let cellContent;
-          switch (true) {
-            case checkforLabel(item):
-              cellContent = <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />;
-              break;
-            case item.name === 'Attack Feasibilities Rating':
-              cellContent = (
-                <StyledTableCell
-                  key={index}
-                  align={'left'}
-                  sx={{
-                    backgroundColor: `${bgColor} !important`,
-                    color: `${textColor} !important`
-                  }}
-                >
-                  {row[item.name] ? row[item.name] : '-'}
-                </StyledTableCell>
-              );
-              break;
-            case item.name === 'Name' || item.name === 'Description':
-              cellContent = (
-                <StyledTableCell
-                  key={index}
-                  style={{ width: currentWidth }}
-                  align={'left'}
-                  sx={{
-                    ...(shouldTruncate
-                      ? {
-                          whiteSpace: 'nowrap', // Truncate text into a single line
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }
-                      : {
-                          whiteSpace: 'normal', // Wrap text into two lines
-                          overflowWrap: 'break-word',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        })
-                  }}
-                >
-                  <Tooltip title={row[item.name]} placement="top">
-                    <span>{row[item.name] ? row[item.name] : '-'}</span>
+          const cellStyles = {
+            ...(shouldTruncate
+              ? {
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }
+              : {
+                  whiteSpace: 'normal',
+                  overflowWrap: 'break-word',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                })
+          };
+
+          return (
+            <React.Fragment key={index}>
+              {isSelectableColumn(item.name) ? (
+                <SelectableCell item={item} row={row} handleChange={handleChange} name={item.name} />
+              ) : item.name === 'Attack Feasibilities Rating' ? (
+                <StyledTableCell sx={{ backgroundColor: bgColor, color: textColor }}>{row[item.name] || '-'}</StyledTableCell>
+              ) : (
+                <StyledTableCell style={{ width: currentWidth }} sx={cellStyles}>
+                  <Tooltip title={row[item.name] || '-'} placement="top">
+                    <span>{row[item.name] || '-'}</span>
                   </Tooltip>
                 </StyledTableCell>
-              );
-              break;
-            default:
-              cellContent = (
-                <StyledTableCell key={index} style={{ width: currentWidth }} align={'left'}>
-                  {row[item.name] ? row[item.name] : '-'}
-                </StyledTableCell>
-              );
-              break;
-          }
-          return <React.Fragment key={index}>{cellContent}</React.Fragment>;
+              )}
+            </React.Fragment>
+          );
         })}
       </StyledTableRow>
     );
@@ -411,19 +322,6 @@ export default function AttackTreeTable() {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
         <Typography sx={{ color: theme.palette.text.primary, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
         <Box display="flex" alignItems="center" gap={1}>
-          {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
-          <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Attack Tree Table</Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Button
-            variant="outlined"
-            sx={{ borderRadius: 1.5 }}
-            onClick={handleAddNewRow}
-            startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
-            disabled={isAddingNewRow}
-          >
-            Add new
-          </Button>
           <TextField
             placeholder="Search"
             size="small"
@@ -505,70 +403,8 @@ export default function AttackTreeTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isAddingNewRow && (
-              <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                {Head?.map((item, index) => {
-                  if (index === 0) {
-                    // Move action buttons to the first column
-                    return (
-                      <StyledTableCell key={index}>
-                        <IconButton
-                          size="small"
-                          onClick={handleSaveNewRow}
-                          color="success"
-                          variant="outlined"
-                          sx={{
-                            mr: 1,
-                            height: 22,
-                            width: 22,
-                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
-                            '&:hover': { bgcolor: 'success.main', color: 'white' }
-                          }}
-                        >
-                          <CheckIcon />
-                        </IconButton>
-
-                        <IconButton
-                          onClick={() => setIsAddingNewRow(false)}
-                          color="error"
-                          variant="outlined"
-                          sx={{
-                            height: 22,
-                            width: 22,
-                            '& .MuiSvgIcon-root': { height: 'inherit', width: 'inherit' },
-                            '&:hover': { bgcolor: 'error.main', color: 'white' }
-                          }}
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                      </StyledTableCell>
-                    );
-                  } else if (item.name === 'Name' || item.name === 'Description') {
-                    return (
-                      <StyledTableCell key={index}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          value={newRowData[item.name]}
-                          onChange={(e) => setNewRowData((prev) => ({ ...prev, [item.name]: e.target.value }))}
-                          sx={{
-                            '& .MuiInputBase-input': {
-                              fontSize: '0.75rem',
-                              padding: '4px 8px'
-                            }
-                          }}
-                        />
-                      </StyledTableCell>
-                    );
-                  } else {
-                    return <StyledTableCell key={index}>-</StyledTableCell>;
-                  }
-                })}
-              </StyledTableRow>
-            )}
-
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
-              <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
+            {paginatedRows.map((row) => (
+              <RenderTableRow key={row.ID} row={row} />
             ))}
           </TableBody>
         </Table>
@@ -590,4 +426,6 @@ export default function AttackTreeTable() {
       />
     </Box>
   );
-}
+};
+
+export default AttackTreeTable;

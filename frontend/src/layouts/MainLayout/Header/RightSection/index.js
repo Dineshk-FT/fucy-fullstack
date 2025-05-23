@@ -16,16 +16,18 @@ function RightSection() {
   const navigate = useNavigate();
   const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
 
-  const handleChangeMode = useCallback(() => {
-    dispatch(changeMode());
-  }, [dispatch]);
-
-  const toggleLogoutDialog = useCallback(
-    (open) => () => {
-      setOpen(open);
+  const handleChangeMode = useCallback(
+    (e) => {
+      e.stopPropagation();
+      dispatch(changeMode());
     },
-    []
+    [dispatch]
   );
+
+  const toggleLogoutDialog = useCallback((e, open) => {
+    e.stopPropagation();
+    setOpen(open);
+  }, []);
 
   const handleConfirmLogout = useCallback(() => {
     dispatch(logout());
@@ -33,9 +35,13 @@ function RightSection() {
     navigate('/login');
   }, [dispatch, navigate]);
 
-  const toggleNavbar = useCallback(() => {
-    dispatch(navbarSlide());
-  }, [dispatch]);
+  const toggleNavbar = useCallback(
+    (e) => {
+      e.stopPropagation();
+      dispatch(navbarSlide());
+    },
+    [dispatch]
+  );
 
   const iconButtonStyles = useMemo(
     () => ({
@@ -65,7 +71,7 @@ function RightSection() {
           {isDark ? <NightsStayIcon sx={{ color: iconColor, fontSize: 20 }} /> : <LightModeIcon sx={{ color: iconColor, fontSize: 20 }} />}
         </Box>
 
-        <Box onClick={toggleLogoutDialog(true)} sx={iconButtonStyles}>
+        <Box onClick={(e) => toggleLogoutDialog(e, true)} sx={iconButtonStyles}>
           <PowerSettingsNewIcon sx={{ color: iconColor, fontSize: 20 }} />
         </Box>
 
@@ -76,7 +82,7 @@ function RightSection() {
 
       <Dialog
         open={open}
-        onClose={toggleLogoutDialog(false)}
+        onClose={(e) => toggleLogoutDialog(e, false)}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
@@ -91,7 +97,7 @@ function RightSection() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={toggleLogoutDialog(false)} variant="outlined" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+          <Button onClick={(e) => toggleLogoutDialog(e, false)} variant="outlined" sx={{ fontFamily: "'Poppins', sans-serif" }}>
             Cancel
           </Button>
           <Button onClick={handleConfirmLogout} color="error" variant="contained" autoFocus sx={{ fontFamily: "'Poppins', sans-serif" }}>
