@@ -10,8 +10,9 @@ import Routes from './routes';
 import themes from './themes';
 
 // project imports
-import NavigationScroll from './layout/NavigationScroll';
-import MockErrorBoundary from './views/ErrorPage';
+import NavigationScroll from './layouts/NavigationScroll';
+import MockErrorBoundary from './Website/pages/Error/index';
+import { ReactFlowProvider } from 'reactflow';
 
 // ==============================|| APP ||============================== //
 
@@ -19,16 +20,18 @@ const App = () => {
   const customization = useSelector((state) => state.customization);
 
   return (
-    <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={themes(customization)}>
-        <CssBaseline />
-        <NavigationScroll>
-          <MockErrorBoundary>
-            <Routes />
-          </MockErrorBoundary>
-        </NavigationScroll>
-      </ThemeProvider>
-    </StyledEngineProvider>
+    <ReactFlowProvider>
+      <StyledEngineProvider injectFirst>
+        <ThemeProvider theme={themes(customization)}>
+          <CssBaseline />
+          <NavigationScroll>
+            <MockErrorBoundary>
+              <Routes />
+            </MockErrorBoundary>
+          </NavigationScroll>
+        </ThemeProvider>
+      </StyledEngineProvider>
+    </ReactFlowProvider>
   );
 };
 
