@@ -24,7 +24,7 @@ export const RatingColor = (value) => {
     Medium: 'yellow',
     Low: 'green',
     'Very low': 'lightgreen',
-    NA: 'transparent'
+    NA: 'grey'
   };
   return mapped[value] || 'transparent';
 };

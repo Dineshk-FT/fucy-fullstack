@@ -103,7 +103,7 @@ export default function Event(props) {
   return (
     <>
       <NodeResizer
-        lineStyle={{ backgroundColor: bgColor ?? 'gray', borderWidth: '2px' }}
+        lineStyle={{ backgroundColor: bgColor === 'transparent' ? 'grey' : bgColor, borderWidth: '2px' }}
         minWidth={100}
         minHeight={50}
         onResize={(event, params) => {
