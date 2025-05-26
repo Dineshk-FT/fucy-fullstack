@@ -592,7 +592,7 @@ export default function MainCanvas() {
   };
 
   const handleClosePopper = (e) => {
-    console.log('close popper');
+    // console.log('close popper');
     e.stopPropagation();
     setPropertiesOpen(false);
     dispatch(clearAnchorEl());

@@ -27,6 +27,7 @@ import {
   Non_repudiationIcon,
   AvailabilityIcon
 } from '../../../assets/icons';
+import { MarkerType } from 'reactflow';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -60,7 +61,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   const { selectedBlock } = useSelector((state) => state?.canvas);
   const [tabValue, setTabValue] = useState(0);
 
-  console.log('selectedBlock', selectedBlock);
+  // console.log('selectedBlock', selectedBlock);
   // Improved update function using functional update
   const updateEdge = (updates) => {
     setEdges((prevEdges) => prevEdges.map((edge) => (edge.id === selectedBlock?.id ? { ...edge, ...updates } : edge)));
@@ -88,7 +89,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
 
     if (name === 'startPoint' || name === 'endPoint') {
       const markerType = name === 'startPoint' ? 'markerStart' : 'markerEnd';
-      const defaultMarker = { type: 'arrow', color: '#000000' }; // Ensure type is defined
+      const defaultMarker = { type: MarkerType.ArrowClosed, color: '#000000' }; // Ensure type is defined
 
       updates = {
         [markerType]: {
