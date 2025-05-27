@@ -46,6 +46,17 @@ const items = [
     subs: [{ id: 41, name: 'Attack' }],
   },
   {
+    id: '5',
+    name: 'CyberSecurity Goals, Claims and Requirements',
+    icon: 'CybersecurityIcon',
+    subs: [
+      { id: 51, name: 'Cybersecurity Goals' },
+      { id: 53, name: 'Cybersecurity Requirements' },
+      { id: 52, name: 'Cybersecurity Controls' },
+      { id: 54, name: 'Cybersecurity Claims' }
+    ]
+  },
+  {
     id: 8,
     name: 'Risk Determination and Risk Treatment Decision',
     icon: 'RiskIcon',
@@ -83,6 +94,10 @@ const DocumentDialog = ({ open, onClose }) => {
     formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
     formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
     formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
+    formData.append('cyberSecurityGoals', selectedItems.includes(51) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
+    formData.append('cyberSecurityRequirements', selectedItems.includes(52) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
+    formData.append('cyberSecurityControls', selectedItems.includes(53) || selectedItems.includes(5) ? 1 : 0);
+    formData.append('cyberSecurityClaims', selectedItems.includes(54) || selectedItems.includes(5) ? 1 : 0); 
 
     if (selectedItems.includes(1)) {
       if (canvasImage) {

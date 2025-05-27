@@ -10,7 +10,8 @@ import {
   PlaylistAdd as AddListIcon,
   AccountTree as TreeIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  Help as HelpIcon
 } from '@mui/icons-material';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
@@ -106,6 +107,15 @@ const LeftSection = () => {
 
   const handleSystemTabClick = useCallback(() => setOpenTemplateDialog(true), []);
   const handleComponentsTabClick = useCallback(() => setOpenComponentsDialog(true), []);
+
+const handleHelpClick = useCallback(() => {
+  // ✅ This assumes the PDF is in your public folder
+  const pdfUrl = process.env.PUBLIC_URL + '/FucyTech-Doc.pdf';
+
+  // Open PDF in a new tab
+  window.open(pdfUrl, '_blank');
+}, []);
+
 
   const handleExportClick = (event) => {
     setExportAnchorEl(event.currentTarget);
@@ -256,7 +266,7 @@ const LeftSection = () => {
 
   const tabs = useMemo(
     () => [
-      {
+              {
         name: 'Project',
         options: [
           { label: 'New', icon: NewFolderIcon, action: () => setOpenModal((prev) => ({ ...prev, New: true })) },
@@ -366,9 +376,15 @@ const LeftSection = () => {
             action: () => handleClick('Threat Assessment & Risk Treatment')
           }
         ]
+      },
+      {
+        name: 'Help',
+        options: [
+          { label: 'Help', icon: HelpIcon, action: handleHelpClick }
+        ]
       }
     ],
-    [handleAddDataNode, handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddDataNode, handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleHelpClick]
   );
 
   const handleCloseModal = useCallback((modalName) => {
