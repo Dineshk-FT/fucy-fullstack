@@ -1,0 +1,9 @@
+# Backend logs
+*.log
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Python virtual environment
+venv/
