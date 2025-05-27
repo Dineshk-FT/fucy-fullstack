@@ -10,8 +10,10 @@ import {
   PlaylistAdd as AddListIcon,
   AccountTree as TreeIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  Help as HelpIcon
 } from '@mui/icons-material';
+import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
 import SelectProject from '../../../../components/Modal/SelectProject';
@@ -177,6 +179,13 @@ const LeftSection = () => {
     fileInput.click();
   };
 
+  // Add the help PDF handler
+  const handleHelpClick = useCallback(() => {
+    const pdfUrl = pdfFile;
+    window.open(pdfUrl, '_blank');
+    
+  }, []);
+
   const handleTabChange = useCallback(
     (e, tabName) => {
       e.stopPropagation();
@@ -188,11 +197,12 @@ const LeftSection = () => {
         'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
         'Attack Path': handleAttackTableClick,
         Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
-        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
+        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8'),
+        Help: handleHelpClick // Add the help action
       };
       actions[tabName]?.();
     },
-    [dispatch]
+    [dispatch, handleHelpClick]
   );
 
   const handleToggleCollapse = useCallback(
@@ -454,9 +464,19 @@ const LeftSection = () => {
             action: () => handleClick('Threat Assessment & Risk Treatment')
           }
         ]
+      },
+      {
+        name: 'Help',
+        options: [
+          {
+            label: 'Documentation',
+            icon: HelpIcon,
+            action: handleHelpClick
+          }
+        ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleHelpClick]
   );
 
   const handleCloseModal = useCallback((e, modalName) => {
