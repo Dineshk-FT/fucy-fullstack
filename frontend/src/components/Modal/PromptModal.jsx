@@ -12,7 +12,7 @@ import {
   Slide,
   CircularProgress,
   Typography,
-  FormLabel,
+  FormLabel
 } from '@mui/material';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
@@ -29,7 +29,7 @@ const selector = (state) => ({
   create: state.createPropmt,
   modelId: state.model?._id,
   getAttackScenario: state.getAttackScenario,
-  getGlobalAttackTrees: state.getGlobalAttackTrees,
+  getGlobalAttackTrees: state.getGlobalAttackTrees
 });
 
 export default React.memo(function PromptModal({ handleClose, open, refreshAPI }) {
@@ -52,12 +52,12 @@ export default React.memo(function PromptModal({ handleClose, open, refreshAPI }
     setLoading(true);
     const newAttackTree = {
       modelId,
-      promptKey: templateDetails.name.trim(),
+      promptKey: templateDetails.name.trim()
     };
 
     create(newAttackTree, modelId)
       .then((res) => {
-        if (!res.error) {
+        if (!res.error && res.status !== 500) {
           toast.success(res.message ?? 'Attack tree created successfully');
           getAttackScenario(modelId);
           getGlobalAttackTrees(modelId);
@@ -66,10 +66,11 @@ export default React.memo(function PromptModal({ handleClose, open, refreshAPI }
           setTemplateDetails({ name: '' });
           handleClose();
         } else {
-          toast.error(res.error ?? 'Error creating attack tree');
+          toast.error(res.error ?? `${res?.data} ,Try using a different name` ?? 'Error creating attack tree');
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        // console.log('err', err);
         toast.error('Something went wrong');
       })
       .finally(() => {
@@ -91,8 +92,8 @@ export default React.memo(function PromptModal({ handleClose, open, refreshAPI }
           '& .MuiPaper-root': {
             background: color?.modalBg,
             width: '475px',
-            borderRadius: '8px',
-          },
+            borderRadius: '8px'
+          }
         }}
       >
         {loading ? (
@@ -104,9 +105,7 @@ export default React.memo(function PromptModal({ handleClose, open, refreshAPI }
           </Box>
         ) : (
           <>
-            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>
-              Create Attack Tree
-            </DialogTitle>
+            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>Create Attack Tree</DialogTitle>
             <DialogContent sx={{ p: 2 }}>
               <DialogContentText id="prompt-modal-dialog-description">
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

@@ -44,7 +44,7 @@ const ItemDefinition = ({
   const { edgesDetail, nodesDetail, dataDetail } = useMemo(() => {
     const details = data.Details || [];
     return {
-      edgesDetail: details.filter((d) => d.nodeId?.includes('reactflow__edge')),
+      edgesDetail: details.filter((d) => d.nodeId?.includes('reactflow__edge') && d.name),
       nodesDetail: details.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data'),
       dataDetail: details.filter((d) => d.type === 'data')
     };

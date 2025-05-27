@@ -2,17 +2,6 @@ import React from 'react';
 import { Popper, Paper, Typography, Button, ClickAwayListener } from '@mui/material';
 
 const AutoSavePopper = ({ open, anchorRef, handleClose, handleSave }) => {
-  //   const [open, setOpen] = useState(false);
-  //   const anchorRef = useRef(null);
-
-  //   const handleToggle = () => {
-  //     setOpen((prev) => !prev);
-  //   };
-
-  //   const handleClose = () => {
-  //     setOpen(false);
-  //   };
-
   const handleAutoSaveChoice = () => {
     handleSave();
     handleClose();

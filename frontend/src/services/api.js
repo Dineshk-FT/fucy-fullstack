@@ -154,7 +154,7 @@ export const ADD_CALL = async (details, url) => {
     return res.data;
   } catch (error) {
     console.error('Error in ADD_CALL:', error);
-    return error.response.data;
+    return error.response;
   }
   // const res = await axios(options);
   // return res.data;
