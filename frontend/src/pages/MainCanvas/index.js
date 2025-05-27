@@ -35,6 +35,8 @@ import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
 import { debounce } from 'lodash';
+import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
+import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -47,8 +49,6 @@ const selector = (state) => ({
   dragAddNode: state.dragAddNode,
   setNodes: state.setNodes,
   setEdges: state.setEdges,
-  setInitialNodes: state.setInitialNodes,
-  setInitialEdges: state.setInitialEdges,
   selectedNodes: state.selectedNodes,
   setSelectedNodes: state.setSelectedNodes,
   model: state.model,
@@ -70,9 +70,11 @@ const selector = (state) => ({
   setSelectedElement: state.setSelectedElement,
   isPropertiesOpen: state.isPropertiesOpen,
   setPropertiesOpen: state.setPropertiesOpen,
-  initialNodes: state.initialNodes,
-  initialEdges: state.initialEdges,
-  setCanvasImage: state.setCanvasImage
+  setCanvasImage: state.setCanvasImage,
+  isChanged: state.isChanged,
+  setIsChanged: state.setIsChanged,
+  openSave: state.openSave,
+  setOpenSave: state.setOpenSave
 });
 
 // Edge line styling
@@ -142,8 +144,6 @@ export default function MainCanvas() {
     dragAddNode,
     setNodes,
     setEdges,
-    setInitialNodes,
-    setInitialEdges,
     selectedNodes,
     setSelectedNodes,
     model,
@@ -166,9 +166,11 @@ export default function MainCanvas() {
     isPropertiesOpen,
     setPropertiesOpen,
     isDark,
-    initialNodes,
-    initialEdges,
-    setCanvasImage
+    setCanvasImage,
+    isChanged,
+    setIsChanged,
+    openSave,
+    setOpenSave
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -189,6 +191,7 @@ export default function MainCanvas() {
   const [isReady, setIsReady] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const latestNodesRef = useRef(nodes);
+  const anchorRef = useRef(null);
 
   const notify = (message, status) => toast[status](message);
 
@@ -373,22 +376,25 @@ export default function MainCanvas() {
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
     setNodeTypes(newNodeTypes);
-    setNodes([]);
-    setEdges([]);
+    dispatch(setAttackScene({}));
+    if (!isChanged) {
+      setNodes([]);
+      setEdges([]);
+    }
     setTimeout(() => setIsReady(true), 0);
-    return () => {
-      if (!_.isEqual(nodes, initialNodes) || !_.isEqual(edges, initialEdges)) {
-        handleSaveToModel();
-      }
-    };
   }, []);
+  // console.log('nodes', nodes);
 
   useEffect(() => {
     const template = assets?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
-    onRestore(template);
-  }, [assets]);
+    if (!isChanged) {
+      setTimeout(() => {
+        onRestore(template);
+      }, 200);
+    }
+  }, [assets, isChanged]);
 
   // Auto-fit canvas view on mount and when nodes/edges change
   // useEffect(() => {
@@ -439,6 +445,7 @@ export default function MainCanvas() {
   };
 
   const onNodeDragStart = useCallback((_, node) => {
+    setIsChanged(true);
     setTimeout(() => checkForNodes(), 0);
     dragRef.current = node;
   }, []);
@@ -526,6 +533,7 @@ export default function MainCanvas() {
 
   const handleClose = () => {
     setOpenTemplate(false);
+    setIsChanged(false);
   };
 
   const onSaveInitial = useCallback((temp) => {
@@ -540,13 +548,12 @@ export default function MainCanvas() {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
-        setInitialNodes(temp.nodes);
-        setInitialEdges(temp.edges);
       } else {
         handleClear();
       }
+      setIsChanged(false);
     },
-    [reactFlowInstance, assets]
+    [reactFlowInstance, assets, isChanged]
   );
 
   const onLoad = (reactFlowInstance) => {
@@ -569,6 +576,11 @@ export default function MainCanvas() {
         })
       );
     }
+  };
+  const handleCloseSave = () => {
+    setOpenSave(false);
+    onRestore(assets?.template);
+    setIsChanged(false);
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
@@ -946,28 +958,29 @@ export default function MainCanvas() {
             onNodeClick={handleSelectNodeSingleClick}
             onEdgeClick={handleSelectEdgeSingleClick}
             onEdgeContextMenu={handleSelectEdge}
-            defaultPosition={[0, 0]}
-            defaultZoom={1}
             onNodeContextMenu={handleNodeContextMenu}
             minZoom={0.2}
             maxZoom={2}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
-              <CanvasToolbar
-                isDark={isDark}
-                Color={Color}
-                onRestore={onRestore}
-                handleSaveToModel={handleSaveToModel}
-                onSelectionClick={onSelectionClick}
-                selectedNodes={selectedNodes}
-                handleGroupDrag={handleGroupDrag}
-                undo={undo}
-                redo={redo}
-                undoStack={undoStack}
-                redoStack={redoStack}
-                handleDownload={handleDownload}
-                assets={assets}
-              />
+              <span ref={anchorRef}>
+                <CanvasToolbar
+                  isDark={isDark}
+                  Color={Color}
+                  isChanged={isChanged}
+                  onRestore={onRestore}
+                  handleSaveToModel={handleSaveToModel}
+                  onSelectionClick={onSelectionClick}
+                  selectedNodes={selectedNodes}
+                  handleGroupDrag={handleGroupDrag}
+                  undo={undo}
+                  redo={redo}
+                  undoStack={undoStack}
+                  redoStack={redoStack}
+                  handleDownload={handleDownload}
+                  assets={assets}
+                />
+              </span>
             </Panel>
             <Panel position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
@@ -1067,6 +1080,7 @@ export default function MainCanvas() {
           <AddLibrary open={openTemplate} handleClose={handleClose} savedTemplate={savedTemplate} setNodes={setNodes} setEdges={setEdges} />
         )}
       </div>
+      <AutoSavePopper open={openSave} handleClose={handleCloseSave} anchorRef={anchorRef} handleSave={handleSaveToModel} />
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </>
   );

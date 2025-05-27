@@ -83,6 +83,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   canvasImage: null,
   isChanged: false,
   isAttackChanged: false,
+  openSave: false,
 
   subSystems: {
     id: '6',
@@ -659,6 +660,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       isCollapsed: typeof value === 'function' ? value(state.isCollapsed) : value
     })),
 
+  setOpenSave: (value) =>
+    set((state) => ({
+      openSave: typeof value === 'function' ? value(state.openSave) : value
+    })),
+
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -880,6 +886,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
       // Update Zustand edges state
       set({
+        isAttackChanged: true,
         edges: addEdge(newConnection, edges)
       });
       return;
@@ -902,6 +909,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
     // Update Zustand edges state
     set({
+      isAttackChanged: true,
       edges: addEdge(newConnection, edges)
     });
   },
@@ -975,13 +983,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   onAttackEdgesChange: (changes) => {
     set({
-      isAttackChanged: true,
+      // isAttackChanged: true,
       attackEdges: applyEdgeChanges(changes, get().attackEdges)
     });
   },
   onAttackConnect: (connection) => {
     set({
-      isAttackChanged: true,
+      // isAttackChanged: true,
       attackEdges: addEdge(connection, get().attackEdges)
     });
   },
@@ -1926,6 +1934,11 @@ const useStore = createWithEqualityFn((set, get) => ({
   deleteAttacks: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
     const res = await ADD_CALL(details, url);
+    return res;
+  },
+  deleteGlobalAttackTrees: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/globalAttackTree`;
+    const res = await DELETE_CALL(details, url);
     return res;
   },
   deleteRiskTreatment: async (details) => {

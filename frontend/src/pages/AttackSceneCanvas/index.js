@@ -18,6 +18,9 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree';
 import RestoreIcon from '@mui/icons-material/Restore';
+import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
+import { Js } from 'iconsax-react';
+import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 
 const elk = new ELK();
 
@@ -156,7 +159,9 @@ const selector = (state) => ({
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
   setIsChanged: state.setIsAttackChanged,
-  isChanged: state.isAttackChanged
+  isChanged: state.isAttackChanged,
+  openSave: state.openSave,
+  setOpenSave: state.setOpenSave
 });
 
 // Edge line styling
@@ -207,9 +212,12 @@ export default function AttackBlock({ attackScene, color }) {
     attacks,
     requirements,
     isChanged,
-    setIsChanged
+    setIsChanged,
+    openSave,
+    setOpenSave
   } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
+  const dispatch = useDispatch();
   const [nodeTypes, setNodeTypes] = useState({});
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [copiedNode, setCopiedNode] = useState([]);
@@ -220,17 +228,11 @@ export default function AttackBlock({ attackScene, color }) {
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
   const flowWrapper = useRef(null);
-  const nodesRef = useRef(nodes);
-  const edgesRef = useRef(edges);
+  const anchorRef = useRef(null);
 
   // console.log('isChanged', isChanged);
-
   // console.log('attackScene', attackScene);
   // console.log('nodes', nodes);
-  useEffect(() => {
-    nodesRef.current = nodes;
-    edgesRef.current = edges;
-  }, [nodes, edges]);
 
   const getMatchingId = useCallback(() => {
     const matchingScene = attacks['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId);
@@ -240,7 +242,7 @@ export default function AttackBlock({ attackScene, color }) {
     return scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId;
   }
 
-  const handleSave = (sceneId) => {
+  const handleSave = () => {
     // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
     const template = {
       nodes: nodes,
@@ -258,7 +260,7 @@ export default function AttackBlock({ attackScene, color }) {
     const details = {
       modelId: model?._id,
       type: 'attack_trees',
-      id: sceneId,
+      id: attackScene?.ID,
       templates: JSON.stringify(template),
       threatId: threatId ?? '',
       damageId: damageId ?? '',
@@ -268,11 +270,11 @@ export default function AttackBlock({ attackScene, color }) {
     update(details)
       .then((res) => {
         if (!res.error) {
-          // console.log('res', res);
           setTimeout(() => {
             notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
             getCyberSecurityScenario(model?._id);
+            dispatch(setAttackScene(res?.scene ?? {}));
           }, 200);
           setIsChanged(false);
         } else {
@@ -281,7 +283,7 @@ export default function AttackBlock({ attackScene, color }) {
       })
       .catch((err) => {
         if (err) {
-          console.log('err', err);
+          // console.log('err', err);
           notify('Something Went Wrong', 'error');
         }
       });
@@ -289,10 +291,10 @@ export default function AttackBlock({ attackScene, color }) {
 
   // Save before switching attackScene
   useEffect(() => {
-    setNodes(attackScene.templates.nodes || []);
-    setEdges(attackScene.templates.edges || []);
-    // prevAttackSceneRef.current = attackScene;
-  }, [attackScene]);
+    setTimeout(() => {
+      onRestore(attackScene.templates);
+    }, 300);
+  }, [attackScene.templates]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes?.attackcanvas || {};
@@ -321,19 +323,25 @@ export default function AttackBlock({ attackScene, color }) {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
         centerLayout();
+        if (
+          JSON.stringify(attackScene?.templates?.nodes) !== JSON.stringify(layoutedNodes) ||
+          JSON.stringify(attackScene?.templates?.edges) !== JSON.stringify(layoutedEdges)
+        ) {
+          setIsChanged(true);
+        }
       } catch (error) {
         console.error('Error during layout:', error);
       }
     },
-    [nodes, edges, setNodes, setEdges]
+    [nodes, edges, setNodes, setEdges, isChanged]
   );
   useEffect(() => {
     centerLayout();
   }, [reactFlowInstance, attackScene]);
 
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
+  // useLayoutEffect(() => {
+  //   onLayout({ direction: 'DOWN', useInitialNodes: true });
+  // }, []);
 
   // console.log('nodes', nodes);
   const getRelativePosition = (event) => {
@@ -506,7 +514,7 @@ export default function AttackBlock({ attackScene, color }) {
       }
       setIsChanged(false);
     },
-    [reactFlowInstance, attackScene]
+    [reactFlowInstance, attackScene.templates, isChanged]
   );
 
   useEffect(() => {
@@ -736,6 +744,10 @@ export default function AttackBlock({ attackScene, color }) {
   };
   // console.log('nodes', nodes);
   // console.log('edges', edges);
+  const handleCloseSave = () => {
+    setOpenSave(false);
+    setIsChanged(false);
+  };
   if (!isReady) return null;
 
   return (
@@ -766,8 +778,9 @@ export default function AttackBlock({ attackScene, color }) {
         >
           <Panel position="top-left" style={{ display: 'flex', gap: 5, background: color.canvasBG }}>
             <Button
+              ref={anchorRef}
               variant="outlined"
-              onClick={() => handleSave(attackScene?.ID)}
+              onClick={handleSave}
               startIcon={<SaveIcon sx={{ color: isChanged ? '#FF3131' : '#32CD32' }} />}
               sx={{
                 ...buttonStyle,
@@ -853,6 +866,7 @@ export default function AttackBlock({ attackScene, color }) {
           ))}
         </div>
       )}
+      <AutoSavePopper open={openSave} handleClose={handleCloseSave} anchorRef={anchorRef} handleSave={handleSave} />
       <Toaster position="top-right" reverseOrder={false} />
     </div>
   );

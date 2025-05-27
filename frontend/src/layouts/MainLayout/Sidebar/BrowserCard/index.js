@@ -204,19 +204,20 @@ const useStyles = makeStyles((theme, isDark) => ({
   }
 }));
 
-const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
-  marginBottom: '16px', // Reduced margin for a tighter layout
+const CardStyle = styled(Card, {
+  shouldForwardProp: (prop) => prop !== '$iscollapsed' && prop !== '$isnavbarclose' && prop !== 'isDark'
+})(({ theme, $iscollapsed, $isnavbarclose, isDark }) => ({
+  marginBottom: '16px',
   overflow: 'hidden',
   position: 'relative',
-  height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
+  height: $isnavbarclose ? '100vh' : `calc(95vh - ${getNavbarHeight($iscollapsed)}px)`,
   border: 'none',
-  borderRadius: '12px', // Slightly smaller border radius
-  background:
-    isDark == true
-      ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
-      : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
-  backdropFilter: 'blur(12px)', // Reduced blur for performance
-  boxShadow: isDark == true ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
+  borderRadius: '12px',
+  background: isDark
+    ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+    : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+  backdropFilter: 'blur(12px)',
+  boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
   [theme.breakpoints.down('sm')]: {
     marginBottom: '8px'
   },
@@ -268,7 +269,8 @@ const selector = (state) => ({
   setSelectedThreatIds: state.setSelectedThreatIds,
   isChanged: state.isChanged,
   setIsChanged: state.setIsChanged,
-  setIsAttackChanged: state.setIsAttackChanged
+  isAttackChanged: state.isAttackChanged,
+  setOpenSave: state.setOpenSave
 });
 
 // ==============================|| SIDEBAR MENU Card ||============================== //
@@ -318,8 +320,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setIsNodePasted,
     setSelectedThreatIds,
     isChanged,
+    isAttackChanged,
     setIsChanged,
-    setIsAttackChanged
+    setOpenSave
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const [count, setCount] = useState({
@@ -464,16 +467,25 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
-  const handleOpenTable = useCallback((e, id, name) => {
-    e.stopPropagation();
-    setClickedItem(id);
-    if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
-      dispatch(setTableOpen(name));
-      dispatch(setTitle(name));
-    }
-    dispatch(setPreviousTab(name));
-  }, []);
+  // console.log('attackScene in sidebar', attackScene);
 
+  const handleOpenTable = useCallback(
+    (e, id, name) => {
+      e.stopPropagation();
+      dispatch(setAttackScene({}));
+      if (isChanged || isAttackChanged) {
+        setOpenSave(true);
+        return;
+      }
+      setClickedItem(id);
+      if (name !== 'Attack Trees' && !name.includes('UNICE') && name !== 'Vulnerability Analysis') {
+        dispatch(setTableOpen(name));
+        dispatch(setTitle(name));
+      }
+      dispatch(setPreviousTab(name));
+    },
+    [isChanged, isAttackChanged]
+  );
   const handleTreeItemClick = useCallback((e, handler, ...args) => {
     const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
     if (isExpandIcon) {
@@ -486,54 +498,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   // handle the attack template comparision & pre-save before switching the attack tree
   const handleOpenAttackTree = (e, scene, name) => {
     e.stopPropagation();
-    const prevSceneId = attackScene?.ID;
+    if (isChanged || isAttackChanged) {
+      setOpenSave(true);
+      return;
+    }
     if (name === 'Attack Trees') {
-      if (
-        JSON.stringify(attackNodes) !== JSON.stringify(initialAttackNodes) ||
-        JSON.stringify(attackEdges) !== JSON.stringify(initialAttackEdges)
-      ) {
-        const template = {
-          nodes: attackNodes,
-          edges: attackEdges
-        };
-        const threatNode = attackNodes?.find((node) => node?.type === 'default' && node?.threatId) ?? {};
-        const { threatId = '', damageId = '', key = '' } = threatNode;
-        const details = {
-          modelId: model?._id,
-          type: 'attack_trees',
-          id: prevSceneId,
-          templates: JSON.stringify(template),
-          threatId: threatId ?? '',
-          damageId: damageId ?? '',
-          key: key ?? ''
-        };
-
-        updateAttack(details)
-          .then((res) => {
-            if (!res.error) {
-              // console.log('res', res);
-              notify('Saved Successfully', 'success');
-              getAttackScenario(model?._id);
-              getCyberSecurityScenario(model?._id);
-              setIsAttackChanged(false);
-              setTimeout(() => {
-                dispatch(setAttackScene(scene));
-              }, 300);
-            } else {
-              notify(res?.error ?? 'Something Went Wrong', 'error');
-            }
-          })
-          .catch((err) => {
-            if (err) {
-              notify('Something Went Wrong', 'error');
-            }
-          });
-
-        // handleSave(prevSceneId);
-      } else {
-        dispatch(setAttackScene(scene));
-      }
-      // console.log('later');
+      dispatch(setAttackScene(scene));
       dispatch(setTableOpen('Attack Trees Canvas'));
     }
   };
@@ -1014,8 +984,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={() => setOpenDocumentDialog(false)} />}
 
       <CardStyle
-        isCollapsed={isCollapsed}
-        isNavbarClose={isNavbarClose}
+        $iscollapsed={isCollapsed}
+        $isnavbarclose={isNavbarClose}
         sx={{
           background: color.tabBorder,
           scrollbarWidth: 'thin',
