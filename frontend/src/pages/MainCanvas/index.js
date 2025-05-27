@@ -961,6 +961,8 @@ export default function MainCanvas() {
             onNodeContextMenu={handleNodeContextMenu}
             minZoom={0.2}
             maxZoom={2}
+            defaultZoom={1}
+            defaultZoomPosition={{ x: 0, y: 0 }}
           >
             <Panel position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
               <span ref={anchorRef}>
