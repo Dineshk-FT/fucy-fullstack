@@ -66,11 +66,10 @@ export default React.memo(function PromptModal({ handleClose, open, refreshAPI }
           setTemplateDetails({ name: '' });
           handleClose();
         } else {
-          toast.error(res.error ?? `${res?.data} ,Try using a different name` ?? 'Error creating attack tree');
+          toast.error(res?.error ?? 'Error creating attack tree');
         }
       })
       .catch((err) => {
-        // console.log('err', err);
         toast.error('Something went wrong');
       })
       .finally(() => {
