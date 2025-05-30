@@ -26,7 +26,6 @@ import {
   FormControlLabel,
   IconButton
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
@@ -438,33 +437,35 @@ export default function RiskTreatmentTable() {
                         width: '100%'
                       }}
                     >
-                      {row[item.name].map((goal, i) => (
-                        <Box
-                          key={goal?.ID || i}
-                          display="flex"
-                          alignItems="center"
-                          gap={1}
-                          sx={{
-                            textAlign: 'left',
-                            width: '100%',
-                            maxWidth: '250px',
-                            whiteSpace: 'normal',
-                            wordBreak: 'break-word',
-                            mb: 0.8
-                          }}
-                        >
-                          <img
-                            src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
-                            alt="icon"
-                            height="15px"
-                            width="15px"
-                            style={{ alignSelf: 'flex-start', marginTop: '3px' }}
-                          />
-                          <Box display="flex" flexDirection="column" gap="5px" minWidth="100px">
-                            {goal?.Name}
+                      {row[item.name].map((goal, i) => {
+                        return (
+                          <Box
+                            key={goal?.ID || i}
+                            display="flex"
+                            alignItems="center"
+                            gap={1}
+                            sx={{
+                              textAlign: 'left',
+                              width: '100%',
+                              maxWidth: '250px',
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-word',
+                              mb: 0.8
+                            }}
+                          >
+                            <img
+                              src={item.name === 'Cybersecurity Goals' ? CyberGoalIcon : CyberClaimsIcon}
+                              alt="icon"
+                              height="15px"
+                              width="15px"
+                              style={{ alignSelf: 'flex-start', marginTop: '3px' }}
+                            />
+                            <Box display="flex" flexDirection="column" gap="5px" minWidth="100px">
+                              {goal?.Name}
+                            </Box>
                           </Box>
-                        </Box>
-                      ))}
+                        );
+                      })}
                     </Box>
                   ) : (
                     <InputLabel onClick={() => handleOpenSelect(row, item.name)} sx={{ cursor: 'pointer' }}>

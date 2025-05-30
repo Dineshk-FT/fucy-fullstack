@@ -24,6 +24,7 @@ export default React.memo(function SelectCyberGoals({
   setSelectedScenes,
   updateRiskTreatment,
   selectedRow,
+  refreshAPI,
   model
 }) {
   const color = ColorTheme();
@@ -64,9 +65,9 @@ export default React.memo(function SelectCyberGoals({
     updateRiskTreatment(payload)
       .then((res) => {
         if (!res.error) {
-          toast.success('Selection updated successfully');
+          toast.success(res.message ?? 'Selection updated successfully');
           setLoading(false);
-
+          refreshAPI();
           handleClose();
         } else {
           toast.error(res.error ?? 'Update failed');
@@ -94,7 +95,7 @@ export default React.memo(function SelectCyberGoals({
           }
         }}
       >
-        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>
+        <DialogTitle variant="h4" color="primary" sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>
           Select {type.includes('Goals') ? 'Cybersecurity Goals' : 'Cybersecurity Claims'}
         </DialogTitle>
         <DialogContent sx={{ p: 2, overflow: 'auto' }}>
@@ -104,7 +105,7 @@ export default React.memo(function SelectCyberGoals({
                 <FormControlLabel
                   key={detail?.ID}
                   sx={{
-                    my: 0.5,
+                    my: -0.5,
                     '& .MuiTypography-root': {
                       fontSize: '14px',
                       color: color?.sidebarContent
