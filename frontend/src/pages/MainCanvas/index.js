@@ -455,11 +455,15 @@ export default function MainCanvas() {
     setNodes(updated);
   };
 
-  const onNodeDragStart = useCallback((_, node) => {
-    setIsChanged(true);
-    setTimeout(() => checkForNodes(), 0);
-    dragRef.current = node;
-  }, []);
+  const onNodeDragStart = useCallback(
+    (_, node) => {
+      setIsChanged(true);
+      setTimeout(() => checkForNodes(), 0);
+      dragRef.current = node;
+      latestNodesRef.current = [...nodes]; // Ensures ref is always synced before drag starts
+    },
+    [nodes]
+  );
 
   const onNodeDrag = useCallback((event, node) => {
     const currentNodes = latestNodesRef.current;

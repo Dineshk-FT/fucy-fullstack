@@ -67,7 +67,8 @@ iframe#webpack-dev-server-client-overlay {
   /* width: initial; */
   box-shadow: none !important;
 }
-.react-flow__node-default {
+.react-flow__node-default,
+.react-flow__node-data {
   z-index: 10000 !important;
   & .react-flow__resize-control {
     border-color: transparent !important;
