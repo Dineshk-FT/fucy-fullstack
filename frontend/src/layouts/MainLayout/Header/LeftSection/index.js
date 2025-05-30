@@ -10,8 +10,10 @@ import {
   PlaylistAdd as AddListIcon,
   AccountTree as TreeIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  Help as HelpIcon
 } from '@mui/icons-material';
+import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
 import SelectProject from '../../../../components/Modal/SelectProject';
@@ -102,13 +104,13 @@ const LeftSection = () => {
     }
   }, [model?._id, getSidebarNode, getTemplates, getAttackScenario]);
 
-  const handleAddNewNode = useCallback(() => {
-    dispatch(openAddNodeTab());
-  }, [dispatch]);
-
-  const handleAddDataNode = useCallback(() => {
-    dispatch(openAddDataNodeTab());
-  }, [dispatch]);
+  const handleAddNewNode = useCallback(
+    (e, name) => {
+      e.stopPropagation();
+      name == 'node' ? dispatch(openAddNodeTab()) : dispatch(openAddDataNodeTab());
+    },
+    [dispatch]
+  );
 
   const handleSystemTabClick = useCallback(() => setOpenTemplateDialog(true), []);
   const handleComponentsTabClick = useCallback(() => setOpenComponentsDialog(true), []);
@@ -117,13 +119,13 @@ const LeftSection = () => {
     setExportAnchorEl(event.currentTarget);
   };
 
-  const handleExportClose = () => {
+  const handleExportClose = (e) => {
+    e.stopPropagation();
     setExportAnchorEl(null);
   };
 
   const handleExportJSON = () => {
     // Implement your JSON export logic here
-    console.log('Exporting as JSON');
     exportProject({ modelId: model?._id })
       .then((res) => {
         if (!res.error) {
@@ -141,7 +143,7 @@ const LeftSection = () => {
 
   const handleExportPDF = () => {
     // Implement your PDF export logic here
-    console.log('Exporting as PDF');
+    // console.log('Exporting as PDF');
     handleExportClose();
   };
 
@@ -183,8 +185,15 @@ const LeftSection = () => {
     fileInput.click();
   };
 
+  // Add the help PDF handler
+  const handleHelpClick = useCallback(() => {
+    const pdfUrl = pdfFile;
+    window.open(pdfUrl, '_blank');
+  }, []);
+
   const handleTabChange = useCallback(
-    (tabName) => {
+    (e, tabName) => {
+      e.stopPropagation();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -197,18 +206,24 @@ const LeftSection = () => {
         'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
         'Attack Path': handleAttackTableClick,
         Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
-        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
+        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8'),
+        Help: handleHelpClick // Add the help action
       };
       actions[tabName]?.();
     },
     [dispatch, isChanged, isAttackChanged]
   );
 
-  const handleToggleCollapse = useCallback(() => {
-    setCollapsed((prev) => !prev);
-  }, [setCollapsed]);
+  const handleToggleCollapse = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCollapsed((prev) => !prev);
+    },
+    [setCollapsed]
+  );
 
   const handleContext = useCallback((name, event) => {
+    event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
       setOpenAttackModal(true);
       setSubName(name);
@@ -268,15 +283,21 @@ const LeftSection = () => {
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
+  const handleOpenModal = (modalKey, e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+    setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
+  };
+
   const tabs = useMemo(
     () => [
       {
         name: 'Project',
         options: [
-          { label: 'New', icon: NewFolderIcon, action: () => setOpenModal((prev) => ({ ...prev, New: true })) },
-          { label: 'Rename', icon: RenameIcon, action: () => setOpenModal((prev) => ({ ...prev, Rename: true })) },
-          { label: 'Open', icon: FolderOpenIcon, action: () => setOpenModal((prev) => ({ ...prev, Open: true })) },
-          { label: 'Delete', icon: DeleteIcon, action: () => setOpenModal((prev) => ({ ...prev, Delete: true })) },
+          { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
+          { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
+          { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
+          { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick }
         ]
@@ -284,17 +305,33 @@ const LeftSection = () => {
       {
         name: 'Item Definition',
         options: [
-          { label: 'New Data', icon: NewFolderIcon, action: handleAddDataNode },
+          { label: 'New Data', icon: NewFolderIcon, action: (e) => handleAddNewNode(e, 'data') },
           {
             label: 'New Component',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=dviuFeWyguPJ&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)' // Adjusted to approximate #1e88e5
+                }}
+              />
             ),
-            action: handleAddNewNode
+            action: (e) => handleAddNewNode(e, 'node')
           },
           {
             label: 'Group',
-            icon: () => <img src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=41480&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
             action: handleGroupDrag
           }
         ]
@@ -305,14 +342,28 @@ const LeftSection = () => {
           {
             label: 'Derivation Table',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Damage Scenarios (DS) Derivations')
           },
           {
             label: 'Impact Rating Table',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Damage Scenarios - Impact Ratings')
           }
@@ -324,7 +375,14 @@ const LeftSection = () => {
           {
             label: 'Threat Table',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Threat Scenarios')
           }
@@ -345,26 +403,58 @@ const LeftSection = () => {
         options: [
           {
             label: 'Goals',
-            icon: () => <img src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
             action: () => handleClick('Cybersecurity Goals')
           },
           {
             label: 'Requirements',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Cybersecurity Requirements')
           },
           {
             label: 'Controls',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Cybersecurity Controls')
           },
           {
             label: 'Claims',
-            icon: () => <img src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000" style={{ width: 24, height: 24 }} />,
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
             action: () => handleClick('Cybersecurity Claims')
           }
         ]
@@ -375,17 +465,35 @@ const LeftSection = () => {
           {
             label: 'Risk Table',
             icon: () => (
-              <img src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000" style={{ width: 24, height: 24 }} />
+              <img
+                src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
             ),
             action: () => handleClick('Threat Assessment & Risk Treatment')
           }
         ]
+      },
+      {
+        name: 'Help',
+        options: [
+          {
+            label: 'Documentation',
+            icon: HelpIcon,
+            action: handleHelpClick
+          }
+        ]
       }
     ],
-    [handleAddDataNode, handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleHelpClick]
   );
 
-  const handleCloseModal = useCallback((modalName) => {
+  const handleCloseModal = useCallback((e, modalName) => {
+    e.stopPropagation();
     setOpenModal((prev) => ({ ...prev, [modalName]: false }));
   }, []);
 
@@ -395,18 +503,18 @@ const LeftSection = () => {
     () => ({
       padding: '6px',
       fontSize: '12px',
-      color: isDark ? '#64b5f6' : '#2196f3',
+      color: '#1e88e5', // Darker blue color
       background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
       border: 'none',
       borderRadius: '6px',
       transition: 'all 0.3s ease',
       '&:hover': {
         background: isDark
-          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+          ? 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)' // Adjusted for #1e88e5
+          : 'linear-gradient(90deg, rgba(30,136,229,0.08) 0%, rgba(30,136,229,0.02) 100%)',
         transform: 'scale(1.1)',
         boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-        filter: isDark ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+        filter: 'drop-shadow(0 0 6px rgba(30,136,229,0.15))'
       }
     }),
     [isDark]
@@ -423,13 +531,13 @@ const LeftSection = () => {
       borderRadius: '6px',
       transition: 'all 0.3s ease',
       '&:hover': {
-        color: isDark ? '#64b5f6' : '#2196f3',
+        color: '#1e88e5', // Darker blue color
         background: isDark
-          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+          ? 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)'
+          : 'linear-gradient(90deg, rgba(30,136,229,0.08) 0%, rgba(30,136,229,0.02) 100%)',
         transform: 'scale(1.02)',
         boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-        filter: isDark ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+        filter: 'drop-shadow(0 0 6px rgba(30,136,229,0.15))'
       }
     }),
     [isDark]
@@ -438,11 +546,11 @@ const LeftSection = () => {
   const activeTabStyles = useMemo(
     () => ({
       fontWeight: 600,
-      color: isDark ? '#64b5f6' : '#2196f3',
-      borderBottom: isDark ? '2px solid #64b5f6' : '2px solid #2196f3',
+      color: '#1e88e5', // Darker blue color
+      borderBottom: '2px solid #1e88e5', // Darker blue border
       background: isDark
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)',
+        ? 'linear-gradient(90deg, rgba(30,136,229,0.25) 0%, rgba(30,136,229,0.08) 100%)'
+        : 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)',
       boxShadow: isDark ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)'
     }),
     [isDark]
@@ -451,6 +559,8 @@ const LeftSection = () => {
   const renderOptionButton = useCallback(
     (option, index) => {
       const Icon = option.icon;
+      const isFunction = typeof Icon === 'function';
+
       return (
         <Box
           key={index}
@@ -467,7 +577,17 @@ const LeftSection = () => {
             <>
               <Tooltip title={option.label}>
                 <IconButton onClick={option.action} sx={buttonStyles}>
-                  <Icon fontSize="small" sx={{ fontSize: 20 }} />
+                  {isFunction ? (
+                    <Icon />
+                  ) : (
+                    <Icon
+                      fontSize="small"
+                      sx={{
+                        fontSize: 20,
+                        color: '#1e88e5' // Darker blue color
+                      }}
+                    />
+                  )}
                 </IconButton>
               </Tooltip>
               <Typography
@@ -513,27 +633,31 @@ const LeftSection = () => {
           onClick={handleToggleCollapse}
           sx={{
             padding: '4px',
-            color: isDark ? '#64b5f6' : '#2196f3',
+            color: '#1e88e5', // Darker blue color
             transition: 'all 0.3s ease',
             '&:hover': {
-              background: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(33,150,243,0.08)',
+              background: isDark ? 'rgba(30,136,229,0.15)' : 'rgba(30,136,229,0.08)',
               transform: 'scale(1.1)',
               boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
             }
           }}
         >
-          {isCollapsed ? <ExpandMoreIcon sx={{ fontSize: 22 }} /> : <ExpandLessIcon sx={{ fontSize: 22 }} />}
+          {isCollapsed ? (
+            <ExpandMoreIcon sx={{ fontSize: 22, color: '#1e88e5' }} />
+          ) : (
+            <ExpandLessIcon sx={{ fontSize: 22, color: '#1e88e5' }} />
+          )}
         </IconButton>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-evenly', flexGrow: 1 }}>
           {tabs.map((tab) => (
             <Box key={tab.name} sx={{ position: 'relative', display: 'inline-block' }}>
               <Typography
-                onClick={() => handleTabChange(tab.name)}
+                onClick={(e) => handleTabChange(e, tab.name)}
                 sx={{
                   ...tabStyles,
                   ...(activeTab === tab.name ? activeTabStyles : {}),
-                  color: activeTab === tab.name ? (isDark ? '#64b5f6' : '#2196f3') : color?.sidebarContent
+                  color: activeTab === tab.name ? '#1e88e5' : color?.sidebarContent
                 }}
               >
                 {tab.name}
@@ -611,17 +735,18 @@ const LeftSection = () => {
         <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
       </Menu>
 
-      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={() => handleCloseModal('New')} />}
-      {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={() => handleCloseModal('Rename')} Models={Models} />}
-      {openModal.Open && <SelectProject open={openModal.Open} handleClose={() => handleCloseModal('Open')} Models={Models} />}
+      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={(e) => handleCloseModal(e, 'New')} />}
+      {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={(e) => handleCloseModal(e, 'Rename')} Models={Models} />}
+      {openModal.Open && <SelectProject open={openModal.Open} handleClose={(e) => handleCloseModal(e, 'Open')} Models={Models} />}
       {openModal.Delete && (
         <DeleteProject
           open={openModal.Delete}
           model={model}
-          handleClose={() => handleCloseModal('Delete')}
+          handleClose={(e) => handleCloseModal(e, 'Delete')}
           Models={Models}
           deleteModels={deleteModels}
           getModels={getModels}
+          anchorEl={anchorEl}
         />
       )}
       {openModal.AIModal && (
@@ -633,7 +758,7 @@ const LeftSection = () => {
       {openModal.AttackModal && (
         <AttackTreeRibbonModal
           open={openModal.AttackModal}
-          handleClose={() => handleCloseModal('AttackModal')}
+          handleClose={(e) => handleCloseModal(e, 'AttackModal')}
           isLoading={isLoading}
           anchorEl={anchorEl}
           attackScenarios={attackScenarios}

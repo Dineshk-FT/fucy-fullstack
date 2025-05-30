@@ -41,18 +41,24 @@ const FontSizeSelector = ({ fontSize, changeFontSize, handleFontSizeChange }) =>
         alignItems: 'center'
       }}
     >
-      <button className={classes.decrease} onClick={() => changeFontSize('dec')}>
+      <button className={classes.decrease} onClick={(e) => changeFontSize(e, 'dec')}>
         -
       </button>
       {/* eslint-disable-next-line */}
-      <select className={classes.select} id="fontSizeSelector" value={`${fontSize}px`} onChange={handleFontSizeChange}>
+      <select
+        className={classes.select}
+        id="fontSizeSelector"
+        value={`${fontSize}px`}
+        onChange={handleFontSizeChange}
+        onClick={(e) => e.stopPropagation()}
+      >
         {range(12, 48).map((it) => (
           <option key={it} value={`${it}px`}>
             {it}px
           </option>
         ))}
       </select>
-      <button onClick={() => changeFontSize('inc')} className={classes.increase}>
+      <button onClick={(e) => changeFontSize(e, 'inc')} className={classes.increase}>
         +
       </button>
     </div>

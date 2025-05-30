@@ -2,7 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 
 const fontFamily = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'Inter'];
-export default function FontSelector({ font, handleChange }) {
+export default function FontSelector({ font, handleChange, handleInputClick }) {
   return (
     <Box sx={{ minWidth: 120 }}>
       {/* eslint-disable-next-line */}
@@ -14,6 +14,7 @@ export default function FontSelector({ font, handleChange }) {
           width: '150px',
           height: '20px'
         }}
+        onClick={handleInputClick}
       >
         {fontFamily?.map((it) => (
           <option key={it} value={it}>

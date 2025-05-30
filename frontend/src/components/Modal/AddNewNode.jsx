@@ -16,9 +16,10 @@ import {
   IconButton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import useStore from '../../store/Zustand/store';
 import { getNodeDetails } from '../../utils/Constraints';
 import { useDispatch, useSelector } from 'react-redux';
+import toast, { Toaster } from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
 import { fontSize } from '../../themes/constant';
@@ -35,30 +36,15 @@ const MenuProps = {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
       width: 'inherit'
     }
-  },
-  anchorOrigin: {
-    vertical: 'top',
-    horizontal: 'left'
-  },
-  transformOrigin: {
-    vertical: 'bottom',
-    horizontal: 'left'
-  },
-  getContentAnchorEl: null
+  }
 };
 
 const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
-
 const selector = (state) => ({
   setNodes: state.setNodes,
-  nodes: state.nodes
+  nodes: state.nodes,
+  setIsChanged: state.setIsChanged
 });
-
-function getStyles(name, nodes, theme) {
-  return {
-    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
-  };
-}
 
 const steps = [
   {
@@ -80,24 +66,24 @@ const steps = [
   }
 ];
 
-const AddNewNode = ({ assets }) => {
+const AddNewNode = () => {
   const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
-  const [count, setCount] = useState(1);
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
+  const [count, setCount] = useState(1);
   const [newNode, setNewNode] = useState({
     nodeName: `New Node ${count}`,
     type: '',
     properties: [properties[0]],
-    bgColor: ''
+    bgColor: '#dadada'
   });
 
   const [runTour, setRunTour] = useState(false);
   const nameInputRef = useRef(null);
   const hasTriggeredTour = useRef(false);
 
-  const { setNodes, nodes } = useStore(selector, shallow);
+  const { setNodes, nodes, setIsChanged } = useStore(selector, shallow);
 
   React.useEffect(() => {
     if (!hasTriggeredTour.current) {
@@ -140,7 +126,7 @@ const AddNewNode = ({ assets }) => {
     }
   };
 
-  const CloseModel = () => {
+  const handleClose = () => {
     dispatch(closeAddNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
@@ -167,6 +153,7 @@ const AddNewNode = ({ assets }) => {
       properties: [properties[0]],
       bgColor: '#dadada'
     }));
+    setIsChanged(true);
   };
 
   return (
@@ -221,7 +208,7 @@ const AddNewNode = ({ assets }) => {
             >
               <HelpOutlineIcon />
             </IconButton>
-            <Box sx={{ cursor: 'pointer' }} onClick={CloseModel}>
+            <Box sx={{ cursor: 'pointer' }} onClick={handleClose}>
               <CancelTwoToneIcon />
             </Box>
           </Box>
@@ -254,25 +241,28 @@ const AddNewNode = ({ assets }) => {
                 labelId="demo-multiple-chip-label"
                 multiple
                 name="properties"
-                sx={{
-                  fontSize: fontSize,
-                  background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent
-                }}
                 value={newNode.properties}
                 onChange={handleChange}
-                input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
+                input={<OutlinedInput label="Properties" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((value) => (
-                      <Chip key={value} label={value} sx={{ fontSize: fontSize }} />
+                      <Chip key={value} label={value} />
                     ))}
                   </Box>
                 )}
                 MenuProps={MenuProps}
+                sx={{ bgcolor: color?.inputBg }}
               >
-                {properties?.map((name) => (
-                  <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
+                {properties.map((name) => (
+                  <MenuItem
+                    key={name}
+                    value={name}
+                    sx={{
+                      fontWeight:
+                        newNode.properties.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
+                    }}
+                  >
                     {name}
                   </MenuItem>
                 ))}
@@ -282,7 +272,7 @@ const AddNewNode = ({ assets }) => {
         </Grid>
 
         <Box display="flex" justifyContent="space-between" height="30px" sx={{ mt: 2 }}>
-          <Button id="cancel-node-btn" onClick={CloseModel} variant="outlined" color="error">
+          <Button id="cancel-node-btn" onClick={handleClose} variant="outlined" color="error">
             Cancel
           </Button>
           <Button
@@ -317,4 +307,4 @@ const AddNewNode = ({ assets }) => {
   );
 };
 
-export default AddNewNode;
+export default React.memo(AddNewNode);

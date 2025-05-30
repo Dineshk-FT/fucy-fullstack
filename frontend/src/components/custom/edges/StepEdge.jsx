@@ -16,7 +16,7 @@ const markerStates = [
   { start: true, end: false }
 ];
 
-export default function StepEdge({
+export default React.memo(function StepEdge({
   id,
   sourceX,
   sourceY,
@@ -68,30 +68,38 @@ export default function StepEdge({
     [id, setEdges]
   );
 
-  const handleSwap = useCallback(() => {
-    const currentIndex = markerStates.findIndex((state) => state.start === isMarkerVisible.start && state.end === isMarkerVisible.end);
-    const nextIndex = (currentIndex + 1) % markerStates.length;
-    const newState = markerStates[nextIndex];
+  const handleSwap = useCallback(
+    (e) => {
+      e.stopPropagation();
+      const currentIndex = markerStates.findIndex((state) => state.start === isMarkerVisible.start && state.end === isMarkerVisible.end);
+      const nextIndex = (currentIndex + 1) % markerStates.length;
+      const newState = markerStates[nextIndex];
 
-    updateEdge({
-      style: { ...style, ...newState }
-    });
-  }, [isMarkerVisible, style, updateEdge]);
+      updateEdge({
+        style: { ...style, ...newState }
+      });
+    },
+    [isMarkerVisible, style, updateEdge]
+  );
 
-  const onEditEdge = useCallback(() => {
-    dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
-    dispatch(setSelectedBlock({ id, data }));
-    dispatch(
-      setEdgeDetails({
-        name: data?.label ?? '',
-        properties: currentEdge?.properties ?? [],
-        isAsset: currentEdge?.isAsset ?? false,
-        style: style ?? {},
-        startPoint: markerStart?.color ?? '#000000',
-        endPoint: markerEnd?.color ?? '#000000'
-      })
-    );
-  }, [currentEdge, data, dispatch, id, markerEnd, markerStart, style]);
+  const onEditEdge = useCallback(
+    (e) => {
+      e.stopPropagation();
+      dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
+      dispatch(setSelectedBlock({ id, data }));
+      dispatch(
+        setEdgeDetails({
+          name: data?.label ?? '',
+          properties: currentEdge?.properties ?? [],
+          isAsset: currentEdge?.isAsset ?? false,
+          style: style ?? {},
+          startPoint: markerStart?.color ?? '#000000',
+          endPoint: markerEnd?.color ?? '#000000'
+        })
+      );
+    },
+    [currentEdge, data, dispatch, id, markerEnd, markerStart, style]
+  );
 
   const handleLabelDoubleClick = useCallback(() => {
     setIsEditing(true);
@@ -115,6 +123,7 @@ export default function StepEdge({
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Enter') {
+        console.log('enter');
         e.preventDefault();
         handleLabelBlur();
         dispatch(setSelectedBlock({}));
@@ -233,4 +242,4 @@ export default function StepEdge({
       </EdgeLabelRenderer>
     </>
   );
-}
+});

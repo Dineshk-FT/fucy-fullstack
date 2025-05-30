@@ -1,36 +1,39 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
-import Table from '@mui/material/Table';
+import React, { useEffect, useMemo, useState } from 'react';
 import Joyride from 'react-joyride';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import { Box } from '@mui/system';
 import {
-  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Box,
   Typography,
-  styled,
   Paper,
-  Checkbox,
-  TablePagination,
+  TextField,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton
+  IconButton,
+  styled,
+  useTheme,
+  Checkbox,
+  TablePagination
 } from '@mui/material';
 import ColorTheme from '../../themes/ColorTheme';
 import { tableHeight } from '../../themes/constant';
-import { DsDerivationHeader } from './constraints';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { DsDerivedSteps } from '../../utils/Steps';
+import { DsDerivationHeader } from './constraints';
+import { useDispatch } from 'react-redux';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -38,23 +41,21 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     fontSize: 13,
     padding: '2px 8px',
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    borderRight: '1px solid rgba(224, 224, 224, 1)',
     padding: '0px 15px',
     textAlign: 'left'
   }
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': {
-    border: 0
-  }
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 const selector = (state) => ({
@@ -64,17 +65,17 @@ const selector = (state) => ({
   getDamageScenarios: state?.getDamageScenarios
 });
 
-export default function DsDerivationTable() {
+const DsDerivationTable = () => {
+  const theme = useTheme();
   const color = ColorTheme();
+  const dispatch = useDispatch();
   const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
-  const [rows, setRows] = React.useState([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtered, setFiltered] = React.useState([]);
-
-  const [page, setPage] = React.useState(0); // Add state for page
-  const [rowsPerPage, setRowsPerPage] = React.useState(25); // Add state for rows per page
-  const [columnWidths, setColumnWidths] = React.useState({});
-  const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
+  const [rows, setRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [columnWidths, setColumnWidths] = useState({});
+  const [openFilter, setOpenFilter] = useState(false);
   const visibleColumns = useStore((state) => state.DsTable);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [runTour, setRunTour] = useState(false);
@@ -89,87 +90,75 @@ export default function DsDerivationTable() {
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
 
-  const Head = React.useMemo(() => {
+  const Head = useMemo(() => {
     return DsDerivationHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
-  const handleSelectAll = (event) => {
-    const isChecked = event.target.checked;
-    const updatedRows = filtered.map((row) => ({
-      ...row,
-      Checked: isChecked
-    }));
-
-    // Update the state with the new rows
-    setFiltered(updatedRows);
-    const details = {
-      id: damageScenarios?._id,
-      isAllChecked: isChecked
-    };
-    update(details)
-      .then((res) => {
-        if (res) {
-          getDamageScenarios(modelId);
-        }
-      })
-      .catch((err) => console.log('err', err));
-  };
-
-  React.useEffect(() => {
-    if (damageScenarios['Derivations']) {
-      const scene = damageScenarios['Derivations']?.map((dt, i) => {
-        return {
-          SNo: i + 1,
-          id: dt?.id,
-          'Task/Requirement': dt?.task,
-          'Losses of Cybersecurity Properties': dt?.loss,
-          // Assets: dt?.asset,
-          Assets: true,
-          'Damage Scenarios': dt?.damageScene,
-          Checked: dt?.is_checked === 'true' ? true : false
-        };
-      });
+  useEffect(() => {
+    if (damageScenarios?.Derivations) {
+      const scene = damageScenarios.Derivations.map((dt, i) => ({
+        SNo: i + 1,
+        id: dt?.id,
+        'Task/Requirement': dt?.task,
+        'Losses of Cybersecurity Properties': dt?.loss,
+        Assets: true,
+        'Damage Scenarios': dt?.damageScene,
+        Checked: dt?.is_checked === 'true'
+      }));
       setRows(scene);
-      setFiltered(scene);
+    } else {
+      setRows([]);
     }
   }, [damageScenarios]);
 
-  const handleChange = (value, rowId) => {
-    setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: !value } : row)));
+  const filteredRows = useMemo(() => {
+    if (!searchTerm.trim()) return rows;
+    return rows.filter((row) => row['Task/Requirement']?.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [rows, searchTerm]);
 
-    const details = {
-      id: damageScenarios?._id,
-      isChecked: !value,
-      'detail-id': rowId
-    };
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
-    update(details)
-      .then((res) => {
-        if (res) {
-          getDamageScenarios(modelId); // Fetch updated data from backend
-        }
-      })
-      .catch((err) => {
-        console.error('Error updating row:', err);
+  const handleSelectAll = async (event) => {
+    const isChecked = event.target.checked;
+    const updatedRows = filteredRows.map((row) => ({ ...row, Checked: isChecked }));
+    setRows(updatedRows);
 
-        // Revert UI state if backend update fails
-        setFiltered((prevFiltered) => prevFiltered.map((row) => (row.id === rowId ? { ...row, Checked: value } : row)));
+    try {
+      const res = await update({ id: damageScenarios?._id, isAllChecked: isChecked });
+      if (res) {
+        await getDamageScenarios(modelId);
+      }
+    } catch (err) {
+      console.error('Error updating select all:', err);
+      setRows(rows); // Revert on error
+    }
+  };
+
+  const handleChange = async (value, rowId) => {
+    const previousRows = [...rows];
+    const updatedRows = rows.map((row) => (row.id === rowId ? { ...row, Checked: !value } : row));
+    setRows(updatedRows);
+
+    try {
+      const res = await update({
+        id: damageScenarios?._id,
+        isChecked: !value,
+        'detail-id': rowId
       });
+      if (res) {
+        await getDamageScenarios(modelId);
+      }
+    } catch (err) {
+      console.error('Error updating row:', err);
+      setRows(previousRows); // Revert on error
+    }
   };
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    // console.log('value', value);
-
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => rw['Task/Requirement'].toLowerCase().includes(value.toLowerCase()));
-      // console.log('filterValue', filterValue);
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   // Handle page change
@@ -177,7 +166,6 @@ export default function DsDerivationTable() {
     setPage(newPage);
   };
 
-  // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -185,16 +173,11 @@ export default function DsDerivationTable() {
 
   const handleResizeStart = (e, columnId) => {
     const startX = e.clientX;
-
-    // Get the starting width of the column
-    const headerCell = e.target.parentNode;
-    const startWidth = columnWidths[columnId] || headerCell.offsetWidth;
+    const startWidth = columnWidths[columnId] || 100;
 
     const handleMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX; // Calculate movement direction
-      const newWidth = Math.max(50, startWidth + delta); // Set a minimum width of 50px
-
-      setColumnWidths((prev) => ({ ...prev, [columnId]: newWidth }));
+      const delta = moveEvent.clientX - startX;
+      setColumnWidths((prev) => ({ ...prev, [columnId]: Math.max(50, startWidth + delta) }));
     };
 
     const handleMouseUp = () => {
@@ -206,27 +189,12 @@ export default function DsDerivationTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+  const RenderTableRow = ({ row }) => {
     return (
       <StyledTableRow
-        key={row.name}
-        data={row}
         sx={{
-          '&:last-child td, &:last-child th': { border: 0 },
-          '&:nth-of-type(even)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '&:nth-of-type(odd)': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          '& .MuiTableCell-root.MuiTableCell-body': {
-            backgroundColor: color?.sidebarBG,
-            color: `${color?.sidebarContent} !important`
-          },
-          backgroundColor: isChild ? '#F4F8FE' : '',
-          color: `${color?.sidebarContent} !important`
+          backgroundColor: color?.sidebarBG,
+          '& .MuiTableCell-body': { color: color?.sidebarContent }
         }}
       >
         {Head?.map((item, index) => {
@@ -405,8 +373,8 @@ export default function DsDerivationTable() {
                       <Box display="flex" alignItems="center" id="column-header">
                         <Checkbox
                           {...label}
-                          checked={filtered.length > 0 && filtered.every((row) => row.Checked)}
-                          indeterminate={filtered.some((row) => row.Checked) && !filtered.every((row) => row.Checked)}
+                          checked={filteredRows.length > 0 && filteredRows.every((row) => row.Checked)}
+                          indeterminate={filteredRows.some((row) => row.Checked) && !filteredRows.every((row) => row.Checked)}
                           onChange={handleSelectAll}
                         />
                         {hd?.name}
@@ -434,7 +402,7 @@ export default function DsDerivationTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
                 <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
@@ -448,7 +416,7 @@ export default function DsDerivationTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={filtered.length}
+          count={paginatedRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
@@ -467,4 +435,6 @@ export default function DsDerivationTable() {
       </style>
     </>
   );
-}
+};
+
+export default DsDerivationTable;

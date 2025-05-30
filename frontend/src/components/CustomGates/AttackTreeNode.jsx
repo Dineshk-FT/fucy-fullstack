@@ -45,7 +45,7 @@ const AttackTreeNode = ({ data, isConnectable, type, id }) => {
 
   const bgColor = RatingColor(calculateAverageLevel(merged));
 
-  // console.log('bgColor', bgColor);
+  console.log('bgColor', bgColor);
   return (
     <>
       <Box display="flex" flexDirection="column" alignItems="center">

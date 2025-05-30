@@ -1,19 +1,35 @@
-import React, { useEffect } from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  CircularProgress
+} from '@mui/material';
+import { TreeView, TreeItem } from '@mui/x-tree-view';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { TreeView } from '@mui/x-tree-view/TreeView';
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import toast, { Toaster } from 'react-hot-toast';
+import ColorTheme from '../../themes/ColorTheme';
 
-export default function SelectCatalog({ catalogDetails, open, handleClose, updateRiskTreatment, selectedRow, getRiskTreatment, model }) {
-  const [checkedItems, setCheckedItems] = React.useState({});
-  const [selectedIds, setSelectedIds] = React.useState([]);
+export default React.memo(function SelectCatalog({
+  catalogDetails,
+  open,
+  handleClose,
+  updateRiskTreatment,
+  selectedRow,
+  getRiskTreatment,
+  model
+}) {
+  const color = ColorTheme();
+  const [checkedItems, setCheckedItems] = useState({});
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (selectedRow?.['Related UNECE Threats or Vulns'] && catalogDetails) {
@@ -38,58 +54,72 @@ export default function SelectCatalog({ catalogDetails, open, handleClose, updat
     }
   }, [selectedRow, catalogDetails]);
 
-  const updateSelectedIds = (itemId, checked) => {
+  const updateSelectedIds = useCallback((itemId, checked) => {
     setSelectedIds((prev) => {
-      if (checked) {
-        return [...new Set([...prev, itemId])];
-      }
-      return prev.filter((existingId) => existingId !== itemId);
+      const updated = checked ? [...new Set([...prev, itemId])] : prev.filter((id) => id !== itemId);
+      return updated;
     });
-  };
+  }, []);
 
-  const isCatalogFullySelected = (catalogId) => {
-    const catalog = catalogDetails.find((cat) => cat.id === catalogId);
-    return catalog.item_name.every((item) => checkedItems[catalogId]?.[item.id]);
-  };
+  const isCatalogFullySelected = useCallback(
+    (catalogId) => {
+      const catalog = catalogDetails.find((cat) => cat.id === catalogId);
+      return catalog?.item_name.every((item) => checkedItems[catalogId]?.[item.id]) || false;
+    },
+    [catalogDetails, checkedItems]
+  );
 
-  const isCatalogPartiallySelected = (catalogId) => {
-    const catalog = catalogDetails.find((cat) => cat.id === catalogId);
-    return catalog.item_name.some((item) => checkedItems[catalogId]?.[item.id]) && !isCatalogFullySelected(catalogId);
-  };
+  const isCatalogPartiallySelected = useCallback(
+    (catalogId) => {
+      const catalog = catalogDetails.find((cat) => cat.id === catalogId);
+      return catalog?.item_name.some((item) => checkedItems[catalogId]?.[item.id]) && !isCatalogFullySelected(catalogId);
+    },
+    [catalogDetails, checkedItems, isCatalogFullySelected]
+  );
 
-  const handleItemChange = (catalogId, itemId, checked) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [catalogId]: {
-        ...prev[catalogId],
-        [itemId]: checked
-      }
-    }));
-    updateSelectedIds(itemId, checked);
-  };
+  const handleItemChange = useCallback(
+    (catalogId, itemId, checked) => {
+      setCheckedItems((prev) => ({
+        ...prev,
+        [catalogId]: {
+          ...prev[catalogId],
+          [itemId]: checked
+        }
+      }));
+      updateSelectedIds(itemId, checked);
+    },
+    [updateSelectedIds]
+  );
 
-  const handleCatalogChange = (catalogId, checked) => {
-    const catalog = catalogDetails.find((cat) => cat.id === catalogId);
-    const updatedItems = catalog.item_name.reduce((acc, item) => {
-      acc[item.id] = checked;
-      return acc;
-    }, {});
+  const handleCatalogChange = useCallback(
+    (catalogId, checked) => {
+      const catalog = catalogDetails.find((cat) => cat.id === catalogId);
+      const updatedItems = catalog.item_name.reduce((acc, item) => {
+        acc[item.id] = checked;
+        return acc;
+      }, {});
 
-    setCheckedItems((prev) => ({
-      ...prev,
-      [catalogId]: {
-        ...updatedItems,
-        selectAll: checked
-      }
-    }));
+      setCheckedItems((prev) => ({
+        ...prev,
+        [catalogId]: {
+          ...updatedItems,
+          selectAll: checked
+        }
+      }));
 
-    const catalogItemIds = catalog.item_name.map((item) => item.id);
-    const newIds = checked ? [...new Set([...selectedIds, ...catalogItemIds])] : selectedIds.filter((id) => !catalogItemIds.includes(id));
+      const catalogItemIds = catalog.item_name.map((item) => item.id);
+      setSelectedIds((prev) => (checked ? [...new Set([...prev, ...catalogItemIds])] : prev.filter((id) => !catalogItemIds.includes(id))));
+    },
+    [catalogDetails]
+  );
 
-    setSelectedIds(newIds);
-  };
+  const handleClick = useCallback(() => {
+    if (!selectedIds.length) {
+      toast.error('Please select at least one catalog item');
+      return;
+    }
 
-  const handleClick = () => {
+    setLoading(true);
     const details = {
       detailId: selectedRow.detailId,
       'model-id': model?._id,
@@ -98,34 +128,43 @@ export default function SelectCatalog({ catalogDetails, open, handleClose, updat
 
     updateRiskTreatment(details)
       .then((res) => {
-        if (res) {
-          handleClose();
+        if (!res.error) {
+          toast.success('Catalogs updated successfully');
           getRiskTreatment(model?._id);
+          setCheckedItems({});
+          setSelectedIds([]);
+          handleClose();
+          setLoading(false);
+        } else {
+          toast.error(res.error ?? 'Update failed');
         }
       })
-      .catch((err) => console.log('err', err));
-  };
+      .catch(() => {
+        toast.error('Something went wrong');
+      });
+  }, [updateRiskTreatment, selectedRow, model, getRiskTreatment, selectedIds, handleClose]);
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        aria-labelledby="select-catalog-dialog-title"
+        aria-describedby="select-catalog-dialog-description"
+        maxWidth="md"
         sx={{
           '& .MuiPaper-root': {
-            width: '-webkit-fill-available',
-            height: 400
+            background: color?.modalBg,
+            width: '600px',
+            height: '400px',
+            borderRadius: '8px'
           }
         }}
       >
-        <DialogTitle id="alert-dialog-title" variant="h4" color="primary">
-          {'Select the Catalogs'}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
+        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>Select Catalogs</DialogTitle>
+        <DialogContent sx={{ p: 2, overflow: 'auto' }}>
+          <DialogContentText id="select-catalog-dialog-description">
+            <TreeView aria-label="Catalog navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
               {catalogDetails?.map((catalogItem) => (
                 <TreeItem
                   key={catalogItem.id}
@@ -133,18 +172,27 @@ export default function SelectCatalog({ catalogDetails, open, handleClose, updat
                   label={
                     <FormGroup>
                       <FormControlLabel
+                        sx={{
+                          my: 0.5,
+                          '& .MuiTypography-root': {
+                            fontSize: '14px',
+                            color: color?.title,
+                            fontWeight: 600
+                          }
+                        }}
                         control={
                           <Checkbox
+                            size="small"
                             checked={isCatalogFullySelected(catalogItem.id)}
                             indeterminate={isCatalogPartiallySelected(catalogItem.id)}
                             onChange={(e) => handleCatalogChange(catalogItem.id, e.target.checked)}
+                            aria-label={`Select all items in ${catalogItem.name}`}
                           />
                         }
                         label={catalogItem.name}
                       />
                     </FormGroup>
                   }
-                  sx={{ color: '#000', fontWeight: 600 }}
                 >
                   {catalogItem.item_name.map((item) => (
                     <TreeItem
@@ -153,22 +201,25 @@ export default function SelectCatalog({ catalogDetails, open, handleClose, updat
                       label={
                         <FormGroup>
                           <FormControlLabel
+                            sx={{
+                              my: 0.5,
+                              '& .MuiTypography-root': {
+                                fontSize: '14px',
+                                color: color?.sidebarContent
+                              }
+                            }}
                             control={
                               <Checkbox
+                                size="small"
                                 checked={checkedItems[catalogItem.id]?.[item.id] || false}
                                 onChange={(e) => handleItemChange(catalogItem.id, item.id, e.target.checked)}
+                                aria-label={`Select ${item.name}`}
                               />
                             }
                             label={item.name}
                           />
                         </FormGroup>
                       }
-                      sx={{
-                        '& .MuiTypography-root': {
-                          fontSize: '13px',
-                          color: '#555'
-                        }
-                      }}
                     />
                   ))}
                 </TreeItem>
@@ -176,15 +227,29 @@ export default function SelectCatalog({ catalogDetails, open, handleClose, updat
             </TreeView>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
             Close
           </Button>
-          <Button variant="contained" onClick={handleClick} autoFocus>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleClick}
+            disabled={loading || !selectedIds.length}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Okay
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+      <Toaster position="top-right" reverseOrder={false} />
+    </>
   );
-}
+});

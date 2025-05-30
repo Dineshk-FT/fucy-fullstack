@@ -230,7 +230,6 @@ export default function DsTable() {
     'Description/Scalability': ''
   });
   const [runTour, setRunTour] = useState(false);
-
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     if (['finished', 'skipped'].includes(status)) {
@@ -818,7 +817,7 @@ export default function DsTable() {
         </>
       );
     },
-    [damageScenarios, selectedRows]
+    [damageScenarios, selectedRows, visibleColumns]
   );
 
   return (
@@ -844,7 +843,7 @@ export default function DsTable() {
           }
         }}
         disableOverlayClose
-        disableScrolling
+        disableScrolling={false}
       />
       <Box
         sx={{
@@ -887,9 +886,6 @@ export default function DsTable() {
                 }
               }}
             />
-            {/* <Button sx={{ alignSelf: 'center', fontSize: '0.85rem' }} variant="contained" onClick={handleOpenModalDs}>
-            Add New Scenario
-          </Button> */}
             <Button
               id="add-scenario"
               variant="outlined"
@@ -933,7 +929,7 @@ export default function DsTable() {
         <Dialog open={openFilter} onClose={handleCloseFilter}>
           <DialogTitle style={{ fontSize: '18px' }}>Column Filters</DialogTitle>
           <DialogContent>
-            {DSTableHeader.map((column) => (
+            {DSTableHeader?.map((column) => (
               <FormControlLabel
                 key={column.id}
                 control={
@@ -955,32 +951,36 @@ export default function DsTable() {
 
         <TableContainer
           component={Paper}
+          elevation={2}
           sx={{
-            flexGrow: 1,
-            overflowY: 'auto',
+            '&.MuiPaper-elevation2': {
+              overflow: 'auto !important'
+            },
             borderRadius: '0px',
             padding: 0.25,
-            '&::-webkit-scrollbar': {
-              width: '4px'
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0, 0, 0, 0.2)',
-              borderRadius: '10px'
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'rgba(0, 0, 0, 0.1)'
-            },
             maxHeight: tableHeight,
             scrollbarWidth: 'thin'
           }}
         >
-          <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }} aria-label="simple table">
+          <Table
+            stickyHeader
+            sx={{ width: '100%', tableLayout: 'fixed' }}
+            aria-labelledby="tableTitle"
+            size="small"
+            style={{ overflow: 'auto' }}
+            aria-label="simple table"
+          >
             <TableHead>
               <TableRow>
                 {Head?.map((hd, i) => (
                   <StyledTableCell
                     key={hd?.id ?? i}
-                    style={{ width: columnWidths[hd.id] || 'auto', position: 'relative', overflowWrap: 'break-word' }}
+                    style={{
+                      width: columnWidths[hd.id] ?? hd?.w,
+                      minWidth: hd?.minW,
+                      position: 'relative',
+                      overflowWrap: 'break-word'
+                    }}
                   >
                     {hd?.name}
                     <div
@@ -989,10 +989,10 @@ export default function DsTable() {
                         position: 'absolute',
                         right: 0,
                         top: 0,
-                        width: '10px',
+                        width: '5px',
                         height: '100%',
                         cursor: 'col-resize',
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                        backgroundColor: 'transparent'
                       }}
                       onMouseDown={(e) => handleResizeStart(e, hd.id)}
                     />

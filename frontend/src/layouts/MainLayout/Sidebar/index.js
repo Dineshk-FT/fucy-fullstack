@@ -59,7 +59,8 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     dispatch(setDrawerwidth(size.width));
   };
 
-  const handleDrawerToggle = () => {
+  const handleDrawerToggle = (e) => {
+    e.stopPropagation();
     setSidebarWidth(draweropen ? 0 : 370);
     dispatch(setDrawerwidth(draweropen ? 0 : 370));
     drawerToggle();
@@ -70,7 +71,14 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     () => (
       <>
         <BrowserView>
-          <PerfectScrollbar component="div" style={{ paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
+          <PerfectScrollbar
+            component="div"
+            style={{
+              paddingRight: '10px',
+              paddingLeft: '10px',
+              paddingTop: '10px'
+            }}
+          >
             <BrowserCard
               template={template}
               models={models}
@@ -82,9 +90,9 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
           <IconButton
             sx={{
               position: 'absolute',
-              border: `1px solid ${color?.title}`,
-              marginTop: 2.5,
-              marginRight: 2.5,
+              // border: `1px solid ${color?.title}`,
+              marginTop: 5.7,
+              marginRight: -1,
               padding: '0px',
               width: '0.8em',
               height: '0.8em',
@@ -95,7 +103,10 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
               '&:hover': { transform: 'scale(1.1)' },
               transition: 'transform 0.2s ease'
             }}
-            onClick={() => setRunTour(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setRunTour(true);
+            }}
             size="small"
           >
             <HelpOutlineIcon fontSize="small" />
@@ -105,7 +116,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             sx={{
               position: 'absolute',
               border: `1px solid ${color?.title}`,
-              marginTop: 2.5,
+              marginTop: 2.7,
               marginRight: 2.5,
               padding: '0px',
               width: '0.8em',

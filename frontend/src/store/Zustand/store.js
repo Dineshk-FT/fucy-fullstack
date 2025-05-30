@@ -664,6 +664,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       openSave: typeof value === 'function' ? value(state.openSave) : value
     })),
 
+  setOpenSave: (value) =>
+    set((state) => ({
+      openSave: typeof value === 'function' ? value(state.openSave) : value
+    })),
+
   // Update visible columns for a specific table
   setVisibleColumns: (table, columns) => {
     set((state) => ({
@@ -885,6 +890,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
       // Update Zustand edges state
       set({
+        isAttackChanged: true,
         edges: addEdge(newConnection, edges)
       });
       return;
@@ -907,13 +913,14 @@ const useStore = createWithEqualityFn((set, get) => ({
 
     // Update Zustand edges state
     set({
+      isAttackChanged: true,
       edges: addEdge(newConnection, edges)
     });
   },
 
   setSelectedElement: (newNode) => {
-    set(() => ({
-      selectedElement: newNode
+    set((state) => ({
+      selectedElement: typeof newNode === 'function' ? newNode(state.selectedElement) : newNode
     }));
   },
   setNodes: (newNodes) => {
@@ -980,13 +987,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
   onAttackEdgesChange: (changes) => {
     set({
-      isAttackChanged: true,
+      // isAttackChanged: true,
       attackEdges: applyEdgeChanges(changes, get().attackEdges)
     });
   },
   onAttackConnect: (connection) => {
     set({
-      isAttackChanged: true,
+      // isAttackChanged: true,
       attackEdges: addEdge(connection, get().attackEdges)
     });
   },
@@ -1936,6 +1943,11 @@ const useStore = createWithEqualityFn((set, get) => ({
   deleteAttacks: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
     const res = await ADD_CALL(details, url);
+    return res;
+  },
+  deleteGlobalAttackTrees: async (details) => {
+    let url = `${configuration.apiBaseUrl}v1/delete/globalAttackTree`;
+    const res = await DELETE_CALL(details, url);
     return res;
   },
   deleteRiskTreatment: async (details) => {

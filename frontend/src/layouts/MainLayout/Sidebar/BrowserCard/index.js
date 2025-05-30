@@ -204,19 +204,20 @@ const useStyles = makeStyles((theme, isDark) => ({
   }
 }));
 
-const CardStyle = styled(Card)(({ theme, isCollapsed, isNavbarClose, isDark }) => ({
-  marginBottom: '16px', // Reduced margin for a tighter layout
+const CardStyle = styled(Card, {
+  shouldForwardProp: (prop) => prop !== '$iscollapsed' && prop !== '$isnavbarclose' && prop !== 'isDark'
+})(({ theme, $iscollapsed, $isnavbarclose, isDark }) => ({
+  marginBottom: '16px',
   overflow: 'hidden',
   position: 'relative',
-  height: isNavbarClose ? '100vh' : `calc(95vh - ${getNavbarHeight(isCollapsed)}px)`,
+  height: $isnavbarclose ? '100vh' : `calc(95vh - ${getNavbarHeight($iscollapsed)}px)`,
   border: 'none',
-  borderRadius: '12px', // Slightly smaller border radius
-  background:
-    isDark == true
-      ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
-      : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
-  backdropFilter: 'blur(12px)', // Reduced blur for performance
-  boxShadow: isDark == true ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
+  borderRadius: '12px',
+  background: isDark
+    ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+    : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+  backdropFilter: 'blur(12px)',
+  boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
   [theme.breakpoints.down('sm')]: {
     marginBottom: '8px'
   },
@@ -309,8 +310,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setIsNodePasted,
     setSelectedThreatIds,
     isChanged,
-    setIsChanged,
     isAttackChanged,
+    setIsChanged,
     setOpenSave
   } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
@@ -346,7 +347,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   // console.log('assets', assets);
   // console.log('previousTab', previousTab);
   // console.log('nodes', nodes);
-
+  // console.log('sidebar5 rendered');
   // console.log('isChanged', isChanged);
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -456,9 +457,12 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     await get_api[name](ModelId);
   };
 
+  // console.log('attackScene in sidebar', attackScene);
+
   const handleOpenTable = useCallback(
     (e, id, name) => {
       e.stopPropagation();
+      dispatch(setAttackScene({}));
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -472,7 +476,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     },
     [isChanged, isAttackChanged]
   );
-
   const handleTreeItemClick = useCallback((e, handler, ...args) => {
     const isExpandIcon = e.target.closest('.MuiTreeItem-iconContainer') !== null;
     if (isExpandIcon) {
@@ -831,7 +834,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           </span>
         );
 
-      case 'threatScenarios':
+      case 'threatScenarios': {
         return (
           <span id="threat-scene">
             {renderTreeItem(
@@ -839,20 +842,24 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               (e) => handleClick(e, model?._id, 'threat', data.id),
               null,
               renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
-                return sub.Details?.flatMap((detail, i) => (
-                  <ThreatScenarios
-                    sub={sub}
-                    detail={detail}
-                    i={i}
-                    setSelectedThreatIds={setSelectedThreatIds}
-                    onDragStart={onDragStart}
-                    getLabel={getLabel}
-                  />
-                ));
+                return sub.Details?.flatMap((detail, i) => {
+                  return (
+                    <ThreatScenarios
+                      key={detail?.id}
+                      sub={sub}
+                      detail={detail}
+                      i={i}
+                      setSelectedThreatIds={setSelectedThreatIds}
+                      onDragStart={onDragStart}
+                      getLabel={getLabel}
+                    />
+                  );
+                });
               })
             )}
           </span>
         );
+      }
 
       case 'attackScenarios':
         return (
@@ -1001,8 +1008,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={() => setOpenDocumentDialog(false)} />}
 
       <CardStyle
-        isCollapsed={isCollapsed}
-        isNavbarClose={isNavbarClose}
+        $iscollapsed={isCollapsed}
+        $isnavbarclose={isNavbarClose}
         sx={{
           background: color.tabBorder,
           scrollbarWidth: 'thin',
@@ -1018,7 +1025,18 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           }
         }}
       >
-        <CardContent sx={{ p: 2, color: color?.sidebarContent, height: '100%', overflowY: 'auto' }}>
+        <CardContent
+          sx={{
+            p: 2,
+            color: color?.sidebarContent,
+            height: '100%',
+            overflowY: 'auto !important',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': {
+              width: '5px' // Thinner scrollbar
+            }
+          }}
+        >
           <TreeView
             aria-label="file system navigator"
             expanded={clickedItem}

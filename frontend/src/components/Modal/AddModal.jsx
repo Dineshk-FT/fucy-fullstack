@@ -14,11 +14,11 @@ import {
   IconButton
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
+import useStore from '../../store/Zustand/store';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { setModelId } from '../../store/slices/PageSectionSlice';
 
@@ -55,7 +55,7 @@ export default function AddModel({ open, handleClose, getModels }) {
   const [templateDetails, setTemplateDetails] = React.useState({
     name: ''
   });
-
+  const [loading, setLoading] = React.useState(false);
   const [runTour, setRunTour] = React.useState(false);
   const inputRef = React.useRef(null);
   const hasTriggeredTour = React.useRef(false);
@@ -104,10 +104,18 @@ export default function AddModel({ open, handleClose, getModels }) {
     setRunTour(true);
   };
 
-  const handleCreate = () => {
-    const newModel = {
-      ...templateDetails
-    };
+  const handleChange = React.useCallback((e) => {
+    setTemplateDetails((prev) => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  const handleCreate = (e) => {
+    if (!templateDetails.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+
+    setLoading(true);
+    const newModel = { name: templateDetails.name.trim() };
 
     create(newModel, userDetails?.username)
       .then((res) => {
@@ -117,12 +125,14 @@ export default function AddModel({ open, handleClose, getModels }) {
           dispatch(setModelId(res?.model_id));
           dispatch(closeAll());
           getModels();
-          handleClose();
+          handleClose(e);
         }
       })
       .catch((err) => {
-        console.log('err', err);
-        notify('Something Went Wrong', 'error');
+        toast.error('Something went wrong');
+      })
+      .finally(() => {
+        setLoading(false);
       });
     setTemplateDetails((state) => ({
       ...state,
@@ -169,7 +179,15 @@ export default function AddModel({ open, handleClose, getModels }) {
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="add-model-dialog-title"
+        aria-describedby="add-model-dialog-description"
+        maxWidth="sm"
+        sx={{
+          '& .MuiPaper-root': {
+            width: '475px',
+            borderRadius: '8px'
+          }
+        }}
       >
         <DialogTitle
           sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}

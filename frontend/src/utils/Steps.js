@@ -16,29 +16,30 @@ export const canvasSteps = [
 
 export const DsSteps = [
   {
-    target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    target: '#column-editer',
+    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.',
     disableBeacon: true
   },
   {
-    target: '#filter-columns-btn',
-    content: 'Click here to select which columns to display in the table.'
-  },
-  {
-    target: '.resize-handle',
-    content: 'Drag these handles to adjust column widths for better visibility.'
+    target: '#search-input',
+    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    disableBeacon: true
   },
   {
     target: '#add-scenario',
     content: 'Click to add a new scenario to the table directly, You can fill the name and description and click the tick to add new row'
   },
   {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
     target: '#delete-scenario',
     content: 'Click the Sno column to select the rows to be deleted.'
   },
   {
-    target: '#column-editer',
-    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.'
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
   },
   {
     target: '#select-losses',

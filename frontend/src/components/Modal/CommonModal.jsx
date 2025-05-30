@@ -1,5 +1,5 @@
-/* eslint-disable */
-import * as React from 'react';
+/*eslint-disable*/
+import React, { useCallback, useState } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -9,16 +9,17 @@ import {
   TextField,
   Slide,
   Paper,
-  Typography
-  // useTheme
+  CircularProgress,
+  FormLabel,
+  DialogContentText
 } from '@mui/material';
-import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import ColorTheme from '../../themes/ColorTheme';
 import Draggable from 'react-draggable';
 import DialogCommonTitle from './DialogCommonTitle';
 import { AttackIcon } from '../../assets/icons';
 import toast from 'react-hot-toast';
+import useStore from '../../store/Zustand/store';
 
 function PaperComponent(props) {
   const nodeRef = React.useRef(null);
@@ -38,83 +39,113 @@ const selector = (state) => ({
   addAttackScene: state.addAttackScene,
   getAttackScenario: state.getAttackScenario
 });
-export default function CommonModal({ open, handleClose, name }) {
+
+export default React.memo(function CommonModal({ open, handleClose, name }) {
   const color = ColorTheme();
-  // const { notify } = React.useContext(ToasterContext);
-  const notify = (message, status) => toast[status](message);
   const { model, addAttackScene, getAttackScenario } = useStore(selector, shallow);
-  const [templateDetails, setTemplateDetails] = React.useState({
-    name: ''
-  });
+  const [templateDetails, setTemplateDetails] = useState({ name: '' });
+  const [loading, setLoading] = useState(false);
 
-  const onClose = () => {
-    setTemplateDetails((state) => ({
-      ...state,
-      name: ''
-    }));
-    handleClose();
-  };
+  const handleChange = useCallback((e) => {
+    setTemplateDetails((prev) => ({ ...prev, name: e.target.value }));
+  }, []);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
+    if (!templateDetails.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+
+    setLoading(true);
     const newScene = {
       modelId: model?._id,
       type: name === 'Attack' ? 'attack' : 'attack_trees',
-      ...templateDetails
+      name: templateDetails.name.trim()
     };
 
     addAttackScene(newScene)
       .then((res) => {
-        // console.log('res', res);
         if (!res.error) {
-          notify('Added Successfully', 'success');
+          toast.success('Added successfully');
           getAttackScenario(model?._id);
-          // onClose();
+          setTemplateDetails({ name: '' });
+          handleClose();
         } else {
-          notify(res?.error ?? 'something went wrong', 'error');
+          toast.error(res?.error ?? 'Something went wrong');
         }
       })
-      .catch((err) => {
-        notify('Something Went Wrong', 'error');
+      .catch(() => {
+        toast.error('Something went wrong');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-  };
+  }, [addAttackScene, getAttackScenario, model?._id, name, templateDetails, handleClose]);
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         TransitionComponent={Transition}
         keepMounted
         PaperComponent={PaperComponent}
-        onClose={onClose}
-        aria-labelledby="draggable-dialog-title"
-        sx={{ '& .MuiPaper-root': { backgroundColor: color?.modalBg } }}
+        onClose={handleClose}
+        aria-labelledby="common-modal-dialog-title"
+        maxWidth="sm"
+        sx={{
+          '& .MuiPaper-root': {
+            background: color?.modalBg,
+            width: '475px',
+            borderRadius: '8px'
+          }
+        }}
       >
         <DialogCommonTitle icon={AttackIcon} title={`Add New ${name}`} />
-
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-            <Typography variant="body1" component="div" gutterBottom>
-              Add new {name} details:
-            </Typography>
-            <TextField
-              fullWidth
-              label="Name"
-              value={templateDetails.name}
-              onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
-              variant="outlined"
-              size="small"
-            />
-          </Box>
+        <DialogContent sx={{ p: 2 }}>
+          <DialogContentText id="common-modal-dialog-description">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
+                  Name
+                </FormLabel>
+                <TextField
+                  name="name"
+                  value={templateDetails.name}
+                  onChange={handleChange}
+                  variant="outlined"
+                  placeholder={`Enter ${name.toLowerCase()} name`}
+                  size="small"
+                  fullWidth
+                  required
+                  aria-label="Name"
+                  sx={{ bgcolor: color?.inputBg }}
+                />
+              </Box>
+            </Box>
+          </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="error" onClick={onClose}>
-            cancel
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
+            Cancel
           </Button>
-          <Button variant="contained" onClick={handleCreate}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleCreate}
+            disabled={loading || !templateDetails.name.trim()}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Add
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+    </>
   );
-}
+});

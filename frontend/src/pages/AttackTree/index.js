@@ -1,6 +1,6 @@
 /*eslint-disable*/
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import AttackBlock from '../AttackSceneCanvas';
 import Properties from './Properties';

@@ -1,24 +1,27 @@
-/* eslint-disable */
-import React, { useState, useRef } from 'react';
-import Joyride from 'react-joyride';
+/*eslint-disable*/
+import React, { useCallback, useRef, useState } from 'react';
 import {
+  Box,
   Button,
   TextField,
-  Box,
-  OutlinedInput,
-  InputLabel,
-  MenuItem,
   FormControl,
+  InputLabel,
   Select,
+  OutlinedInput,
+  MenuItem,
   Chip,
   Typography,
   Grid,
+  CircularProgress,
+  FormLabel,
   IconButton
 } from '@mui/material';
+import { v4 as uid } from 'uuid';
 import { useTheme } from '@mui/material/styles';
+import { useDispatch, useSelector } from 'react-redux';
+import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import { getNodeDetails } from '../../utils/Constraints';
-import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddDataNodeTab } from '../../store/slices/CanvasSlice';
 import { fontSize } from '../../themes/constant';
@@ -26,6 +29,9 @@ import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { shallow } from 'zustand/shallow';
+import Joyride from 'react-joyride';
+
+const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -35,30 +41,14 @@ const MenuProps = {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
       width: 'inherit'
     }
-  },
-  anchorOrigin: {
-    vertical: 'top',
-    horizontal: 'left'
-  },
-  transformOrigin: {
-    vertical: 'bottom',
-    horizontal: 'left'
-  },
-  getContentAnchorEl: null
+  }
 };
-
-const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
 const selector = (state) => ({
   setNodes: state.setNodes,
-  nodes: state.nodes
+  nodes: state.nodes,
+  setIsChanged: state.setIsChanged
 });
-
-function getStyles(name, nodes, theme) {
-  return {
-    fontWeight: nodes.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
-  };
-}
 
 const steps = [
   {
@@ -80,24 +70,22 @@ const steps = [
   }
 ];
 
-const AddDataNode = ({ assets }) => {
+export default React.memo(function AddDataNode() {
   const color = ColorTheme();
   const theme = useTheme();
   const dispatch = useDispatch();
   const { selectedNodeGroupId } = useSelector((state) => state?.pageName);
+  const { setNodes, nodes, setIsChanged } = useStore(selector, shallow);
   const [count, setCount] = useState(1);
   const [newNode, setNewNode] = useState({
     nodeName: `New Data ${count}`,
     type: '',
     properties: [properties[0]],
-    bgColor: ''
+    bgColor: '#dadada'
   });
-
   const [runTour, setRunTour] = useState(false);
   const nameInputRef = useRef(null);
   const hasTriggeredTour = useRef(false);
-
-  const { setNodes, nodes } = useStore(selector, shallow);
 
   React.useEffect(() => {
     if (!hasTriggeredTour.current) {
@@ -128,19 +116,19 @@ const AddDataNode = ({ assets }) => {
     setRunTour(true);
   };
 
-  const handleChange = (event) => {
-    const {
-      target: { value, name }
-    } = event;
-    if (name) {
-      setNewNode({
-        ...newNode,
-        [`${name}`]: value
-      });
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    if (name === 'properties') {
+      setNewNode((prev) => ({
+        ...prev,
+        properties: typeof value === 'string' ? value.split(',') : value
+      }));
+    } else {
+      setNewNode((prev) => ({ ...prev, [name]: value }));
     }
-  };
+  }, []);
 
-  const CloseModel = () => {
+  const handleClose = useCallback(() => {
     dispatch(closeAddDataNodeTab());
     dispatch(setSelectedNodeGroupId(''));
     setNewNode({
@@ -149,7 +137,7 @@ const AddDataNode = ({ assets }) => {
       properties: [properties[0]],
       bgColor: '#dadada'
     });
-  };
+  }, [dispatch, setNewNode]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -168,6 +156,7 @@ const AddDataNode = ({ assets }) => {
       properties: [properties[0]],
       bgColor: '#dadada'
     }));
+    setIsChanged(true);
   };
 
   return (
@@ -222,7 +211,7 @@ const AddDataNode = ({ assets }) => {
             >
               <HelpOutlineIcon />
             </IconButton>
-            <Box sx={{ cursor: 'pointer' }} onClick={CloseModel}>
+            <Box sx={{ cursor: 'pointer' }} onClick={handleClose}>
               <CancelTwoToneIcon />
             </Box>
           </Box>
@@ -255,25 +244,28 @@ const AddDataNode = ({ assets }) => {
                 labelId="demo-multiple-chip-label"
                 multiple
                 name="properties"
-                sx={{
-                  fontSize: fontSize,
-                  background: `${color?.sidebarBG} !important`,
-                  color: color?.sidebarContent
-                }}
                 value={newNode.properties}
                 onChange={handleChange}
-                input={<OutlinedInput id="select-multiple-chip" label="Properties" />}
+                input={<OutlinedInput label="Properties" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((value) => (
-                      <Chip key={value} label={value} sx={{ fontSize: fontSize }} />
+                      <Chip key={value} label={value} />
                     ))}
                   </Box>
                 )}
                 MenuProps={MenuProps}
+                sx={{ bgcolor: color?.inputBg }}
               >
-                {properties?.map((name) => (
-                  <MenuItem key={name} value={name} style={getStyles(name, newNode.properties, theme)}>
+                {properties.map((name) => (
+                  <MenuItem
+                    key={name}
+                    value={name}
+                    sx={{
+                      fontWeight:
+                        newNode.properties.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium
+                    }}
+                  >
                     {name}
                   </MenuItem>
                 ))}
@@ -283,7 +275,7 @@ const AddDataNode = ({ assets }) => {
         </Grid>
 
         <Box display="flex" justifyContent="space-between" height="30px" sx={{ mt: 2 }}>
-          <Button id="cancel-data-node-btn" onClick={CloseModel} variant="outlined" color="error">
+          <Button id="cancel-data-node-btn" onClick={handleClose} variant="outlined" color="error">
             Cancel
           </Button>
           <Button
@@ -317,6 +309,4 @@ const AddDataNode = ({ assets }) => {
       </style>
     </Box>
   );
-};
-
-export default AddDataNode;
+});

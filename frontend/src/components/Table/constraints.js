@@ -1,21 +1,21 @@
+/**
+ * Constraints and configuration for the AttackTreeTable component.
+ * Defines table headers, options for selectable fields, and utility functions for
+ * color mapping, rating calculations, and cybersecurity-related configurations.
+ *
+ * @module constraints
+ */
+
 export const colorPicker = (pr) => {
-  // console.log('pr', pr);
-  switch (pr) {
-    case 'Confidentiality':
-      return 'red';
-    case 'Integrity':
-      return 'green';
-    case 'Availability':
-      return 'yellow';
-    case 'Authenticity':
-      return 'blue';
-    case 'Authorization':
-      return 'violet';
-    case 'Non-repudiation':
-      return 'gray';
-    default:
-      return 'black';
-  }
+  const colorMap = {
+    Confidentiality: 'red',
+    Integrity: 'green',
+    Availability: 'yellow',
+    Authenticity: 'blue',
+    Authorization: 'violet',
+    'Non-repudiation': 'gray'
+  };
+  return colorMap[pr] || 'black';
 };
 
 export const RatingColor = (value) => {
@@ -24,59 +24,40 @@ export const RatingColor = (value) => {
     Medium: 'yellow',
     Low: 'green',
     'Very low': 'lightgreen',
-    NA: 'transparent'
+    NA: 'grey'
   };
-  return mapped[value];
+  return mapped[value] || 'transparent';
 };
 
 export const getRating = (value) => {
-  if (value >= 0 && value <= 13) {
-    return 'High';
-  } else if (value >= 14 && value <= 19) {
-    return 'Medium';
-  } else if (value >= 20 && value <= 24) {
-    return 'Low';
-  } else {
-    return 'Very low';
-  }
+  if (value >= 0 && value <= 13) return 'High';
+  if (value >= 14 && value <= 19) return 'Medium';
+  if (value >= 20 && value <= 24) return 'Low';
+  return 'Very low';
 };
 
 export const threatType = (value) => {
-  // console.log('value', value)
-  switch (value) {
-    case 'Integrity':
-      return 'Tampering';
-    case 'Confidentiality':
-      return 'Information Disclosure';
-    case 'Availability':
-      return 'Denial of service';
-    case 'Authenticity':
-      return 'Spoofing';
-    case 'Authorization':
-      return 'Elevation of Privilage';
-    case 'Non-repudiation':
-      return 'Rejection';
-    default:
-      return '';
-  }
+  const typeMap = {
+    Integrity: 'Tampering',
+    Confidentiality: 'Information Disclosure',
+    Availability: 'Denial of service',
+    Authenticity: 'Spoofing',
+    Authorization: 'Elevation of Privilege',
+    'Non-repudiation': 'Rejection'
+  };
+  return typeMap[value] || '';
 };
 
 export const colorPickerTab = (value) => {
   const trimmed = value?.trim();
-  switch (trimmed) {
-    case 'Severe':
-      return 'red';
-    case 'Major':
-      return '#FCAE1E';
-    case 'Moderate':
-      return 'yellow';
-    case 'Minor':
-      return 'green';
-    case 'Negligible':
-      return 'lightgreen';
-    default:
-      return 'inherit';
-  }
+  const colorMap = {
+    Severe: 'red',
+    Major: '#FCAE1E',
+    Moderate: 'yellow',
+    Minor: 'green',
+    Negligible: 'lightgreen'
+  };
+  return colorMap[trimmed] || 'inherit';
 };
 
 export const options = [
@@ -169,11 +150,9 @@ export const stakeHeader = [
 export const DSTableHeader = [
   { id: 1, name: 'ID', w: 70, minW: 60 },
   { id: 2, name: 'Name', w: 100, minW: 90 },
-  // { id: 3, name: 'Damage Scenario' },
   { id: 4, name: 'Description/Scalability', w: 100, minW: 90 },
-  { id: 5, name: 'Losses of Cybersecurity Properties', w: 220, minW: 150 },
+  { id: 5, name: 'Losses of Cybersecurity Properties', w: 250, minW: 200 },
   { id: 6, name: 'Assets', w: 70, minW: 60 },
-  // { id: 7, name: 'Component/Message', w: 100, minW: 70 },
   { id: 13, name: 'Safety Impact', w: 160, minW: 140 },
   { id: 14, name: 'Financial Impact', w: 160, minW: 140 },
   { id: 15, name: 'Operational Impact', w: 160, minW: 140 },
@@ -181,9 +160,6 @@ export const DSTableHeader = [
   { id: 17, name: 'Impact Justification', w: 120, minW: 60 },
   { id: 18, name: 'Associated Threat Scenarios', w: 100, minW: 60 },
   { id: 19, name: 'Overall Impact', w: 100, minW: 60 }
-  // { id: 20, name: 'Asset is Evaluated', w: 80, minW: 60 },
-  // { id: 21, name: 'Cybersecurity Properties are Evaluated', w: 120, minW: 100 },
-  // { id: 22, name: 'Unevaluated Cybersecurity Properties', w: 120, minW: 100 }
 ];
 
 export const DsDerivationHeader = [
@@ -206,9 +182,6 @@ export const TsTableHeader = [
   { id: 8, name: 'Assets', w: 100, minW: 80 },
   { id: 9, name: 'Related Attack Trees', w: 120, minW: 100 },
   { id: 10, name: 'Related Attack Path Models', w: 120, minW: 100 }
-  // { id: 11, name: 'Assessment References' },
-  // { id: 12, name: 'To be Assessed' },
-  // { id: 13, name: 'Assessment Jurification' }
 ];
 
 export const TsDerivedTableHeader = [
@@ -229,7 +202,6 @@ export const AttackTableHeader = [
   { id: 2, name: 'Name' },
   { id: 3, name: 'Category' },
   { id: 4, name: 'Description' },
-  // { id: 5, name: 'Approach' },
   { id: 6, name: 'Elapsed Time' },
   { id: 7, name: 'Expertise' },
   { id: 8, name: 'Knowledge of the Item' },
@@ -243,6 +215,13 @@ export const AttackTableHeader = [
   { id: 16, name: 'Determination Criteria' },
   { id: 17, name: 'Attack Feasibilities Rating' },
   { id: 18, name: 'Attack Feasability Rating Justification' }
+];
+
+export const EXTERNAL_CONNECTIVITY_HEADERS = [
+  { id: 1, name: 'ID' },
+  { id: 2, name: 'Name' },
+  { id: 3, name: 'Category' },
+  { id: 4, name: 'Example' }
 ];
 
 export const RiskTreatmentHeaderTable = [
@@ -272,7 +251,7 @@ export const RiskTreatmentHeaderTable = [
   { id: 24, name: 'Risk Treatment Options', w: 100, minW: 80 },
   { id: 25, name: 'Risk Treatment Justification', w: 100, minW: 80 },
   { id: 26, name: 'Applied Measures', w: 100, minW: 80 },
-  { id: 27, name: 'Detailed / Combained Threat Scenarios', w: 100, minW: 80 },
+  { id: 27, name: 'Detailed / Combined Threat Scenarios', w: 100, minW: 80 },
   { id: 28, name: 'Cybersecurity Goals', w: 160, minW: 140 },
   { id: 29, name: 'Contributing Requirements', w: 160, minW: 140 },
   { id: 30, name: 'Cybersecurity Claims', w: 160, minW: 140 }
@@ -531,13 +510,13 @@ export const AttackTableoptions = {
       label: 'Expert',
       rating: 6,
       description:
-        'Familiar with the underlying algorithms, protocols, hardware, structures, security behavior, and the complexity of scientific knowledge that leads to the definition of new attacks, cryptography, classical attacks for the product type, attack methods, etc., implemented in the product or system type. '
+        'Familiar with the underlying algorithms, protocols, hardware, structures, security behavior, and the complexity of scientific knowledge that leads to the definition of new attacks, cryptography, classical attacks for the product type, attack methods, etc., implemented in the product or system type.'
     },
     {
       value: 'Multiple experts',
       label: 'Multiple experts',
       rating: 8,
-      description: 'Different fields of expertise are required at an expert level for distinct steps of an attack. '
+      description: 'Different fields of expertise are required at an expert level for distinct steps of an attack.'
     }
   ],
   'Knowledge of the Item': [
@@ -552,21 +531,21 @@ export const AttackTableoptions = {
       label: 'Restricted information',
       rating: 3,
       description:
-        'Restricted information concerning the item or component (e.g. knowledge that is controlled within the developer organization and shared with other organizations under a non-disclosure agreement). '
+        'Restricted information concerning the item or component (e.g. knowledge that is controlled within the developer organization and shared with other organizations under a non-disclosure agreement).'
     },
     {
       value: 'Confidential information',
       label: 'Confidential information',
       rating: 7,
       description:
-        'Confidential information about the item or component (e.g. knowledge that is shared between different teams within the developer organization, access to which is controlled and only to members of the design and testing teams). '
+        'Confidential information about the item or component (e.g. knowledge that is shared between different teams within the developer organization, access to which is controlled and only to members of the design and testing teams).'
     },
     {
       value: 'Strictly confidential information',
       label: 'Strictly confidential information',
       rating: 11,
       description:
-        'Highly confidential information about the item or component (e.g. knowledge that is known by a handful of individuals, access to which is very tightly controlled on a strict need-to-know basis and kept secret for individual reasons). '
+        'Highly confidential information about the item or component (e.g. knowledge that is known by a handful of individuals, access to which is very tightly controlled on a strict need-to-know basis and kept secret for individual reasons).'
     }
   ],
   'Window of Opportunity': [
@@ -588,7 +567,7 @@ export const AttackTableoptions = {
       label: 'Moderate',
       rating: 4,
       description:
-        'Low availability of the item or component, limited physical and/or logical access. Physical access to the vehicle interior or exterior without using any special tool. '
+        'Low availability of the item or component, limited physical and/or logical access. Physical access to the vehicle interior or exterior without using any special tool.'
     },
     {
       value: 'Difficult',
@@ -604,14 +583,14 @@ export const AttackTableoptions = {
       label: 'Standard',
       rating: 0,
       description:
-        'Equipment is readily available to the attacker. This equipment can be a part of the product itself (e.g. debugger on an operating system), or can be readily obtained (e.g. internet sources, product samples, or simple attack scripts). '
+        'Equipment is readily available to the attacker. This equipment can be a part of the product itself (e.g. debugger on an operating system), or can be readily obtained (e.g. internet sources, product samples, or simple attack scripts).'
     },
     {
       value: 'Specialized',
       label: 'Specialized',
       rating: 4,
       description:
-        'Equipment is not readily available to the attacker but can be acquired without undue effort. This includes products and/or intermediate stages of equipment (e.g., power analysis tools, use of hundreds of PC hacker tools offered in the Internet) would fall into this category. Development of more extensive attack scripts or scan programs. If difficulty reflects the benchmark costs of specialized equipment are required for distinct steps of an attack, this would be rated as bespoke. '
+        'Equipment is not readily available to the attacker but can be acquired without undue effort. This includes products and/or intermediate stages of equipment (e.g., power analysis tools, use of hundreds of PC hacker tools offered in the Internet) would fall into this category. Development of more extensive attack scripts or scan programs. If difficulty reflects the benchmark costs of specialized equipment are required for distinct steps of an attack, this would be rated as bespoke.'
     },
     {
       value: 'Bespoke',
@@ -625,13 +604,12 @@ export const AttackTableoptions = {
       label: 'Multiple bespoke',
       rating: 9,
       description:
-        ' It is introduced to allow for a situation, where different types of bespoke equipment are required for distinct steps of an attack.'
+        'It is introduced to allow for a situation, where different types of bespoke equipment are required for distinct steps of an attack.'
     }
   ]
 };
 
 export const OverallImpact = (impact) => {
-  // console.log('impact', impact);
   const impactMap = {
     Negligible: 1,
     Minor: 2,
@@ -649,7 +627,6 @@ export const OverallImpact = (impact) => {
   };
 
   const maxImpactValue = Math.max(...impact.map((it) => impactMap[it] || 0));
-
   return impactLabel[maxImpactValue] || '';
 };
 
@@ -663,7 +640,6 @@ export const getCybersecurityType = (type) => {
   return getType[type];
 };
 
-//Cybersecurity Table Headers
 export const CybersecurityGoalsHeader = [
   { id: 1, name: 'SNo' },
   { id: 2, name: 'Name' },
@@ -681,6 +657,7 @@ export const CybersecurityClaimsHeader = [
   { id: 4, name: 'Condition for Re-Evaluation' },
   { id: 5, name: 'Related Threat Scenario' }
 ];
+
 export const CybersecurityRequirementsHeader = [
   { id: 1, name: 'SNo' },
   { id: 2, name: 'Name' },
@@ -689,6 +666,7 @@ export const CybersecurityRequirementsHeader = [
   { id: 4, name: 'Related Cybersecurity Goals' },
   { id: 5, name: 'Related Cybersecurity Controls' }
 ];
+
 export const CybersecurityControlsHeader = [
   { id: 1, name: 'SNo' },
   { id: 2, name: 'Name' },

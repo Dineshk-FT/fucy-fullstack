@@ -1,14 +1,20 @@
-/* eslint-disable */
-import * as React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import React, { useCallback, useEffect } from 'react';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  CircularProgress
+} from '@mui/material';
+import toast, { Toaster } from 'react-hot-toast';
+import ColorTheme from '../../themes/ColorTheme';
 
-export default function SelectCyberGoals({
+export default React.memo(function SelectCyberGoals({
   riskTreatment,
   type,
   details,
@@ -18,32 +24,36 @@ export default function SelectCyberGoals({
   setSelectedScenes,
   updateRiskTreatment,
   selectedRow,
-  refreshAPI,
   model
 }) {
-  const handleChange = (scene) => {
-    // console.log('scene', scene);
-    setSelectedScenes((prevSelected) =>
-      prevSelected.some((s) => s.ID === scene.ID) ? prevSelected.filter((s) => s.ID !== scene.ID) : [...prevSelected, scene]
-    );
-  };
+  const color = ColorTheme();
+  const [loading, setLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    function getCybersecurity(riskTreatment, selectedRow) {
-      // Find the object in Details where threat_key matches
+  useEffect(() => {
+    const getCybersecurity = () => {
       const matchingDetail = riskTreatment['Details'].find((detail) => detail.threat_key === selectedRow.threat_key);
-
-      // Return cybersecurity goals if found, otherwise return null
       return type.includes('Goals')
-        ? matchingDetail?.cybersecurity?.cybersecurity_goals
-        : matchingDetail?.cybersecurity?.cybersecurity_claims || null;
-    }
-    const cybersecurity = getCybersecurity(riskTreatment, selectedRow);
-    setSelectedScenes(cybersecurity);
-  }, [selectedRow, riskTreatment]);
+        ? matchingDetail?.cybersecurity?.cybersecurity_goals || []
+        : matchingDetail?.cybersecurity?.cybersecurity_claims || [];
+    };
+    setSelectedScenes(getCybersecurity());
+  }, [selectedRow, riskTreatment, type, setSelectedScenes]);
 
-  const handleClick = () => {
-    const details = {
+  const handleChange = useCallback(
+    (scene) => {
+      setSelectedScenes((prev) => (prev.some((s) => s.ID === scene.ID) ? prev.filter((s) => s.ID !== scene.ID) : [...prev, scene]));
+    },
+    [setSelectedScenes]
+  );
+
+  const handleClick = useCallback(() => {
+    if (!selectedScenes.length) {
+      toast.error('Please select at least one item');
+      return;
+    }
+
+    setLoading(true);
+    const payload = {
       cyberDetails: selectedScenes.map((scene) => scene.ID),
       threatId: selectedRow.ID,
       type: type.includes('Goals') ? 'cybersecurity_goals' : 'cybersecurity_claims',
@@ -51,103 +61,92 @@ export default function SelectCyberGoals({
       'model-id': model?._id
     };
 
-    // console.log('details', details);
-    updateRiskTreatment(details)
+    updateRiskTreatment(payload)
       .then((res) => {
-        if (res) {
+        if (!res.error) {
+          toast.success('Selection updated successfully');
+          setLoading(false);
+
           handleClose();
-          refreshAPI();
+        } else {
+          toast.error(res.error ?? 'Update failed');
         }
       })
-      .catch((err) => console.log('err', err));
-  };
+      .catch(() => {
+        toast.error('Something went wrong');
+      });
+  }, [updateRiskTreatment, selectedScenes, selectedRow, model, handleClose]);
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        aria-labelledby="select-cyber-goals-dialog-title"
+        aria-describedby="select-cyber-goals-dialog-description"
+        maxWidth="md"
         sx={{
           '& .MuiPaper-root': {
-            width: 'fit-content',
-            maxWidth: 600,
-            height: 400
+            background: color?.modalBg,
+            width: '600px',
+            height: '400px',
+            borderRadius: '8px'
           }
         }}
       >
-        <DialogTitle
-          id="alert-dialog-title"
-          sx={{
-            fontSize: 20,
-            fontFamily: 'Inter',
-            fontWeight: 600
-          }}
-        >
-          {type.includes('Goals') ? 'Select the CyberSecurity Goals' : 'Select the CyberSecurity Claims'}
+        <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>
+          Select {type.includes('Goals') ? 'Cybersecurity Goals' : 'Cybersecurity Claims'}
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {details?.map((detail) => (
-              <FormGroup key={detail?.ID}>
+        <DialogContent sx={{ p: 2, overflow: 'auto' }}>
+          <DialogContentText id="select-cyber-goals-dialog-description">
+            <FormGroup>
+              {details?.map((detail) => (
                 <FormControlLabel
+                  key={detail?.ID}
                   sx={{
-                    margin: '-6px',
+                    my: 0.5,
                     '& .MuiTypography-root': {
-                      fontSize: '13px',
-                      color: '#000'
+                      fontSize: '14px',
+                      color: color?.sidebarContent
                     }
                   }}
                   control={
-                    <Checkbox size="small" checked={selectedScenes.some((s) => s.ID === detail.ID)} onChange={() => handleChange(detail)} />
+                    <Checkbox
+                      size="small"
+                      checked={selectedScenes.some((s) => s.ID === detail.ID)}
+                      onChange={() => handleChange(detail)}
+                      aria-label={`Select ${detail?.Name}`}
+                    />
                   }
                   label={detail?.Name}
                 />
-              </FormGroup>
-            ))}
-            {/* <TreeView aria-label="file system navigator" defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-              <TreeItem key={details?._id} nodeId={details?._id} label={details?.name} sx={{ color: '#000', fontWeight: 600 }}>
-                {details?.scenes?.map((scene) => (
-                  <TreeItem
-                    key={scene?.ID}
-                    nodeId={scene?.ID}
-                    label={
-                      <FormGroup>
-                        <FormControlLabel
-                          sx={{
-                            margin: '-6px',
-                            '& .MuiTypography-root': {
-                              fontSize: '13px',
-                              color: '#000'
-                            }
-                          }}
-                          control={
-                            <Checkbox
-                              size="small"
-                              checked={selectedScenes.some((s) => s.ID === scene.ID)}
-                              onChange={() => handleChange(scene)}
-                            />
-                          }
-                          label={scene?.Name}
-                        />
-                      </FormGroup>
-                    }
-                  />
-                ))}
-              </TreeItem>
-            </TreeView> */}
+              ))}
+            </FormGroup>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="warning" onClick={handleClose}>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+          >
             Close
           </Button>
-          <Button variant="contained" onClick={handleClick} autoFocus>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleClick}
+            disabled={loading || !selectedScenes.length}
+            sx={{ textTransform: 'none', minWidth: '80px' }}
+            startIcon={loading && <CircularProgress size={16} />}
+          >
             Okay
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+      <Toaster position="top-right" reverseOrder={false} />
+    </>
   );
-}
+});

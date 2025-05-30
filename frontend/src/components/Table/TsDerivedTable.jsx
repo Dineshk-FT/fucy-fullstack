@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import KeyboardBackspaceRoundedIcon from '@mui/icons-material/KeyboardBackspaceRounded';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
   Button,
@@ -26,9 +25,7 @@ import {
   DialogTitle,
   FormControlLabel
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
@@ -64,12 +61,6 @@ const selector = (state) => ({
 const notify = (message, status) => toast[status](message);
 
 const column = TsDerivedTableHeader;
-
-const useStyles = makeStyles({
-  div: {
-    width: 'max-content'
-  }
-});
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {

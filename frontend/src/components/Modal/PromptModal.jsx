@@ -1,26 +1,29 @@
 /*eslint-disable*/
+import React, { useCallback, useState } from 'react';
 import {
-  Box,
-  Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Slide,
+  Button,
+  Box,
   TextField,
-  Typography
+  Slide,
+  CircularProgress,
+  Typography,
+  FormLabel
 } from '@mui/material';
-import React, { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
+import { useDispatch } from 'react-redux';
+import { setAttackScene, setTableOpen } from '../../store/slices/CurrentIdSlice';
+import ColorTheme from '../../themes/ColorTheme';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
-const notify = (message, status) => toast[status](message);
 
 const selector = (state) => ({
   create: state.createPropmt,
@@ -28,83 +31,120 @@ const selector = (state) => ({
   getAttackScenario: state.getAttackScenario,
   getGlobalAttackTrees: state.getGlobalAttackTrees
 });
-const PromptModal = ({ handleClose, open }) => {
-  const { create, modelId, getAttackScenario, getGlobalAttackTrees } = useStore(selector, shallow);
-  const [loading, setLoading] = useState(false);
-  const [templateDetails, setTemplateDetails] = useState({ name: '' });
 
-  const handleCreate = () => {
+export default React.memo(function PromptModal({ handleClose, open, refreshAPI }) {
+  const color = ColorTheme();
+  const dispatch = useDispatch();
+  const { create, modelId, getAttackScenario, getGlobalAttackTrees } = useStore(selector, shallow);
+  const [templateDetails, setTemplateDetails] = useState({ name: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = useCallback((e) => {
+    setTemplateDetails((prev) => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    if (!templateDetails.name.trim()) {
+      toast.error('Prompt is required');
+      return;
+    }
+
     setLoading(true);
     const newAttackTree = {
-      modelId: modelId,
-      promptKey: templateDetails?.name
+      modelId,
+      promptKey: templateDetails.name.trim()
     };
 
     create(newAttackTree, modelId)
       .then((res) => {
-        // console.log('res', res);
-        if (!res.error) {
-          notify(res.message ?? 'Attack tree created successfully', 'success');
+        if (!res.error && res.status !== 500) {
+          toast.success(res.message ?? 'Attack tree created successfully');
           getAttackScenario(modelId);
           getGlobalAttackTrees(modelId);
+          dispatch(setTableOpen('Attack Trees Canvas'));
+          dispatch(setAttackScene(res?.scene));
+          setTemplateDetails({ name: '' });
           handleClose();
-          // setTimeout(() => {
-          //   dispatch(setTableOpen('Attack Trees Canvas'));
-          //   dispatch(setAttackScene(res?.scene));
-          // }, 1000);
         } else {
-          notify(res.error ?? 'Error while Generating the Requested Attack', 'error');
+          toast.error(res?.error ?? 'Error creating attack tree');
         }
       })
       .catch((err) => {
-        console.log('err', err);
-        notify('Something Went Wrong', 'error');
+        toast.error('Something went wrong');
       })
       .finally(() => {
         setLoading(false);
       });
-
-    setTemplateDetails({ name: '' });
-  };
+  }, [create, modelId, getAttackScenario, getGlobalAttackTrees, dispatch, templateDetails, handleClose]);
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-labelledby="prompt-modal-dialog-title"
+        aria-describedby="prompt-modal-dialog-description"
+        maxWidth="sm"
+        sx={{
+          '& .MuiPaper-root': {
+            background: color?.modalBg,
+            width: '475px',
+            borderRadius: '8px'
+          }
+        }}
       >
         {loading ? (
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={4}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
             <CircularProgress />
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Generating Response...
+            <Typography variant="h6" sx={{ mt: 2, color: color?.title }}>
+              Generating Attack Tree...
             </Typography>
           </Box>
         ) : (
           <>
-            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', pb: 0 }}>{'Create Attack Tree'}</DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-slide-description">
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 1 }}>
-                  <TextField
-                    value={templateDetails?.name}
-                    id="outlined-basic"
-                    label="Name"
-                    variant="outlined"
-                    onChange={(e) => setTemplateDetails({ ...templateDetails, name: e.target.value })}
-                    sx={{ width: '300px' }}
-                  />
+            <DialogTitle sx={{ fontSize: 18, fontFamily: 'Inter', p: 2 }}>Create Attack Tree</DialogTitle>
+            <DialogContent sx={{ p: 2 }}>
+              <DialogContentText id="prompt-modal-dialog-description">
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box>
+                    <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>
+                      Prompt
+                    </FormLabel>
+                    <TextField
+                      value={templateDetails.name}
+                      onChange={handleChange}
+                      variant="outlined"
+                      placeholder="Enter prompt for attack tree"
+                      size="small"
+                      fullWidth
+                      required
+                      aria-label="Prompt"
+                      sx={{ bgcolor: color?.inputBg }}
+                    />
+                  </Box>
                 </Box>
               </DialogContentText>
             </DialogContent>
-            <DialogActions>
-              <Button variant="outlined" color="error" onClick={handleClose} disabled={loading}>
+            <DialogActions sx={{ p: 2, gap: 1 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleClose}
+                disabled={loading}
+                sx={{ textTransform: 'none', minWidth: '80px' }}
+              >
                 Cancel
               </Button>
-              <Button variant="contained" onClick={handleCreate} disabled={loading}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleCreate}
+                disabled={loading || !templateDetails.name.trim()}
+                sx={{ textTransform: 'none', minWidth: '80px' }}
+                startIcon={loading && <CircularProgress size={16} />}
+              >
                 Create
               </Button>
             </DialogActions>
@@ -112,8 +152,6 @@ const PromptModal = ({ handleClose, open }) => {
         )}
       </Dialog>
       <Toaster position="top-right" reverseOrder={false} />
-    </React.Fragment>
+    </>
   );
-};
-
-export default PromptModal;
+});

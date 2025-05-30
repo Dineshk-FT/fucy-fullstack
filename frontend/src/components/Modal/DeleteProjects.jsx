@@ -1,138 +1,130 @@
-/*eslint-disable*/
-import React, { useState, useRef } from 'react';
-import { List, ListItemButton, ListItemText, Button, CircularProgress, Box, Typography, Popper, Paper } from '@mui/material';
-import toast from 'react-hot-toast';
+import React, { useCallback, useState } from 'react';
+import { Popper, Paper, Box, Typography, List, ListItemButton, ListItemText, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
+import toast, { Toaster } from 'react-hot-toast';
 import { setModelId } from '../../store/slices/PageSectionSlice';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
+import ColorTheme from '../../themes/ColorTheme';
 
-export default function DeleteProject({ open, handleClose, Models, deleteModels, isLoading, getModels, model }) {
-  const userId = sessionStorage.getItem('user-id');
+export default React.memo(function DeleteProject({ open, handleClose, Models, deleteModels, isLoading, getModels, model, anchorEl }) {
+  const color = ColorTheme();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [selectedModels, setSelectedModels] = useState([]);
-  const notify = (message, status) => toast[status](message);
+  const userId = sessionStorage.getItem('user-id');
 
-  const anchorRef = useRef(null); // Used to anchor the popper below this element
+  const handleModelClick = useCallback((e, id) => {
+    e.stopPropagation();
+    setSelectedModels((prev) => (prev.includes(id) ? prev.filter((modelId) => modelId !== id) : [...prev, id]));
+  }, []);
 
-  const handleModelClick = (id) => {
-    setSelectedModels((prevSelected) =>
-      prevSelected.includes(id) ? prevSelected.filter((modelId) => modelId !== id) : [...prevSelected, id]
-    );
-  };
+  const handleDelete = useCallback(
+    (e) => {
+      if (!selectedModels.length) {
+        toast.error('Select at least one project');
+        return;
+      }
 
-  const handleDelete = () => {
-    deleteModels({ 'model-ids': selectedModels, 'user-id': userId })
-      .then((res) => {
-        // console.log('res', res);
-        if (!res.error) {
-          notify(res.message ?? 'Models deleted successfully', 'success');
-          if (selectedModels.includes(model?._id)) {
-            navigate(`/Models/${res?.next_model_id}`);
-            dispatch(setModelId(res?.next_model_id));
-            dispatch(closeAll());
+      deleteModels({ 'model-ids': selectedModels, 'user-id': userId })
+        .then((res) => {
+          if (!res.error) {
+            toast.success(res.message ?? 'Projects deleted successfully');
+            if (selectedModels.includes(model?._id)) {
+              navigate(`/Models/${res?.next_model_id}`);
+              dispatch(setModelId(res?.next_model_id));
+              dispatch(closeAll());
+            }
+            getModels();
+            setSelectedModels([]);
+            handleClose(e);
+          } else {
+            toast.error(res.error ?? 'Something went wrong');
           }
-          getModels();
-          handleClose();
-        } else {
-          notify(res.error ?? 'Something Went Wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        notify('Something Went Wrong', 'error');
-        handleClose();
-      });
-  };
+        })
+        .catch(() => {
+          toast.error('Something went wrong');
+        });
+    },
+    [deleteModels, userId, selectedModels, model?._id, navigate, dispatch, getModels, handleClose]
+  );
 
   return (
     <>
-      <Popper
-        open={open}
-        anchorEl={anchorRef.current}
-        placement="bottom-end"
-        disablePortal={false}
-        style={{ zIndex: 1500, top: 100, left: 940 }}
-      >
+      <Popper open={open} anchorEl={anchorEl} placement="bottom-end" disablePortal={false} sx={{ zIndex: 1500, top: 100, left: 940 }}>
         <Paper
           sx={{
-            width: 220, // Reduced width
-            padding: 1, // Reduced padding
+            width: 220,
+            p: 1,
             borderRadius: 2,
-            backgroundColor: 'background.paper',
-            boxShadow: 1,
-            zIndex: 1500 // Ensure it's above other elements
+            bgcolor: color?.modalBg,
+            boxShadow: 1
           }}
         >
           <Typography
             sx={{
-              fontSize: 14, // Reduced font size
+              fontSize: 14,
               fontWeight: 600,
-              color: 'primary.main',
-              pb: 0.5, // Reduced bottom padding
+              color: color?.title,
+              pb: 0.5,
               textAlign: 'center'
             }}
           >
             Select Projects to Delete
           </Typography>
-
           <Box
             sx={{
-              maxHeight: '150px', // Reduced height of the dropdown list
+              maxHeight: '150px',
               overflowY: 'auto',
               borderRadius: 1,
               border: '1px solid',
               borderColor: 'divider',
-              backgroundColor: '#fafafa',
-              boxShadow: 1,
-              mb: 1 // Reduced bottom margin
+              bgcolor: color?.inputBg,
+              mb: 1
             }}
           >
             {isLoading ? (
               <Box sx={{ textAlign: 'center', py: 2 }}>
                 <CircularProgress size={20} />
               </Box>
-            ) : Models?.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center' }}>
-                No projects available.
+            ) : !Models?.length ? (
+              <Typography variant="body2" sx={{ p: 1, textAlign: 'center', color: color?.sidebarContent }}>
+                No projects available
               </Typography>
             ) : (
               <List disablePadding>
-                {Models?.map((model) => (
+                {Models.map((model) => (
                   <ListItemButton
                     key={model?._id}
                     selected={selectedModels.includes(model?._id)}
-                    onClick={() => handleModelClick(model?._id)}
+                    onClick={(e) => handleModelClick(e, model?._id)}
                     sx={{
                       py: 0.5,
                       px: 1,
                       borderRadius: 1,
-                      backgroundColor: selectedModels.includes(model?._id) ? '#fd5c63' : 'transparent',
-                      color: selectedModels.includes(model?._id) ? 'white' : 'text.primary',
+                      bgcolor: selectedModels.includes(model?._id) ? 'error.main' : 'transparent',
+                      color: selectedModels.includes(model?._id) ? 'white' : color?.sidebarContent,
                       '&:hover': {
-                        backgroundColor: selectedModels.includes(model?._id) ? 'darkred' : 'action.hover'
+                        bgcolor: selectedModels.includes(model?._id) ? 'error.dark' : 'action.hover'
                       }
                     }}
                   >
-                    <ListItemText sx={{ '& .MuiTypography-root': { color: 'inherit' } }} primary={model?.name} />
+                    <ListItemText primary={model?.name} />
                   </ListItemButton>
                 ))}
               </List>
             )}
           </Box>
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, gap: 1 }}>
             <Button
               onClick={handleClose}
               variant="outlined"
-              color="warning"
+              color="error"
               sx={{
-                fontWeight: 500,
                 textTransform: 'none',
-                fontSize: 10,
-                padding: '4px 6px',
-                minWidth: 60
+                fontSize: 12,
+                minWidth: 60,
+                py: 0.5
               }}
             >
               Close
@@ -141,20 +133,21 @@ export default function DeleteProject({ open, handleClose, Models, deleteModels,
               onClick={handleDelete}
               variant="contained"
               color="error"
-              disabled={selectedModels.length === 0}
+              disabled={isLoading || !selectedModels.length}
               sx={{
-                fontWeight: 500,
                 textTransform: 'none',
-                fontSize: 10,
+                fontSize: 12,
                 minWidth: 60,
-                padding: '4px 6px'
+                py: 0.5
               }}
+              startIcon={isLoading && <CircularProgress size={16} />}
             >
               Delete
             </Button>
           </Box>
         </Paper>
       </Popper>
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
-}
+});

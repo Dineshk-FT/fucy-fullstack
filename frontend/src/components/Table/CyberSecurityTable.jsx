@@ -194,7 +194,7 @@ export default function CybersecurityTable() {
           notify(res.message ?? 'Added successfully', 'success');
           // handleClose();
           setNewRowData({
-            name: '',
+            Name: '',
             Description: ''
           });
           // }, 500);
@@ -385,8 +385,8 @@ export default function CybersecurityTable() {
                 <StyledTableCell key={index} style={{ width: columnWidths[item.id] || 'auto' }} align={'left'}>
                   {row[item.name] && Array.isArray(row[item.name]) && row[item.name].length
                     ? row[item.name]?.map((key) => (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <img src={ThreatIcon} alt="threat" height="10px" width="10px" key={key} />
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }} key={key}>
+                          <img src={ThreatIcon} alt="threat" height="10px" width="10px" />
                           <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>{key}</span>
                         </span>
                       ))

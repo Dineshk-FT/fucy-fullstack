@@ -5,16 +5,12 @@ import {
   Avatar,
   Box,
   Button,
-  Checkbox,
   Chip,
   ClickAwayListener,
-  FormControlLabel,
   Grid,
   InputLabel,
-  MenuItem,
   Paper,
   Popper,
-  Select,
   Tab,
   Tabs,
   TextField
@@ -31,6 +27,7 @@ import {
   Non_repudiationIcon,
   AvailabilityIcon
 } from '../../../assets/icons';
+import { MarkerType } from 'reactflow';
 
 const useStyles = makeStyles(() => ({
   inputlabel: {
@@ -58,7 +55,7 @@ const Properties = [
   { name: 'Availability', image: AvailabilityIcon }
 ];
 
-const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, edges, setEdges }) => {
+const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSaveEdit, dispatch, setEdges }) => {
   const color = ColorTheme();
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
@@ -91,24 +88,34 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
 
     if (name === 'startPoint' || name === 'endPoint') {
       const markerType = name === 'startPoint' ? 'markerStart' : 'markerEnd';
+      const defaultMarker = { type: MarkerType.ArrowClosed, color: '#000000' };
+
       updates = {
         [markerType]: {
+          ...defaultMarker,
           ...selectedBlock?.[markerType],
           color: value
         }
       };
+
       dispatch(setDetails({ ...details, [name]: value }));
     } else {
-      updates = {
-        style: {
-          ...selectedBlock?.style,
-          [name]: value
-        }
+      // ✅ Use latest style from details, not selectedBlock
+      const prevStyle = details?.style || {};
+
+      const updatedStyle = {
+        ...prevStyle,
+        [name]: value
       };
+
+      updates = {
+        style: updatedStyle
+      };
+
       dispatch(
         setDetails({
           ...details,
-          style: { ...details.style, [name]: value }
+          style: updatedStyle
         })
       );
     }
@@ -274,4 +281,4 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
   );
 };
 
-export default EditEdge;
+export default React.memo(EditEdge);

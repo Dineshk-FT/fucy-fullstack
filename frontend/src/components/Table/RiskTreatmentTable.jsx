@@ -421,7 +421,6 @@ export default function RiskTreatmentTable() {
               );
               break;
             case item.name.includes('Cybersecurity'):
-              // console.log('row', item.name);
               cellContent = (
                 <StyledTableCell
                   id={item.name === 'Cybersecurity Goals' ? 'select-goals' : 'select-claims'}
@@ -429,30 +428,26 @@ export default function RiskTreatmentTable() {
                   scope="row"
                   sx={{
                     width: `${columnWidths[item.id] || 'auto'}`
-                    // textAlign: 'center', // Centers content in the table cell
-                    // verticalAlign: 'middle'
                   }}
                 >
                   {row[item.name] && row[item.name].length ? (
                     <Box
-                      // display="flex"
-                      // flexDirection="column"
-                      // alignItems="center" // Ensures overall centering
-                      // justifyContent="center"
-                      flexWrap="wrap"
-                      width="100%"
+                      onClick={() => handleOpenSelect(row, item.name)} // Make the list clickable for updates
+                      sx={{
+                        cursor: 'pointer', // Indicate it's clickable
+                        width: '100%'
+                      }}
                     >
                       {row[item.name].map((goal, i) => (
                         <Box
                           key={goal?.ID || i}
                           display="flex"
-                          alignItems="center" // Ensures all items start at the same position
-                          // justifyContent="center"
+                          alignItems="center"
                           gap={1}
                           sx={{
                             textAlign: 'left',
                             width: '100%',
-                            maxWidth: '250px', // Keeps structure uniform
+                            maxWidth: '250px',
                             whiteSpace: 'normal',
                             wordBreak: 'break-word',
                             mb: 0.8
@@ -463,7 +458,7 @@ export default function RiskTreatmentTable() {
                             alt="icon"
                             height="15px"
                             width="15px"
-                            style={{ alignSelf: 'flex-start' }} // Aligns icon with text start position
+                            style={{ alignSelf: 'flex-start', marginTop: '3px' }}
                           />
                           <Box display="flex" flexDirection="column" gap="5px" minWidth="100px">
                             {goal?.Name}
@@ -472,11 +467,14 @@ export default function RiskTreatmentTable() {
                       ))}
                     </Box>
                   ) : (
-                    <InputLabel onClick={() => handleOpenSelect(row, item.name)}>Select</InputLabel>
+                    <InputLabel onClick={() => handleOpenSelect(row, item.name)} sx={{ cursor: 'pointer' }}>
+                      Select
+                    </InputLabel>
                   )}
                 </StyledTableCell>
               );
               break;
+
             case item.name === 'Related UNECE Threats or Vulns':
               cellContent = (
                 <StyledTableCell

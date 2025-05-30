@@ -8,7 +8,7 @@ import { shallow } from 'zustand/shallow';
 import { CustomEdge } from '../../components/custom';
 import { Button, Checkbox, IconButton } from '@mui/material';
 import { v4 as uid } from 'uuid';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import ELK from 'elkjs/lib/elk.bundled';
 import toast, { Toaster } from 'react-hot-toast';
 import { pageNodeTypes, style } from '../../utils/Constraints';
@@ -18,10 +18,11 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree';
 import RestoreIcon from '@mui/icons-material/Restore';
-import Joyride from 'react-joyride';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
+import Joyride from 'react-joyride';
 import { attackCanvasSteps } from '../../utils/Steps';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 
 const elk = new ELK();
 
@@ -218,6 +219,7 @@ export default function AttackBlock({ attackScene, color }) {
     setOpenSave
   } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
+  const dispatch = useDispatch();
   const [nodeTypes, setNodeTypes] = useState({});
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [copiedNode, setCopiedNode] = useState([]);
@@ -228,8 +230,6 @@ export default function AttackBlock({ attackScene, color }) {
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
   const flowWrapper = useRef(null);
-  const nodesRef = useRef(nodes);
-  const edgesRef = useRef(edges);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
 
@@ -241,13 +241,8 @@ export default function AttackBlock({ attackScene, color }) {
   };
 
   // console.log('isChanged', isChanged);
-
   // console.log('attackScene', attackScene);
   // console.log('nodes', nodes);
-  useEffect(() => {
-    nodesRef.current = nodes;
-    edgesRef.current = edges;
-  }, [nodes, edges]);
 
   const getMatchingId = useCallback(() => {
     const matchingScene = attacks['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId);
@@ -285,11 +280,11 @@ export default function AttackBlock({ attackScene, color }) {
     update(details)
       .then((res) => {
         if (!res.error) {
-          // console.log('res', res);
           setTimeout(() => {
             notify('Saved Successfully', 'success');
             getAttackScenario(model?._id);
             getCyberSecurityScenario(model?._id);
+            dispatch(setAttackScene(res?.scene ?? {}));
           }, 200);
           setIsChanged(false);
         } else {
@@ -298,7 +293,7 @@ export default function AttackBlock({ attackScene, color }) {
       })
       .catch((err) => {
         if (err) {
-          console.log('err', err);
+          // console.log('err', err);
           notify('Something Went Wrong', 'error');
         }
       });
@@ -306,10 +301,10 @@ export default function AttackBlock({ attackScene, color }) {
 
   // Save before switching attackScene
   useEffect(() => {
-    setNodes(attackScene?.templates?.nodes || []);
-    setEdges(attackScene?.templates?.edges || []);
-    // prevAttackSceneRef.current = attackScene;
-  }, [attackScene]);
+    setTimeout(() => {
+      onRestore(attackScene.templates);
+    }, 300);
+  }, [attackScene.templates]);
 
   useEffect(() => {
     const newNodeTypes = pageNodeTypes?.attackcanvas || {};
@@ -339,8 +334,8 @@ export default function AttackBlock({ attackScene, color }) {
         setEdges(layoutedEdges);
         centerLayout();
         if (
-          JSON.stringify(nodes) !== JSON.stringify(attackScene?.templates?.nodes) ||
-          JSON.stringify(edges) !== JSON.stringify(attackScene?.templates?.edges)
+          JSON.stringify(attackScene?.templates?.nodes) !== JSON.stringify(layoutedNodes) ||
+          JSON.stringify(attackScene?.templates?.edges) !== JSON.stringify(layoutedEdges)
         ) {
           setIsChanged(true);
         }
@@ -354,9 +349,9 @@ export default function AttackBlock({ attackScene, color }) {
     centerLayout();
   }, [reactFlowInstance, attackScene]);
 
-  useLayoutEffect(() => {
-    onLayout({ direction: 'DOWN', useInitialNodes: true });
-  }, []);
+  // useLayoutEffect(() => {
+  //   onLayout({ direction: 'DOWN', useInitialNodes: true });
+  // }, []);
 
   // console.log('nodes', nodes);
   const getRelativePosition = (event) => {
@@ -536,7 +531,7 @@ export default function AttackBlock({ attackScene, color }) {
       }
       setIsChanged(false);
     },
-    [reactFlowInstance, attackScene, isChanged]
+    [reactFlowInstance, attackScene?.templates, isChanged]
   );
 
   useEffect(() => {
@@ -767,7 +762,6 @@ export default function AttackBlock({ attackScene, color }) {
 
   const handleCloseSave = () => {
     setOpenSave(false);
-    // onRestore(attackScene?.templates);
     setIsChanged(false);
   };
   // console.log('nodes', nodes);
@@ -862,7 +856,7 @@ export default function AttackBlock({ attackScene, color }) {
               </IconButton>
             </Panel>
             <MiniMap zoomable pannable style={{ background: color.canvasBG }} />
-            <Controls id="controls" />
+            <Controls />
             <Background variant="dots" gap={12} size={1} style={{ backgroundColor: color?.canvasBG }} />
           </ReactFlow>
         </ReactFlowProvider>
@@ -919,8 +913,8 @@ export default function AttackBlock({ attackScene, color }) {
             ))}
           </div>
         )}
-        <Toaster position="top-right" reverseOrder={false} />
         <AutoSavePopper open={openSave} handleClose={handleCloseSave} anchorRef={anchorRef} handleSave={handleSave} />
+        <Toaster position="top-right" reverseOrder={false} />
       </div>
     </>
   );
