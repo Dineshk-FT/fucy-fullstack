@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react'; // Ensure useCallback is imported
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,11 +36,18 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const isMounted = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false; // Set to false when component unmounts
+    };
+  }, []);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
 
-  // console.log('isSelected', isSelected);
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   useEffect(() => {
     setLabelValue(data?.label || '');
@@ -119,19 +126,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     }
   };
 
-  // useEffect(() => {
-  //   const handleKeyPress = (e) => {
-  //     if (e.key === 'F3' && isSelected) {
-  //       setIsEditing(true);
-  //     }
-  //   };
-
-  //   window.addEventListener('keydown', handleKeyPress);
-  //   return () => {
-  //     window.removeEventListener('keydown', handleKeyPress);
-  //   };
-  // }, [id, selectedBlock]);
-
   useEffect(() => {
     if (isEditing && labelRef.current) {
       labelRef.current.focus();
@@ -158,7 +152,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
       })
     );
   };
-  // console.log('setSelectedBlock', setSelectedBlock);
 
   const handleDetailClick = () => {
     setPropertiesOpen(true);
@@ -181,13 +174,38 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     setIsVisible(false);
   };
 
-  const handleDelete = () => {
-    deleteNode({ assetId: assets?._id, nodeId: id })
-      .then(() => getAssets(model?._id))
-      .catch((err) => console.log('err', err));
-    setIsUnsavedDialogVisible(false);
-    setIsVisible(false);
-  };
+  const handleDelete = useCallback(() => {
+    if (!assets?._id || !model?._id) {
+      console.error('Missing assetId or modelId');
+      return;
+    }
+    // Close dialogs immediately
+    if (isMounted.current) {
+      setIsUnsavedDialogVisible(false);
+      setIsVisible(false);
+    }
+    deleteNode({ assetId: assets._id, nodeId: id })
+      .then(() => {
+        if (isMounted.current) {
+          // Remove node from canvas immediately
+          setNodes((nodes) => nodes.filter((node) => node.id !== id));
+          // Fetch updated assets (optional, depending on your app's needs)
+          getAssets(model._id);
+        }
+      })
+      .catch((err) => {
+        if (isMounted.current) {
+          console.error('Delete node error:', err);
+          alert('Failed to delete node. Please try again.');
+        }
+      })
+      .finally(() => {
+        if (isMounted.current) {
+          setIsUnsavedDialogVisible(false);
+          setIsVisible(false);
+        }
+      });
+  }, [assets, model, id, deleteNode, getAssets, setNodes]);
 
   const handlePermanentDeleteClick = () => {
     if (nodes.length > originalNodes.length) {
@@ -261,9 +279,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               textAlign: 'center',
               outline: 'none',
               cursor: 'text',
-
               ...(isEditing && {
-                // backgroundColor: 'white',
                 color: 'black',
                 padding: '0 4px',
                 borderRadius: '4px',

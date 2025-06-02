@@ -21,6 +21,14 @@ export default function DiagonalNode({ id, data, isConnectable, type }) {
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const isMounted = useRef(true);
+  
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => {
+        isMounted.current = false; // Set to false when component unmounts
+      };
+    }, []);
 
   const handleInfoClick = () => {
     // Open properties tab and set the selected node
