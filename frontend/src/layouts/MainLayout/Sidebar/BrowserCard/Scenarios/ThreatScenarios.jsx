@@ -3,26 +3,23 @@ import DraggableTreeItem from '../DraggableItem';
 import { threatType } from '../../../../../components/Table/constraints';
 
 const ThreatScenarios = ({ sub, detail, i, setSelectedThreatIds, onDragStart, getLabel }) => {
-  //   console.log('detail', detail);
-  let key = 0;
   return (
     <>
       {(sub.name === 'Threat Scenarios'
         ? detail.Details.flatMap((nodeDetail) =>
             nodeDetail?.props?.map((prop) => {
-              key++;
               return {
-                label: `[TS${key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
+                label: `[TS${prop?.key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
                   detail?.damage_name
                 } [${detail?.id}]`,
                 nodeId: nodeDetail?.nodeId,
-                index: key,
+                index: prop?.key,
                 extraProps: {
                   threatId: prop?.id,
                   damageId: detail?.rowId,
                   width: 150,
                   height: 60,
-                  key: `TS${key.toString().padStart(3, '0')}`
+                  key: `TS${prop?.key.toString().padStart(3, '0')}`
                 }
               };
             })
@@ -43,7 +40,7 @@ const ThreatScenarios = ({ sub, detail, i, setSelectedThreatIds, onDragStart, ge
         return (
           <DraggableTreeItem
             draggable={true}
-            key={nodeId}
+            key={index ?? nodeId}
             nodeId={nodeId}
             label={getLabel('TopicIcon', label, index ?? i + 1, nodeId, extraProps?.threat_ids, onClick)}
             onDragStart={(e) => onDragStart(e, { label, type: 'default', dragged: true, nodeId, ...extraProps })}
