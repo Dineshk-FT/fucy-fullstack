@@ -178,7 +178,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     if (!assets?._id || !model?._id) {
       console.error('Missing assetId or modelId');
       return;
-    }
+    } 
     // Close dialogs immediately
     if (isMounted.current) {
       setIsUnsavedDialogVisible(false);
