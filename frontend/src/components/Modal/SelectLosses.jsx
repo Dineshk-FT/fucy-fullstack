@@ -165,64 +165,66 @@ export default function SelectLosses({
               {details?.map((item, i) => {
                 const { allSelected, someSelected } = isParentChecked(item);
                 return (
-                  <TreeItem
-                    key={`a${i}`}
-                    nodeId={`a${i}`}
-                    label={
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <FormGroup>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                size="small"
-                                checked={allSelected} // All children selected
-                                indeterminate={!allSelected && someSelected} // Some children selected
-                                disabled={!item.props || item.props.length === 0} // Disable if no children
-                                onChange={(e) => handleParentChange(e, item)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            }
-                            label={
-                              <Typography variant="h5" sx={{ color: color?.title }}>
-                                {item?.name}
-                              </Typography>
-                            }
-                          />
-                        </FormGroup>
-                      </div>
-                    }
-                  >
-                    {item?.props?.map((pr, ind) => (
-                      <TreeItem
-                        key={`${i}${ind}`}
-                        nodeId={`${i}${ind}`}
-                        label={
+                  item.name && (
+                    <TreeItem
+                      key={`a${i}`}
+                      nodeId={`a${i}`}
+                      label={
+                        <div onClick={(e) => e.stopPropagation()}>
                           <FormGroup>
                             <FormControlLabel
                               control={
                                 <Checkbox
                                   size="small"
-                                  disabled={pr?.is_risk_added}
-                                  checked={pr?.isSelected} // Set based on isSelected
-                                  onChange={(e) => handleChildChange(e, pr, item)}
+                                  checked={allSelected} // All children selected
+                                  indeterminate={!allSelected && someSelected} // Some children selected
+                                  disabled={!item.props || item.props.length === 0} // Disable if no children
+                                  onChange={(e) => handleParentChange(e, item)}
+                                  onClick={(e) => e.stopPropagation()}
                                 />
                               }
                               label={
-                                <Typography variant="p" sx={{ color: color?.title, display: 'flex', gap: 1, alignItems: 'center' }}>
-                                  {`Loss of ${pr.name}`}
-                                  {pr?.is_risk_added && (
-                                    <Tooltip title="This risk has already been added and cannot be changed">
-                                      <InfoIcon fontSize="small" sx={{ marginLeft: 0.5 }} />
-                                    </Tooltip>
-                                  )}
+                                <Typography variant="h5" sx={{ color: color?.title }}>
+                                  {item?.name}
                                 </Typography>
                               }
                             />
                           </FormGroup>
-                        }
-                      />
-                    ))}
-                  </TreeItem>
+                        </div>
+                      }
+                    >
+                      {item?.props?.map((pr, ind) => (
+                        <TreeItem
+                          key={`${i}${ind}`}
+                          nodeId={`${i}${ind}`}
+                          label={
+                            <FormGroup>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    disabled={pr?.is_risk_added}
+                                    checked={pr?.isSelected} // Set based on isSelected
+                                    onChange={(e) => handleChildChange(e, pr, item)}
+                                  />
+                                }
+                                label={
+                                  <Typography variant="p" sx={{ color: color?.title, display: 'flex', gap: 1, alignItems: 'center' }}>
+                                    {`Loss of ${pr.name}`}
+                                    {pr?.is_risk_added && (
+                                      <Tooltip title="This risk has already been added and cannot be changed">
+                                        <InfoIcon fontSize="small" sx={{ marginLeft: 0.5 }} />
+                                      </Tooltip>
+                                    )}
+                                  </Typography>
+                                }
+                              />
+                            </FormGroup>
+                          }
+                        />
+                      ))}
+                    </TreeItem>
+                  )
                 );
               })}
             </TreeView>
