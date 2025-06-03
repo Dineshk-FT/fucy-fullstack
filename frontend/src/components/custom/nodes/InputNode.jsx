@@ -22,6 +22,14 @@ const InputNode = ({ id, data, isConnectable, type }) => {
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const isMounted = useRef(true);
+  
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => {
+        isMounted.current = false; // Set to false when component unmounts
+      };
+    }, []);
 
   const handleInfoClick = () => {
     // Open properties tab and set the selected node
@@ -34,16 +42,39 @@ const InputNode = ({ id, data, isConnectable, type }) => {
     setIsVisible(false);
   };
 
-  const handleDelete = () => {
-    deleteNode({ assetId: assets?._id, nodeId: id })
-      .then((res) => {
-        // console.log('res', res);
-        getAssets(model?._id);
-      })
-      .catch((err) => {
-        console.log('err', err);
-      });
-  };
+  const handleDelete = useCallback(() => {
+      if (!assets?._id || !model?._id) {
+        console.error('Missing assetId or modelId');
+        return;
+      }
+      // Close dialogs immediately
+      if (isMounted.current) {
+        setIsUnsavedDialogVisible(false);
+        setIsVisible(false);
+      }
+      deleteNode({ assetId: assets._id, nodeId: id })
+        .then(() => {
+          if (isMounted.current) {
+            // Remove node from canvas immediately
+            setNodes((nodes) => nodes.filter((node) => node.id !== id));
+            // Fetch updated assets (optional, depending on your app's needs)
+            getAssets(model._id);
+          }
+        })
+        .catch((err) => {
+          if (isMounted.current) {
+            console.error('Delete node error:', err);
+            alert('Failed to delete node. Please try again.');
+          }
+        })
+        .finally(() => {
+          if (isMounted.current) {
+            setIsUnsavedDialogVisible(false);
+            setIsVisible(false);
+          }
+        });
+    }, [assets, model, id, deleteNode, getAssets, setNodes]);
+  
 
   const copiedNodes = nodes.filter((node) => node.isCopied === true);
 
