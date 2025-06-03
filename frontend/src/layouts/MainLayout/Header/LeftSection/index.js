@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem } from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
@@ -95,6 +95,30 @@ const LeftSection = () => {
   const [openAttackModal, setOpenAttackModal] = useState(false);
   const [subName, setSubName] = useState('');
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
+  const [hoveredTab, setHoveredTab] = useState(null);
+  const hoverTimeoutRef = useRef(null);
+
+  const handleMouseEnter = useCallback((tabName) => {
+    clearTimeout(hoverTimeoutRef.current);
+    setHoveredTab(tabName);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+  }, []);
+
+  // Keep dropdown open when hovering over tab or dropdown
+  const handleTabWrapperMouseEnter = useCallback((tabName) => {
+    clearTimeout(hoverTimeoutRef.current);
+    setHoveredTab(tabName);
+  }, []);
+
+  const handleDropdownMouseEnter = useCallback((tabName) => {
+    clearTimeout(hoverTimeoutRef.current);
+    setHoveredTab(tabName);
+  }, []);
+
+  useEffect(() => () => clearTimeout(hoverTimeoutRef.current), []);
 
   useEffect(() => {
     getSidebarNode();
@@ -568,7 +592,8 @@ const LeftSection = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            width: '70px'
+            width: '70px',
+            position: 'relative'
           }}
           draggable={option.label === 'Group'}
           onDragStart={option.label === 'Group' ? handleGroupDrag : undefined}
@@ -591,12 +616,16 @@ const LeftSection = () => {
                 </IconButton>
               </Tooltip>
               <Typography
+                variant="caption"
                 sx={{
-                  marginTop: '4px',
-                  fontSize: '10px',
-                  fontFamily: "'Poppins', sans-serif",
+                  mt: 0.5,
                   textAlign: 'center',
-                  color: color?.sidebarContent
+                  fontSize: '0.7rem',
+                  color: color?.sidebarContent,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  width: '100%'
                 }}
               >
                 {option.label}
@@ -612,9 +641,10 @@ const LeftSection = () => {
   return (
     <Box
       sx={{
-        display: 'inline-flex',
+        display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        position: 'relative'
       }}
     >
       <Box
@@ -626,74 +656,84 @@ const LeftSection = () => {
           borderRadius: '10px',
           padding: '6px 8px',
           boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
-          marginBottom: '6px'
+          marginBottom: '6px',
+          gap: '8px'
         }}
       >
+        {tabs.map((tab) => (
+          <Box
+            key={tab.name}
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+            onMouseEnter={() => handleTabWrapperMouseEnter(tab.name)}
+            onMouseLeave={handleMouseLeave}
+          >
+            <Box
+              onClick={(e) => handleTabChange(e, tab.name)}
+              sx={{
+                cursor: 'pointer',
+                ...tabStyles,
+                ...(activeTab === tab.name ? activeTabStyles : {}),
+                color: activeTab === tab.name ? '#1e88e5' : color?.sidebarContent,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1
+              }}
+            >
+              {tab.name}
+            </Box>
+            {isCollapsed && hoveredTab === tab.name && tab.options?.length > 0 && (
+              <Box
+                onMouseEnter={() => handleDropdownMouseEnter(tab.name)}
+                onMouseLeave={handleMouseLeave}
+                sx={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  left: 0,
+                  zIndex: 1300,
+                  background: color.tabBorder,
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '8px',
+                  border: 'none',
+                  p: 1.5,
+                  boxShadow: (theme) => theme.shadows[8],
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+                  gap: 1.5,
+                  width: 'max-content',
+                  maxWidth: 300,
+                  opacity: 1,
+                  transition: 'opacity 0.2s ease, transform 0.2s ease',
+                  pointerEvents: 'auto',
+                  mt: 0.5
+                }}
+              >
+                {tab.options.map(renderOptionButton)}
+              </Box>
+            )}
+          </Box>
+        ))}
         <IconButton
           onClick={handleToggleCollapse}
+          size="small"
           sx={{
-            padding: '4px',
-            color: '#1e88e5', // Darker blue color
-            transition: 'all 0.3s ease',
+            ml: 1,
+            color: '#1e88e5',
             '&:hover': {
-              background: isDark ? 'rgba(30,136,229,0.15)' : 'rgba(30,136,229,0.08)',
-              transform: 'scale(1.1)',
-              boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+              background: isDark ? 'rgba(30,136,229,0.15)' : 'rgba(30,136,229,0.08)'
             }
           }}
         >
           {isCollapsed ? (
-            <ExpandMoreIcon sx={{ fontSize: 22, color: '#1e88e5' }} />
+            <ExpandMoreIcon fontSize="small" />
           ) : (
-            <ExpandLessIcon sx={{ fontSize: 22, color: '#1e88e5' }} />
+            <ExpandLessIcon fontSize="small" />
           )}
         </IconButton>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', flexGrow: 1 }}>
-          {tabs.map((tab) => (
-            <Box key={tab.name} sx={{ position: 'relative', display: 'inline-block' }}>
-              <Typography
-                onClick={(e) => handleTabChange(e, tab.name)}
-                sx={{
-                  ...tabStyles,
-                  ...(activeTab === tab.name ? activeTabStyles : {}),
-                  color: activeTab === tab.name ? '#1e88e5' : color?.sidebarContent
-                }}
-              >
-                {tab.name}
-              </Typography>
-
-              {isCollapsed && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 'calc(100% + 2px)',
-                    left: 0,
-                    zIndex: 1300,
-                    display: 'none',
-                    background: color.tabBorder,
-                    backdropFilter: 'blur(8px)',
-                    borderRadius: '8px',
-                    border: 'none',
-                    padding: '8px',
-                    boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-evenly',
-                    gap: '4px',
-                    width: 'max-content',
-                    maxWidth: '280px',
-                    opacity: 0,
-                    transition: 'opacity 0.3s ease-in-out',
-                    '&:hover': { display: 'flex', opacity: 1 },
-                    '.MuiTypography-root:hover + &': { display: 'flex', opacity: 1 }
-                  }}
-                >
-                  {tab.options.map(renderOptionButton)}
-                </Box>
-              )}
-            </Box>
-          ))}
-        </Box>
       </Box>
       <Collapse in={!isCollapsed}>
         <Box
