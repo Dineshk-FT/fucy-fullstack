@@ -613,9 +613,23 @@ export default function MainCanvas() {
   };
 
   const handleSelectEdgeSingleClick = (e, edge) => {
-    // e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
+    // Set anchor element to ensure sidebar knows which edge is selected
+    dispatch(setAnchorEl({ type: 'edge', value: `edge-${edge.id}` }));
     dispatch(setSelectedBlock(edge));
     setSelectedElement(edge);
+    // Update edge details in the store
+    dispatch(
+      setEdgeDetails({
+        ...details,
+        name: edge?.data?.label ?? '',
+        properties: edge?.properties ?? [],
+        isAsset: edge.isAsset ?? false,
+        style: edge.data.style ?? {},
+        startPoint: edge.markerStart?.color ?? '#64B5F6',
+        endPoint: edge.markerEnd?.color ?? '#64B6F6'
+      })
+    );
   };
 
   const handleClosePopper = (e) => {
