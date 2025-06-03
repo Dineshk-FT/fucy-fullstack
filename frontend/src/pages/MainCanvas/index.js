@@ -340,48 +340,67 @@ export default function MainCanvas() {
     setEdges([]);
   };
 
-  const handleSaveToModel = () => {
-    const template = {
-      nodes: nodes,
-      edges: edges
-    };
-    nodes.forEach((node) => {
-      if (node.isCopied == true) {
-        node.isCopied = false;
-      }
-    });
-    setIsNodePasted(false);
-    const details = {
-      'model-id': model?._id,
-      template: JSON.stringify(template),
-      assetId: assets?._id
-    };
+  const handleSaveToModel = async () => {
+    const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
+    if (!reactFlowViewport) {
+      notify('Viewport not found', 'error');
+      return;
+    }
 
-    update(details)
-      .then((res) => {
-        if (!res.error) {
-          const debouncedFitView = debounce(() => {
-            reactFlowInstance.fitView({
-              padding: 0.2,
-              includeHiddenNodes: true,
-              minZoom: 0.2,
-              maxZoom: 2,
-              duration: 500
-            });
-            setZoomLevel(reactFlowInstance.getZoom());
-          });
+    try {
+      const dataUrl = await toPng(reactFlowViewport);
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
 
-          debouncedFitView();
-          notify('Saved Successfully', 'success');
-          handleClose();
-          RefreshAPI();
-        } else {
-          notify(res.error ?? 'Something went wrong', 'error');
+      // Build your JSON template object
+      const template = {
+        nodes,
+        edges
+      };
+      nodes.forEach((node) => {
+        if (node.isCopied) {
+          node.isCopied = false;
         }
-      })
-      .catch((err) => {
-        notify('Something went wrong', 'error');
       });
+      setIsNodePasted(false);
+
+      // Use FormData to send both the JSON and the image
+      const details = {
+        'model-id': model?._id,
+        template: JSON.stringify(template),
+        assetId: assets?._id,
+        image: blob
+      };
+
+      update(details) // You’d need to adapt your `update` call to accept FormData
+        .then((res) => {
+          if (!res.error) {
+            const debouncedFitView = debounce(() => {
+              reactFlowInstance.fitView({
+                padding: 0.2,
+                includeHiddenNodes: true,
+                minZoom: 0.2,
+                maxZoom: 2,
+                duration: 500
+              });
+              setZoomLevel(reactFlowInstance.getZoom());
+            });
+
+            debouncedFitView();
+            notify('Saved Successfully', 'success');
+            handleClose();
+            RefreshAPI();
+          } else {
+            notify(res.error ?? 'Something went wrong', 'error');
+          }
+        })
+        .catch((err) => {
+          notify('Something went wrong', 'error');
+        });
+    } catch (error) {
+      console.error('Error capturing viewport:', error);
+      notify('Failed to capture image', 'error');
+    }
   };
 
   useEffect(() => {

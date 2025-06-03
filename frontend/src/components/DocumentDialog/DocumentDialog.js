@@ -12,17 +12,19 @@ import {
   Divider,
   Box,
   CircularProgress,
-  Tooltip,
+  Tooltip
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
+import { base64ToBlob } from './Base64Convert';
 
 const selector = (state) => ({
   template: state.assets.template,
+  image: state?.assets?.image,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
-  canvasImage: state.canvasImage,
+  canvasImage: state.canvasImage
 });
 
 const items = [
@@ -31,19 +33,19 @@ const items = [
     id: 2,
     name: 'Damage Scenarios and Impact Ratings',
     icon: 'DamageIcon',
-    subs: [{ id: 22, name: 'Damage Scenarios - Impact Ratings' }],
+    subs: [{ id: 22, name: 'Damage Scenarios - Impact Ratings' }]
   },
   {
     id: 3,
     name: 'Threat Scenarios',
     icon: 'ThreatIcon',
-    subs: [{ id: 32, name: 'Derived Threat Scenarios' }],
+    subs: [{ id: 32, name: 'Derived Threat Scenarios' }]
   },
   {
     id: 4,
     name: 'Attack Path Analysis and Attack Feasibility Rating',
     icon: 'AttackIcon',
-    subs: [{ id: 41, name: 'Attack' }],
+    subs: [{ id: 41, name: 'Attack' }]
   },
   {
     id: '5',
@@ -60,12 +62,12 @@ const items = [
     id: 8,
     name: 'Risk Determination and Risk Treatment Decision',
     icon: 'RiskIcon',
-    subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }],
-  },
+    subs: [{ id: 81, name: 'Threat Assessment & Risk Treatment' }]
+  }
 ];
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, canvasImage } = useStore(selector, shallow);
+  const { template, generateDocument, nodes, canvasImage, image } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -80,9 +82,7 @@ const DocumentDialog = ({ open, onClose }) => {
 
   // Handle checkbox changes
   const handleCheckboxChange = useCallback((id) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }, []);
 
   // Handle document download
@@ -94,23 +94,26 @@ const DocumentDialog = ({ open, onClose }) => {
     formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
     formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
     formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
-    formData.append('cyberSecurityGoals', selectedItems.includes(51) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
-    formData.append('cyberSecurityRequirements', selectedItems.includes(52) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
+    formData.append('cyberSecurityGoals', selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
+    formData.append(
+      'cyberSecurityRequirements',
+      selectedItems.includes(52) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0
+    );
     formData.append('cyberSecurityControls', selectedItems.includes(53) || selectedItems.includes(5) ? 1 : 0);
-    formData.append('cyberSecurityClaims', selectedItems.includes(54) || selectedItems.includes(5) ? 1 : 0); 
+    formData.append('cyberSecurityClaims', selectedItems.includes(54) || selectedItems.includes(5) ? 1 : 0);
 
     if (selectedItems.includes(1)) {
-      if (canvasImage) {
-        try {
-          const blob = await fetch(canvasImage).then((res) => res.blob());
+      if (image) {
+        const blob = base64ToBlob(image);
+        if (blob) {
           formData.append('image', blob, 'itemModelImage.png');
-        } catch (error) {
-          console.error('Error converting canvas image to blob:', error);
+        } else {
+          console.error('Failed to convert base64 image to Blob.');
           setIsGenerating(false);
           return;
         }
       } else {
-        console.warn('No canvas image available for Item Definition');
+        console.warn('No image available for Item Definition.');
         setIsGenerating(false);
         return;
       }
@@ -119,6 +122,7 @@ const DocumentDialog = ({ open, onClose }) => {
     try {
       const response = await generateDocument(formData);
       if (response instanceof Blob) {
+        // Download the file
         const url = window.URL.createObjectURL(response);
         const a = document.createElement('a');
         a.href = url;
@@ -149,8 +153,8 @@ const DocumentDialog = ({ open, onClose }) => {
           width: '100%',
           maxWidth: '450px',
           minWidth: '320px',
-          backdropFilter: 'blur(4px)',
-        },
+          backdropFilter: 'blur(4px)'
+        }
       }}
     >
       <DialogTitle
@@ -162,7 +166,7 @@ const DocumentDialog = ({ open, onClose }) => {
           color: isDark ? '#64B5F6' : '#2196F3',
           padding: '12px 16px',
           borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-          fontFamily: "'Poppins', sans-serif",
+          fontFamily: "'Poppins', sans-serif"
         }}
       >
         Document Report
@@ -172,7 +176,7 @@ const DocumentDialog = ({ open, onClose }) => {
           padding: '16px',
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           maxHeight: '60vh',
-          overflowY: 'auto',
+          overflowY: 'auto'
         }}
       >
         <Typography
@@ -183,7 +187,7 @@ const DocumentDialog = ({ open, onClose }) => {
             fontWeight: 500,
             color: isDark ? '#B0BEC5' : '#616161',
             marginBottom: '12px',
-            fontFamily: "'Poppins', sans-serif",
+            fontFamily: "'Poppins', sans-serif"
           }}
         >
           Select items to add in the report and click on download:
@@ -200,7 +204,7 @@ const DocumentDialog = ({ open, onClose }) => {
                     fontSize: '1rem',
                     color: isDark ? '#E0E0E0' : '#333333',
                     mb: 0.5,
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Poppins', sans-serif"
                   }}
                 >
                   {item.name}
@@ -216,7 +220,7 @@ const DocumentDialog = ({ open, onClose }) => {
                         sx={{
                           color: isDark ? '#64B5F6' : '#2196F3',
                           '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
-                          padding: '4px',
+                          padding: '4px'
                         }}
                       />
                     }
@@ -225,7 +229,7 @@ const DocumentDialog = ({ open, onClose }) => {
                         sx={{
                           fontSize: '0.9rem',
                           color: isDark ? '#E0E0E0' : '#333333',
-                          fontFamily: "'Poppins', sans-serif",
+                          fontFamily: "'Poppins', sans-serif"
                         }}
                       >
                         {item.name}
@@ -248,7 +252,7 @@ const DocumentDialog = ({ open, onClose }) => {
                             sx={{
                               color: isDark ? '#64B5F6' : '#2196F3',
                               '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
-                              padding: '4px',
+                              padding: '4px'
                             }}
                           />
                         }
@@ -257,7 +261,7 @@ const DocumentDialog = ({ open, onClose }) => {
                             sx={{
                               fontSize: '0.85rem',
                               color: isDark ? '#E0E0E0' : '#333333',
-                              fontFamily: "'Poppins', sans-serif",
+                              fontFamily: "'Poppins', sans-serif"
                             }}
                           >
                             {sub.name}
@@ -279,7 +283,7 @@ const DocumentDialog = ({ open, onClose }) => {
           padding: '12px 16px',
           borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-          justifyContent: 'space-between',
+          justifyContent: 'space-between'
         }}
       >
         <Button
@@ -297,12 +301,12 @@ const DocumentDialog = ({ open, onClose }) => {
             transition: 'all 0.2s ease',
             '&:hover': {
               background: isDark ? 'rgba(100,181,246,0.2)' : 'rgba(33,150,243,0.2)',
-              transform: 'scale(1.03)',
+              transform: 'scale(1.03)'
             },
             '&:disabled': {
               opacity: 0.6,
-              cursor: 'not-allowed',
-            },
+              cursor: 'not-allowed'
+            }
           }}
         >
           Cancel
@@ -322,13 +326,13 @@ const DocumentDialog = ({ open, onClose }) => {
             transition: 'all 0.2s ease',
             '&:hover': {
               background: isDark ? '#42A5F5' : '#1976D2',
-              transform: 'scale(1.03)',
+              transform: 'scale(1.03)'
             },
             '&:disabled': {
               opacity: 0.6,
               background: isDark ? '#616161' : '#B0BEC5',
-              borderColor: isDark ? '#616161' : '#B0BEC5',
-            },
+              borderColor: isDark ? '#616161' : '#B0BEC5'
+            }
           }}
         >
           {isGenerating ? (
