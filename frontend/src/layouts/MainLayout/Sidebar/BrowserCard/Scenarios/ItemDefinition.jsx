@@ -42,11 +42,11 @@ const ItemDefinition = ({
   const dispatch = useDispatch();
 
   const { edgesDetail, nodesDetail, dataDetail } = useMemo(() => {
-    const details = data.Details || [];
+    const details = (data?.Details && data.Details.length) || [];
     return {
-      edgesDetail: details.filter((d) => d.nodeId?.includes('reactflow__edge') && d.name),
-      nodesDetail: details.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data'),
-      dataDetail: details.filter((d) => d.type === 'data')
+      edgesDetail: details?.filter((d) => d.nodeId?.includes('reactflow__edge') && d.name) ?? [],
+      nodesDetail: details?.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data') ?? [],
+      dataDetail: details?.filter((d) => d.type === 'data') ?? []
     };
   }, [data.Details]);
 

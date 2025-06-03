@@ -813,7 +813,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   return sub.Derivations?.map((derivation, i) => (
                     <TreeItem
                       onClick={(e) => e.stopPropagation()}
-                      key={derivation.id}
+                      key={derivation?.id}
                       nodeId={derivation.id}
                       label={getLabel('TopicIcon', derivation.name, i + 1, derivation.id)}
                     />
@@ -823,7 +823,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   return sub.Details?.map((detail, i) => (
                     <TreeItem
                       onClick={(e) => e.stopPropagation()}
-                      key={detail._id}
+                      key={detail?._id}
                       nodeId={detail._id}
                       label={getLabel('DangerousIcon', detail.Name, i + 1, detail._id)}
                     />
@@ -872,6 +872,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 sub.scenes?.map((at_scene, i) => {
                   return (
                     <AttackScenarios
+                      key={at_scene?.ID}
                       sub={sub}
                       at_scene={at_scene}
                       i={i}
@@ -899,7 +900,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 return sub.Derivations?.map((derivation) => (
                   <TreeItem
                     onClick={(e) => e.stopPropagation()}
-                    key={derivation.id}
+                    key={derivation?.id}
                     nodeId={derivation.id}
                     label={getLabel('TopicIcon', derivation.name, null, derivation.id)}
                   />
@@ -919,8 +920,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 return sub.scenes?.map((scene, i) => (
                   <TreeItem
                     onClick={(e) => e.stopPropagation()}
-                    key={scene.ID}
-                    nodeId={scene.ID}
+                    key={scene?.ID}
+                    nodeId={scene?.ID}
                     label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
                   />
                 ));
@@ -937,10 +938,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               (e) => handleClick(e, model?._id, 'catalog', data.id),
               null,
               renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-                return sub.subs_scenes?.map((scene) => (
+                return sub?.subs_scenes?.map((scene) => (
                   <TreeItem
                     key={scene.id}
-                    nodeId={scene.id}
+                    nodeId={scene?.id}
                     label={getLabel('TopicIcon', scene.name, null, scene.id)}
                     onClick={(e) => handleOpenTable(e, scene.id, scene.name)}
                   >
