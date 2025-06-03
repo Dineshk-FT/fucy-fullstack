@@ -37,13 +37,13 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
   const isMounted = useRef(true);
-  
-    // Cleanup on unmount
-    useEffect(() => {
-      return () => {
-        isMounted.current = false; // Set to false when component unmounts
-      };
-    }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false; // Set to false when component unmounts
+    };
+  }, []);
 
   const checkSelection = () => selectedBlock?.id === id;
   const isSelected = checkSelection();
@@ -190,38 +190,37 @@ export default function DataNode({ id, data, isConnectable, type }) {
   };
 
   const handleDelete = useCallback(() => {
-      if (!assets?._id || !model?._id) {
-        console.error('Missing assetId or modelId');
-        return;
-      }
-      // Close dialogs immediately
-      if (isMounted.current) {
-        setIsUnsavedDialogVisible(false);
-        setIsVisible(false);
-      }
-      deleteNode({ assetId: assets._id, nodeId: id })
-        .then(() => {
-          if (isMounted.current) {
-            // Remove node from canvas immediately
-            setNodes((nodes) => nodes.filter((node) => node.id !== id));
-            // Fetch updated assets (optional, depending on your app's needs)
-            getAssets(model._id);
-          }
-        })
-        .catch((err) => {
-          if (isMounted.current) {
-            console.error('Delete node error:', err);
-            alert('Failed to delete node. Please try again.');
-          }
-        })
-        .finally(() => {
-          if (isMounted.current) {
-            setIsUnsavedDialogVisible(false);
-            setIsVisible(false);
-          }
-        });
-    }, [assets, model, id, deleteNode, getAssets, setNodes]);
-  
+    if (!assets?._id || !model?._id) {
+      console.error('Missing assetId or modelId');
+      return;
+    }
+    // Close dialogs immediately
+    if (isMounted.current) {
+      setIsUnsavedDialogVisible(false);
+      setIsVisible(false);
+    }
+    deleteNode({ assetId: assets._id, nodeId: id })
+      .then(() => {
+        if (isMounted.current) {
+          // Remove node from canvas immediately
+          setNodes((nodes) => nodes.filter((node) => node.id !== id));
+          // Fetch updated assets (optional, depending on your app's needs)
+          getAssets(model._id);
+        }
+      })
+      .catch((err) => {
+        if (isMounted.current) {
+          console.error('Delete node error:', err);
+          alert('Failed to delete node. Please try again.');
+        }
+      })
+      .finally(() => {
+        if (isMounted.current) {
+          setIsUnsavedDialogVisible(false);
+          setIsVisible(false);
+        }
+      });
+  }, [assets, model, id, deleteNode, getAssets, setNodes]);
 
   const handlePermanentDeleteClick = () => {
     if (nodes.length > originalNodes.length) {
