@@ -86,9 +86,6 @@ function RightSection() {
           <PowerSettingsNewIcon sx={{ color: iconColor, fontSize: 20 }} />
         </Box>
 
-        <Box onClick={toggleNavbar} sx={iconButtonStyles}>
-          {isNavbarClose ? <ArrowSquareDown size="20" color={iconColor} /> : <ArrowSquareUp size="20" color={iconColor} />}
-        </Box>
       </Box>
 
       <Dialog
