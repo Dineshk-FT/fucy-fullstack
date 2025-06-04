@@ -178,10 +178,10 @@ export default function MainCanvas() {
 
   const dispatch = useDispatch();
   const Color = ColorTheme();
-  const { fitView: fitViewDirect } = useReactFlow(); // Added useReactFlow hook to get fitView directly
   const [openTemplate, setOpenTemplate] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState({});
   const [nodeTypes, setNodeTypes] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
   const dragRef = useRef(null);
   const reactFlowWrapper = useRef(null);
   const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
@@ -340,7 +340,21 @@ export default function MainCanvas() {
     setEdges([]);
   };
 
-  const handleSaveToModel = async () => {
+  const debouncedFitView = debounce(() => {
+    reactFlowInstance.fitView({
+      padding: 0.2,
+      includeHiddenNodes: true,
+      minZoom: 0.2,
+      maxZoom: 2,
+      duration: 500
+    });
+    setZoomLevel(reactFlowInstance.getZoom());
+  });
+
+  const handleSaveToModel = async (e) => {
+    e.stopPropagation();
+    setSaveLoading(true);
+    debouncedFitView();
     const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
     if (!reactFlowViewport) {
       notify('Viewport not found', 'error');
@@ -348,7 +362,7 @@ export default function MainCanvas() {
     }
 
     try {
-      const dataUrl = await toPng(reactFlowViewport);
+      const dataUrl = await toPng(reactFlowViewport, { skipFonts: true });
       const response = await fetch(dataUrl);
       const blob = await response.blob();
 
@@ -375,21 +389,10 @@ export default function MainCanvas() {
       update(details) // You’d need to adapt your `update` call to accept FormData
         .then((res) => {
           if (!res.error) {
-            const debouncedFitView = debounce(() => {
-              reactFlowInstance.fitView({
-                padding: 0.2,
-                includeHiddenNodes: true,
-                minZoom: 0.2,
-                maxZoom: 2,
-                duration: 500
-              });
-              setZoomLevel(reactFlowInstance.getZoom());
-            });
-
-            debouncedFitView();
             notify('Saved Successfully', 'success');
             handleClose();
             RefreshAPI();
+            debouncedFitView();
           } else {
             notify(res.error ?? 'Something went wrong', 'error');
           }
@@ -397,6 +400,7 @@ export default function MainCanvas() {
         .catch((err) => {
           notify('Something went wrong', 'error');
         });
+      setSaveLoading(false);
     } catch (error) {
       console.error('Error capturing viewport:', error);
       notify('Failed to capture image', 'error');
@@ -1025,6 +1029,7 @@ export default function MainCanvas() {
               <span ref={anchorRef}>
                 <CanvasToolbar
                   isDark={isDark}
+                  loading={saveLoading}
                   Color={Color}
                   isChanged={isChanged}
                   onRestore={onRestore}

@@ -6,6 +6,7 @@ import GridOnIcon from '@mui/icons-material/GridOn';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function CanvasToolbar({
   isDark,
@@ -21,7 +22,8 @@ export default function CanvasToolbar({
   undoStack,
   assets,
   redoStack,
-  handleDownload
+  handleDownload,
+  loading
 }) {
   return (
     <Box
@@ -64,28 +66,28 @@ export default function CanvasToolbar({
       <Tooltip title="Save">
         <IconButton
           onClick={handleSaveToModel}
+          disabled={loading}
           sx={{
-            // color: isDark == true ? '#64B5F6' : '#2196F3',
+            position: 'relative',
             color: isChanged ? '#FF3131' : '#32CD32',
             padding: '4px',
             '&:hover': {
-              background:
-                isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+              background: isDark
+                ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
               transform: 'scale(1.1)',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              filter: isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+              boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              filter: isDark ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
             },
             '&:focus': {
-              outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+              outline: `2px solid ${isDark ? '#64B5F6' : '#2196F3'}`,
               outlineOffset: '2px'
             }
           }}
           tabIndex={0}
           aria-label="Save canvas"
         >
-          <SaveIcon sx={{ fontSize: 19 }} />
+          {loading ? <CircularProgress size={19} sx={{ color: '#32CD32' }} /> : <SaveIcon sx={{ fontSize: 19 }} />}
         </IconButton>
       </Tooltip>
       <Tooltip title="Group Selected Nodes">

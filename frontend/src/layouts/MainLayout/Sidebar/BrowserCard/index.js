@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useCallback, useMemo, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Card, CardContent, Typography, TextField, Tooltip } from '@mui/material';
+import { Box, Card, CardContent, Typography, TextField, Tooltip, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TreeView } from '@mui/x-tree-view/TreeView';
@@ -50,6 +50,8 @@ import { shallow } from 'zustand/shallow';
 import AttackScenarios from './Scenarios/AttackScenarios';
 import ThreatScenarios from './Scenarios/ThreatScenarios';
 import ItemDefinition from './Scenarios/ItemDefinition';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import PublishIcon from '@mui/icons-material/Publish';
 
 const imageComponents = {
   AttackIcon,
@@ -572,7 +574,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     );
   };
 
-  const getImageLabel = (icon, name, id) => {
+  const getImageLabel = (icon, name, id, imported = false) => {
+    // console.log('name', name);
     const Image = imageComponents[icon];
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
@@ -600,6 +603,36 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
             {name}
           </Typography>
+          {imported && (
+            <Box ml="auto" display="flex">
+              <IconButton
+                size="small"
+                sx={{
+                  '& .MuiSvgIcon-root': {
+                    width: '0.8em'
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation(); /* handle import */
+                }}
+              >
+                <PublishIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
+              </IconButton>
+              <IconButton
+                size="small"
+                sx={{
+                  '& .MuiSvgIcon-root': {
+                    width: '0.8em'
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation(); /* handle export */
+                }}
+              >
+                <FileDownloadIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
+              </IconButton>
+            </Box>
+          )}
         </div>
       </Tooltip>
     );
@@ -709,7 +742,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     <TreeItem
       key={data.id}
       nodeId={data.id}
-      label={getImageLabel(data.icon, data.name, data.id)}
+      label={getImageLabel(data.icon, data.name, data.id, data.name === 'Goals, Claims and Requirements')}
       onClick={onClick}
       onContextMenu={contextMenuHandler}
       className={classes.treeItem}
@@ -718,9 +751,9 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     </TreeItem>
   );
 
-  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping) => {
-    return subs?.map((sub) =>
-      sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
+  const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping, imported = false) => {
+    return subs?.map((sub) => {
+      return sub.name === 'Attack' || sub.name === 'Attack Trees' ? (
         <TreeItem
           key={sub.id}
           nodeId={sub.id}
@@ -732,7 +765,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               onMouseEnter={() => setHovered((state) => ({ ...state, [sub.type]: true }))}
               onMouseLeave={() => setHovered((state) => ({ ...state, [sub.type]: false }))}
             >
-              <Box>{getLabel('TopicIcon', sub.name, null, sub.id)}</Box>
+              <Box>{getLabel('TopicIcon', sub.name, null, sub.id, null, null, imported)}</Box>
               {hovered[sub.type] && (
                 <Box
                   onClick={(e) => {
@@ -749,7 +782,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             setClickedItem(sub.id);
             handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
           }}
-          // onContextMenu={(e) => contextMenuHandler && contextMenuHandler(e, sub.name)}
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
@@ -757,7 +789,41 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         <TreeItem
           key={sub.id}
           nodeId={sub.id}
-          label={getLabel('TopicIcon', sub.name, null, sub.id)}
+          label={
+            <Box display="flex" alignItems="center">
+              {getLabel('TopicIcon', sub.name, null, sub.id, null, null, imported)}
+              {imported && sub.name === 'Cybersecurity Requirements' && (
+                <Box ml="auto" display="flex">
+                  <IconButton
+                    size="small"
+                    sx={{
+                      '& .MuiSvgIcon-root': {
+                        width: '0.8em'
+                      }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation(); /* handle import */
+                    }}
+                  >
+                    <PublishIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      '& .MuiSvgIcon-root': {
+                        width: '0.8em'
+                      }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation(); /* handle export */
+                    }}
+                  >
+                    <FileDownloadIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
+          }
           onClick={(e) => {
             setClickedItem(sub.id);
             handleTreeItemClick(e, handleOpenTable, sub.id, sub.name);
@@ -766,8 +832,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         >
           {additionalMapping && additionalMapping(sub)}
         </TreeItem>
-      )
-    );
+      );
+    });
   };
 
   const renderTreeItems = (data, type) => {
@@ -915,16 +981,22 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               data,
               (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
               null,
-              renderSubItems(data.subs, handleOpenTable, null, (sub) => {
-                return sub.scenes?.map((scene, i) => (
-                  <TreeItem
-                    onClick={(e) => e.stopPropagation()}
-                    key={scene.ID}
-                    nodeId={scene.ID}
-                    label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
-                  />
-                ));
-              })
+              renderSubItems(
+                data.subs,
+                handleOpenTable,
+                null,
+                (sub) => {
+                  return sub.scenes?.map((scene, i) => (
+                    <TreeItem
+                      onClick={(e) => e.stopPropagation()}
+                      key={scene.ID}
+                      nodeId={scene.ID}
+                      label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
+                    />
+                  ));
+                },
+                true
+              )
             )}
           </span>
         );

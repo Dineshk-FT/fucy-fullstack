@@ -80,13 +80,17 @@ const DocumentDialog = ({ open, onClose }) => {
     }
   }, [open]);
 
+  // console.log('canvasImage', canvasImage);
+  // console.log('image', image);
   // Handle checkbox changes
-  const handleCheckboxChange = useCallback((id) => {
+  const handleCheckboxChange = useCallback((e, id) => {
+    e.stopPropagation();
     setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }, []);
 
   // Handle document download
-  const handleDownload = async () => {
+  const handleDownload = async (e) => {
+    e.stopPropagation();
     setIsGenerating(true);
     const formData = new FormData();
     formData.append('model-id', modelId);
@@ -104,7 +108,8 @@ const DocumentDialog = ({ open, onClose }) => {
 
     if (selectedItems.includes(1)) {
       if (image) {
-        const blob = base64ToBlob(image);
+        const baseimage = 'data:image/png;base64,' + image;
+        const blob = base64ToBlob(baseimage);
         if (blob) {
           formData.append('image', blob, 'itemModelImage.png');
         } else {
@@ -215,7 +220,7 @@ const DocumentDialog = ({ open, onClose }) => {
                     control={
                       <Checkbox
                         checked={selectedItems.includes(item.id)}
-                        onChange={() => handleCheckboxChange(item.id)}
+                        onChange={(e) => handleCheckboxChange(e, item.id)}
                         disabled={item.id === 1 && isGenerating}
                         sx={{
                           color: isDark ? '#64B5F6' : '#2196F3',
@@ -247,7 +252,7 @@ const DocumentDialog = ({ open, onClose }) => {
                         control={
                           <Checkbox
                             checked={selectedItems.includes(sub.id)}
-                            onChange={() => handleCheckboxChange(sub.id)}
+                            onChange={(e) => handleCheckboxChange(e, sub.id)}
                             disabled={isGenerating}
                             sx={{
                               color: isDark ? '#64B5F6' : '#2196F3',
