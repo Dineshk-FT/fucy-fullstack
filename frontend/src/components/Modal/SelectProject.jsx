@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import { setModelId } from '../../store/slices/PageSectionSlice';
+import ColorTheme from '../../themes/ColorTheme';
 
 export default function SelectProject({ open, handleClose, Models, isLoading, anchorEl }) {
+  const color = ColorTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedModel, setSelectedModel] = useState(null);
@@ -30,7 +32,7 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
           width: 220, // Reduced width further to 250px
           padding: 1, // Reduced padding
           borderRadius: 2,
-          backgroundColor: 'background.paper',
+          bgcolor: color?.modalBg,
           boxShadow: 1,
           zIndex: 1500 // Ensure it's above other elements
         }}
@@ -40,7 +42,7 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
           sx={{
             fontSize: 14, // Reduced font size
             fontWeight: 600,
-            color: 'primary.main',
+            color: color?.title,
             pb: 0.5, // Reduced bottom padding
             textAlign: 'center'
           }}
@@ -55,7 +57,7 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
-            backgroundColor: '#fafafa',
+            bgcolor: color?.inputBg,
             boxShadow: 1,
             mb: 1 // Reduced bottom margin
           }}
@@ -65,7 +67,7 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
               <CircularProgress size={20} /> {/* Smaller CircularProgress */}
             </Box>
           ) : Models?.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center', color: color?.sidebarContent }}>
               No projects available.
             </Typography>
           ) : (
@@ -82,10 +84,10 @@ export default function SelectProject({ open, handleClose, Models, isLoading, an
                     py: 0.5, // Reduced padding for list items
                     px: 1, // Reduced horizontal padding
                     borderRadius: 1,
-                    backgroundColor: selectedModel === model?._id ? 'primary.main' : 'transparent',
-                    color: selectedModel === model?._id ? 'white' : 'text.primary',
+                    bgcolor: selectedModel === model?._id ? 'error.main' : 'transparent',
+                    color: selectedModel === model?._id ? 'white' : color?.sidebarContent,
                     '&:hover': {
-                      backgroundColor: 'action.hover'
+                      bgcolor: selectedModel === model?._id ? 'error.dark' : 'action.hover'
                     }
                   }}
                 >

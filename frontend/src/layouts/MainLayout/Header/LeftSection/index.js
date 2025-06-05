@@ -107,7 +107,6 @@ const LeftSection = () => {
     hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
   }, []);
 
-  // Keep dropdown open when hovering over tab or dropdown
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
@@ -149,7 +148,6 @@ const LeftSection = () => {
   };
 
   const handleExportJSON = () => {
-    // Implement your JSON export logic here
     exportProject({ modelId: model?._id })
       .then((res) => {
         if (!res.error) {
@@ -166,8 +164,6 @@ const LeftSection = () => {
   };
 
   const handleExportPDF = () => {
-    // Implement your PDF export logic here
-    // console.log('Exporting as PDF');
     handleExportClose();
   };
 
@@ -209,7 +205,6 @@ const LeftSection = () => {
     fileInput.click();
   };
 
-  // Add the help PDF handler
   const handleHelpClick = useCallback(() => {
     const pdfUrl = pdfFile;
     window.open(pdfUrl, '_blank');
@@ -231,7 +226,7 @@ const LeftSection = () => {
         'Attack Path': handleAttackTableClick,
         Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
         'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8'),
-        Help: handleHelpClick // Add the help action
+        Help: handleHelpClick
       };
       actions[tabName]?.();
     },
@@ -338,7 +333,7 @@ const LeftSection = () => {
                 style={{
                   width: 24,
                   height: 24,
-                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)' // Adjusted to approximate #1e88e5
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
                 }}
               />
             ),
@@ -527,14 +522,14 @@ const LeftSection = () => {
     () => ({
       padding: '6px',
       fontSize: '12px',
-      color: '#1e88e5', // Darker blue color
+      color: '#1e88e5',
       background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
       border: 'none',
       borderRadius: '6px',
       transition: 'all 0.3s ease',
       '&:hover': {
         background: isDark
-          ? 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)' // Adjusted for #1e88e5
+          ? 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)'
           : 'linear-gradient(90deg, rgba(30,136,229,0.08) 0%, rgba(30,136,229,0.02) 100%)',
         transform: 'scale(1.1)',
         boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
@@ -555,7 +550,7 @@ const LeftSection = () => {
       borderRadius: '6px',
       transition: 'all 0.3s ease',
       '&:hover': {
-        color: '#1e88e5', // Darker blue color
+        color: '#1e88e5',
         background: isDark
           ? 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)'
           : 'linear-gradient(90deg, rgba(30,136,229,0.08) 0%, rgba(30,136,229,0.02) 100%)',
@@ -570,8 +565,8 @@ const LeftSection = () => {
   const activeTabStyles = useMemo(
     () => ({
       fontWeight: 600,
-      color: '#1e88e5', // Darker blue color
-      borderBottom: '2px solid #1e88e5', // Darker blue border
+      color: '#1e88e5',
+      borderBottom: '2px solid #1e88e5',
       background: isDark
         ? 'linear-gradient(90deg, rgba(30,136,229,0.25) 0%, rgba(30,136,229,0.08) 100%)'
         : 'linear-gradient(90deg, rgba(30,136,229,0.15) 0%, rgba(30,136,229,0.03) 100%)',
@@ -609,7 +604,7 @@ const LeftSection = () => {
                       fontSize="small"
                       sx={{
                         fontSize: 20,
-                        color: '#1e88e5' // Darker blue color
+                        color: '#1e88e5'
                       }}
                     />
                   )}
@@ -753,7 +748,6 @@ const LeftSection = () => {
           {currentTabOptions.map(renderOptionButton)}
         </Box>
       </Collapse>
-      {/* Export Menu */}
       <Menu
         anchorEl={exportAnchorEl}
         open={Boolean(exportAnchorEl)}
@@ -773,7 +767,16 @@ const LeftSection = () => {
 
       {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={(e) => handleCloseModal(e, 'New')} />}
       {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={(e) => handleCloseModal(e, 'Rename')} Models={Models} />}
-      {openModal.Open && <SelectProject open={openModal.Open} handleClose={(e) => handleCloseModal(e, 'Open')} Models={Models} />}
+      {openModal.Open && (
+        <SelectProject
+          open={openModal.Open}
+          handleClose={(e) => handleCloseModal(e, 'Open')}
+          Models={Models}
+          anchorEl={anchorEl}
+          color={color}
+          isDark={isDark}
+        />
+      )}
       {openModal.Delete && (
         <DeleteProject
           open={openModal.Delete}
