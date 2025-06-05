@@ -345,7 +345,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const [exportAnchor, setExportAnchor] = useState(null);
   const [deleteScene, setDeleteScene] = useState({
     type: '',
-    id: ''
+    id: '',
+    name: ''
   });
 
   const handleopenCybersecurityExport = (e) => {
@@ -373,7 +374,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleOpenDeleteModal = (type, scene) => {
     setDeleteScene({
       type: type,
-      id: scene?.ID
+      id: scene?.ID,
+      name: scene?.Name
     });
     setOpenModal((state) => ({ ...state, delete: true }));
   };
@@ -382,7 +384,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setOpenModal((state) => ({ ...state, delete: false }));
     setDeleteScene({
       type: '',
-      id: ''
+      id: '',
+      name: ''
     });
   };
   // console.log('deleteScene', deleteScene);
@@ -400,8 +403,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           notify(res?.message ?? 'Deleted Successfully', 'success');
           getAttackScenario(model?._id);
           handleCloseDeleteModal();
-          if (deleteScene.type === 'attack_trees' && Array.isArray(attacktrees)) {
-            const index = attacktrees.findIndex((tree) => tree.ID === deleteScene.id);
+          if (deleteScene?.type === 'attack_trees' && Array.isArray(attacktrees)) {
+            const index = attacktrees.findIndex((tree) => tree.ID === deleteScene?.id);
             if (index === -1) {
               dispatch(setAttackScene({}));
               return;
@@ -1171,6 +1174,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           open={openModal?.delete}
           onClose={handleCloseDeleteModal}
           onConfirm={handleDeleteAttack}
+          name={deleteScene?.name}
           type={deleteScene?.type}
         />
       )}

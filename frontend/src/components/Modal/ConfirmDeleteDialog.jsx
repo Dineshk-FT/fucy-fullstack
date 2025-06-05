@@ -20,39 +20,26 @@ export default React.memo(function ConfirmDeleteDialog({ open, onClose, onConfir
         '& .MuiPaper-root': {
           background: color?.modalBg,
           width: '475px',
-          borderRadius: '8px',
-        },
+          borderRadius: '8px'
+        }
       }}
     >
-      <DialogTitle
-        id="confirm-delete-dialog-title"
-        sx={{ fontSize: 18, fontFamily: 'Inter', color: color?.title }}
-      >
+      <DialogTitle id="confirm-delete-dialog-title" sx={{ fontSize: 18, fontFamily: 'Inter', color: color?.title }}>
         Confirm Deletion
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ display: 'flex', alignItems: 'center', p: 2, color: color?.sidebarContent }}>
         Are you sure you want to delete
-        <Typography variant="h6" sx={{ ml: 0.5, color: color?.title }}>
+        <Typography variant="h4" sx={{ ml: 0.8, color: color?.title }}>
           {name}
         </Typography>
         ?
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          color="primary"
-          sx={{ textTransform: 'none', minWidth: '80px' }}
-        >
+        <Button onClick={onClose} variant="outlined" color="primary" sx={{ textTransform: 'none', minWidth: '80px' }}>
           Cancel
         </Button>
-        <Button
-          onClick={handleConfirm}
-          color="error"
-          variant="contained"
-          sx={{ textTransform: 'none', minWidth: '80px' }}
-        >
+        <Button onClick={handleConfirm} color="error" variant="contained" sx={{ textTransform: 'none', minWidth: '80px' }}>
           Delete
         </Button>
       </DialogActions>
