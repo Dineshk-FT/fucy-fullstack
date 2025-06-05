@@ -104,8 +104,11 @@ const LeftSection = () => {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
-  }, []);
+    // Only hide the hovered tab if no modal is open
+    if (!openModal.Open && !openModal.Delete) {
+      hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+    }
+  }, [openModal.Open, openModal.Delete]);
 
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -760,34 +763,60 @@ const LeftSection = () => {
           vertical: 'top',
           horizontal: 'center'
         }}
+        disablePortal
+        disableScrollLock
+        disableAutoFocus
+        disableEnforceFocus
+        style={{ position: 'fixed' }}
+        MenuListProps={{
+          'aria-labelledby': 'export-menu',
+          onMouseEnter: () => clearTimeout(hoverTimeoutRef.current),
+          onMouseLeave: handleMouseLeave
+        }}
       >
         <MenuItem onClick={handleExportJSON}>Export as JSON</MenuItem>
         <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
       </Menu>
 
-      {openModal.New && <AddModel getModels={getModels} open={openModal.New} handleClose={(e) => handleCloseModal(e, 'New')} />}
-      {openModal.Rename && <RenameProject open={openModal.Rename} handleClose={(e) => handleCloseModal(e, 'Rename')} Models={Models} />}
-      {openModal.Open && (
-        <SelectProject
-          open={openModal.Open}
-          handleClose={(e) => handleCloseModal(e, 'Open')}
-          Models={Models}
-          anchorEl={anchorEl}
-          color={color}
-          isDark={isDark}
-        />
-      )}
-      {openModal.Delete && (
-        <DeleteProject
-          open={openModal.Delete}
-          model={model}
-          handleClose={(e) => handleCloseModal(e, 'Delete')}
-          Models={Models}
-          deleteModels={deleteModels}
-          getModels={getModels}
-          anchorEl={anchorEl}
-        />
-      )}
+      {/* Project Modals */}
+      <AddModel 
+        getModels={getModels} 
+        open={openModal.New} 
+        handleClose={(e) => handleCloseModal(e, 'New')} 
+        disablePortal
+        style={{ position: 'fixed' }}
+      />
+      
+      <RenameProject 
+        open={openModal.Rename} 
+        handleClose={(e) => handleCloseModal(e, 'Rename')} 
+        Models={Models}
+        disablePortal
+        style={{ position: 'fixed' }}
+      />
+      
+      <SelectProject
+        open={openModal.Open}
+        handleClose={(e) => handleCloseModal(e, 'Open')}
+        Models={Models}
+        anchorEl={anchorEl}
+        color={color}
+        isDark={isDark}
+        disablePortal
+        style={{ position: 'fixed' }}
+      />
+      
+      <DeleteProject
+        open={openModal.Delete}
+        model={model}
+        handleClose={(e) => handleCloseModal(e, 'Delete')}
+        Models={Models}
+        deleteModels={deleteModels}
+        getModels={getModels}
+        anchorEl={anchorEl}
+        disablePortal
+        style={{ position: 'fixed' }}
+      />
       {openModal.AIModal && (
         <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((prev) => ({ ...prev, AIModal: false }))} />
       )}
