@@ -50,8 +50,8 @@ import { shallow } from 'zustand/shallow';
 import AttackScenarios from './Scenarios/AttackScenarios';
 import ThreatScenarios from './Scenarios/ThreatScenarios';
 import ItemDefinition from './Scenarios/ItemDefinition';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PublishIcon from '@mui/icons-material/Publish';
+import CybersecurityExport from '../../../../components/Poppers/CybersecurityExport';
 
 const imageComponents = {
   AttackIcon,
@@ -244,6 +244,7 @@ const selector = (state) => ({
   getDamageScenarios: state.getDamageScenarios,
   getAttackScenario: state.getAttackScenario,
   attackScenarios: state.attackScenarios,
+  attacktrees: state.attackScenarios['subs'][1]['scenes'] ?? [],
   getRiskTreatment: state.getRiskTreatment,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   cybersecurity: state.cybersecurity,
@@ -292,6 +293,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getRiskTreatment,
     getCyberSecurityScenario,
     attackScenarios,
+    attacktrees,
     cybersecurity,
     subSystems,
     catalog,
@@ -340,17 +342,23 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     id: ''
   });
   const anchorElId = document.querySelector(`[data="${anchorEl?.sidebar}"]`) || null;
-
+  const [exportAnchor, setExportAnchor] = useState(null);
   const [deleteScene, setDeleteScene] = useState({
     type: '',
     id: ''
   });
 
-  // console.log('assets', assets);
-  // console.log('previousTab', previousTab);
-  // console.log('nodes', nodes);
-  // console.log('sidebar5 rendered');
-  // console.log('isChanged', isChanged);
+  const handleopenCybersecurityExport = (e) => {
+    e.stopPropagation();
+    setExportAnchor(e.currentTarget);
+  };
+  const handleCloseExport = (e) => {
+    e.stopPropagation();
+    setExportAnchor(null);
+  };
+  const handleExport = (e) => {
+    e.stopPropagation();
+  };
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       setIsEditing(false);
@@ -377,17 +385,35 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       id: ''
     });
   };
+  // console.log('deleteScene', deleteScene);
+  // // console.log('attackScenarios', attackScenarios);
+  // console.log('attacktrees', attacktrees);
   const handleDeleteAttack = () => {
     const details = {
       'model-id': model?._id,
       ...deleteScene
     };
+
     deleteAttacks(details)
       .then((res) => {
         if (!res.error) {
           notify(res?.message ?? 'Deleted Successfully', 'success');
           getAttackScenario(model?._id);
           handleCloseDeleteModal();
+          if (deleteScene.type === 'attack_trees' && Array.isArray(attacktrees)) {
+            const index = attacktrees.findIndex((tree) => tree.ID === deleteScene.id);
+            if (index === -1) {
+              dispatch(setAttackScene({}));
+              return;
+            }
+            const nextTree = attacktrees[index + 1] || attacktrees[index - 1];
+            if (nextTree) {
+              dispatch(setAttackScene(nextTree));
+            } else {
+              dispatch(setTableOpen('Attack'));
+              dispatch(setAttackScene({}));
+            }
+          }
         } else {
           notify(res?.error ?? 'Something went wrong', 'error');
         }
@@ -397,6 +423,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         notify('Something went wrong', 'error');
       });
   };
+
   useEffect(() => {
     getModelById(modelId);
     getAssets(modelId);
@@ -598,13 +625,14 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           }}
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
+          onContextMenu={(e) => imported && (e.stopPropagation(), e.preventDefault(), handleopenCybersecurityExport(e))}
         >
           {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: isDark == true ? 'invert(1)' : 'none' }} />}
           <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
             {name}
           </Typography>
           {imported && (
-            <Box ml="auto" display="flex">
+            <Box ml="auto" display="flex" marginLeft={2}>
               <IconButton
                 size="small"
                 sx={{
@@ -614,22 +642,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 }}
                 onClick={(e) => {
                   e.stopPropagation(); /* handle import */
+                  handleopenCybersecurityExport(e);
                 }}
               >
                 <PublishIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
-              </IconButton>
-              <IconButton
-                size="small"
-                sx={{
-                  '& .MuiSvgIcon-root': {
-                    width: '0.8em'
-                  }
-                }}
-                onClick={(e) => {
-                  e.stopPropagation(); /* handle export */
-                }}
-              >
-                <FileDownloadIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
               </IconButton>
             </Box>
           )}
@@ -738,18 +754,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
       });
   };
 
-  const renderTreeItem = (data, onClick, contextMenuHandler, children) => (
-    <TreeItem
-      key={data.id}
-      nodeId={data.id}
-      label={getImageLabel(data.icon, data.name, data.id, data.name === 'Goals, Claims and Requirements')}
-      onClick={onClick}
-      onContextMenu={contextMenuHandler}
-      className={classes.treeItem}
-    >
-      {children}
-    </TreeItem>
-  );
+  const renderTreeItem = (data, onClick, contextMenuHandler, children) => {
+    return (
+      <TreeItem
+        key={data.id}
+        nodeId={data.id}
+        label={getImageLabel(data.icon, data.name, data.id, data.name === 'Goals, Claims and Requirements')}
+        onClick={onClick}
+        onContextMenu={contextMenuHandler}
+        className={classes.treeItem}
+      >
+        {children}
+      </TreeItem>
+    );
+  };
 
   const renderSubItems = (subs, handleOpenTable, contextMenuHandler, additionalMapping, imported = false) => {
     return subs?.map((sub) => {
@@ -792,36 +810,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           label={
             <Box display="flex" alignItems="center">
               {getLabel('TopicIcon', sub.name, null, sub.id, null, null, imported)}
-              {imported && sub.name === 'Cybersecurity Requirements' && (
-                <Box ml="auto" display="flex">
-                  <IconButton
-                    size="small"
-                    sx={{
-                      '& .MuiSvgIcon-root': {
-                        width: '0.8em'
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation(); /* handle import */
-                    }}
-                  >
-                    <PublishIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    sx={{
-                      '& .MuiSvgIcon-root': {
-                        width: '0.8em'
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation(); /* handle export */
-                    }}
-                  >
-                    <FileDownloadIcon fontSize="small" color={isDark ? 'primary' : 'secondary'} />
-                  </IconButton>
-                </Box>
-              )}
             </Box>
           }
           onClick={(e) => {
@@ -981,7 +969,11 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             {renderTreeItem(
               data,
               (e) => handleClick(e, model?._id, 'cybersecurity', data.id),
-              null,
+              (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleopenCybersecurityExport(e);
+              },
               renderSubItems(
                 data.subs,
                 handleOpenTable,
@@ -1182,6 +1174,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           type={deleteScene?.type}
         />
       )}
+      {exportAnchor && <CybersecurityExport anchorEl={exportAnchor} handleClosePopper={handleCloseExport} onExport={handleExport} />}
     </>
   );
 };

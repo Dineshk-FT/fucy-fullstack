@@ -119,17 +119,20 @@ export default function AddModel({ open, handleClose, getModels }) {
 
     create(newModel, userDetails?.username)
       .then((res) => {
-        if (res) {
+        if (!res.error) {
           notify(res.message ?? 'Model created successfully', 'success');
           navigate(`/Models/${res?.model_id}`);
           dispatch(setModelId(res?.model_id));
           dispatch(closeAll());
           getModels();
           handleClose(e);
+        } else {
+          toast.error(res.error ?? 'Something went wrong');
         }
       })
       .catch((err) => {
-        toast.error('Something went wrong');
+        // console.log('err', err);
+        toast.error(err.response.data.error ?? 'Something went wrong');
       })
       .finally(() => {
         setLoading(false);

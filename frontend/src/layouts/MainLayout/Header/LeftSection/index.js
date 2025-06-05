@@ -251,7 +251,7 @@ const LeftSection = () => {
     if (name === 'Attack' || name === 'Attack Trees') {
       setOpenAttackModal(true);
       setSubName(name);
-    } else if (name === 'create with AI') {
+    } else if (name === 'AI Assistant') {
       setOpenModal((prev) => ({ ...prev, AIModal: true }));
     }
   }, []);
@@ -419,7 +419,7 @@ const LeftSection = () => {
           { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) },
           { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick },
           { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) },
-          { label: 'create with AI', icon: AddListIcon, action: (e) => handleContext('create with AI', e) }
+          { label: 'AI Assistant', icon: AddListIcon, action: (e) => handleContext('AI Assistant', e) }
         ]
       },
       {
@@ -728,11 +728,7 @@ const LeftSection = () => {
             }
           }}
         >
-          {isCollapsed ? (
-            <ExpandMoreIcon fontSize="small" />
-          ) : (
-            <ExpandLessIcon fontSize="small" />
-          )}
+          {isCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
         </IconButton>
       </Box>
       <Collapse in={!isCollapsed}>
