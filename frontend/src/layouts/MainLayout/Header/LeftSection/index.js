@@ -407,6 +407,20 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Threat Scenarios')
+          },
+          {
+            label: 'Derived Table',
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=Imv4VIewVo4o&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
+            action: () => handleClick('Derived Threat Scenarios')
           }
         ]
       },
