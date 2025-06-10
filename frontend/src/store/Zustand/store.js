@@ -84,6 +84,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   isChanged: false,
   isAttackChanged: false,
   openSave: false,
+  guides: [],
 
   subSystems: {
     id: '6',
@@ -1649,6 +1650,20 @@ const useStore = createWithEqualityFn((set, get) => ({
       globalAttackTrees: res ?? []
     });
   },
+
+  getGuides: async () => {
+    const url = `${configuration.apiBaseUrl}v1/guides/videos`;
+    try {
+      const res = await axios.get(url);
+      // console.log('res', res);
+      set({
+        guides: res?.data ?? []
+      });
+    } catch (error) {
+      console.error('Error in getGuides:', error);
+    }
+  },
+
   //Update Section
   updateModelName: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/model-name`;
@@ -1758,6 +1773,31 @@ const useStore = createWithEqualityFn((set, get) => ({
   },
 
   //Add Section
+
+  exportCybersecurity: async (details) => {
+    const url = `${configuration.apiBaseUrl}/v1/exportCyberSecData`;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(details)
+      });
+      // console.log('res', res);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to export cybersecurity data');
+      }
+
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error('Error exporting cybersecurity data:', error.message);
+      throw error; // re-throw so the caller knows
+    }
+  },
 
   exportProject: async (details) => {
     const url = `${configuration.apiBaseUrl}/v1/export`;

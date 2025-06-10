@@ -1,107 +1,58 @@
-/*eslint-disable*/
-import React, { useState, useRef } from 'react';
+/* eslint-disable */
+import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 
-// material-ui
+// Material-UI
 import { Tooltip, Fab, Box, Popper, Paper, Typography, ClickAwayListener } from '@mui/material';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import { TreeItem, TreeView } from '@mui/x-tree-view';
-const helpData = {
-  'Item Definition': [
-    { id: 'add_component', label: 'How to add a component/Data?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-    { id: 'delete_component', label: 'How to delete a component?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' },
-    { id: 'assign_properties', label: 'How to assign Properties?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' }
-  ],
-  'Damage Scenarios and Impact Ratings': {
-    'Damage Scenario (Ds) Derivations': [
-      { id: 'add_derivation', label: 'How to add a derivation?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      {
-        id: 'checkbox_reason',
-        label: 'Why i need to check the checkbox?',
-        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      }
-    ],
-    'Damage Scenario - Impact Ratings': [
-      { id: 'add_impact', label: 'How to add an impact rating?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      { id: 'delete_scene', label: 'How to delete a scene?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' },
-      { id: 'add_losses', label: 'How to add cybersecurity losses?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' }
-    ]
-  },
-  'Threat Scenarios': {
-    'Threat Scenarios': [
-      { id: 'add_threat', label: 'How to add a derivation?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      { id: 'delete_threat', label: 'How to delete a derivation?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' }
-    ],
-    'Derived Threat Scenarios': [
-      { id: 'add_derived_threat', label: 'How to add a derived scene?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      {
-        id: 'delete_derived_threat',
-        label: 'How to delete a derived scene?',
-        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      },
-      {
-        id: 'update_derived_threat',
-        label: 'How to update the derived scene',
-        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      }
-    ]
-  },
-  'Attack Path Analysis': {
-    Attacks: [
-      { id: 'add_attack', label: 'How to add an attack?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      { id: 'delete_attack', label: 'How to delete an attack?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' },
-      { id: 'update_attack', label: 'How to assign values?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' },
-      {
-        id: 'use_attack',
-        label: 'How to use the attacks in attack trees?',
-        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      }
-    ],
-    'Attack trees': [
-      { id: 'add_attack_tree', label: 'How to add an attack tree?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-      {
-        id: 'use_attack_tree',
-        label: 'what are the component used in attack trees?',
-        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      }
-    ]
-  },
-  'Goals, Claims and Requirements': {
-    'Cybersecurity Goals,claims,controls & Requirements': [
-      {
-        id: 'add_cyber',
-        label: 'How to add a goal/claim/control/requirement?',
-        gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif'
-      },
-      { id: 'use_cyber', label: 'Where can use these?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' }
-    ]
-  },
-  'Risk Determination and Risk Treatment Decision': [
-    { id: 'add_risk', label: 'How to a threat scene to view the risk?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-    {
-      id: 'assign_cyber',
-      label: 'How to assign cybersecurity Goals/claims?',
-      gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-    }
-  ],
+import useStore from '../../store/Zustand/store';
+import { helpData } from './HelpData';
 
-  Reporting: [
-    { id: 'use_report', label: 'How to use it?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
-    { id: 'download_report', label: 'How to download the data?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' }
-  ]
-};
-
-// ==============================|| LIVE CUSTOMIZATION ||============================== //
+const selector = (state) => ({
+  getGuides: state.getGuides,
+  guides: state.guides
+});
 
 const FloatingHelper = () => {
+  const { getGuides, guides } = useStore(selector);
   const [open, setOpen] = useState(false);
-  const buttonRef = useRef(null); // Reference for Popper positioning
+  const buttonRef = useRef(null);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [questionAnchor, setQuestionAnchor] = useState(null);
 
-  const handleToggle = (e) => {
-    // e.stopProgation();
+  useEffect(() => {
+    getGuides();
+  }, []);
+
+  useEffect(() => {
+    if (guides && guides.length > 0) {
+      const updateHelpDataWithUrls = (data) => {
+        Object.entries(data).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach((item) => {
+              // Compare by removing the file extension from guide.name
+              const matchedGuide = guides.find((guide) => {
+                const guideNameWithoutExtension = guide.name.replace(/\.(mp4|webm)$/i, '');
+                return guideNameWithoutExtension === item.id;
+              });
+
+              if (matchedGuide) {
+                item.gif = matchedGuide.url;
+              }
+            });
+          } else if (typeof value === 'object') {
+            updateHelpDataWithUrls(value);
+          }
+        });
+      };
+
+      updateHelpDataWithUrls(helpData);
+    }
+  }, [guides]);
+
+  const handleToggle = () => {
     setOpen((prev) => !prev);
   };
 
@@ -115,7 +66,8 @@ const FloatingHelper = () => {
     setSelectedQuestion(null);
     setQuestionAnchor(null);
   };
-  function renderTreeItems(data, parentId = '') {
+
+  const renderTreeItems = (data, parentId = '') => {
     let nodeCounter = 0;
     const generateNodeId = () => `${parentId}-${++nodeCounter}`;
 
@@ -134,7 +86,11 @@ const FloatingHelper = () => {
                   label={
                     <Box
                       onClick={(e) => handleQuestionClick(e, question)}
-                      sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                      }}
                     >
                       <Box component="span" sx={{ mr: 1 }}>
                         •
@@ -154,90 +110,69 @@ const FloatingHelper = () => {
           </TreeItem>
         );
       } else {
-        return <TreeItem nodeId={nodeId} label={value} key={nodeId} />;
+        return null;
       }
     });
-  }
+  };
 
   return (
     <>
-      <Draggable cancel="input,textarea,button" onStop={() => document.activeElement?.blur()}>
-        <Box
+      <Tooltip title="Need help?">
+        <Fab
+          color="primary"
+          onClick={handleToggle}
           ref={buttonRef}
+          size="small"
           sx={{
             position: 'fixed',
             bottom: '18mm',
             right: 10,
             zIndex: 1200,
-            cursor: 'grab'
+            zIndex: 1300
           }}
         >
-          <Tooltip title="Help">
-            <Fab
-              component="div"
-              onClick={handleToggle}
-              size="small"
-              variant="circular"
-              color="light"
-              sx={{
-                borderRadius: 0,
-                borderTopLeftRadius: '50%',
-                borderBottomLeftRadius: '50%',
-                borderTopRightRadius: '50%',
-                borderBottomRightRadius: '4px'
-              }}
-            >
-              {/* <Box component="img" src={ChatbotIcon} alt="chatbot" height="30px" width="30px" /> */}
-              <LiveHelpIcon fontSize="medium" color="primary" />
-            </Fab>
-          </Tooltip>
-        </Box>
-      </Draggable>
-      {/* Popper for chatbot messages */}
-      <Popper open={open} anchorEl={buttonRef.current} placement="left-start" sx={{ zIndex: 1300 }}>
-        <ClickAwayListener onClickAway={() => setOpen(false)}>
-          <Paper sx={{ p: 2, width: 350, bgcolor: 'background.paper', boxShadow: 3, borderRadius: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-              How can I help?
-            </Typography>
+          <LiveHelpIcon />
+        </Fab>
+      </Tooltip>
 
-            <TreeView defaultCollapseIcon={<ExpandMore />} defaultExpandIcon={<ChevronRight />}>
-              {renderTreeItems(helpData, 'root')}
-            </TreeView>
-          </Paper>
-        </ClickAwayListener>
-      </Popper>
-      <Popper
-        open={Boolean(selectedQuestion)}
-        anchorEl={questionAnchor}
-        placement="top-start"
-        modifiers={[
-          {
-            name: 'offset',
-            options: {
-              offset: [-10, 0] // [horizontal, vertical] — adjust this value as needed
-            }
-          }
-        ]}
-        sx={{ zIndex: 1400 }}
-      >
-        <ClickAwayListener
-          onClickAway={() => {
-            handleCloseGifPopper();
-          }}
-        >
+      <Popper open={open} anchorEl={buttonRef.current} placement="top-end" sx={{ zIndex: 1300 }}>
+        <Draggable handle=".drag-handle">
           <Paper
             sx={{
-              p: 1,
-              maxWidth: 300,
-              borderRadius: 1,
-              bgcolor: 'background.paper'
+              width: 300,
+              maxHeight: 400,
+              overflowY: 'auto',
+              p: 2
             }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Box
+              className="drag-handle"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'move',
+                mb: 1
+              }}
+            >
+              <Typography variant="h6">Helper</Typography>
+            </Box>
+            <TreeView defaultCollapseIcon={<ExpandMore />} defaultExpandIcon={<ChevronRight />} sx={{ flexGrow: 1 }}>
+              {renderTreeItems(helpData)}
+            </TreeView>
+          </Paper>
+        </Draggable>
+      </Popper>
+
+      <Popper open={!!selectedQuestion} anchorEl={questionAnchor} placement="right-start" sx={{ zIndex: 1400 }}>
+        <ClickAwayListener onClickAway={handleCloseGifPopper}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
               {selectedQuestion?.label}
             </Typography>
-            <Box component="img" src={selectedQuestion?.gif} alt={selectedQuestion?.label} sx={{ width: '100%', borderRadius: 1 }} />
+            {selectedQuestion?.gif && (
+              <video src={selectedQuestion?.gif} controls autoPlay muted style={{ maxWidth: 800, maxHeight: 800 }} />
+            )}
           </Paper>
         </ClickAwayListener>
       </Popper>
@@ -245,4 +180,4 @@ const FloatingHelper = () => {
   );
 };
 
-export default React.memo(FloatingHelper);
+export default FloatingHelper;
