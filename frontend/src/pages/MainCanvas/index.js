@@ -354,7 +354,14 @@ export default function MainCanvas() {
   const handleSaveToModel = async (e) => {
     e.stopPropagation();
     setSaveLoading(true);
-    debouncedFitView();
+    reactFlowInstance.fitView({
+      padding: 0.2,
+      includeHiddenNodes: true,
+      minZoom: 0.2,
+      maxZoom: 2,
+      duration: 0
+    });
+    setZoomLevel(reactFlowInstance.getZoom());
     const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
     if (!reactFlowViewport) {
       notify('Viewport not found', 'error');
@@ -586,12 +593,13 @@ export default function MainCanvas() {
       if (temp) {
         setNodes(temp.nodes);
         setEdges(temp.edges);
+        debouncedFitView();
       } else {
         handleClear();
       }
       setIsChanged(false);
     },
-    [reactFlowInstance, assets, isChanged]
+    [reactFlowInstance, assets, isChanged, debouncedFitView]
   );
 
   const onLoad = (reactFlowInstance) => {

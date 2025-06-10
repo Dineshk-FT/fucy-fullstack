@@ -1,14 +1,15 @@
 /* eslint-disable */
 import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
-
-// Material-UI
-import { Tooltip, Fab, Box, Popper, Paper, Typography, ClickAwayListener } from '@mui/material';
+import { Tooltip, Fab, Box, Popper, Paper, Typography, ClickAwayListener, IconButton } from '@mui/material';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import { TreeItem, TreeView } from '@mui/x-tree-view';
 import useStore from '../../store/Zustand/store';
 import { helpData } from './HelpData';
+import { ResizableBox } from 'react-resizable';
+import { Close as CloseIcon } from '@mui/icons-material';
+import 'react-resizable/css/styles.css';
 
 const selector = (state) => ({
   getGuides: state.getGuides,
@@ -164,17 +165,73 @@ const FloatingHelper = () => {
         </Draggable>
       </Popper>
 
-      <Popper open={!!selectedQuestion} anchorEl={questionAnchor} placement="right-start" sx={{ zIndex: 1400 }}>
-        <ClickAwayListener onClickAway={handleCloseGifPopper}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="body1" sx={{ mb: 1 }}>
+      <Popper
+        open={!!selectedQuestion}
+        anchorEl={questionAnchor}
+        placement="left-start" // Changed from 'top-start' to 'left-start'
+        modifiers={[
+          {
+            name: 'offset',
+            options: {
+              offset: [-10, 0] // Changed to horizontal offset (x, y)
+            }
+          }
+        ]}
+        sx={{ zIndex: 1400 }}
+      >
+        {/* <ClickAwayListener onClickAway={handleCloseGifPopper}> */}
+        <Draggable handle=".popper-drag-handle" cancel=".MuiIconButton-root, video" onDrag={(e) => e.stopPropagation()}>
+          <Paper sx={{ p: 2, position: 'relative', width: 'fit-content' }}>
+            {/* Drag Handle */}
+            <Typography
+              variant="body1"
+              className="popper-drag-handle"
+              sx={{
+                cursor: 'move',
+                fontWeight: 'bold',
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                p: 0.5,
+                mb: 1
+              }}
+            >
               {selectedQuestion?.label}
             </Typography>
-            {selectedQuestion?.gif && (
-              <video src={selectedQuestion?.gif} controls autoPlay muted style={{ maxWidth: 800, maxHeight: 800 }} />
-            )}
+
+            {/* Close Button */}
+            <IconButton
+              size="small"
+              onClick={handleCloseGifPopper}
+              sx={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                zIndex: 1500
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+
+            {/* Resizable Box */}
+            <ResizableBox
+              width={800}
+              height={selectedQuestion?.gif ? 500 : 100}
+              minConstraints={[600, 400]}
+              maxConstraints={[900, 700]}
+              resizeHandles={['se', 'sw']}
+            >
+              {selectedQuestion?.gif && (
+                <video
+                  src={selectedQuestion?.gif}
+                  controls
+                  autoPlay
+                  muted
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              )}
+            </ResizableBox>
           </Paper>
-        </ClickAwayListener>
+        </Draggable>
+        {/* </ClickAwayListener> */}
       </Popper>
     </>
   );
