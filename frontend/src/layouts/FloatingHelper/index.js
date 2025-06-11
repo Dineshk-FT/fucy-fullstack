@@ -9,6 +9,7 @@ import useStore from '../../store/Zustand/store';
 import { helpData } from './HelpData';
 import { ResizableBox } from 'react-resizable';
 import { Close as CloseIcon } from '@mui/icons-material';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import 'react-resizable/css/styles.css';
 
 const selector = (state) => ({
@@ -53,7 +54,8 @@ const FloatingHelper = () => {
     }
   }, [guides]);
 
-  const handleToggle = () => {
+  const handleToggle = (e) => {
+    e.stopPropagation();
     setOpen((prev) => !prev);
   };
 
@@ -63,7 +65,8 @@ const FloatingHelper = () => {
     setQuestionAnchor(event.currentTarget);
   };
 
-  const handleCloseGifPopper = () => {
+  const handleCloseGifPopper = (e) => {
+    e.stopPropagation();
     setSelectedQuestion(null);
     setQuestionAnchor(null);
   };
@@ -77,7 +80,7 @@ const FloatingHelper = () => {
 
       if (Array.isArray(value)) {
         return (
-          <TreeItem nodeId={nodeId} label={key} key={nodeId}>
+          <TreeItem nodeId={nodeId} label={key} key={nodeId} onClick={(e) => e.stopPropagation()}>
             {value.map((question, i) => {
               const childId = `${nodeId}-${i}`;
               return (
@@ -106,7 +109,7 @@ const FloatingHelper = () => {
         );
       } else if (typeof value === 'object') {
         return (
-          <TreeItem nodeId={nodeId} label={key} key={nodeId}>
+          <TreeItem nodeId={nodeId} label={key} key={nodeId} onClick={(e) => e.stopPropagation()}>
             {renderTreeItems(value, nodeId)}
           </TreeItem>
         );
@@ -143,7 +146,8 @@ const FloatingHelper = () => {
               width: 300,
               maxHeight: 400,
               overflowY: 'auto',
-              p: 2
+              p: 2,
+              boxShadow: '0px 0px 5px gray'
             }}
           >
             <Box
@@ -156,7 +160,19 @@ const FloatingHelper = () => {
                 mb: 1
               }}
             >
-              <Typography variant="h6">Helper</Typography>
+              <Typography color={'primary'} variant="h5">
+                Helper
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
+                sx={{ ml: 1 }}
+              >
+                <HighlightOffIcon color="error" fontSize="small" />
+              </IconButton>
             </Box>
             <TreeView defaultCollapseIcon={<ExpandMore />} defaultExpandIcon={<ChevronRight />} sx={{ flexGrow: 1 }}>
               {renderTreeItems(helpData)}
@@ -181,7 +197,7 @@ const FloatingHelper = () => {
       >
         {/* <ClickAwayListener onClickAway={handleCloseGifPopper}> */}
         <Draggable handle=".popper-drag-handle" cancel=".MuiIconButton-root, video" onDrag={(e) => e.stopPropagation()}>
-          <Paper sx={{ p: 2, position: 'relative', width: 'fit-content' }}>
+          <Paper sx={{ p: 2, position: 'relative', width: 'fit-content', boxShadow: '0px 0px 5px gray' }}>
             {/* Drag Handle */}
             <Typography
               variant="body1"
@@ -222,7 +238,7 @@ const FloatingHelper = () => {
               {selectedQuestion?.gif && (
                 <video
                   src={selectedQuestion?.gif}
-                  controls
+                  controls={false}
                   autoPlay
                   muted
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
