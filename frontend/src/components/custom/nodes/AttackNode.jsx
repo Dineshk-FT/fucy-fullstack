@@ -129,7 +129,7 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
           height: `${nodeDimensions.height}px`,
           padding: '8px',
           boxSizing: 'border-box',
-          border: `2px solid ${borderColor ?? '#ccc'}`,
+          border: `2px solid ${borderColor === 'transparent' ? '#ccc' : borderColor}`,
           borderRadius: '4px',
           backgroundColor: '#fff',
           overflow: 'hidden',
