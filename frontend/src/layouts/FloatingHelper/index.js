@@ -238,7 +238,7 @@ const FloatingHelper = () => {
               {selectedQuestion?.gif && (
                 <video
                   src={selectedQuestion?.gif}
-                  controls={false}
+                  controls
                   autoPlay
                   muted
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
