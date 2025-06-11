@@ -10,7 +10,8 @@ const initialState = {
   addDataNodeTab: false,
   anchorEl: {
     node: null,
-    edge: null
+    edge: null,
+    sidebar: null
   },
   isSaveModalOpen: false,
   isHeaderOpen: false,
@@ -35,7 +36,7 @@ const CanvasSlice = createSlice({
       return { ...state, addNodeTabOpen: true };
     },
     openAddDataNodeTab: (state) => {
-      return {...state, addDataNodeTab: true };
+      return { ...state, addDataNodeTab: true };
     },
     openHeader: (state) => {
       return { ...state, isHeaderOpen: true };
@@ -53,8 +54,8 @@ const CanvasSlice = createSlice({
       // console.log('action', action?.payload?.id);
       return { ...state, anchorEl: { [action.payload.type]: action.payload.value } };
     },
-    clearAnchorEl: () => {
-      return { anchorEl: { node: null, edge: null } };
+    clearAnchorEl: (state) => {
+      return { ...state, anchorEl: { node: null, edge: null, sidebar: null } };
     },
     setDetails: (state, action) => {
       if (typeof action.payload === 'function') {
@@ -80,8 +81,10 @@ const CanvasSlice = createSlice({
       return { ...state, isCanvasPage: action.payload };
     },
     setSelectedBlock: (state, action) => {
-      return { ...state, selectedBlock: action.payload };
+      // console.log('action', action);
+      state.selectedBlock = typeof action.payload === 'function' ? action.payload(state.selectedBlock) : action.payload;
     },
+
     OpenInitialDialog: (state) => {
       return { ...state, initialDialogOpen: true };
     },

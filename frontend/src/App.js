@@ -10,8 +10,8 @@ import Routes from './routes';
 import themes from './themes';
 
 // project imports
-import NavigationScroll from './layout/NavigationScroll';
-import MockErrorBoundary from './views/ErrorPage';
+import NavigationScroll from './layouts/NavigationScroll';
+import MockErrorBoundary from './Website/pages/Error/index';
 import { ReactFlowProvider } from 'reactflow';
 
 // ==============================|| APP ||============================== //
