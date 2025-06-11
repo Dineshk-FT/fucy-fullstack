@@ -25,6 +25,7 @@ export default function Event(props) {
     return matchingAttack?.Name || props.data.label;
   }, [attacks, props?.id, props?.data]);
 
+  // console.log('props', props);
   const [inputValue, setInputValue] = useState(inputValueFromProps);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -38,21 +39,27 @@ export default function Event(props) {
     setAttackNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
   // console.log('nodes', nodes);
-
   const updateNodeRating = useCallback(() => {
     setAttackNodes((nodes) =>
       nodes.map((node) => {
         const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
         if (attack) {
+          // If the node is an attack, set its rating
           return {
             ...node,
             data: {
               ...node.data,
-              rating: attack['Attack Feasibilities Rating'] // Update rating dynamically
+              rating: attack['Attack Feasibilities Rating']
             }
           };
+        } else {
+          // If not an attack, remove the rating
+          const { rating, ...restData } = node.data || {};
+          return {
+            ...node,
+            data: restData
+          };
         }
-        return node;
       })
     );
   }, [attacks, setAttackNodes]);
