@@ -431,7 +431,20 @@ const LeftSection = () => {
           { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) },
           { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick },
           { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) },
-          { label: 'AI Assistant', icon: AddListIcon, action: (e) => handleContext('AI Assistant', e) }
+          { 
+            label: 'AI Assistant', 
+            icon: () => (
+              <img
+                src="https://img.icons8.com/ios-filled/24/1e88e5/artificial-intelligence.png"
+                alt="ai assistant"
+                style={{
+                  width: 24,
+                  height: 24
+                }}
+              /> 
+            ), 
+            action: (e) => handleContext('AI Assistant', e) 
+          }
         ]
       },
       {
@@ -441,11 +454,11 @@ const LeftSection = () => {
             label: 'Goals',
             icon: () => (
               <img
-                src="https://img.icons8.com/?size=100&id=20884&format=png&color=000000"
+                src="https://img.icons8.com/ios-filled/24/1e88e5/goal.png"
+                alt="goals"
                 style={{
                   width: 24,
-                  height: 24,
-                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                  height: 24
                 }}
               />
             ),
@@ -455,11 +468,11 @@ const LeftSection = () => {
             label: 'Requirements',
             icon: () => (
               <img
-                src="https://img.icons8.com/?size=100&id=h88n73Ss5iTI&format=png&color=000000"
+                src="https://img.icons8.com/ios-filled/24/1e88e5/task-completed.png"
+                alt="requirements"
                 style={{
                   width: 24,
-                  height: 24,
-                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                  height: 24
                 }}
               />
             ),
@@ -469,11 +482,11 @@ const LeftSection = () => {
             label: 'Controls',
             icon: () => (
               <img
-                src="https://img.icons8.com/?size=100&id=vFqlDrzMYOT0&format=png&color=000000"
+                src="https://img.icons8.com/ios-filled/24/1e88e5/control-panel.png"
+                alt="controls"
                 style={{
                   width: 24,
-                  height: 24,
-                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                  height: 24
                 }}
               />
             ),
@@ -483,11 +496,11 @@ const LeftSection = () => {
             label: 'Claims',
             icon: () => (
               <img
-                src="https://img.icons8.com/?size=100&id=40886&format=png&color=000000"
+                src="https://img.icons8.com/ios-filled/24/1e88e5/checked-2.png"
+                alt="claims"
                 style={{
                   width: 24,
-                  height: 24,
-                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                  height: 24
                 }}
               />
             ),
