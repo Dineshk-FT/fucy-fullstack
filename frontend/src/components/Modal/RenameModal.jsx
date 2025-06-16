@@ -24,12 +24,12 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const selector = (state) => ({
   updateModelName: state.updateModelName,
   model: state.model,
-  getModels: state.getModels
+  getModelById: state.getModelById
 });
 
 export default React.memo(function RenameProject({ open, handleClose, Models }) {
   const color = ColorTheme();
-  const { updateModelName, model, getModels } = useStore(selector, shallow);
+  const { updateModelName, model, getModelById } = useStore(selector, shallow);
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +64,7 @@ export default React.memo(function RenameProject({ open, handleClose, Models }) 
         .then((res) => {
           if (res) {
             toast.success('Model renamed successfully');
-            getModels();
+            getModelById(model?._id);
             handleClose(e);
           } else {
             toast.error('Rename failed');
@@ -77,7 +77,7 @@ export default React.memo(function RenameProject({ open, handleClose, Models }) 
           setLoading(false);
         });
     },
-    [updateModelName, model, getModels, newName, Models, handleClose]
+    [updateModelName, model, newName, Models, handleClose]
   );
 
   return (

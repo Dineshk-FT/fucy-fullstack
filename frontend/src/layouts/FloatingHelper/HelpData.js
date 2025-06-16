@@ -1,4 +1,10 @@
 export const helpData = {
+  Project: [
+    { id: 'add_project', label: 'How to add a Project?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
+    { id: 'view_project', label: 'How to select & view a Project?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
+    { id: 'rename_project', label: 'How to rename a Project?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
+    { id: 'delete_projects', label: 'How to delete Projects?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' }
+  ],
   'Item Definition': [
     { id: 'add_data_node', label: 'How to add a component/Data?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
     { id: 'add_edge', label: 'How to add a Connector?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
@@ -107,8 +113,12 @@ export const helpData = {
         id: 'ADD_CybersecurityGoal',
         label: 'How to add a goal/claim/control/requirement?',
         gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif'
+      },
+      {
+        id: 'export_cybersecurity',
+        label: 'How to export cybersecurity?',
+        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
       }
-      //   { id: 'use_cyber', label: 'Where can i use these?', gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' }
     ]
   },
   'Risk Determination and Risk Treatment Decision': [
