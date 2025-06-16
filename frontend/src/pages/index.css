@@ -129,6 +129,9 @@ iframe#webpack-dev-server-client-overlay {
   border-radius: 3px;
   padding: 10px 15px;
 } */
+.edge-container{
+  z-index: 1500;
+}
 
 .react-flow__resize-control {
   /* display: none !important; */

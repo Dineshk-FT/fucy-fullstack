@@ -3,8 +3,8 @@ import { Box, Tooltip, IconButton } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import GridOnIcon from '@mui/icons-material/GridOn';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
+// import UndoIcon from '@mui/icons-material/Undo';
+// import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -17,11 +17,11 @@ export default function CanvasToolbar({
   onSelectionClick,
   selectedNodes,
   handleGroupDrag,
-  undo,
-  redo,
-  undoStack,
+  // undo,
+  // redo,
+  // undoStack,
+  // redoStack,
   assets,
-  redoStack,
   handleDownload,
   loading
 }) {
@@ -118,7 +118,7 @@ export default function CanvasToolbar({
           <GridOnIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Undo">
+      {/* <Tooltip title="Undo">
         <span>
           <IconButton
             onClick={undo}
@@ -189,7 +189,7 @@ export default function CanvasToolbar({
             <RedoIcon sx={{ fontSize: 18 }} />
           </IconButton>
         </span>
-      </Tooltip>
+      </Tooltip> */}
       <Tooltip title="Download as PNG">
         <IconButton
           onClick={handleDownload}
