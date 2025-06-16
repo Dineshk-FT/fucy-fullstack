@@ -25,7 +25,8 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton
+  IconButton,
+  TableSortLabel
 } from '@mui/material';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import useStore from '../../store/Zustand/store';
@@ -183,7 +184,6 @@ export default function AttackTreeTable() {
   const { model, update, attacks, getAttackScenario, addScene } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const [page, setPage] = useState(0); // Pagination state
   const [rowsPerPage, setRowsPerPage] = useState(25); // Rows per page state
   const { title } = useSelector((state) => state?.pageName);
@@ -196,6 +196,8 @@ export default function AttackTreeTable() {
     Description: ''
   });
   const [runTour, setRunTour] = useState(false);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('SNO');
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -215,6 +217,55 @@ export default function AttackTreeTable() {
   const [columnWidths, setColumnWidths] = useState(
     Object.fromEntries(Head?.map((hd) => [hd.id, 180])) // Default 100px width
   );
+
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const filteredRows = useMemo(() => {
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (row) =>
+          row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
   const handleAddNewRow = () => {
     setIsAddingNewRow(true);
@@ -248,7 +299,6 @@ export default function AttackTreeTable() {
       });
 
       setRows(mod1);
-      setFiltered(mod1);
     }
   }, [attacks]);
 
@@ -258,7 +308,7 @@ export default function AttackTreeTable() {
     const { name, value } = e.target;
 
     // Store previous state to rollback if needed
-    const previousRows = [...filtered];
+    const previousRows = [...rows];
 
     // Optimistically update the selected category
     const updatedRows = rows.map((r) => {
@@ -268,7 +318,7 @@ export default function AttackTreeTable() {
       return r;
     });
 
-    setFiltered(updatedRows); // Update UI immediately
+    setRows(updatedRows); // Update UI immediately
 
     // Simulate average rating calculation
     const calculateAverageRating = (row) => {
@@ -306,7 +356,7 @@ export default function AttackTreeTable() {
       })
       .catch((err) => {
         console.log('err', err);
-        setFiltered(previousRows); // Revert UI to previous state if request fails
+        setRows(previousRows); // Revert UI to previous state if request fails
       });
   };
   const handleSaveNewRow = () => {
@@ -346,19 +396,8 @@ export default function AttackTreeTable() {
   // console.log('model', model);
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw?.Name?.toLowerCase().includes(value) || rw?.Description?.toLowerCase().includes(value)) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -618,7 +657,13 @@ export default function AttackTreeTable() {
                     overflowWrap: 'break-word'
                   }}
                 >
-                  {hd.name}
+                  <TableSortLabel
+                    active={orderBy === hd.name}
+                    direction={orderBy === hd.name ? order : 'asc'}
+                    onClick={() => handleRequestSort(hd.name)}
+                  >
+                    {hd?.name}
+                  </TableSortLabel>
                   <div
                     className="resize-handle"
                     style={{
@@ -699,7 +744,7 @@ export default function AttackTreeTable() {
               </StyledTableRow>
             )}
 
-            {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+            {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
               <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
             ))}
           </TableBody>
@@ -714,7 +759,7 @@ export default function AttackTreeTable() {
         }}
         rowsPerPageOptions={[5, 10, 25, 50, 100]}
         component="div"
-        count={filtered.length}
+        count={paginatedRows.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

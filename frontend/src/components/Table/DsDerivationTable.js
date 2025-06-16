@@ -23,9 +23,9 @@ import {
   FormControlLabel,
   IconButton,
   styled,
-  useTheme,
   Checkbox,
-  TablePagination
+  TablePagination,
+  TableSortLabel
 } from '@mui/material';
 import ColorTheme from '../../themes/ColorTheme';
 import { tableHeight } from '../../themes/constant';
@@ -33,7 +33,6 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { DsDerivedSteps } from '../../utils/Steps';
 import { DsDerivationHeader } from './constraints';
-import { useDispatch } from 'react-redux';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -66,9 +65,7 @@ const selector = (state) => ({
 });
 
 const DsDerivationTable = () => {
-  const theme = useTheme();
   const color = ColorTheme();
-  const dispatch = useDispatch();
   const { damageScenarios, update, modelId, getDamageScenarios } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,6 +76,9 @@ const DsDerivationTable = () => {
   const visibleColumns = useStore((state) => state.DsTable);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [runTour, setRunTour] = useState(false);
+  // Sorting state
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('SNo');
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -86,6 +86,7 @@ const DsDerivationTable = () => {
       setRunTour(false);
     }
   };
+
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
@@ -111,10 +112,48 @@ const DsDerivationTable = () => {
     }
   }, [damageScenarios]);
 
+  // Sorting function
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   const filteredRows = useMemo(() => {
-    if (!searchTerm.trim()) return rows;
-    return rows.filter((row) => row['Task/Requirement']?.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [rows, searchTerm]);
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((row) => row['Task/Requirement']?.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
 
   const paginatedRows = useMemo(() => {
     return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -286,7 +325,6 @@ const DsDerivationTable = () => {
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mx={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            {/* <KeyboardBackspaceRoundedIcon sx={{ float: 'left', cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>Damage Scenario Derivation Table</Typography>
           </Box>
           <Box display="flex" justifyContent="center" gap={1}>
@@ -300,13 +338,13 @@ const DsDerivationTable = () => {
               value={searchTerm}
               onChange={handleSearch}
               sx={{
-                padding: 0.5, // Reduce padding
+                padding: 0.5,
                 '& .MuiInputBase-input': {
-                  fontSize: '0.75rem', // Smaller font size
-                  padding: '0.5rem' // Adjust padding inside input
+                  fontSize: '0.75rem',
+                  padding: '0.5rem'
                 },
                 '& .MuiOutlinedInput-root': {
-                  height: '30px' // Reduce overall height
+                  height: '30px'
                 }
               }}
             />
@@ -315,7 +353,6 @@ const DsDerivationTable = () => {
               sx={{
                 padding: '0px 8px',
                 fontSize: '0.85rem',
-                // alignSelf: 'center',
                 backgroundColor: '#4caf50',
                 ':hover': {
                   backgroundColor: '#388e3c'
@@ -343,7 +380,7 @@ const DsDerivationTable = () => {
                     onChange={() => toggleColumnVisibility('DsTable', column.name)}
                   />
                 }
-                label={column.name} // Display column name as label
+                label={column.name}
               />
             ))}
           </DialogContent>
@@ -368,7 +405,11 @@ const DsDerivationTable = () => {
             <TableHead>
               <TableRow>
                 {Head?.map((hd) => (
-                  <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
+                  <StyledTableCell
+                    key={hd?.id}
+                    style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}
+                    sortDirection={orderBy === hd.name ? order : false}
+                  >
                     {hd?.name === 'Checked' ? (
                       <Box display="flex" alignItems="center" id="column-header">
                         <Checkbox
@@ -380,34 +421,37 @@ const DsDerivationTable = () => {
                         {hd?.name}
                       </Box>
                     ) : (
-                      hd?.name
+                      <TableSortLabel
+                        active={orderBy === hd.name}
+                        direction={orderBy === hd.name ? order : 'asc'}
+                        onClick={() => handleRequestSort(hd.name)}
+                      >
+                        {hd?.name}
+                      </TableSortLabel>
                     )}
-                    {
-                      <div
-                        className="resize-handle"
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 0,
-                          width: '5px',
-                          height: '100%',
-                          cursor: 'col-resize',
-                          backgroundColor: 'transparent'
-                        }}
-                        onMouseDown={(e) => handleResizeStart(e, hd.id)}
-                      />
-                    }
+                    <div
+                      className="resize-handle"
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: '5px',
+                        height: '100%',
+                        cursor: 'col-resize',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseDown={(e) => handleResizeStart(e, hd.id)}
+                    />
                   </StyledTableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {paginatedRows?.map((row, rowkey) => (
                 <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
           </Table>
-          {/* Pagination controls */}
         </TableContainer>
         <TablePagination
           sx={{
@@ -416,7 +460,7 @@ const DsDerivationTable = () => {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={paginatedRows.length}
+          count={filteredRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
