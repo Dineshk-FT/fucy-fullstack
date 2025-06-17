@@ -22,7 +22,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  TableSortLabel
 } from '@mui/material';
 import ColorTheme from '../../themes/ColorTheme';
 import { useSelector } from 'react-redux';
@@ -108,6 +109,9 @@ export default function CybersecurityTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('SNo');
+
   const visibleColumns1 = useStore((state) => state.CybersecurityGoalsTable);
   const visibleColumns2 = useStore((state) => state.CybersecurityRequirementsTable);
   const visibleColumns3 = useStore((state) => state.CybersecurityControlsTable);
@@ -143,6 +147,54 @@ export default function CybersecurityTable() {
     };
     return getName[title];
   };
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const filteredRows = useMemo(() => {
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (row) =>
+          row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
   useEffect(() => {
     const getId = getIdName();
@@ -158,10 +210,8 @@ export default function CybersecurityTable() {
         };
       });
       setRows(scene);
-      setFiltered(scene);
     } else {
       setRows([]);
-      setFiltered([]);
     }
   }, [cybersecurity, title]);
 
@@ -233,14 +283,8 @@ export default function CybersecurityTable() {
   };
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => rw['Name'].toLowerCase().includes(value.toLowerCase()));
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -552,7 +596,13 @@ export default function CybersecurityTable() {
               <TableRow>
                 {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
-                    {hd?.name}
+                    <TableSortLabel
+                      active={orderBy === hd.name}
+                      direction={orderBy === hd.name ? order : 'asc'}
+                      onClick={() => handleRequestSort(hd.name)}
+                    >
+                      {hd?.name}
+                    </TableSortLabel>
                     <div
                       className="resize-handle"
                       style={{
@@ -633,7 +683,7 @@ export default function CybersecurityTable() {
                 </StyledTableRow>
               )}
 
-              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
                 <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
@@ -646,7 +696,7 @@ export default function CybersecurityTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={filtered.length}
+          count={paginatedRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}

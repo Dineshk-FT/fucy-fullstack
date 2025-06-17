@@ -22,7 +22,8 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton
+  IconButton,
+  TableSortLabel
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ColorTheme from '../../themes/ColorTheme';
@@ -60,8 +61,6 @@ const selector = (state) => ({
 });
 
 const notify = (message, status) => toast[status](message);
-
-const column = TsTableHeader;
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -115,7 +114,6 @@ const Tstable = () => {
   };
 
   const [rows, setRows] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -125,18 +123,58 @@ const Tstable = () => {
   const [details, setDetails] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(TsTableHeader.map((col) => [col.id, col.w])));
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('SNo');
 
   const Head = useMemo(() => {
     return TsTableHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
 
+  // Sorting function
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   const filteredRows = useMemo(() => {
-    if (!searchTerm.trim()) return rows;
-    return rows.filter(
-      (row) =>
-        row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [rows, searchTerm]);
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (row) =>
+          row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
 
   const paginatedRows = useMemo(() => {
     return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -174,7 +212,6 @@ const Tstable = () => {
       ).filter(Boolean);
 
       setRows(mod1);
-      setFiltered(mod1);
       setDetails(damageScenarios);
     }
   }, [derived?.Details, damageScenarios]);
@@ -593,7 +630,13 @@ const Tstable = () => {
                       overflowWrap: 'break-word'
                     }}
                   >
-                    {hd?.name}
+                    <TableSortLabel
+                      active={orderBy === hd.name}
+                      direction={orderBy === hd.name ? order : 'asc'}
+                      onClick={() => handleRequestSort(hd.name)}
+                    >
+                      {hd?.name}
+                    </TableSortLabel>
                     <div
                       className="resize-handle"
                       style={{

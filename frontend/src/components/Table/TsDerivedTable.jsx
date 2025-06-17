@@ -23,7 +23,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  TableSortLabel
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
@@ -108,11 +109,12 @@ export default function TsDerivedTable() {
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const { title } = useSelector((state) => state?.pageName);
   const [openFilter, setOpenFilter] = useState(false); // Manage the filter modal visibility
   const visibleColumns = useStore((state) => state?.threatDerivedScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('SNo');
 
   const Head = useMemo(() => {
     return column.filter((header) => visibleColumns.includes(header.name));
@@ -136,6 +138,55 @@ export default function TsDerivedTable() {
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
+
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const filteredRows = useMemo(() => {
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (row) =>
+          row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
   const handleOpenSelect = (row) => {
     setSelectedRow(row);
@@ -181,7 +232,6 @@ export default function TsDerivedTable() {
         : [];
 
       setRows(mappedDetails);
-      setFiltered(mappedDetails);
       setDetails(damageScenarios);
     }
   }, [derived, userDefined, damageScenarios]);
@@ -195,19 +245,8 @@ export default function TsDerivedTable() {
   };
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (rw.Name.toLowerCase().includes(value.toLowerCase()) || rw.Description.toLowerCase().includes(value.toLowerCase())) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -648,7 +687,13 @@ export default function TsDerivedTable() {
                       overflowWrap: 'break-word'
                     }}
                   >
-                    {hd?.name}
+                    <TableSortLabel
+                      active={orderBy === hd.name}
+                      direction={orderBy === hd.name ? order : 'asc'}
+                      onClick={() => handleRequestSort(hd.name)}
+                    >
+                      {hd?.name}
+                    </TableSortLabel>
                     <div
                       className="resize-handle"
                       style={{
@@ -667,7 +712,7 @@ export default function TsDerivedTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
                 <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
               ))}
             </TableBody>
@@ -680,7 +725,7 @@ export default function TsDerivedTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={filtered.length}
+          count={paginatedRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}

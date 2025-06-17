@@ -29,10 +29,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel
+  FormControlLabel,
+  TableSortLabel
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import SelectLosses from '../Modal/SelectLosses';
@@ -74,7 +74,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    whiteSpace: 'normal', // ⬅ allow multiline
+    wordBreak: 'break-word',
+    lineHeight: 1.4 // ⬅ better vertical spacing
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
@@ -218,7 +221,6 @@ export default function DsTable() {
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const [details, setDetails] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -230,6 +232,39 @@ export default function DsTable() {
     'Description/Scalability': ''
   });
   const [runTour, setRunTour] = useState(false);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('ID');
+
+  // Sorting function
+  const stableSort = (array, comparator) => {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) return order;
+      return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+  };
+  const getComparator = (order, orderBy) => {
+    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     if (['finished', 'skipped'].includes(status)) {
@@ -281,7 +316,7 @@ export default function DsTable() {
   };
 
   const handleChecked = (value, item, rowId) => {
-    setFiltered((prevFiltered) =>
+    setRows((prevFiltered) =>
       prevFiltered.map((row) =>
         row.id === rowId
           ? {
@@ -311,7 +346,7 @@ export default function DsTable() {
       })
       .catch((err) => {
         console.error('Error updating row:', err);
-        setFiltered((prevFiltered) =>
+        setRows((prevFiltered) =>
           prevFiltered.map((row) =>
             row.id === rowId
               ? {
@@ -366,22 +401,8 @@ export default function DsTable() {
   };
 
   const handleSearch = (e) => {
-    const { value } = e.target;
-    if (value.length > 0) {
-      const filterValue = rows.filter((rw) => {
-        if (
-          rw.Name.toLowerCase().includes(value.toLowerCase()) ||
-          rw['Description/Scalability']?.toLowerCase().includes(value.toLowerCase())
-        ) {
-          return rw;
-        }
-      });
-      setFiltered(filterValue);
-    } else {
-      setFiltered(rows);
-    }
-
-    setSearchTerm(value);
+    setSearchTerm(e.target.value);
+    setPage(0);
   };
 
   useEffect(() => {
@@ -404,7 +425,6 @@ export default function DsTable() {
           : {}
       }));
       setRows(scene);
-      setFiltered(scene);
       const details = Details?.filter((detail) => detail?.props?.length) ?? [];
       setDetails(details);
     }
@@ -419,7 +439,7 @@ export default function DsTable() {
     const { name, value } = e.target;
     const prevValue = row.impacts[name];
 
-    setFiltered((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r)));
+    setRows((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: value } } : r)));
 
     const updatedRow = JSON.parse(JSON.stringify(row));
     updatedRow.impacts[name] = value;
@@ -438,9 +458,7 @@ export default function DsTable() {
       })
       .catch((err) => {
         console.error('Error updating impact:', err);
-        setFiltered((prevFiltered) =>
-          prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r))
-        );
+        setRows((prevFiltered) => prevFiltered.map((r) => (r.id === row.id ? { ...r, impacts: { ...r.impacts, [name]: prevValue } } : r)));
       });
   };
 
@@ -523,6 +541,25 @@ export default function DsTable() {
         if (err) notify('Something went wrong', 'error');
       });
   };
+
+  const filteredRows = useMemo(() => {
+    let filtered = rows;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter((row) => {
+        return row.Name?.toLowerCase().includes(lowerSearch) || row['Description/Scalability']?.toLowerCase().includes(lowerSearch);
+      });
+    }
+
+    // Apply sorting
+    return stableSort(filtered, getComparator(order, orderBy));
+  }, [rows, searchTerm, order, orderBy]);
+
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredRows, page, rowsPerPage]);
 
   const RenderTableRow = useCallback(
     ({ row, rowKey, isChild = false }) => {
@@ -982,7 +1019,14 @@ export default function DsTable() {
                       overflowWrap: 'break-word'
                     }}
                   >
-                    {hd?.name}
+                    <TableSortLabel
+                      active={orderBy === hd.name}
+                      direction={orderBy === hd.name ? order : 'asc'}
+                      onClick={() => handleRequestSort(hd.name)}
+                    >
+                      {hd?.name}
+                    </TableSortLabel>
+
                     <div
                       className="resize-handle"
                       style={{
@@ -1063,7 +1107,7 @@ export default function DsTable() {
                 </StyledTableRow>
               )}
 
-              {filtered?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
                 <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
@@ -1077,7 +1121,7 @@ export default function DsTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={filtered.length}
+          count={paginatedRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
