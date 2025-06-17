@@ -781,7 +781,7 @@ export default function RiskTreatmentTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowKey) => (
+              {paginatedRows?.map((row, rowKey) => (
                 <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
               ))}
             </TableBody>
@@ -801,7 +801,7 @@ export default function RiskTreatmentTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={paginatedRows.length}
+          count={filteredRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}

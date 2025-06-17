@@ -655,7 +655,7 @@ const Tstable = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {paginatedRows?.map((row, rowkey) => (
                 <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
               ))}
             </TableBody>

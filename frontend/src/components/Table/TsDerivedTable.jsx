@@ -712,7 +712,7 @@ export default function TsDerivedTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {paginatedRows?.map((row, rowkey) => (
                 <RenderTableRow row={row} rowKey={rowkey} key={rowkey} />
               ))}
             </TableBody>
@@ -725,7 +725,7 @@ export default function TsDerivedTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={paginatedRows.length}
+          count={filteredRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
