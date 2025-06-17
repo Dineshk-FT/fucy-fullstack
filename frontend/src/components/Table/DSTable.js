@@ -33,7 +33,6 @@ import {
   TableSortLabel
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-
 import EditIcon from '@mui/icons-material/Edit';
 import { tooltipClasses } from '@mui/material/Tooltip';
 import SelectLosses from '../Modal/SelectLosses';
@@ -75,7 +74,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderRight: '1px solid rgba(224, 224, 224, 1) !important',
     fontSize: 13,
     padding: '2px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    whiteSpace: 'normal', // ⬅ allow multiline
+    wordBreak: 'break-word',
+    lineHeight: 1.4 // ⬅ better vertical spacing
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 13,
