@@ -683,7 +683,7 @@ export default function CybersecurityTable() {
                 </StyledTableRow>
               )}
 
-              {filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((row, rowkey) => (
+              {paginatedRows?.map((row, rowkey) => (
                 <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
               ))}
             </TableBody>
@@ -696,7 +696,7 @@ export default function CybersecurityTable() {
             '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
           }}
           component="div"
-          count={paginatedRows.length}
+          count={filteredRows.length}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           page={page}
           onPageChange={handleChangePage}
