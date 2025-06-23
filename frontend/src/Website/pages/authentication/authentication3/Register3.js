@@ -11,6 +11,7 @@ import AuthCardWrapper from '../AuthCardWrapper';
 import Logo from '../../../../components/Logo';
 import AuthRegister from '../auth-forms/AuthRegister';
 import AuthFooter from '../../../../components/cards/AuthFooter';
+import RegisterStepper from './RegisterStepper';
 
 // ===============================|| AUTH3 - REGISTER ||=============================== //
 
@@ -49,7 +50,8 @@ const Register = () => {
                     </Grid>
                   </Grid>
                   <Grid item xs={12}>
-                    <AuthRegister />
+                    {/* <AuthRegister /> */}
+                    <RegisterStepper />
                   </Grid>
                   <Grid item xs={12}>
                     <Divider />
@@ -57,7 +59,7 @@ const Register = () => {
                   <Grid item xs={12}>
                     <Grid item container direction="column" alignItems="center" xs={12}>
                       <Typography component={Link} to="/login" variant="subtitle1" sx={{ textDecoration: 'none' }}>
-                        Already have an account?
+                        Already have an account 12?
                       </Typography>
                     </Grid>
                   </Grid>
@@ -72,4 +74,3 @@ const Register = () => {
 };
 
 export default Register;
-
