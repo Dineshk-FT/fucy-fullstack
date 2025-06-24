@@ -16,11 +16,6 @@ export const canvasSteps = [
 
 export const DsSteps = [
   {
-    target: '#column-editer',
-    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.',
-    disableBeacon: true
-  },
-  {
     target: '#search-input',
     content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
     disableBeacon: true
@@ -40,6 +35,10 @@ export const DsSteps = [
   {
     target: '.resize-handle',
     content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#column-editer',
+    content: 'Name and Description can be editable by clicking the Pen icon when you move the mouse towards those cells.'
   },
   {
     target: '#select-losses',
@@ -78,7 +77,7 @@ export const DsDerivedSteps = [
 export const TsSteps = [
   {
     target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    content: 'Search through threat scenarios by typing in keywords related to Name.',
     disableBeacon: true
   },
   {
@@ -108,7 +107,7 @@ export const TsSteps = [
 export const TsDerivedSteps = [
   {
     target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.',
+    content: 'Search through derived threat scenarios by typing in keywords related to Name.',
     disableBeacon: true
   },
   {
@@ -137,7 +136,7 @@ export const attackTableSteps = [
   },
   {
     target: '#search-input',
-    content: 'Search through damage scenarios by typing in keywords related to tasks/requirements.'
+    content: 'Search through attacks by typing in keywords related to Name.'
   },
   {
     target: '#filter-columns-btn',
@@ -150,6 +149,33 @@ export const attackTableSteps = [
   {
     target: '#select-value',
     content: 'The cells with the select Value can be selected by clicking the cell and selecting the value in the list.'
+  }
+];
+export const cyberSteps = [
+  {
+    target: '#add-btn',
+    content: 'Click  here to add cybersecurity module to the table.',
+    disableBeacon: true
+  },
+  {
+    target: '#search-input',
+    content: 'Search through cybersecurity modules by typing in keywords related to Name'
+  },
+  {
+    target: '#filter-columns-btn',
+    content: 'Click here to select which columns to display in the table.'
+  },
+  {
+    target: '#delete-btn',
+    content: 'Select the rows and click on Delete to delete multiple rows.'
+  },
+  {
+    target: '.resize-handle',
+    content: 'Drag these handles to adjust column widths for better visibility.'
+  },
+  {
+    target: '#edit-name',
+    content: 'You can edit the name and description by clicking the pen icon at the top of the cell.'
   }
 ];
 
@@ -188,10 +214,6 @@ export const riskSteps = [
     disableBeacon: true
   },
   {
-    target: '#drag_drop',
-    content: 'Drag a threat scenario and drop in the table to view the details.'
-  },
-  {
     target: '#filter-columns-btn',
     content: 'Click here to select which columns to display in the table.'
   },
@@ -204,17 +226,21 @@ export const riskSteps = [
     content: 'Drag these handles to adjust column widths for better visibility.'
   },
   {
+    target: '#drag_drop',
+    content: 'Drag a threat scenario and drop in the table to view the details.'
+  },
+  {
     target: '#select-catalogs',
     content: 'Click here to select the catalogs.'
-  },
-  {
-    target: '#select-claims',
-    content: 'Click here to select the Cybersecurity Claims from the saved list.'
-  },
-  {
-    target: '#select-goals',
-    content: 'Click here to select the Cybersecurity Goals from the saved list.'
   }
+  // {
+  //   target: '#select-claims',
+  //   content: 'Click here to select the Cybersecurity Claims from the saved list.'
+  // },
+  // {
+  //   target: '#select-goals',
+  //   content: 'Click here to select the Cybersecurity Goals from the saved list.'
+  // }
 ];
 
 export const sidebarSteps = [
@@ -255,5 +281,45 @@ export const sidebarSteps = [
   {
     target: '#reporting',
     content: 'Here You can download the desired data in a PDF format.'
+  }
+];
+
+export const addNodeSteps = [
+  {
+    target: '#node-name-input',
+    content: 'Enter a name for your new node here.',
+    disableBeacon: true
+  },
+  {
+    target: '#node-properties-select',
+    content: 'Select one or more security properties for this node from the dropdown.'
+  },
+  {
+    target: '#add-node-btn',
+    content: 'Click here to create the node with the specified properties.'
+  },
+  {
+    target: '#cancel-node-btn',
+    content: 'Click here to cancel node creation and close the form.'
+  }
+];
+
+export const addDataSteps = [
+  {
+    target: '#data-node-name-input',
+    content: 'Enter a name for your new data node here.',
+    disableBeacon: true
+  },
+  {
+    target: '#data-node-properties-select',
+    content: 'Select one or more security properties for this data node from the dropdown.'
+  },
+  {
+    target: '#add-data-node-btn',
+    content: 'Click here to create the data node with the specified properties.'
+  },
+  {
+    target: '#cancel-data-node-btn',
+    content: 'Click here to cancel data node creation and close the form.'
   }
 ];

@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import Joyride from 'react-joyride';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
   Button,
@@ -43,6 +42,7 @@ import { tableHeight } from '../../themes/constant';
 import SelectCatalog from '../Modal/SelectCatalog';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { riskSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -119,30 +119,8 @@ export default function RiskTreatmentTable() {
   const visibleColumns = useStore((state) => state.riskTreatmentTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [runTour, setRunTour] = useState(false);
-  const tableRef = useRef(null);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
-
-  // useEffect(() => {
-  //   if (runTour) {
-  //     document.body.classList.add('joyride-active');
-  //   } else {
-  //     document.body.classList.remove('joyride-active');
-  //   }
-  // }, [runTour]);
-
-  const handleJoyrideCallback = (data) => {
-    const { status, step } = data;
-    if (step.target === '#select-claims' || step.target === '#select-goals') {
-      tableRef.current.scrollLeft = 2500;
-    } else {
-      tableRef.current.scrollLeft = 0;
-    }
-
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
@@ -614,29 +592,7 @@ export default function RiskTreatmentTable() {
 
   return (
     <>
-      <Joyride
-        steps={riskSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={riskSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           overflow: 'auto !important',
@@ -736,9 +692,16 @@ export default function RiskTreatmentTable() {
         </Dialog>
 
         <TableContainer
-          ref={tableRef}
           component={Paper}
-          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
+          sx={{
+            '&.MuiPaper-elevation2': {
+              overflow: 'auto !important'
+            },
+            borderRadius: '0px',
+            padding: 0.25,
+            maxHeight: tableHeight,
+            scrollbarWidth: 'thin'
+          }}
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
         >
@@ -841,15 +804,6 @@ export default function RiskTreatmentTable() {
         )}
         <Toaster position="top-right" reverseOrder={false} />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 }

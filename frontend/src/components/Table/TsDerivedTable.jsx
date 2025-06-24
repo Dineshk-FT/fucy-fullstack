@@ -41,8 +41,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import Joyride from 'react-joyride';
 import { TsDerivedSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -127,13 +127,6 @@ export default function TsDerivedTable() {
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
   const [selectedRows, setSelectedRows] = useState([]);
   const [runTour, setRunTour] = useState(false);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -544,29 +537,7 @@ export default function TsDerivedTable() {
 
   return (
     <>
-      <Joyride
-        steps={TsDerivedSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={TsDerivedSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           overflow: 'auto',
@@ -671,8 +642,16 @@ export default function TsDerivedTable() {
 
         <TableContainer
           component={Paper}
-          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
-          onDragOver={(e) => e.preventDefault()}
+          elevation={2}
+          sx={{
+            '&.MuiPaper-elevation2': {
+              overflow: 'auto !important'
+            },
+            borderRadius: '0px',
+            padding: 0.25,
+            maxHeight: tableHeight,
+            scrollbarWidth: 'thin'
+          }}
         >
           <Table stickyHeader sx={{ width: '100%' }} aria-label="simple table">
             <TableHead>
@@ -746,15 +725,6 @@ export default function TsDerivedTable() {
         )}
         <Toaster position="top-right" reverseOrder={false} />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 }

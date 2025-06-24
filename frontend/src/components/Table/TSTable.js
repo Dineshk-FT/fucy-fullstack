@@ -39,10 +39,10 @@ import AddThreatScenarios from '../Modal/AddThreatScenario';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
 import CreateDerivedThreatModal from '../Modal/CreateDerivedThreatModal';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import Joyride from 'react-joyride';
 import { TsSteps } from '../../utils/Steps';
 import FormPopper from '../Poppers/FormPopper';
 import { useSelector } from 'react-redux';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -105,13 +105,6 @@ const Tstable = () => {
   const visibleColumns = useStore((state) => state.threatScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [runTour, setRunTour] = useState(false);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -486,29 +479,7 @@ const Tstable = () => {
 
   return (
     <>
-      <Joyride
-        steps={TsSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={TsSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           overflow: 'auto',
@@ -698,15 +669,6 @@ const Tstable = () => {
           />
         )}
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 };

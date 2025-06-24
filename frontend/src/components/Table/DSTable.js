@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import Joyride from 'react-joyride';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
@@ -48,6 +47,7 @@ import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { DsSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -265,12 +265,6 @@ export default function DsTable() {
     setOrderBy(property);
   };
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
   // console.log('details', details);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -859,29 +853,7 @@ export default function DsTable() {
 
   return (
     <>
-      <Joyride
-        steps={DsSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={DsSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           display: 'flex',
@@ -1145,15 +1117,6 @@ export default function DsTable() {
         )}
         <Toaster position="top-right" reverseOrder={false} />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 }

@@ -36,10 +36,10 @@ import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
 import { debounce } from 'lodash';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
-import Joyride from 'react-joyride';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { canvasSteps } from '../../utils/Steps';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
+import AutoGuidePopper from '../../components/Poppers/AutoGuidePopper';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -196,13 +196,6 @@ export default function MainCanvas() {
   const latestNodesRef = useRef(nodes);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   const notify = (message, status) => toast[status](message);
 
@@ -969,29 +962,7 @@ export default function MainCanvas() {
 
   return (
     <>
-      <Joyride
-        steps={canvasSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={canvasSteps} runTour={runTour} setRunTour={setRunTour} />
       <div
         style={{
           width: '100%',

@@ -1,6 +1,5 @@
 /* eslint-disable */
 import React, { useState, useRef } from 'react';
-import Joyride from 'react-joyride';
 import {
   Button,
   TextField,
@@ -18,7 +17,6 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { getNodeDetails } from '../../utils/Constraints';
 import { useDispatch, useSelector } from 'react-redux';
-import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
 import { closeAddNodeTab } from '../../store/slices/CanvasSlice';
@@ -27,6 +25,8 @@ import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { shallow } from 'zustand/shallow';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import { addNodeSteps } from '../../utils/Steps';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -45,26 +45,6 @@ const selector = (state) => ({
   nodes: state.nodes,
   setIsChanged: state.setIsChanged
 });
-
-const steps = [
-  {
-    target: '#node-name-input',
-    content: 'Enter a name for your new node here.',
-    disableBeacon: true
-  },
-  {
-    target: '#node-properties-select',
-    content: 'Select one or more security properties for this node from the dropdown.'
-  },
-  {
-    target: '#add-node-btn',
-    content: 'Click here to create the node with the specified properties.'
-  },
-  {
-    target: '#cancel-node-btn',
-    content: 'Click here to cancel node creation and close the form.'
-  }
-];
 
 const AddNewNode = () => {
   const color = ColorTheme();
@@ -101,14 +81,6 @@ const AddNewNode = () => {
       };
     }
   }, []);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   const handleTourStart = () => {
     setRunTour(true);
@@ -158,36 +130,7 @@ const AddNewNode = () => {
 
   return (
     <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent, position: 'relative' }}>
-      <Joyride
-        steps={steps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-        floaterProps={{
-          styles: {
-            arrow: {
-              color: '#1976d2'
-            }
-          }
-        }}
-      />
+      <AutoGuidePopper steps={addNodeSteps} runTour={runTour} setRunTour={setRunTour} />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

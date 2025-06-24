@@ -1,6 +1,5 @@
 /*eslint-disable*/
 import React, { useEffect, useMemo, useState } from 'react';
-import Joyride from 'react-joyride';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import {
@@ -33,6 +32,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { DsDerivedSteps } from '../../utils/Steps';
 import { DsDerivationHeader } from './constraints';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -79,13 +79,6 @@ const DsDerivationTable = () => {
   // Sorting state
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -283,29 +276,7 @@ const DsDerivationTable = () => {
 
   return (
     <>
-      <Joyride
-        steps={DsDerivedSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={DsDerivedSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           overflow: 'auto',
@@ -468,15 +439,6 @@ const DsDerivationTable = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 };

@@ -44,6 +44,9 @@ import { ThreatIcon } from '../../assets/icons';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import { cyberSteps } from '../../utils/Steps';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -109,6 +112,7 @@ export default function CybersecurityTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
 
@@ -387,6 +391,7 @@ export default function CybersecurityTable() {
             case isEditableField:
               cellContent = (
                 <StyledTableCell
+                  id="edit-name"
                   key={index}
                   onMouseEnter={() => setHoveredField(item.name)}
                   onMouseLeave={() => {
@@ -475,6 +480,8 @@ export default function CybersecurityTable() {
 
   return (
     <>
+      <AutoGuidePopper steps={cyberSteps} runTour={runTour} setRunTour={setRunTour} />
+
       <Box
         sx={{
           overflow: 'auto',
@@ -497,8 +504,12 @@ export default function CybersecurityTable() {
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
+            <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
             <Button
               variant="outlined"
+              id="add-btn"
               sx={{ borderRadius: 1.5 }}
               onClick={handleAddNewRow}
               startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
@@ -507,7 +518,7 @@ export default function CybersecurityTable() {
               Add new
             </Button>
             <TextField
-              id="outlined-size-small"
+              id="search-input"
               placeholder="Search"
               size="small"
               value={searchTerm}
@@ -524,6 +535,7 @@ export default function CybersecurityTable() {
               }}
             />
             <Button
+              id="filter-columns-btn"
               sx={{
                 fontSize: '0.85rem',
                 backgroundColor: '#4caf50',
@@ -538,6 +550,7 @@ export default function CybersecurityTable() {
               Filter Columns
             </Button>
             <Button
+              id="delete-btn"
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}

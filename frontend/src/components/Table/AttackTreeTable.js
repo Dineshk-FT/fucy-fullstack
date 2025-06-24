@@ -1,7 +1,6 @@
 /*eslint-disable*/
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Table from '@mui/material/Table';
-import Joyride from 'react-joyride';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -44,6 +43,7 @@ import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import toast from 'react-hot-toast';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { attackTableSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
@@ -199,12 +199,6 @@ export default function AttackTreeTable() {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNO');
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
@@ -533,29 +527,8 @@ export default function AttackTreeTable() {
 
   return (
     <>
-      <Joyride
-        steps={attackTableSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={attackTableSteps} runTour={runTour} setRunTour={setRunTour} />
+
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
           {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
@@ -626,21 +599,13 @@ export default function AttackTreeTable() {
 
       <TableContainer
         component={Paper}
+        elevation={2}
         sx={{
-          maxHeight: 440,
+          '&.MuiPaper-elevation2': {
+            overflow: 'auto !important'
+          },
           borderRadius: '0px',
           padding: 0.25,
-          overflow: 'auto',
-          '&::-webkit-scrollbar': {
-            width: '4px'
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)'
-          },
           maxHeight: tableHeight,
           scrollbarWidth: 'thin'
         }}
@@ -765,15 +730,6 @@ export default function AttackTreeTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <style>
-        {`
-       @keyframes pulse {
-         0% { transform: scale(1); opacity: 1; }
-         50% { transform: scale(1.3); opacity: 0.7; }
-         100% { transform: scale(1); opacity: 1; }
-       }
-     `}
-      </style>
     </>
   );
 }

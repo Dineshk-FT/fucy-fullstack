@@ -18,8 +18,8 @@ import { setDrawerwidth } from '../../../store/slices/CanvasSlice';
 import { getNavbarHeight } from '../../../themes/constant';
 import ColorTheme from '../../../themes/ColorTheme';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import Joyride from 'react-joyride';
 import { sidebarSteps } from '../../../utils/Steps';
+import AutoGuidePopper from '../../../components/Poppers/AutoGuidePopper';
 
 export const ToasterContext = createContext();
 
@@ -42,13 +42,6 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
   const [sidebarWidth, setSidebarWidth] = useState(draweropen ? 400 : 0);
   const [runTour, setRunTour] = useState(false);
 
-  const handleJoyrideCallback = (data) => {
-    // console.log('data', data);
-    const { status, step } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
   useEffect(() => {
     fetchModels();
     dispatch(clearProperties());
@@ -147,29 +140,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
 
   return (
     <>
-      <Joyride
-        steps={sidebarSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={sidebarSteps} runTour={runTour} setRunTour={setRunTour} />
 
       <ToasterContext.Provider value={values}>
         <ResizableBox
