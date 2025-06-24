@@ -232,15 +232,15 @@ export const riskSteps = [
   {
     target: '#select-catalogs',
     content: 'Click here to select the catalogs.'
+  },
+  {
+    target: '#select-claims',
+    content: 'Click here to select the Cybersecurity Claims from the saved list.'
+  },
+  {
+    target: '#select-goals',
+    content: 'Click here to select the Cybersecurity Goals from the saved list.'
   }
-  // {
-  //   target: '#select-claims',
-  //   content: 'Click here to select the Cybersecurity Claims from the saved list.'
-  // },
-  // {
-  //   target: '#select-goals',
-  //   content: 'Click here to select the Cybersecurity Goals from the saved list.'
-  // }
 ];
 
 export const sidebarSteps = [
