@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import WestIcon from '@mui/icons-material/West';
+import EastIcon from '@mui/icons-material/East';
 import { Box, ClickAwayListener } from '@mui/material';
-import { ArrowSwapHorizontal } from 'iconsax-react';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import './buttonedge.css';
 import ColorTheme from '../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -150,18 +152,19 @@ export default React.memo(function StepEdge({
 
   const renderButton = useMemo(() => {
     const { start, end } = isMarkerVisible;
-    let Icon = start && end ? ArrowRightAltIcon : ArrowSwapHorizontal;
-    const iconProps = { className: 'icons', size: 15 };
+    let Icon;
 
-    if (!start && end) {
-      if (Icon.muiName) {
-        iconProps.sx = { ...iconProps.sx, transform: 'rotate(180deg)' };
-      }
+    if (start && end) {
+      Icon = EastIcon; // or WestIcon based on your desired direction
+    } else if (!start && end) {
+      Icon = WestIcon;
+    } else {
+      Icon = SwapHorizIcon;
     }
 
     return (
       <button className="edgebutton">
-        <Icon {...iconProps} />
+        <Icon className="icons" sx={{ fontSize: 15 }} />
       </button>
     );
   }, [isMarkerVisible]);

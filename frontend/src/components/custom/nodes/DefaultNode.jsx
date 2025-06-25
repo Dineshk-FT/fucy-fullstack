@@ -26,7 +26,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector, shallow);
-  const { selectedBlock } = useSelector((state) => state?.canvas);
+  const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -128,14 +128,16 @@ export default React.memo(function DefaultNode({ id, data, type }) {
 
   useEffect(() => {
     if (isEditing && labelRef.current) {
+      labelRef.current.textContent = labelValue; // ✅ Manually insert current label
       labelRef.current.focus();
       const range = document.createRange();
       range.selectNodeContents(labelRef.current);
+      range.collapse(false); // Put cursor at end
       const selection = window.getSelection();
       selection.removeAllRanges();
       selection.addRange(range);
     }
-  }, [isEditing]);
+  }, [isEditing, labelValue]);
 
   const handleInfoClick = (e) => {
     setPropertiesOpen(false);
@@ -178,7 +180,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     if (!assets?._id || !model?._id) {
       console.error('Missing assetId or modelId');
       return;
-    } 
+    }
     // Close dialogs immediately
     if (isMounted.current) {
       setIsUnsavedDialogVisible(false);
@@ -274,6 +276,12 @@ export default React.memo(function DefaultNode({ id, data, type }) {
             onContextMenu={handleLabelRightClick}
             onBlur={handleLabelBlur}
             onKeyDown={handleKeyDown}
+            onInput={(e) => {
+              const newText = e.currentTarget.textContent || '';
+              setLabelValue(newText);
+              setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: newText } } : node)));
+              dispatch(setDetails({ ...details, name: newText }));
+            }}
             style={{
               maxWidth: width - 10,
               textAlign: 'center',
@@ -283,13 +291,13 @@ export default React.memo(function DefaultNode({ id, data, type }) {
                 color: 'black',
                 padding: '0 4px',
                 borderRadius: '4px',
-                minWidth: '60px',
-                cursor: 'text'
+                minWidth: '60px'
               })
             }}
           >
-            {labelValue}
+            {!isEditing && labelValue}
           </Box>
+
           <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
           <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
           <div
