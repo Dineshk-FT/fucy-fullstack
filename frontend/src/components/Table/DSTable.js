@@ -409,6 +409,7 @@ export default function DsTable() {
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         'Asset is Evaluated': ls?.is_asset_evaluated === 'true' ? true : false,
         'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true' ? true : false,
+        'Impact Justification': ls?.impact_justification ?? '',
         impacts: ls?.impacts
           ? {
               'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
@@ -583,7 +584,7 @@ export default function DsTable() {
           const details = {
             id: damageID,
             detailId: row?.id,
-            [editingField === 'Name' ? 'Name' : 'Description']: editValue
+            [editingField === 'Name' ? 'Name' : editingField === 'Impact Justification' ? 'justification' : 'Description']: editValue
           };
 
           updateName(details)
@@ -622,7 +623,8 @@ export default function DsTable() {
             }}
           >
             {Head?.map((item, index) => {
-              const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
+              const isEditableField =
+                item.name === 'Name' || item.name === 'Description/Scalability' || item.name === 'Impact Justification';
               const currentWidth = columnWidths[item.id] || item.w; // Get the current width of the column
               const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
 
@@ -1055,7 +1057,7 @@ export default function DsTable() {
                           </IconButton>
                         </StyledTableCell>
                       );
-                    } else if (item.name === 'Name' || item.name === 'Description/Scalability') {
+                    } else if (item.name === 'Name' || item.name === 'Description/Scalability' || item.name === 'Impact Justification') {
                       return (
                         <StyledTableCell key={index}>
                           <TextField

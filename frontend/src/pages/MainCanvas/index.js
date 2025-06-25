@@ -776,6 +776,7 @@ export default function MainCanvas() {
     }
 
     if (option === 'Paste') {
+      setIsChanged(true);
       if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
         notify('No valid copied node found', 'error');
         return;
