@@ -85,6 +85,9 @@ const useStore = createWithEqualityFn((set, get) => ({
   isAttackChanged: false,
   openSave: false,
   guides: [],
+  derivedIds: [],
+  isEditDerived: false,
+  derivationId: '',
 
   subSystems: {
     id: '6',
@@ -665,9 +668,18 @@ const useStore = createWithEqualityFn((set, get) => ({
       openSave: typeof value === 'function' ? value(state.openSave) : value
     })),
 
-  setOpenSave: (value) =>
+  // derived Edit part
+  setDerivedIds: (value) =>
     set((state) => ({
-      openSave: typeof value === 'function' ? value(state.openSave) : value
+      derivedIds: typeof value === 'function' ? value(state.derivedIds) : value
+    })),
+  setIsEditDerived: (value) =>
+    set((state) => ({
+      isEditDerived: typeof value === 'function' ? value(state.isEditDerived) : value
+    })),
+  setDerivationId: (value) =>
+    set((state) => ({
+      derivationId: typeof value === 'function' ? value(state.derivationId) : value
     })),
 
   // Update visible columns for a specific table
@@ -1713,6 +1725,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },
+  updateDerivedThreatScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/derved_threat_scene`;
+    const res = await PATCH_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
 
   updateAttackScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/attacks`;
@@ -1720,6 +1738,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     return res;
   },
+
   updateSidebarNodes: async (newTemplate) => {
     const res = await axios.patch(`${configuration.apiBaseUrl}sidebarNode/${newTemplate.id}`, newTemplate);
     return res;

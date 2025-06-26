@@ -43,6 +43,7 @@ import { TsSteps } from '../../utils/Steps';
 import FormPopper from '../Poppers/FormPopper';
 import { useSelector } from 'react-redux';
 import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import CloseIcon from '@mui/icons-material/Close';
 
 const selector = (state) => ({
   model: state.model,
@@ -57,7 +58,12 @@ const selector = (state) => ({
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
   deleteThreatScenario: state.deleteThreatScenario,
-  selectedthreatIds: state.selectedthreatIds
+  selectedthreatIds: state.selectedthreatIds,
+  updateDerivedThreatScenario: state.updateDerivedThreatScenario,
+  derivedIds: state.derivedIds,
+  isEditDerived: state.isEditDerived,
+  derivationId: state.derivationId,
+  setIsEditDerived: state.setIsEditDerived
 });
 
 const notify = (message, status) => toast[status](message);
@@ -99,8 +105,12 @@ const Tstable = () => {
     UserDefinedId,
     deleteThreatScenario,
     getRiskTreatment,
-    addThreatScene,
-    selectedthreatIds
+    selectedthreatIds,
+    updateDerivedThreatScenario,
+    derivedIds,
+    isEditDerived,
+    derivationId,
+    setIsEditDerived
   } = useStore(selector, shallow);
   const visibleColumns = useStore((state) => state.threatScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -122,6 +132,29 @@ const Tstable = () => {
   const Head = useMemo(() => {
     return TsTableHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
+
+  //To render the selected rows for derived updation
+  useEffect(() => {
+    if (isEditDerived && derivedIds && rows) {
+      const matchedRows = derivedIds
+        .map((derivedItem) => {
+          const matched = rows?.find((item) => item.ID === derivedItem.propId);
+          return matched
+            ? {
+                ...matched,
+                propId: derivedItem.propId,
+                SNo: derivedItem.SNo || matched.SNo,
+                type: 'derived'
+              }
+            : null;
+        })
+        .filter(Boolean);
+
+      if (matchedRows.length > 0) {
+        setSelectedRows(matchedRows);
+      }
+    }
+  }, [isEditDerived, derivationId, derivedIds]); // Run when these dependencies change
 
   // Sorting function
   const stableSort = (array, comparator) => {
@@ -222,10 +255,43 @@ const Tstable = () => {
     setSelectedRow({});
   };
 
-  const handleOpenModalTs = () => setOpenModal((prev) => ({ ...prev, threat: true }));
-  const handleCloseTs = () => setOpenModal((prev) => ({ ...prev, threat: false }));
-
   const handleOpenDerived = () => setOpenModal((prev) => ({ ...prev, derived: true }));
+  const handleCloseTs = () => setOpenModal((prev) => ({ ...prev, threat: false }));
+  const handleCloseEditDerived = () => {
+    setIsEditDerived(false);
+    setSelectedRows([]);
+  };
+
+  const handleUpdateDerived = () => {
+    const ids = selectedRows?.map((row) => ({
+      propId: row?.propId,
+      nodeId: row?.nodeId,
+      rowId: row?.rowId
+    }));
+    const details = {
+      'model-id': model?._id,
+      threatIds: JSON.stringify(ids),
+      'scene-id': derivationId
+    };
+    updateDerivedThreatScenario(details)
+      .then((res) => {
+        // console.log('res page', res);
+        if (!res.error) {
+          notify(res?.message ?? 'Updated the derivation', 'success');
+          setTimeout(() => {
+            handleCloseEditDerived();
+            getThreatScenario(model?._id);
+          }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        // console.log('err', err);
+        notify('Something went wrong', 'error');
+      });
+  };
+
   const handleCloseDerived = () => {
     setOpenModal((prev) => ({ ...prev, derived: false }));
     setSelectedRows([]);
@@ -534,17 +600,34 @@ const Tstable = () => {
               <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
               Filter Columns
             </Button>
-            <Button
-              id="derive-btn"
-              sx={{ fontSize: '0.85rem' }}
-              variant="contained"
-              color="primary"
-              startIcon={<CircleIcon />} // Or any appropriate icon
-              onClick={handleOpenDerived}
-              disabled={selectedRows.length === 0}
-            >
-              Derive
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                sx={{ fontSize: '0.85rem' }}
+                variant="contained"
+                color="primary"
+                startIcon={<CircleIcon />}
+                onClick={isEditDerived ? handleUpdateDerived : handleOpenDerived}
+                disabled={selectedRows.length === 0}
+              >
+                {isEditDerived ? 'Update' : 'Derive'}
+              </Button>
+
+              {isEditDerived && (
+                <IconButton
+                  size="small"
+                  onClick={handleCloseEditDerived}
+                  sx={{
+                    marginLeft: 1,
+                    color: 'error.main',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)' // light red on hover
+                    }
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
             <Button
               id="delete-btn"
               sx={{ fontSize: '0.85rem' }}

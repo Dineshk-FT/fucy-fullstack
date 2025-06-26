@@ -264,7 +264,6 @@ const selector = (state) => ({
   getGlobalAttackTrees: state.getGlobalAttackTrees,
   deleteAttacks: state.deleteAttacks,
   setIsNodePasted: state.setIsNodePasted,
-  setSelectedThreatIds: state.setSelectedThreatIds,
   isChanged: state.isChanged,
   setIsChanged: state.setIsChanged,
   isAttackChanged: state.isAttackChanged,
@@ -312,7 +311,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     getGlobalAttackTrees,
     deleteAttacks,
     setIsNodePasted,
-    setSelectedThreatIds,
     isChanged,
     isAttackChanged,
     setIsChanged,
@@ -900,17 +898,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
               null,
               renderSubItems(data?.subs, handleOpenTable, null, (sub) => {
                 return sub.Details?.flatMap((detail, i) => {
-                  return (
-                    <ThreatScenarios
-                      key={detail?.id}
-                      sub={sub}
-                      detail={detail}
-                      i={i}
-                      setSelectedThreatIds={setSelectedThreatIds}
-                      onDragStart={onDragStart}
-                      getLabel={getLabel}
-                    />
-                  );
+                  return <ThreatScenarios key={detail?.id} sub={sub} detail={detail} i={i} onDragStart={onDragStart} getLabel={getLabel} />;
                 });
               })
             )}
