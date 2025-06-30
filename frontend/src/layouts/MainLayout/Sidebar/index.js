@@ -80,10 +80,9 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
               sidebarWidth={sidebarWidth}
             />
           </PerfectScrollbar>
-          <IconButton
+          {/* <IconButton
             sx={{
               position: 'absolute',
-              // border: `1px solid ${color?.title}`,
               marginTop: 5.7,
               marginRight: -1,
               padding: '0px',
@@ -103,7 +102,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             size="small"
           >
             <HelpOutlineIcon fontSize="small" />
-          </IconButton>
+          </IconButton> */}
           <IconButton
             onClick={handleDrawerToggle}
             sx={{

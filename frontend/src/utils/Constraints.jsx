@@ -97,6 +97,8 @@ export const pageNodeTypes = {
 };
 
 export const getNodeDetails = (type, name, count, newNode) => {
+  const width = type === 'data' ? 100 : 150;
+  const height = type === 'data' ? 30 : 50;
   const dataNode = {
     id: uid(),
     data: {
@@ -113,14 +115,14 @@ export const getNodeDetails = (type, name, count, newNode) => {
         borderColor: 'gray',
         borderWidth: '2px',
         borderStyle: 'solid',
-        width: 150,
-        height: 50
+        width: width,
+        height: height
       }
     },
     type: type,
     properties: newNode?.properties ?? ['Confidentiality'],
-    width: 150,
-    height: 50,
+    width: width,
+    height: height,
     isAsset: false
   };
   const updatePositionWithinRange = (position, range) => {

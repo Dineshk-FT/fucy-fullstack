@@ -129,7 +129,7 @@ iframe#webpack-dev-server-client-overlay {
   border-radius: 3px;
   padding: 10px 15px;
 } */
-.edge-container{
+.edge-container {
   z-index: 1500;
 }
 
@@ -218,10 +218,11 @@ iframe#webpack-dev-server-client-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50% / 25%;
+  border-radius: 999px; /* Full pill shape */
+  padding: 10px 20px;
   /* background: linear-gradient(180deg, #ddd, #ea4848); */
-  padding: 10px 15px;
 }
+
 /* 
 .modal {
     position: absolute;
