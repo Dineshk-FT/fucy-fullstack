@@ -5,6 +5,8 @@ import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
   TableChart as TableIcon,
+  LibraryBooks as LibraryBooksIcon,
+  CreateNewFolderOutlined as CreateNewFolderOutlinedIcon,
   CreateNewFolder as NewFolderIcon,
   DriveFileRenameOutline as RenameIcon,
   PlaylistAdd as AddListIcon,
@@ -13,13 +15,13 @@ import {
   ExpandLess as ExpandLessIcon,
   Help as HelpIcon
 } from '@mui/icons-material';
-import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
 import SelectProject from '../../../../components/Modal/SelectProject';
 import AddModel from '../../../../components/Modal/AddModal';
 import RenameProject from '../../../../components/Modal/RenameModal';
 import DeleteProject from '../../../../components/Modal/DeleteProjects';
+import LibraryModal from '../../../../components/Modal/LibraryModal';
 import useStore from '../../../../store/Zustand/store';
 import AttackTreeRibbonModal from '../../../../components/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../themes/ColorTheme';
@@ -74,7 +76,8 @@ const LeftSection = () => {
     importProject,
     isChanged,
     isAttackChanged,
-    setOpenSave
+    setOpenSave,
+    convertToLibrary
   } = useStore(selector, shallow);
 
   const [activeTab, setActiveTab] = useState('Project');
@@ -83,6 +86,7 @@ const LeftSection = () => {
     Rename: false,
     Open: false,
     Delete: false,
+    Library: false,
     AttackModal: false,
     AIModal: false
   });
@@ -105,10 +109,10 @@ const LeftSection = () => {
 
   const handleMouseLeave = useCallback(() => {
     // Only hide the hovered tab if no modal is open
-    if (!openModal.Open && !openModal.Delete) {
+    if (!openModal.Open && !openModal.Delete && !openModal.Library) {
       hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
     }
-  }, [openModal.Open, openModal.Delete]);
+  }, [openModal.Open, openModal.Delete, openModal.Library]);
 
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -208,11 +212,6 @@ const LeftSection = () => {
     fileInput.click();
   };
 
-  const handleHelpClick = useCallback(() => {
-    const pdfUrl = pdfFile;
-    window.open(pdfUrl, '_blank');
-  }, []);
-
   const handleTabChange = useCallback(
     (e, tabName) => {
       e.stopPropagation();
@@ -228,8 +227,7 @@ const LeftSection = () => {
         'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
         'Attack Path': handleAttackTableClick,
         Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
-        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8'),
-        Help: handleHelpClick
+        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
       };
       actions[tabName]?.();
     },
@@ -311,6 +309,29 @@ const LeftSection = () => {
     setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
   };
 
+  const handleLibraryAdded = useCallback(() => {
+    // Refresh the library list when a new library is added
+    getModels(); // Assuming this refreshes the library list
+  }, [getModels]);
+
+  const handleConvertToLibrary = useCallback(async (e) => {
+    e?.stopPropagation?.();
+
+    if (!model?._id) {
+      console.error('No active model to convert');
+      return;
+    }
+
+    try {
+      const success = await useStore.getState().convertToLibrary(model._id);
+      if (success) {
+        await getModels();
+      }
+    } catch (error) {
+      console.error('Failed to convert model:', error);
+    }
+  }, [model?._id, getModels]);
+
   const tabs = useMemo(
     () => [
       {
@@ -322,6 +343,13 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick }
+        ]
+      },
+      {
+        name: 'Library',
+        options: [
+          { label: 'Open', icon: LibraryBooksIcon, action: (e) => handleOpenModal('Library', e) },
+          { label: 'Make Library', icon: CreateNewFolderOutlinedIcon, action: handleConvertToLibrary, disabled: !model?._id }
         ]
       },
       {
@@ -431,8 +459,8 @@ const LeftSection = () => {
           { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) },
           { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick },
           { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) },
-          { 
-            label: 'AI Assistant', 
+          {
+            label: 'AI Assistant',
             icon: () => (
               <img
                 src="https://img.icons8.com/ios-filled/24/1e88e5/artificial-intelligence.png"
@@ -441,9 +469,9 @@ const LeftSection = () => {
                   width: 24,
                   height: 24
                 }}
-              /> 
-            ), 
-            action: (e) => handleContext('AI Assistant', e) 
+              />
+            ),
+            action: (e) => handleContext('AI Assistant', e)
           }
         ]
       },
@@ -526,24 +554,14 @@ const LeftSection = () => {
             action: () => handleClick('Threat Assessment & Risk Treatment')
           }
         ]
-      },
-      {
-        name: 'Help',
-        options: [
-          {
-            label: 'Documentation',
-            icon: HelpIcon,
-            action: handleHelpClick
-          }
-        ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleHelpClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
   );
 
-  const handleCloseModal = useCallback((e, modalName) => {
-    e.stopPropagation();
-    setOpenModal((prev) => ({ ...prev, [modalName]: false }));
+  const handleCloseModal = useCallback((e, modalKey) => {
+    if (e) e.stopPropagation();
+    setOpenModal((prev) => ({ ...prev, [modalKey]: false }));
   }, []);
 
   const currentTabOptions = useMemo(() => tabs.find((tab) => tab.name === activeTab)?.options || [], [tabs, activeTab]);
@@ -806,22 +824,22 @@ const LeftSection = () => {
       </Menu>
 
       {/* Project Modals */}
-      <AddModel 
-        getModels={getModels} 
-        open={openModal.New} 
-        handleClose={(e) => handleCloseModal(e, 'New')} 
+      <AddModel
+        getModels={getModels}
+        open={openModal.New}
+        handleClose={(e) => handleCloseModal(e, 'New')}
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
-      <RenameProject 
-        open={openModal.Rename} 
-        handleClose={(e) => handleCloseModal(e, 'Rename')} 
+
+      <RenameProject
+        open={openModal.Rename}
+        handleClose={(e) => handleCloseModal(e, 'Rename')}
         Models={Models}
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
+
       <SelectProject
         open={openModal.Open}
         handleClose={(e) => handleCloseModal(e, 'Open')}
@@ -832,7 +850,18 @@ const LeftSection = () => {
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
+
+      <LibraryModal
+        open={openModal.Library}
+        handleClose={(e) => handleCloseModal(e, 'Library')}
+        Models={Models}
+        isLoading={isLoading}
+        anchorEl={anchorEl}
+        disablePortal
+        style={{ position: 'fixed' }}
+        onLibraryAdded={handleLibraryAdded}
+      />
+
       <DeleteProject
         open={openModal.Delete}
         model={model}
