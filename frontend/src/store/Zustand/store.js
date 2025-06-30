@@ -1310,6 +1310,74 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  // Library related functions
+  getLibraries: async () => {
+    try {
+      const res = await axios({
+        method: 'GET',
+        url: `${configuration.apiBaseUrl}v1/listLibraries`,
+        headers: {
+          ...createHeaders().headers
+        }
+      });
+      
+      // Only return the required fields that are actually used in the UI
+      return Array.isArray(res.data) 
+        ? res.data
+          .filter(lib => lib?._id && lib?.name) // Filter out invalid entries
+          .map(({ _id, name }) => ({ _id, name })) // Only keep needed fields
+        : [];
+    } catch (error) {
+      console.error('Error fetching libraries:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+      }
+      return [];
+    }
+  },
+
+  convertToLibrary: async (modelId) => {
+    try {
+      const userId = sessionStorage.getItem('user-id') || '';
+      
+      if (!userId) throw new Error('User ID not found in session');
+      if (!modelId) throw new Error('Model ID is required');
+  
+      const formData = new FormData();
+      formData.append('keyId', modelId);
+      formData.append('source', 'model');
+      formData.append('userId', userId);
+  
+      const { data } = await axios.post(
+        `${configuration.apiBaseUrl}v1/cloneModelOrLibrary`,
+        formData,
+        {
+          headers: {
+            ...createHeaders().headers,
+            'Accept': 'application/json'
+            // Note: Do NOT manually set 'Content-Type' — let Axios handle it
+          },
+          validateStatus: () => true
+        }
+      );
+  
+      if (data?.success) {
+        console.log('Successfully converted model to library');
+        return true;
+      }
+  
+      throw new Error(data?.message || 'Failed to convert model to library');
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error('Convert to library failed:', errorMessage, { 
+        error,
+        requestData: { modelId, userId: sessionStorage.getItem('user-id') }
+      });
+      return false;
+    }
+  },
+
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
