@@ -51,7 +51,7 @@ const CanvasSlice = createSlice({
       return { ...state, drawerwidthChange: Number(action.payload) };
     },
     setAnchorEl: (state, action) => {
-      // console.log('action', action?.payload?.id);
+      // console.log('action', action?.payload);
       return { ...state, anchorEl: { [action.payload.type]: action.payload.value } };
     },
     clearAnchorEl: (state) => {

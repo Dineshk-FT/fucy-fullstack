@@ -139,24 +139,8 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     }
   }, [isEditing, labelValue]);
 
-  const handleInfoClick = (e) => {
-    setPropertiesOpen(false);
-    const selectedNode = nodes.find((node) => node.id === id);
-    const { isAsset, properties } = selectedNode;
-    dispatch(setSelectedBlock({ id, data }));
-    dispatch(setAnchorEl({ type: 'node', value: id }));
-    setSelectedElement(selectedNode);
-    dispatch(
-      setDetails({
-        name: data?.label ?? '',
-        properties: properties ?? [],
-        isAsset: isAsset ?? false
-      })
-    );
-  };
-
-  const handleDetailClick = () => {
-    setPropertiesOpen(true);
+  const handleInfoClick = (open) => {
+    setPropertiesOpen(open);
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
@@ -303,7 +287,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleInfoClick();
+              handleInfoClick(false);
             }}
             style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
           >
@@ -312,7 +296,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleDetailClick();
+              handleInfoClick(true);
             }}
             style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
           >

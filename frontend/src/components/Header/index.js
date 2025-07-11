@@ -323,7 +323,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     );
     setStyles((prev) => ({ ...prev, borderWidth: `${newWidth}px` }));
     setSelectedElement((prev) => ({
-      ...hypothetical,
+      ...prev,
       data: { ...prev.data, style: { ...prev.data.style, borderWidth: `${newWidth}px` } }
     }));
   };
