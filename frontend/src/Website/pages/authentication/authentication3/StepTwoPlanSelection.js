@@ -2,13 +2,7 @@
 import { useState } from 'react';
 import { Box, Button, Grid, Paper, Typography } from '@mui/material';
 
-const plans = [
-  { id: 'free', name: 'Free Trial', details: '2 Weeks Free', price: '₹0' },
-  { id: 'monthly', name: 'Monthly', details: '₹499 per month', price: '₹499' },
-  { id: 'yearly', name: 'Yearly', details: '₹4999 per year', price: '₹4999' }
-];
-
-const StepTwoPlanSelection = ({ handleNext, handleBack, data }) => {
+const StepTwoPlanSelection = ({ handleNext, handleBack, data, plans }) => {
   const [selected, setSelected] = useState(data.plan || '');
 
   return (
@@ -16,7 +10,7 @@ const StepTwoPlanSelection = ({ handleNext, handleBack, data }) => {
       <Typography color="primary" variant="h4" mb={4} textAlign="center">
         Select a Plan
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent={'center'}>
         {plans.map((plan) => (
           <Grid item xs={12} sm={4} key={plan.id}>
             <Paper
@@ -25,7 +19,7 @@ const StepTwoPlanSelection = ({ handleNext, handleBack, data }) => {
                 p: 3,
                 borderRadius: 3,
                 textAlign: 'center',
-                border: selected === plan.id ? '2px solid #2EC1AC' : '1px solid #ddd',
+                border: selected === plan.id ? '2px solid #0BDA51' : '1px solid #ddd',
                 boxShadow: selected === plan.id ? '0 0 12px rgba(46, 193, 172, 0.3)' : '',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',

@@ -25,9 +25,31 @@ export const login = createAsyncThunk('login', async ({ username, password }, th
 export const register = createAsyncThunk('register', async (details, thunkAPI) => {
   const FormData = require('form-data');
   let data = new FormData();
-  data.append('username', details?.email);
-  data.append('password', details?.password);
+
+  // ✅ Loop over all fields safely
+  Object.entries(details).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      data.append(key, value);
+    }
+  });
+
   const URL = `${configuration.apiBaseUrl}register`;
+
+  try {
+    const res = await axios.post(URL, data);
+    return res;
+  } catch (error) {
+    console.error('Register failed', error);
+    return thunkAPI.rejectWithValue({ ...error.response, name: 'register' });
+  }
+});
+
+export const CheckUserStatus = async (details, thunkAPI) => {
+  const FormData = require('form-data');
+  let data = new FormData();
+  data.append('email', details?.email);
+  data.append('org', details?.org);
+  const URL = `${configuration.apiBaseUrl}check-user-status`;
   try {
     const res = await axios.post(URL, data);
     // console.log('res', res);
@@ -36,8 +58,7 @@ export const register = createAsyncThunk('register', async (details, thunkAPI) =
     console.log('error', thunkAPI.rejectWithValue({ ...error.response, name: 'register' }));
     if (error) return thunkAPI.rejectWithValue({ ...error.response, name: 'register' });
   }
-});
-
+};
 export const GET_CALL = async (modelId, url) => {
   let data = new FormData();
   data.append('model-id', modelId);

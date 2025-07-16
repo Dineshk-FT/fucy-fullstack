@@ -2,8 +2,9 @@
 import { Box, Grid, TextField, Button, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { CheckUserStatus } from '../../../../services/api';
 
-const StepOneUserInfo = ({ handleNext, data }) => {
+const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
   return (
     <Formik
       initialValues={{
@@ -22,7 +23,28 @@ const StepOneUserInfo = ({ handleNext, data }) => {
         organization: Yup.string().required('Organization required'),
         role: Yup.string().required('Role required')
       })}
-      onSubmit={handleNext}
+      onSubmit={async (values) => {
+        try {
+          const res = await CheckUserStatus({
+            email: values.email,
+            org: values.organization
+          });
+
+          // console.log('CheckUserStatus res', res);
+
+          const { exists, trialUsed, trialExpired } = res.data;
+
+          // logic: if no account + trial not used -> first timer
+          const isFirstTimer = !exists || (!trialUsed && !trialExpired);
+          setIsFirstTimer(isFirstTimer);
+
+          // Save form values and move to next
+          handleNext(values);
+        } catch (error) {
+          console.error('CheckUserStatus failed:', error);
+          // Optional: show toast or inline error
+        }
+      }}
     >
       {({ values, handleChange, handleSubmit, errors, touched }) => (
         <form onSubmit={handleSubmit}>

@@ -3,7 +3,19 @@ import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
-const StepThreePayment = ({ handleBack, data }) => {
+const StepThreePayment = ({ handleBack, data, handleSubmit, isFirstTimer, selectedPlan }) => {
+  // Check if payment is optional:
+  const isTrial = isFirstTimer && selectedPlan === 'trial';
+
+  const validationSchema = isTrial
+    ? Yup.object().shape({}) // No validation if trial
+    : Yup.object().shape({
+        cardNumber: Yup.string().required('Card Number required'),
+        expiry: Yup.string().required('Expiry Date required'),
+        cvc: Yup.string().required('CVC required'),
+        nameOnCard: Yup.string().required('Name required')
+      });
+
   return (
     <Formik
       initialValues={{
@@ -12,21 +24,13 @@ const StepThreePayment = ({ handleBack, data }) => {
         cvc: '',
         nameOnCard: ''
       }}
-      validationSchema={Yup.object().shape({
-        cardNumber: Yup.string().required('Card Number required'),
-        expiry: Yup.string().required('Expiry Date required'),
-        cvc: Yup.string().required('CVC required'),
-        nameOnCard: Yup.string().required('Name required')
-      })}
-      onSubmit={(values) => {
-        console.log({ ...data, ...values });
-        alert('Registration Complete!');
-      }}
+      validationSchema={validationSchema}
+      onSubmit={(values) => handleSubmit(values)}
     >
       {({ values, handleChange, handleSubmit, errors, touched }) => (
         <form onSubmit={handleSubmit}>
           <Typography color="primary" variant="h4" mb={2}>
-            Credit Card Details
+            Credit Card Details {isTrial && <>(optional for trial users)</>}
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12}>
