@@ -1320,12 +1320,12 @@ const useStore = createWithEqualityFn((set, get) => ({
           ...createHeaders().headers
         }
       });
-      
+
       // Only return the required fields that are actually used in the UI
-      return Array.isArray(res.data) 
+      return Array.isArray(res.data)
         ? res.data
-          .filter(lib => lib?._id && lib?.name) // Filter out invalid entries
-          .map(({ _id, name }) => ({ _id, name })) // Only keep needed fields
+            .filter((lib) => lib?._id && lib?.name) // Filter out invalid entries
+            .map(({ _id, name }) => ({ _id, name })) // Only keep needed fields
         : [];
     } catch (error) {
       console.error('Error fetching libraries:', error);
@@ -1339,57 +1339,52 @@ const useStore = createWithEqualityFn((set, get) => ({
   convertToLibrary: async (modelId) => {
     try {
       const userId = sessionStorage.getItem('user-id') || '';
-      
+
       if (!userId) throw new Error('User ID not found in session');
       if (!modelId) throw new Error('Model ID is required');
-      
+
       // Get current model name for better error messages
       const currentModel = useStore.getState().model;
       if (!currentModel) throw new Error('No active model found');
-  
+
       // Check for duplicate library names first
       const librariesResponse = await axios({
         method: 'GET',
         url: `${configuration.apiBaseUrl}v1/listLibraries`,
         headers: createHeaders().headers
       });
-      
+
       if (Array.isArray(librariesResponse.data)) {
-        const duplicateLibrary = librariesResponse.data.find(
-          lib => lib?.name?.toLowerCase() === currentModel.name?.toLowerCase()
-        );
+        const duplicateLibrary = librariesResponse.data.find((lib) => lib?.name?.toLowerCase() === currentModel.name?.toLowerCase());
         if (duplicateLibrary) {
           throw new Error(`A library with the name "${currentModel.name}" already exists.`);
         }
       }
-  
+
       const formData = new FormData();
       formData.append('keyId', modelId);
       formData.append('source', 'model');
       formData.append('userId', userId);
-  
-      const { data } = await axios.post(
-        `${configuration.apiBaseUrl}v1/cloneModelOrLibrary`,
-        formData,
-        {
-          headers: {
-            ...createHeaders().headers,
-            'Accept': 'application/json'
-          },
-          validateStatus: () => true
-        }
-      );
-  
-      if (data?.success) {
-        console.log(`Successfully converted model "${currentModel.name}" to library with ID: ${modelId}`);
+
+      const res = await axios.post(`${configuration.apiBaseUrl}v1/cloneModelOrLibrary`, formData, {
+        headers: {
+          ...createHeaders().headers,
+          Accept: 'application/json'
+        },
+        validateStatus: () => true
+      });
+      // console.log('res', res);
+      // console.log('data', data);
+      const data = res?.data;
+
+      if (res?.status === 200) {
         return { success: true, modelName: currentModel.name };
       }
-  
+
       throw new Error(data?.message || 'Failed to convert model to library');
-      
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
-      console.error('Convert to library failed:', errorMessage, { 
+      console.error('Convert to library failed:', errorMessage, {
         error,
         requestData: { modelId, userId: sessionStorage.getItem('user-id') }
       });
