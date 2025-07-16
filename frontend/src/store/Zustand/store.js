@@ -1342,6 +1342,26 @@ const useStore = createWithEqualityFn((set, get) => ({
       
       if (!userId) throw new Error('User ID not found in session');
       if (!modelId) throw new Error('Model ID is required');
+      
+      // Get current model name for better error messages
+      const currentModel = useStore.getState().model;
+      if (!currentModel) throw new Error('No active model found');
+  
+      // Check for duplicate library names first
+      const librariesResponse = await axios({
+        method: 'GET',
+        url: `${configuration.apiBaseUrl}v1/listLibraries`,
+        headers: createHeaders().headers
+      });
+      
+      if (Array.isArray(librariesResponse.data)) {
+        const duplicateLibrary = librariesResponse.data.find(
+          lib => lib?.name?.toLowerCase() === currentModel.name?.toLowerCase()
+        );
+        if (duplicateLibrary) {
+          throw new Error(`A library with the name "${currentModel.name}" already exists.`);
+        }
+      }
   
       const formData = new FormData();
       formData.append('keyId', modelId);
@@ -1355,15 +1375,14 @@ const useStore = createWithEqualityFn((set, get) => ({
           headers: {
             ...createHeaders().headers,
             'Accept': 'application/json'
-            // Note: Do NOT manually set 'Content-Type' — let Axios handle it
           },
           validateStatus: () => true
         }
       );
   
       if (data?.success) {
-        console.log('Successfully converted model to library');
-        return true;
+        console.log(`Successfully converted model "${currentModel.name}" to library with ID: ${modelId}`);
+        return { success: true, modelName: currentModel.name };
       }
   
       throw new Error(data?.message || 'Failed to convert model to library');
@@ -1374,7 +1393,7 @@ const useStore = createWithEqualityFn((set, get) => ({
         error,
         requestData: { modelId, userId: sessionStorage.getItem('user-id') }
       });
-      return false;
+      return { success: false, error: errorMessage };
     }
   },
 
