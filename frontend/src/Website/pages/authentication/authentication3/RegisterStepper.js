@@ -7,6 +7,7 @@ import StepTwoPlanSelection from './StepTwoPlanSelection';
 import StepThreePayment from './StepThreePayment';
 import { register } from '../../../../services/api';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 const steps = ['User Info', 'Select Plan', 'Payment'];
 
@@ -15,6 +16,7 @@ const RegisterStepper = () => {
   const [formValues, setFormValues] = useState({});
   const [isFirstTimer, setIsFirstTimer] = useState(true); // default true
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const notify = (message, status) => toast[status](message);
   // Replace with real check from backend!
 
@@ -52,6 +54,11 @@ const RegisterStepper = () => {
       console.log('Registration success:', res);
       if (!res.error) {
         notify(res?.data?.message ?? 'Registered Successfully', 'success');
+        setTimeout(() => {
+          navigate('/login');
+        }, 800);
+      } else {
+        notify(res?.data?.error ?? 'Something went wrong', 'error');
       }
 
       // ✅ Redirect, toast or show success UI here

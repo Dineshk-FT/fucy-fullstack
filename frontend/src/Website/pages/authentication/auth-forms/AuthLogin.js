@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 // material-ui
@@ -19,7 +19,8 @@ import {
   OutlinedInput,
   Stack,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  Alert
 } from '@mui/material';
 
 // third party
@@ -33,15 +34,12 @@ import AnimateButton from '../../../../components/extended/AnimateButton';
 // assets
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-
 import Google from '../../../../assets/images/icons/social-google.svg';
 import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
-import { login } from '../../../../services/api';
+import { login, checkUserStatus, CheckUserStatus } from '../../../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { setModelId } from '../../../../store/slices/PageSectionSlice';
-
-// ============================|| FIREBASE - LOGIN ||============================ //
 
 const FirebaseLogin = ({ ...others }) => {
   const dispatch = useDispatch();
@@ -51,12 +49,16 @@ const FirebaseLogin = ({ ...others }) => {
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const customization = useSelector((state) => state.customization);
   const [checked, setChecked] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [licenseWarning, setLicenseWarning] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [orgInput, setOrgInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
 
   const googleHandler = async () => {
     console.error('Login');
   };
 
-  const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -65,14 +67,81 @@ const FirebaseLogin = ({ ...others }) => {
     event.preventDefault();
   };
 
-  const handleLogin = (email, password) => {
-    dispatch(login({ username: email, password }))
+  const checkLicenseStatus = useCallback(async (email, org) => {
+    if (!email || !org) return;
+
+    setCheckingStatus(true);
+    try {
+      const response = await CheckUserStatus({
+        email: email.trim(), // No toLowerCase() - case sensitive
+        org: org.trim() // No toLowerCase() - case sensitive
+      });
+      // console.log('response', response);
+      const data = response.data;
+
+      if (!data.exists) {
+        setLicenseWarning({
+          severity: 'error',
+          message: data.message || 'User not found'
+        });
+        return;
+      }
+
+      if (data.message === 'User not found in this organization') {
+        setLicenseWarning({
+          severity: 'error',
+          message: 'User not found in this organization'
+        });
+        return;
+      }
+
+      if (data.trialUsed && data.license_end) {
+        const expirationDate = new Date(data.license_end);
+        const today = new Date();
+        const timeDiff = expirationDate.getTime() - today.getTime();
+        const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+        if (daysRemaining <= 0) {
+          setLicenseWarning({
+            severity: 'error',
+            message: 'Your trial license has expired!'
+          });
+        } else if (daysRemaining <= 14) {
+          setLicenseWarning({
+            severity: 'warning',
+            message: `Your trial license expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
+          });
+        } else {
+          setLicenseWarning(null);
+        }
+      }
+    } catch (error) {
+      console.log('error', error);
+      setLicenseWarning({
+        severity: 'error',
+        message: 'Error checking license status'
+      });
+    } finally {
+      setCheckingStatus(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!orgInput) return;
+
+    const timer = setTimeout(() => {
+      checkLicenseStatus(emailInput, orgInput);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [orgInput, emailInput, checkLicenseStatus]);
+
+  const handleLogin = (email, password, org) => {
+    dispatch(login({ username: email, password, org }))
       .then((res) => {
         if (res.payload.status === 200 || res.payload.status === 201) {
-          // console.log('res', res);
           notify('Login Successfully', 'success');
           setTimeout(() => {
-            // sessionStorage.setItem('isLoggedIn', true);
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
             dispatch(changeCanvasPage('canvas'));
@@ -90,57 +159,6 @@ const FirebaseLogin = ({ ...others }) => {
   return (
     <>
       <Grid container direction="column" justifyContent="center" spacing={2}>
-        {/* <Grid item xs={12}>
-          <AnimateButton>
-            <Button
-              disableElevation
-              fullWidth
-              onClick={googleHandler}
-              size="large"
-              variant="outlined"
-              sx={{
-                color: 'grey.700',
-                backgroundColor: theme.palette.grey[50],
-                borderColor: theme.palette.grey[100]
-              }}
-            >
-              <Box sx={{ mr: { xs: 1, sm: 2, width: 20 } }}>
-                <img src={Google} alt="google" width={16} height={16} style={{ marginRight: matchDownSM ? 8 : 16 }} />
-              </Box>
-              Sign in with Google
-            </Button>
-          </AnimateButton>
-        </Grid>
-        <Grid item xs={12}>
-          <Box
-            sx={{
-              alignItems: 'center',
-              display: 'flex'
-            }}
-          >
-            <Divider sx={{ flexGrow: 1 }} orientation="horizontal" />
-
-            <Button
-              variant="outlined"
-              sx={{
-                cursor: 'unset',
-                m: 2,
-                py: 0.5,
-                px: 7,
-                borderColor: `${theme.palette.grey[100]} !important`,
-                color: `${theme.palette.grey[900]}!important`,
-                fontWeight: 500,
-                borderRadius: `${customization.borderRadius}px`
-              }}
-              disableRipple
-              disabled
-            >
-              OR
-            </Button>
-
-            <Divider sx={{ flexGrow: 1 }} orientation="horizontal" />
-          </Box>
-        </Grid> */}
         <Grid item xs={12} container alignItems="center" justifyContent="center">
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle1">Sign in with Email address</Typography>
@@ -152,18 +170,20 @@ const FirebaseLogin = ({ ...others }) => {
         initialValues={{
           email: '',
           password: '',
+          org: '',
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          // email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          email: Yup.string().max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          email: Yup.string().max(255).required('Email/Username is required'),
+          password: Yup.string().max(255).required('Password is required'),
+          org: Yup.string().max(255).required('Organization is required')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
             if (scriptedRef.current) {
               setStatus({ success: true });
               setSubmitting(false);
+              handleLogin(values.email, values.password, values.org);
             }
           } catch (err) {
             console.error(err);
@@ -177,15 +197,18 @@ const FirebaseLogin = ({ ...others }) => {
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
-            <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
+            <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput, mb: 2 }}>
               <InputLabel htmlFor="outlined-adornment-email-login">Email Address / Username</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-login"
-                type="email"
+                type="text"
                 value={values.email}
                 name="email"
                 onBlur={handleBlur}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  setEmailInput(e.target.value);
+                }}
                 label="Email Address / Username"
                 inputProps={{}}
               />
@@ -196,7 +219,29 @@ const FirebaseLogin = ({ ...others }) => {
               )}
             </FormControl>
 
-            <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
+            <FormControl fullWidth error={Boolean(touched.org && errors.org)} sx={{ ...theme.typography.customInput, mb: 2 }}>
+              <InputLabel htmlFor="outlined-adornment-org-login">Organization</InputLabel>
+              <OutlinedInput
+                id="outlined-adornment-org-login"
+                type="text"
+                value={values.org}
+                name="org"
+                onBlur={handleBlur}
+                onChange={(e) => {
+                  handleChange(e);
+                  setOrgInput(e.target.value);
+                }}
+                label="Organization"
+                inputProps={{}}
+              />
+              {touched.org && errors.org && (
+                <FormHelperText error id="standard-weight-helper-text-org-login">
+                  {errors.org}
+                </FormHelperText>
+              )}
+            </FormControl>
+
+            <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput, mb: 2 }}>
               <InputLabel htmlFor="outlined-adornment-password-login">Password</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-password-login"
@@ -227,6 +272,13 @@ const FirebaseLogin = ({ ...others }) => {
                 </FormHelperText>
               )}
             </FormControl>
+
+            {licenseWarning && (
+              <Box sx={{ mb: 2 }}>
+                <Alert severity={licenseWarning.severity}>{licenseWarning.message}</Alert>
+              </Box>
+            )}
+
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
               <FormControlLabel
                 control={
@@ -248,15 +300,14 @@ const FirebaseLogin = ({ ...others }) => {
               <AnimateButton>
                 <Button
                   disableElevation
-                  disabled={isSubmitting}
-                  onClick={() => handleLogin(values?.email, values?.password)}
+                  disabled={isSubmitting || checkingStatus}
                   fullWidth
                   size="large"
                   type="submit"
                   variant="contained"
                   color="secondary"
                 >
-                  Sign in
+                  {checkingStatus ? 'Checking...' : 'Sign in'}
                 </Button>
               </AnimateButton>
             </Box>

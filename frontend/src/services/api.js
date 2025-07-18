@@ -43,8 +43,40 @@ export const register = createAsyncThunk('register', async (details, thunkAPI) =
     return thunkAPI.rejectWithValue({ ...error.response, name: 'register' });
   }
 });
+export const SendVerificationOTP = async (details) => {
+  const FormData = require('form-data');
+  let data = new FormData();
+  data.append('email', details?.email);
 
-export const CheckUserStatus = async (details, thunkAPI) => {
+  const URL = `${configuration.apiBaseUrl}send-verification-otp`;
+
+  try {
+    const res = await axios.post(URL, data);
+    return res;
+  } catch (error) {
+    console.error('Error while sending OTP:', error);
+    return error.response.data;
+  }
+};
+
+export const VerifyOTP = async (details) => {
+  const FormData = require('form-data');
+  let data = new FormData();
+  data.append('email', details?.email);
+  data.append('otp', details?.otp);
+
+  const URL = `${configuration.apiBaseUrl}verify-otp`;
+
+  try {
+    const res = await axios.post(URL, data);
+    return res;
+  } catch (error) {
+    console.error('Error while verifying OTP:', error);
+    return error.response.data;
+  }
+};
+
+export const CheckUserStatus = async (details) => {
   const FormData = require('form-data');
   let data = new FormData();
   data.append('email', details?.email);
@@ -55,8 +87,8 @@ export const CheckUserStatus = async (details, thunkAPI) => {
     // console.log('res', res);
     return res;
   } catch (error) {
-    console.log('error', thunkAPI.rejectWithValue({ ...error.response, name: 'register' }));
-    if (error) return thunkAPI.rejectWithValue({ ...error.response, name: 'register' });
+    console.error('Error while registering:', error);
+    return error.response.data;
   }
 };
 export const GET_CALL = async (modelId, url) => {
