@@ -1336,6 +1336,60 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  openLibrary: async (libraryId) => {
+    try {
+      const userId = sessionStorage.getItem('user-id') || '';
+      if (!userId) throw new Error('User ID not found in session');
+      if (!libraryId) throw new Error('Library ID is required');
+
+      const formData = new FormData();
+      formData.append('keyId', libraryId);
+      formData.append('source', 'library');
+      formData.append('userId', userId);
+
+      const { data } = await axios.post(
+        `${configuration.apiBaseUrl}v1/cloneModelOrLibrary`,
+        formData,
+        {
+          headers: {
+            ...createHeaders().headers,
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      if (!data) {
+        throw new Error('No response data received');
+      }
+
+      // Refresh the models list after successful operation
+      try {
+        await useStore.getState().getModels();
+      } catch (refreshError) {
+        console.error('Error refreshing models list:', refreshError);
+        // Don't fail the operation if refresh fails
+      }
+
+      return { 
+        success: true, 
+        newId: data.new_id,
+        message: data.message 
+      };
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error('Open library failed:', errorMessage, { 
+        error,
+        requestData: { libraryId, userId: sessionStorage.getItem('user-id') }
+      });
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
+    }
+  },
+
   convertToLibrary: async (modelId) => {
     try {
       const userId = sessionStorage.getItem('user-id') || '';
