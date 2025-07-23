@@ -314,23 +314,36 @@ const LeftSection = () => {
     getModels(); // Assuming this refreshes the library list
   }, [getModels]);
 
-  const handleConvertToLibrary = useCallback(async (e) => {
-    e?.stopPropagation?.();
+  const handleConvertToLibrary = useCallback(
+    async (e) => {
+      e?.stopPropagation?.();
 
-    if (!model?._id) {
-      console.error('No active model to convert');
-      return;
-    }
-
-    try {
-      const success = await useStore.getState().convertToLibrary(model._id);
-      if (success) {
-        await getModels();
+      if (!model?._id) {
+        console.error('No active model to convert');
+        notify('No active model to convert', 'error');
+        return;
       }
-    } catch (error) {
-      console.error('Failed to convert model:', error);
-    }
-  }, [model?._id, getModels]);
+
+      try {
+        const result = await useStore.getState().convertToLibrary(model._id);
+        // console.log('result', result);
+        if (result?.success) {
+          // Success notification with model name
+          notify(`Successfully converted "${result.modelName}" to library`, 'success');
+          await getModels();
+        } else if (result?.error) {
+          // Show the error message from the API or validation
+          notify(result.error, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to convert model:', error);
+        // Fallback error handling
+        const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
+        notify(errorMessage, 'error');
+      }
+    },
+    [model?._id, getModels]
+  );
 
   const tabs = useMemo(
     () => [

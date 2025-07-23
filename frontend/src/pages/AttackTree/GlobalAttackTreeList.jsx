@@ -39,7 +39,7 @@ const GlobalAttackTreeList = ({ globalAttackTrees, onDelete, onAdd }) => {
                 fontSize: '1rem'
               }}
             >
-              <span>Global Attack Trees</span>
+              <span>Global Attack Trees Libraries</span>
               <IconButton
                 size="small"
                 onClick={(e) => {
