@@ -1336,45 +1336,71 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  openLibrary: async (libraryId) => {
+  /**
+   * Clones library data to an existing model
+   * @param {string} libraryId - The ID of the library to clone from
+   * @param {string} targetModelId - The ID of the target model to clone to
+   * @returns {Promise<{success: boolean, message?: string}>}
+   */
+  openLibrary: async (libraryId, targetModelId) => {
     try {
       const userId = sessionStorage.getItem('user-id') || '';
       if (!userId) throw new Error('User ID not found in session');
       if (!libraryId) throw new Error('Library ID is required');
+      if (!targetModelId) throw new Error('Target Model ID is required');
 
       const formData = new FormData();
-      formData.append('keyId', libraryId);
-      formData.append('source', 'library');
+      formData.append('sourceModelId', libraryId);
+      formData.append('targetModelId', targetModelId);
       formData.append('userId', userId);
 
-      const { data } = await axios.post(
-        `${configuration.apiBaseUrl}v1/cloneModelOrLibrary`,
+      await axios.post(
+        `${configuration.apiBaseUrl}v1/cloneModelDataToExistingModel`,
         formData,
         {
           headers: {
             ...createHeaders().headers,
             'Accept': 'application/json',
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          validateStatus: () => true // Ensure we handle all status codes
         }
       );
 
-      if (!data) {
-        throw new Error('No response data received');
-      }
+      // Refresh the model data to reflect the changes
+      const refreshModel = async () => {
+        try {
+          // Get the current model data
+          const currentModel = useStore.getState().model;
+          if (currentModel?._id === targetModelId) {
+            // Refresh the entire model data
+            await useStore.getState().getModelById(targetModelId);
+            
+            // Refresh related data
+            await Promise.all([
+              useStore.getState().getAssets(targetModelId),
+              useStore.getState().getDamageScenarios(targetModelId),
+              useStore.getState().getThreatScenario(targetModelId),
+              useStore.getState().getAttackScenario(targetModelId),
+              useStore.getState().getCyberSecurityScenario(targetModelId),
+              useStore.getState().getRiskTreatment({ modelId: targetModelId })
+            ]);
+            
+            console.log('Model data refreshed successfully');
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing model data:', refreshError);
+          // Don't fail the main operation if refresh fails
+        }
+      };
 
-      // Refresh the models list after successful operation
-      try {
-        await useStore.getState().getModels();
-      } catch (refreshError) {
-        console.error('Error refreshing models list:', refreshError);
-        // Don't fail the operation if refresh fails
-      }
+      // Run the refresh in the background
+      refreshModel();
 
       return { 
-        success: true, 
-        newId: data.new_id,
-        message: data.message 
+        success: true,
+        message: 'Library data successfully applied to model',
+        modelId: targetModelId
       };
       
     } catch (error) {

@@ -78,21 +78,21 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
       const library = draggedItem || (selectedLibrary && libraries.find(lib => lib._id === selectedLibrary));
       if (!library?._id) return;
 
-      // Use the store's openLibrary method
-      const result = await useStore.getState().openLibrary(library._id);
+      // Get the current model ID from the store or URL
+      const currentModelId = useStore.getState().model?._id || window.location.pathname.split('/').pop();
+      if (!currentModelId) {
+        throw new Error('No active model found to apply library to');
+      }
+
+      // Use the store's openLibrary method with both library ID and target model ID
+      const result = await useStore.getState().openLibrary(library._id, currentModelId);
       
       if (result.success) {
-        const newId = result.newId || library._id;
-        
-        // Update Redux state
-        dispatch(setModelId(newId));
-        dispatch(closeAll());
-        
         // Close the modal first
         handleClose(e);
         
         // Show success notification
-        toast.success('Library opened successfully!', {
+        toast.success('Library data applied successfully!', {
           duration: 3000,
           position: 'top-right',
           style: {
@@ -101,14 +101,21 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
           },
         });
         
-        // Then navigate to the new model
-        navigate(`/Models/${newId}`, { replace: true });
+        // No need to navigate as we're updating the current model
+        // The page will automatically refresh with the new data
       } else {
-        throw new Error(result.error || 'Failed to open library');
+        throw new Error(result.error || 'Failed to apply library data');
       }
     } catch (error) {
-      console.error('Error opening library:', error);
-      setError(error.message || 'Failed to open library');
+      console.error('Error applying library data:', error);
+      toast.error(error.message || 'Failed to apply library data', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#f44336',
+          color: '#fff',
+        },
+      });
     }
   };
 
