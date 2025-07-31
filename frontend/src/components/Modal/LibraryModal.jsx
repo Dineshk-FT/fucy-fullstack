@@ -18,14 +18,29 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
   
   useEffect(() => {
+    const checkExistingData = () => {
+      const { nodes, edges } = useStore.getState();
+      return nodes?.length > 0 || edges?.length > 0;
+    };
+
     const loadLibraries = async () => {
       if (!open) return;
       
       setIsLoading(true);
       setLibraries([]);
       setSelectedLibrary(null);
+      
+      // Check if project has existing data
+      const hasData = checkExistingData();
+      setHasExistingData(hasData);
+      
+      if (hasData) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         const librariesData = await useStore.getState().getLibraries();
@@ -75,6 +90,10 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
   const handleDrop = async (e) => {
     e.preventDefault();
     try {
+      if (hasExistingData) {
+        throw new Error('You can only import the library in a newly created project');
+      }
+      
       const library = draggedItem || (selectedLibrary && libraries.find(lib => lib._id === selectedLibrary));
       if (!library?._id) return;
 
@@ -194,18 +213,34 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
           Select from Library
         </Typography>
 
-        <Box
-          sx={{
-            maxHeight: '150px',
-            overflowY: 'auto',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: color?.inputBg,
-            boxShadow: 1,
-            mb: 1
-          }}
-        >
+        {hasExistingData ? (
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: color?.inputBg,
+              textAlign: 'center',
+              color: 'error.main',
+              fontWeight: 500
+            }}
+          >
+            You can only import the library in a newly created project
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: color?.inputBg,
+              boxShadow: 1,
+              mb: 1
+            }}
+          >
           {isLoading ? (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <CircularProgress size={20} />
@@ -288,7 +323,8 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
               })}
             </List>
           )}
-        </Box>
+          </Box>
+        )}
 
         <Box sx={{ mt: 1, textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
