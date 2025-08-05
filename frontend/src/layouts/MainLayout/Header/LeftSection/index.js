@@ -15,6 +15,7 @@ import {
   ExpandLess as ExpandLessIcon,
   Help as HelpIcon
 } from '@mui/icons-material';
+import AutoModeIcon from '@mui/icons-material/AutoMode';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
 import SelectProject from '../../../../components/Modal/SelectProject';
@@ -35,6 +36,7 @@ import { shallow } from 'zustand/shallow';
 import { Export, Import } from 'iconsax-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import GenerateModel from '../../../../components/Modal/GenerateModel';
 
 const notify = (message, status) => toast[status](message);
 
@@ -83,6 +85,7 @@ const LeftSection = () => {
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
+    NewAI: false,
     Rename: false,
     Open: false,
     Delete: false,
@@ -356,6 +359,7 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick }
+          // { label: 'CreateWithAI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
       {
@@ -844,6 +848,7 @@ const LeftSection = () => {
         disablePortal
         style={{ position: 'fixed' }}
       />
+      <GenerateModel open={openModal.NewAI} handleClose={(e) => handleCloseModal(e, 'NewAI')} />
 
       <RenameProject
         open={openModal.Rename}
