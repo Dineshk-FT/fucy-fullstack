@@ -18,14 +18,29 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
   
   useEffect(() => {
+    const checkExistingData = () => {
+      const { nodes, edges } = useStore.getState();
+      return nodes?.length > 0 || edges?.length > 0;
+    };
+
     const loadLibraries = async () => {
       if (!open) return;
       
       setIsLoading(true);
       setLibraries([]);
       setSelectedLibrary(null);
+      
+      // Check if project has existing data
+      const hasData = checkExistingData();
+      setHasExistingData(hasData);
+      
+      if (hasData) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         const librariesData = await useStore.getState().getLibraries();
@@ -75,24 +90,28 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
   const handleDrop = async (e) => {
     e.preventDefault();
     try {
+      if (hasExistingData) {
+        throw new Error('You can only import the library in a newly created project');
+      }
+      
       const library = draggedItem || (selectedLibrary && libraries.find(lib => lib._id === selectedLibrary));
       if (!library?._id) return;
 
-      // Use the store's openLibrary method
-      const result = await useStore.getState().openLibrary(library._id);
+      // Get the current model ID from the store or URL
+      const currentModelId = useStore.getState().model?._id || window.location.pathname.split('/').pop();
+      if (!currentModelId) {
+        throw new Error('No active model found to apply library to');
+      }
+
+      // Use the store's openLibrary method with both library ID and target model ID
+      const result = await useStore.getState().openLibrary(library._id, currentModelId);
       
       if (result.success) {
-        const newId = result.newId || library._id;
-        
-        // Update Redux state
-        dispatch(setModelId(newId));
-        dispatch(closeAll());
-        
         // Close the modal first
         handleClose(e);
         
         // Show success notification
-        toast.success('Library opened successfully!', {
+        toast.success('Library data applied successfully!', {
           duration: 3000,
           position: 'top-right',
           style: {
@@ -101,14 +120,21 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
           },
         });
         
-        // Then navigate to the new model
-        navigate(`/Models/${newId}`, { replace: true });
+        // No need to navigate as we're updating the current model
+        // The page will automatically refresh with the new data
       } else {
-        throw new Error(result.error || 'Failed to open library');
+        throw new Error(result.error || 'Failed to apply library data');
       }
     } catch (error) {
-      console.error('Error opening library:', error);
-      setError(error.message || 'Failed to open library');
+      console.error('Error applying library data:', error);
+      toast.error(error.message || 'Failed to apply library data', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#f44336',
+          color: '#fff',
+        },
+      });
     }
   };
 
@@ -187,18 +213,34 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
           Select from Library
         </Typography>
 
-        <Box
-          sx={{
-            maxHeight: '150px',
-            overflowY: 'auto',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: color?.inputBg,
-            boxShadow: 1,
-            mb: 1
-          }}
-        >
+        {hasExistingData ? (
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: color?.inputBg,
+              textAlign: 'center',
+              color: 'error.main',
+              fontWeight: 500
+            }}
+          >
+            You can only import the library in a newly created project
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: color?.inputBg,
+              boxShadow: 1,
+              mb: 1
+            }}
+          >
           {isLoading ? (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <CircularProgress size={20} />
@@ -281,7 +323,8 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
               })}
             </List>
           )}
-        </Box>
+          </Box>
+        )}
 
         <Box sx={{ mt: 1, textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
