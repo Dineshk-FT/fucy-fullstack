@@ -6,24 +6,14 @@ import { clearLicenseWarning } from '../../store/slices/UserDetailsSlice';
 const LicenseExpiryModal = () => {
   const dispatch = useDispatch();
   const licenseWarning = useSelector((state) => {
-    console.log('Redux state changed:', state.userDetails);
     return state.userDetails.licenseWarning || { show: false, message: '' };
   });
-  
-  console.log('LicenseExpiryModal - Current licenseWarning state:', licenseWarning);
-  
-  // Log when component re-renders
-  React.useEffect(() => {
-    console.log('LicenseExpiryModal - Component rendered with:', { licenseWarning });
-  }, [licenseWarning]);
-
+    
   const handleClose = () => {
-    console.log('Closing license warning modal');
     dispatch(clearLicenseWarning());
   };
 
   if (!licenseWarning.show || !licenseWarning.message) {
-    console.log('LicenseExpiryModal - Not showing: show=', licenseWarning.show, 'message=', licenseWarning.message);
     return null;
   }
 

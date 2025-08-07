@@ -5,6 +5,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { verifyCard } from '../../../../services/api';
 
 const StepThreePayment = ({ handleBack, data, handleSubmit, selectedPlan }) => {
   const isTrial = selectedPlan === 'trial';
@@ -69,27 +70,10 @@ const StepThreePayment = ({ handleBack, data, handleSubmit, selectedPlan }) => {
         return;
       }
 
-      let response;
-      let result;
-      
       try {
-        response = await fetch('/verify-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            payment_method_id: paymentMethod.id,
-          }),
-        });
-
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          result = await response.json();
-        } else {
-          const textResponse = await response.text();
-          throw new Error('Server returned an invalid response. Please try again later.');
-        }
-
-        if (response.ok && result && result.success) {
+        const result = await verifyCard(paymentMethod.id);
+        
+        if (result && result.success) {
           handleSubmit({ ...values, payment_method_id: paymentMethod.id });
         } else {
           const errorMessage = result?.error || 'Card verification failed';
