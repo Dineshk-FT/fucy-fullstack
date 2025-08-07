@@ -3,46 +3,65 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { configuration } from '../services/baseApiService';
 import axios from 'axios';
 import { createHeaders, createHeadersForJson } from '../store/Zustand/store';
+import { isLicenseExpiring, getExpiryMessage } from '../utils/licenseUtils';
 
 const FormData = require('form-data');
 
-export const login = createAsyncThunk('login', async ({ username, password }, thunkAPI) => {
+export const login = createAsyncThunk('login', async ({ username, password, org }, thunkAPI) => {
   const FormData = require('form-data');
   let data = new FormData();
   data.append('username', username);
   data.append('password', password);
+  if (org) {
+    data.append('org', org);
+  }
+  
   const URL = `${configuration.apiBaseUrl}login`;
   try {
     const res = await axios.post(URL, data);
-    // console.log('res', res);
+    
+    // Check if response has license data
+    const licenseEndDate = res.data?.license_end;
+    
+    if (licenseEndDate) {
+      const isExpiring = isLicenseExpiring(licenseEndDate);
+      const expiryMessage = getExpiryMessage(licenseEndDate);
+      
+      if (isExpiring) {
+        thunkAPI.dispatch({
+          type: 'userDetails/setLicenseWarning',
+          payload: {
+            show: true,
+            message: expiryMessage
+          }
+        });
+      }
+    }
+    
     return res;
   } catch (error) {
-    // console.log('error', thunkAPI.rejectWithValue({ ...error.response, name: 'login' }));
     if (error) return thunkAPI.rejectWithValue({ ...error.response, name: 'login' });
   }
 });
 
-export const register = createAsyncThunk('register', async (details, thunkAPI) => {
+export const register = createAsyncThunk('register', async (data, { rejectWithValue }) => {
   const FormData = require('form-data');
-  let data = new FormData();
-
-  // ✅ Loop over all fields safely
-  Object.entries(details).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      data.append(key, value);
-    }
+  const formData = new FormData();
+  
+  // Append all data fields to formData
+  Object.entries(data).forEach(([key, value]) => {
+    formData.append(key, value);
   });
 
   const URL = `${configuration.apiBaseUrl}register`;
-
   try {
-    const res = await axios.post(URL, data);
-    return res;
+    const response = await axios.post(URL, formData);
+    return response.data;
   } catch (error) {
-    console.error('Register failed', error);
-    return thunkAPI.rejectWithValue({ ...error.response, name: 'register' });
+    return rejectWithValue(error.response?.data || { error: error.message });
   }
 });
+
 export const SendVerificationOTP = async (details) => {
   const FormData = require('form-data');
   let data = new FormData();

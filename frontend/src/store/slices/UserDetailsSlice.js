@@ -5,15 +5,31 @@ const initialState = {
   userDetails: {},
   isLoggedIn: false,
   loading: false,
-  error: null
+  error: null,
+  licenseWarning: {
+    show: false,
+    message: ''
+  }
 };
 
 const UserDetailsSlice = createSlice({
-  name: 'Canvas',
+  name: 'userDetails',
   initialState,
   reducers: {
-    logout: (state) => {
-      return { ...state, userDetails: {}, isLoggedIn: false };
+    setLicenseWarning: (state, action) => {
+      state.licenseWarning = {
+        show: action.payload.show !== undefined ? action.payload.show : true,
+        message: action.payload.message || ''
+      };
+    },
+    clearLicenseWarning: (state) => {
+      state.licenseWarning = {
+        show: false,
+        message: ''
+      };
+    },
+    logout: () => {
+      return { ...initialState };
     }
   },
   extraReducers(builder) {
@@ -35,5 +51,9 @@ const UserDetailsSlice = createSlice({
   }
 });
 
-export const { logout } = UserDetailsSlice.actions;
+export const { 
+  logout, 
+  setLicenseWarning, 
+  clearLicenseWarning 
+} = UserDetailsSlice.actions;
 export default UserDetailsSlice.reducer;
