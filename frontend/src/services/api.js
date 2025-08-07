@@ -7,6 +7,26 @@ import { isLicenseExpiring, getExpiryMessage } from '../utils/licenseUtils';
 
 const FormData = require('form-data');
 
+export const verifyCard = async (paymentMethodId) => {
+  try {
+    const response = await axios.post(
+      `${configuration.apiBaseUrl}verify-card`,
+      new URLSearchParams({
+        payment_method_id: paymentMethodId,
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Card verification error:', error);
+    throw error;
+  }
+};
+
 export const login = createAsyncThunk('login', async ({ username, password, org }, thunkAPI) => {
   const FormData = require('form-data');
   let data = new FormData();
