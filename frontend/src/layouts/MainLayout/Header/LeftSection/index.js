@@ -13,7 +13,8 @@ import {
   AccountTree as TreeIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Help as HelpIcon
+  Help as HelpIcon,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import TemplateList from '../../../../pages/Libraries';
@@ -37,6 +38,7 @@ import { Export, Import } from 'iconsax-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import GenerateModel from '../../../../components/Modal/GenerateModel';
+import DashboardDialog from '../../../../components/Dashboard';
 
 const notify = (message, status) => toast[status](message);
 
@@ -103,6 +105,7 @@ const LeftSection = () => {
   const [subName, setSubName] = useState('');
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
   const [hoveredTab, setHoveredTab] = useState(null);
+  const [openDashboard, setOpenDashboard] = useState(false);
   const hoverTimeoutRef = useRef(null);
 
   const handleMouseEnter = useCallback((tabName) => {
@@ -350,6 +353,18 @@ const LeftSection = () => {
 
   const tabs = useMemo(
     () => [
+      {
+        name: 'Dashboard',
+        options: [
+          { 
+            label: 'Open Dashboard', 
+            icon: () => (
+              <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />
+            ),
+            action: () => setOpenDashboard(true) 
+          }
+        ]
+      },
       {
         name: 'Project',
         options: [
@@ -607,7 +622,7 @@ const LeftSection = () => {
   const tabStyles = useMemo(
     () => ({
       cursor: 'pointer',
-      fontSize: '13px',
+      fontSize: '12px',
       fontFamily: "'Poppins', sans-serif",
       fontWeight: 500,
       margin: '0 8px',
@@ -717,7 +732,6 @@ const LeftSection = () => {
           padding: '6px 8px',
           boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
           marginBottom: '6px',
-          gap: '8px'
         }}
       >
         {tabs.map((tab) => (
@@ -907,6 +921,18 @@ const LeftSection = () => {
           getAttackScenario={getAttackScenario}
         />
       )}
+      
+      <DashboardDialog 
+        open={openDashboard} 
+        onClose={() => setOpenDashboard(false)}
+        modelId={model?._id}
+        projectData={{
+          components: model?.components || [],
+          threats: model?.threats || [],
+          risks: model?.risks || [],
+          controls: model?.controls || []
+        }}
+      />
     </Box>
   );
 };
