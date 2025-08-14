@@ -40,6 +40,8 @@ import { closeAll } from '../../../../store/slices/CurrentIdSlice';
 import { login, checkUserStatus, CheckUserStatus } from '../../../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { setModelId } from '../../../../store/slices/PageSectionSlice';
+import LicenseExpiryModal from '../../../../components/Modal/LicenseExpiryModal';
+import { setLicenseWarning } from '../../../../store/slices/UserDetailsSlice';
 
 const FirebaseLogin = ({ ...others }) => {
   const dispatch = useDispatch();
@@ -137,10 +139,23 @@ const FirebaseLogin = ({ ...others }) => {
   }, [orgInput, emailInput, checkLicenseStatus]);
 
   const handleLogin = (email, password, org) => {
-    dispatch(login({ username: email, password, org }))
+    // First clear any existing license warning
+    dispatch({ type: 'Canvas/clearLicenseWarning' });
+    
+    dispatch(login({ 
+      username: email, 
+      password, 
+      org 
+    }))
       .then((res) => {
         if (res.payload.status === 200 || res.payload.status === 201) {
           notify('Login Successfully', 'success');
+          
+          // Show license warning if needed (will be handled by the login thunk)
+          if (res.payload.data?.license?.isExpiring) {
+            // The warning is already dispatched by the login thunk
+          }
+          
           setTimeout(() => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
@@ -153,7 +168,10 @@ const FirebaseLogin = ({ ...others }) => {
           notify(res.payload.data.error, 'error');
         }
       })
-      .catch((err) => console.log('err', err));
+      .catch((err) => {
+        console.error('Login error:', err);
+        notify(err.message || 'Login failed', 'error');
+      });
   };
 
   return (
@@ -314,7 +332,8 @@ const FirebaseLogin = ({ ...others }) => {
           </form>
         )}
       </Formik>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} />
+      <LicenseExpiryModal />
     </>
   );
 };

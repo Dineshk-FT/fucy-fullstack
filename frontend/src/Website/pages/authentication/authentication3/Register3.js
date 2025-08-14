@@ -1,5 +1,7 @@
 /*eslint-disable*/
 import { Link, NavLink } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -12,6 +14,9 @@ import Logo from '../../../../components/Logo';
 import AuthRegister from '../auth-forms/AuthRegister';
 import AuthFooter from '../../../../components/cards/AuthFooter';
 import RegisterStepper from './RegisterStepper';
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe('pk_test_51RtOUPBUB67jzFEicmJuwJfMLgUcwNhPTxILB10SLEieKIolTVqcmFrhl1EfPokFnvTp248gWSM6MTwd4PUxN67c00rN9S8uYy');
 
 // ===============================|| AUTH3 - REGISTER ||=============================== //
 
@@ -50,8 +55,9 @@ const Register = () => {
                     </Grid>
                   </Grid>
                   <Grid item xs={12}>
-                    {/* <AuthRegister /> */}
-                    <RegisterStepper />
+                    <Elements stripe={stripePromise}>
+                      <RegisterStepper />
+                    </Elements>
                   </Grid>
                   <Grid item xs={12}>
                     <Divider />

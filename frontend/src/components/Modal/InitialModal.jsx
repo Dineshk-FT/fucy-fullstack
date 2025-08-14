@@ -19,6 +19,7 @@ import SelectProject from './SelectProject';
 import AddModel from './AddModal';
 import ColorTheme from '../../themes/ColorTheme';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import LicenseExpiryModal from './LicenseExpiryModal';
 
 const selector = (state) => ({
   Models: state.Models,
@@ -46,6 +47,7 @@ export default React.memo(function InitialModal() {
 
   return (
     <>
+      <LicenseExpiryModal />
       <Dialog
         open={initialDialogOpen}
         onClose={handleClose}
