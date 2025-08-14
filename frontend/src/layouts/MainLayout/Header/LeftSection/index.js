@@ -358,8 +358,8 @@ const LeftSection = () => {
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
-          { label: 'Import', icon: Import, action: handleImportClick }
-          // { label: 'CreateWithAI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
+          { label: 'Import', icon: Import, action: handleImportClick },
+          { label: 'CreateWithAI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
       {
