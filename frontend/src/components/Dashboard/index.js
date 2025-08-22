@@ -23,7 +23,6 @@ import {
   Slide,
   IconButton,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
   BarChart,
   PieChart,
@@ -32,10 +31,6 @@ import {
   pieArcClasses,
 } from '@mui/x-charts';
 import ColorTheme from '../../themes/ColorTheme';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-jsPDF.autoTable = autoTable;
-import Chart from 'chart.js/auto';
 import { alpha } from '@mui/material/styles';
 
 // Icons
@@ -59,10 +54,10 @@ import { configuration } from '../../services/baseApiService';
 const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, trendValue }) => {
   const theme = useTheme();
   const colors = ColorTheme();
-  const [elevation, setElevation] = useState(2);
+  const [elevation, setElevation] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const cardColor = color || theme.palette.primary.main;
-  
+
   // Determine trend styles
   const getTrendStyles = () => {
     if (!trend) return null;
@@ -70,17 +65,17 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
     return {
       display: 'flex',
       alignItems: 'center',
-      mt: 0.5,
+      mt: 0.2,
       color: isPositive ? theme.palette.success.main : theme.palette.error.main,
       '& svg': {
-        fontSize: '1rem',
-        ml: 0.5,
+        fontSize: '0.8rem',
+        ml: 0.2,
       },
     };
   };
 
   return (
-    <Fade in={!loading} timeout={500}>
+    <Fade in={!loading} timeout={400}>
       <Tooltip
         title={`View details for ${title}`}
         arrow
@@ -91,35 +86,35 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
         <Paper
           elevation={elevation}
           onMouseEnter={() => {
-            setElevation(8);
+            setElevation(4);
             setIsHovered(true);
           }}
           onMouseLeave={() => {
-            setElevation(2);
+            setElevation(1);
             setIsHovered(false);
           }}
           sx={{
-            p: 2.5,
-            height: '100%',
+            p: 1,
+            minHeight: 70,
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
             overflow: 'hidden',
-            borderRadius: 3,
+            borderRadius: 2,
             bgcolor: colors.paperBg || 'background.paper',
-            border: `1px solid ${alpha(colors.borderColor || theme.palette.divider, 0.2)}`,
-            minWidth: 140,
+            border: `1px solid ${alpha(colors.borderColor || theme.palette.divider, 0.15)}`,
+            minWidth: 100,
             transition: theme.transitions.create(
-              ['all', 'transform', 'box-shadow'],
+              ['transform', 'box-shadow', 'border-color'],
               {
-                duration: theme.transitions.duration.shorter,
-                easing: theme.transitions.easing.easeInOut,
+                duration: theme.transitions.duration.short,
+                easing: theme.transitions.easing.easeOut,
               }
             ),
             '&:hover': {
-              transform: 'translateY(-6px)',
-              boxShadow: `0 12px 24px -4px ${alpha(cardColor, 0.12)}`,
-              borderColor: alpha(cardColor, 0.3),
+              transform: 'translateY(-3px)',
+              boxShadow: `0 6px 12px ${alpha(cardColor, 0.15)}`,
+              borderColor: alpha(cardColor, 0.5),
             },
             '&::before': {
               content: '""',
@@ -127,14 +122,14 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
               top: 0,
               left: 0,
               right: 0,
-              height: 4,
-              background: `linear-gradient(90deg, ${cardColor} 0%, ${alpha(cardColor, 0.7)} 100%)`,
-              opacity: 0.8,
-              transition: 'all 0.3s ease-in-out',
+              height: 2,
+              background: `linear-gradient(90deg, ${cardColor} 0%, ${alpha(cardColor, 0.6)} 100%)`,
+              opacity: 0.9,
+              transition: 'height 0.2s ease-in-out, opacity 0.2s ease-in-out',
             },
             '&:hover::before': {
+              height: 3,
               opacity: 1,
-              height: 5,
             },
           }}
         >
@@ -145,19 +140,18 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
               alignItems: 'center',
               justifyContent: 'center',
               height: '100%',
-              minHeight: 140,
-              p: 2,
-              gap: 1.5
+              minHeight: 70,
+              p: 0.5,
+              gap: 0.3
             }}>
               <CircularProgress 
-                size={36} 
-                thickness={3} 
+                size={20} 
+                thickness={4} 
                 sx={{ 
-                  color: alpha(cardColor, 0.8),
-                  mb: 1,
+                  color: alpha(cardColor, 0.7),
+                  mb: 0.3,
                   '& .MuiCircularProgress-circle': {
                     strokeLinecap: 'round',
-                    stroke: `url(#loading-gradient-${cardColor.replace('#', '')})`,
                   },
                 }} 
               />
@@ -165,24 +159,15 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                 variant="caption" 
                 sx={{ 
                   color: 'text.secondary',
-                  fontSize: '0.75rem',
+                  fontSize: '0.6rem',
                   fontWeight: 500,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  opacity: 0.8
+                  letterSpacing: '0.3px',
+                  opacity: 0.7
                 }}
               >
-                Loading...
+                Loading
               </Typography>
-              <Box 
-                sx={{ 
-                  width: '60%', 
-                  height: 4, 
-                  background: `linear-gradient(90deg, ${alpha(cardColor, 0.2)} 0%, ${alpha(cardColor, 0.1)} 100%)`,
-                  borderRadius: 2,
-                  mt: 0.5
-                }}
-              />
             </Box>
           ) : (
             <Box sx={{ width: '100%' }}>
@@ -191,7 +176,7 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  mb: 2,
+                  mb: 0.5,
                 }}
               >
                 <Typography
@@ -200,9 +185,9 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                     color: theme.palette.text.secondary,
                     fontWeight: 600,
                     textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    fontSize: '0.7rem',
-                    opacity: 0.9,
+                    letterSpacing: '0.3px',
+                    fontSize: '0.6rem',
+                    opacity: 0.85,
                   }}
                 >
                   {title}
@@ -213,15 +198,15 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 36,
-                      height: 36,
+                      width: 24,
+                      height: 24,
                       borderRadius: '50%',
-                      bgcolor: alpha(cardColor, 0.1),
+                      bgcolor: alpha(cardColor, 0.15),
                       '& svg': {
                         color: cardColor,
-                        fontSize: 20,
+                        fontSize: 14,
                         transition: theme.transitions.create('transform', {
-                          duration: theme.transitions.duration.standard,
+                          duration: theme.transitions.duration.short,
                         }),
                       },
                     }}
@@ -232,18 +217,18 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
               </Box>
               
               <Typography
-                variant="h4"
+                variant="h6"
                 sx={{
-                  fontWeight: 800,
-                  fontSize: '2rem',
-                  lineHeight: 1.2,
-                  mb: 1,
-                  background: `linear-gradient(135deg, ${cardColor} 0%, ${alpha(cardColor, 0.8)} 100%)`,
+                  fontWeight: 700,
+                  fontSize: '1.2rem',
+                  lineHeight: 1.1,
+                  mb: 0.3,
+                  background: `linear-gradient(135deg, ${cardColor} 0%, ${alpha(cardColor, 0.9)} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  transition: 'all 0.3s ease-in-out',
-                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  transition: 'all 0.2s ease-in-out',
+                  transform: isHovered ? 'scale(1.03)' : 'scale(1)',
                 }}
               >
                 {value}
@@ -256,7 +241,7 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                   ) : (
                     <TrendingDownIcon fontSize="inherit" />
                   )}
-                  <Typography variant="caption" sx={{ ml: 0.5, fontWeight: 600 }}>
+                  <Typography variant="caption" sx={{ ml: 0.2, fontWeight: 600, fontSize: '0.55rem' }}>
                     {trendValue}%
                   </Typography>
                 </Box>
@@ -268,10 +253,10 @@ const StatCard = ({ title, value, color, icon: Icon, loading = false, trend, tre
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  height: 4,
-                  background: `linear-gradient(90deg, ${cardColor} 0%, ${alpha(cardColor, 0.1)} 100%)`,
-                  opacity: isHovered ? 0.8 : 0.4,
-                  transition: 'opacity 0.3s ease-in-out',
+                  height: 1,
+                  background: `linear-gradient(90deg, ${cardColor} 0%, ${alpha(cardColor, 0.2)} 100%)`,
+                  opacity: isHovered ? 0.9 : 0.5,
+                  transition: 'opacity 0.2s ease-in-out',
                 }}
               />
             </Box>
@@ -490,7 +475,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     notRated: 0,
   });
   const [attackPerScenario, setAttackPerScenario] = useState([]);
-  const [assetThreatAttack, setAssetThreatAttack] = useState([]);
   const [threatIdsWithAttacks, setThreatIdsWithAttacks] = useState(new Set());
   const [overallRisk, setOverallRisk] = useState('Low');
   const [tabValue, setTabValue] = useState(0);
@@ -579,15 +563,14 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           }
         });
 
-        // Count threats - handle both array and object with Details array, similar to damageScenarios
+        // Count threats - handle both array and object with Details array
         let threatsData = [];
         if (Array.isArray(dashboardDataTemp.threats) && dashboardDataTemp.threats.length > 0) {
-          // Get threats from Details array in the first item
           threatsData = dashboardDataTemp.threats[0]?.Details || [];
         }
         const threats = threatsData.length;
         const damages = dashboardDataTemp.damageScenarios.reduce(
-          (sum, d) => sum + (d.Details?.length || 0),
+          (sum, d) => sum + (d.Derivations?.length || 0),
           0
         );
         const attacks = dashboardDataTemp.attackScenarios.reduce(
@@ -628,33 +611,14 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           
         // Process impact data from damage scenarios
         dashboardDataTemp.damageScenarios.forEach((scenario) => {
-          // Process Details array at the top level
-          if (scenario.Details && Array.isArray(scenario.Details)) {
-            scenario.Details.forEach(detail => {
-              if (detail.impacts) {
-                processImpactData(detail.impacts);
-              }
-            });
-          }
-          
-          // Process Derivations array
           if (scenario.Derivations && Array.isArray(scenario.Derivations)) {
             scenario.Derivations.forEach(derivation => {
               if (derivation.impacts) {
                 processImpactData(derivation.impacts);
               }
-              // Also check for Details inside Derivations
-              if (derivation.Details && Array.isArray(derivation.Details)) {
-                derivation.Details.forEach(detail => {
-                  if (detail.impacts) {
-                    processImpactData(detail.impacts);
-                  }
-                });
-              }
             });
           }
           
-          // Handle case where impacts are direct properties of the scenario
           if (scenario.impacts) {
             processImpactData(scenario.impacts);
           }
@@ -662,16 +626,12 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         
         // Helper function to process impact data
         function processImpactData(impacts) {
-          // Handle the case where impacts is an object with impact types as keys
           if (impacts && typeof impacts === 'object') {
             Object.entries(impacts).forEach(([impactType, impactValue]) => {
-              // Skip if impact value is null, undefined, or empty string
               if (impactValue == null || impactValue === '') return;
               
-              // Extract the base impact type (remove ' Impact' suffix if present)
               const baseImpactType = impactType.replace(' Impact', '').trim();
               
-              // Convert impact value to numeric score
               const num = typeof impactValue === 'string'
                 ? { 
                     'Low': 1, 
@@ -684,11 +644,10 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   }[impactValue.trim()] || 0
                 : typeof impactValue === 'number' ? impactValue : 0;
                 
-              if (num > 0) {  // Only count valid impacts
+              if (num > 0) {
                 totalImpacts += num;
                 impactCount++;
                 
-                // Categorize impact by type (case-insensitive)
                 const lowerType = baseImpactType.toLowerCase();
                 if (lowerType.includes('safety')) {
                   safety += num;
@@ -704,7 +663,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           }
         }
         
-        // Calculate average impact
         const avgImpact = impactCount > 0 ? (totalImpacts / impactCount).toFixed(2) : 0;
 
         const unmitigated =
@@ -712,7 +670,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           dashboardDataTemp.riskTreatments.Details?.filter(
             (r) => r.cybersecurity?.cybersecurity_controls?.length > 0
           ).length || 0;
-        const coverage = risks > 0 ? ((controls / risks) * 100).toFixed(1) : 0;
+        const coverage = risks > 0 ? ((cyberItems.controls / risks) * 100).toFixed(1) : 0;
 
         let highFeas = 0,
           medFeas = 0,
@@ -726,9 +684,8 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           });
         });
 
-        // Use the correct damage scenarios count from the Derivations array
-        const finalDamageScenarios = damageScenariosData.length;
-        const finalDerivedDamageScenarios = derivedDamageScenarios.length;
+        const finalDamageScenarios = dashboardDataTemp.damageScenarios[0]?.Derivations?.length || 0;
+        const finalDerivedDamageScenarios = dashboardDataTemp.damageScenarios[1]?.Details?.length || 0;
         
         setProjectStats(prevStats => ({
           ...prevStats,
@@ -738,10 +695,10 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           totalDerivedDamageScenarios: finalDerivedDamageScenarios,
           totalAttackScenarios: attacks,
           risksIdentified: risks,
-          cyberGoals: cyberItems?.goals || 0,
-          cyberClaims: cyberItems?.claims || 0,
-          cyberRequirements: cyberItems?.requirements || 0,
-          cyberControls: cyberItems?.controls || 0,
+          cyberGoals: cyberItems.goals || 0,
+          cyberClaims: cyberItems.claims || 0,
+          cyberRequirements: cyberItems.requirements || 0,
+          cyberControls: cyberItems.controls || 0,
           averageImpact: avgImpact,
           unmitigatedRisks: unmitigated,
           coveragePercentage: coverage,
@@ -756,7 +713,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           low = 0;
         dashboardDataTemp.riskTreatments.Details?.forEach((risk) => {
           const damage = dashboardDataTemp.damageScenarios
-            .flatMap((ds) => ds.Details || [])
+            .flatMap((ds) => ds.Derivations || [])
             .find((d) => d._id === risk.damage_id);
           if (damage) {
             const maxImpact = Object.values(damage.impacts || {}).reduce(
@@ -809,7 +766,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         // Attack feasibility
         setAttackFeasibility({ high: highFeas, medium: medFeas, low: lowFeas });
 
-        // New: Treatment distribution
+        // Treatment distribution
         let sharing = 0, retaining = 0, avoiding = 0, reducing = 0, notRated = 0;
         dashboardDataTemp.riskTreatments.Details?.forEach(risk => {
           const treatment = risk.risk_treatment || 'Not rated';
@@ -842,51 +799,15 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
 
         // Process threats and attacks per asset
         const threatIdsWithAttacksSet = new Set();
-        const assetThreatAttackTemp = [];
-
-        // First, process all attack scenes to collect threat IDs and count attacks per asset
-        const attackCountsByAsset = {};
         dashboardDataTemp.attackScenarios.forEach(attack => {
           attack.scenes?.forEach(scene => {
             if (scene.threat_id) {
               threatIdsWithAttacksSet.add(scene.threat_id);
             }
-            if (scene.asset_id) {
-              attackCountsByAsset[scene.asset_id] = (attackCountsByAsset[scene.asset_id] || 0) + 1;
-            }
           });
         });
         
         setThreatIdsWithAttacks(threatIdsWithAttacksSet);
-
-        // Then process all assets to count threats and attacks
-        if (dashboardDataTemp.components.template?.nodes) {
-          dashboardDataTemp.components.template.nodes.forEach((asset, index) => {
-            if (!asset || !asset.id) return;
-            
-            const assetId = asset.id;
-            let threatCount = 0;
-            
-            // Count threats for this asset by checking all threat details
-            dashboardDataTemp.threats.forEach(threatGroup => {
-              if (threatGroup.Details) {
-                threatCount += threatGroup.Details.filter(detail => 
-                  detail.asset_id === assetId || 
-                  detail.nodeId === assetId
-                ).length;
-              }
-            });
-            
-            assetThreatAttackTemp.push({
-              id: `asset-${assetId || index}`,
-              assetId: asset.data?.label || assetId,
-              threatCount,
-              attackCount: attackCountsByAsset[assetId] || 0
-            });
-          });
-        }
-        
-        setAssetThreatAttack(assetThreatAttackTemp);
 
       } catch (err) {
         setError('Failed to load data. Please try again.');
@@ -898,51 +819,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     fetchData();
   }, [open, modelId]);
 
-  // Chart data adapter for Chart.js and MUI Charts
-  const adaptChartData = (chartData, type) => {
-    if (!chartData) {
-      console.error('Chart data is undefined or null');
-      return { labels: [], datasets: [] };
-    }
-
-    try {
-      if (type === 'pie') {
-        const series = chartData.series?.[0]?.data || [];
-        return {
-          labels: series.map((d) => d?.label || '').filter(Boolean),
-          datasets: [
-            {
-              data: series.map((d) => d?.value || 0),
-              backgroundColor: series.map(
-                (d, i) => d?.color || colors.chartColors[i % colors.chartColors.length]
-              ),
-            },
-          ],
-        };
-      } else {
-        // bar or line
-        const xAxisData = chartData.xAxis?.[0]?.data || [];
-        const seriesData = Array.isArray(chartData.series) ? chartData.series : [];
-        return {
-          labels: xAxisData,
-          datasets: seriesData.map((s, i) => ({
-            label: s?.label || '',
-            data: Array.isArray(s?.data) ? s.data : [],
-            backgroundColor:
-              s?.backgroundColor || colors.chartColors[i % colors.chartColors.length],
-            borderColor:
-              s?.borderColor || colors.chartColors[i % colors.chartColors.length],
-            borderWidth: type === 'line' ? 2 : 0,
-          })),
-        };
-      }
-    } catch (error) {
-      console.error('Error adapting chart data:', error);
-      return { labels: [], datasets: [] };
-    }
-  };
-
-  // Chart configurations with theme support
+  // Chart data adapter for MUI Charts
   const chartOptions = {
     sx: {
       '.MuiChartsAxis-tick': { stroke: colors.chartText },
@@ -965,7 +842,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           projectStats.totalComponents,
           projectStats.totalThreats,
           projectStats.risksIdentified,
-          projectStats.controlsImplemented,
+          projectStats.cyberControls,
         ],
         label: 'Counts',
         color: colors.chartColors[0],
@@ -1080,382 +957,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     xAxis: [{ scaleType: 'band', data: attackPerScenario.map(s => s.scenario) }],
   };
 
-  // Tables
-  const riskColumns = [
-    { field: 'id', headerName: 'ID', width: 80 },
-    { field: 'threat_id', headerName: 'Threat ID', width: 100 },
-    { field: 'damage_id', headerName: 'Damage ID', width: 100 },
-    { field: 'label', headerName: 'Label', width: 120 },
-    { field: 'threat_key', headerName: 'Threat Key', width: 100 },
-    {
-      field: 'cybersecurity_goals',
-      headerName: 'Goals',
-      width: 100,
-      valueGetter: (params) => params.row.cybersecurity?.cybersecurity_goals?.length || 0,
-    },
-    {
-      field: 'catalogs',
-      headerName: 'Catalogs',
-      width: 100,
-      valueGetter: (params) => params.row.catalogs?.length || 0,
-    },
-  ];
-
-  const riskRows = (dashboardData.riskTreatments.Details || []).map((r, index) => ({
-    ...r,
-    id: r.id || index,
-  }));
-
-  const attackColumns = [
-    { field: 'id', headerName: 'ID', width: 80 },
-    { field: 'type', headerName: 'Type', width: 100 },
-    { field: 'Name', headerName: 'Name', width: 120 },
-    { field: 'threat_id', headerName: 'Threat ID', width: 100 },
-    { field: 'Attack Feasibilities Rating', headerName: 'Feasibility', width: 120 },
-    { field: 'Elapsed Time', headerName: 'Time', width: 100 },
-  ];
-
-  const attackRows = dashboardData.attackScenarios.flatMap((a) =>
-    a.scenes?.map((s) => ({ ...s, id: s.ID, type: a.type })) || []
-  );
-
-  const threatColumns = [
-    { field: 'id', headerName: 'ID', width: 80 },
-    { field: 'type', headerName: 'Type', width: 100 },
-    { field: 'detailCount', headerName: 'Details', width: 80 },
-    {
-      field: 'propCount',
-      headerName: 'Props',
-      width: 80,
-      valueGetter: (params) =>
-        params.row.Details?.reduce((sum, d) => sum + (d.props?.length || 0), 0) || 0,
-    },
-  ];
-
-  const threatRows = dashboardData.threats.map((t) => ({
-    ...t,
-    id: t._id,
-    detailCount: t.Details?.length || o,
-  }));
-
-  const damageColumns = [
-    { field: 'id', headerName: 'ID', width: 100 },
-    { field: 'name', headerName: 'Name', width: 200 },
-    { field: 'loss', headerName: 'Loss Type', width: 150 },
-  ];
-
-  // Get damage scenarios data from the Derivations array in the first item
-  const getDamageScenariosData = () => {
-    if (Array.isArray(dashboardData.damageScenarios) && dashboardData.damageScenarios.length > 0) {
-      return dashboardData.damageScenarios[0]?.Derivations || [];
-    } else if (dashboardData.damageScenarios?.Details) {
-      return Array.isArray(dashboardData.damageScenarios.Details)
-        ? dashboardData.damageScenarios.Details
-        : [];
-    }
-    return [];
-  };
-
-  const damageRows = getDamageScenariosData().map((ds, index) => ({
-    ...ds,
-    id: ds.id || `ds-${index}`,
-    name: ds.name || `Damage Scenario ${index + 1}`,
-  }));
-
-  const cyberColumns = [
-    { field: 'id', headerName: 'ID', width: 80 },
-    { field: 'type', headerName: 'Type', width: 120 },
-    {
-      field: 'sceneCount',
-      headerName: 'Scenes',
-      width: 80,
-      valueGetter: (params) => params.row.scenes?.length || 0,
-    },
-    {
-      field: 'threatKeys',
-      headerName: 'Threat Keys',
-      width: 120,
-      valueGetter: (params) => {
-        const threatKey = params.row.scenes?.[0]?.threat_key;
-        return Array.isArray(threatKey) ? threatKey.join(', ') : threatKey || 'N/A';
-      },
-    },
-  ];
-
-  const cyberRows = dashboardData.cybersecurity.map((c) => ({
-    ...c,
-    id: c._id,
-    sceneCount: c.scenes?.length || 0,
-  }));
-
-  const assetColumns = [
-    { field: 'assetId', headerName: 'Asset BID', width: 150 },
-    { field: 'threatCount', headerName: 'Number of Threat Scenarios', width: 200 },
-    { field: 'attackCount', headerName: 'Number of Attack Paths', width: 200 },
-  ];
-
-  // Generate chart image for PDF export
-  const generateChartImage = (chartData, type) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 400;
-    const ctx = canvas.getContext('2d');
-
-    const adaptedData = adaptChartData(chartData, type);
-    new Chart(ctx, {
-      type,
-      data: adaptedData,
-      options: {
-        responsive: false,
-        plugins: {
-          title: {
-            display: true,
-            text: chartData.title || 'Chart',
-            color: colors.chartText,
-          },
-          legend: {
-            display: type !== 'pie',
-            position: 'bottom',
-            labels: {
-              color: colors.chartText,
-            },
-          },
-        },
-        scales:
-          type === 'bar' || type === 'line'
-            ? {
-              x: {
-                type: 'category',
-                ticks: { color: colors.chartText },
-                grid: { color: colors.chartGrid },
-              },
-              y: {
-                beginAtZero: true,
-                ticks: { color: colors.chartText },
-                grid: { color: colors.chartGrid },
-              },
-            }
-            : undefined,
-        backgroundColor: colors.chartBackground,
-      },
-    });
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(canvas.toDataURL('image/png'));
-      }, 100);
-    });
-  };
-
-  // PDF Export
-  const exportPDF = async () => {
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const date = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-    let y = 10;
-
-    // Title and Metadata
-    doc.setFontSize(16);
-    doc.setTextColor(colors.textPrimary);
-    doc.text('Comprehensive Security Dashboard Report', 10, y);
-    y += 10;
-    doc.setFontSize(10);
-    doc.text(`Generated: ${date}`, 10, y);
-    doc.text(`Model ID: ${modelId}`, 150, y);
-    y += 10;
-
-    // Overview Section (Cards)
-    doc.setFontSize(12);
-    doc.text('Overview', 10, y);
-    y += 5;
-    const stats = [
-      { title: 'Components', value: projectStats.totalComponents, color: colors.chartColors[0] },
-      { title: 'Threats', value: projectStats.totalThreats, color: colors.chartColors[1] },
-      { title: 'Damages', value: projectStats.totalDamageScenarios, color: colors.chartColors[2] },
-      { title: 'Derived Damages', value: projectStats.totalDerivedDamageScenarios, color: colors.chartColors[4] },
-      { title: 'Attacks', value: projectStats.totalAttackScenarios, color: colors.chartColors[3] },
-      { title: 'Risks', value: projectStats.risksIdentified, color: colors.chartColors[2] },
-      { title: 'Controls', value: projectStats.controlsImplemented, color: colors.chartColors[3] },
-      { title: 'Avg Impact', value: projectStats.averageImpact, color: colors.chartColors[0] },
-      { title: 'Unmitigated', value: projectStats.unmitigatedRisks, color: colors.chartColors[1] },
-      { title: 'Coverage %', value: `${projectStats.coveragePercentage}%`, color: colors.chartColors[3] },
-      { title: 'High Feas', value: projectStats.highFeasibilityAttacks, color: colors.chartColors[1] },
-      { title: 'Connections', value: projectStats.totalConnections, color: colors.chartColors[0] },
-      { title: 'Properties', value: projectStats.uniqueProperties, color: colors.chartColors[2] },
-    ];
-    stats.forEach((stat, index) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 10;
-        doc.text('Overview (Continued)', 10, y);
-        y += 5;
-      }
-      const rgb = hexToRgb(stat.color).map((c) => c * 255);
-      doc.setFillColor(...rgb);
-      doc.rect(10 + (index % 5) * 35, y, 30, 20, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.text(stat.title, 10 + (index % 5) * 35 + 5, y + 5);
-      doc.text(stat.value.toString(), 10 + (index % 5) * 35 + 5, y + 15);
-      if ((index + 1) % 5 === 0) y += 25;
-    });
-    y += 10;
-
-    // Charts
-    const charts = [
-      { title: 'Project Overview', data: overviewBarData, type: 'bar' },
-      { title: 'Impact Distribution', data: impactBarData, type: 'bar' },
-      { title: 'Threat Types', data: threatBarData, type: 'bar' },
-      { title: 'Attack Feasibility', data: feasBarData, type: 'bar' },
-      { title: 'Risk Levels', data: riskPieData, type: 'pie' },
-      { title: 'Cyber Breakdown', data: cyberPieData, type: 'pie' },
-      { title: 'Threats Timeline', data: timelineData, type: 'line' },
-    ];
-    for (const chart of charts) {
-      if (y > 250) {
-        doc.addPage();
-        y = 10;
-      }
-      doc.setTextColor(colors.textPrimary);
-      doc.text(chart.title, 10, y);
-      y += 5;
-      const imgData = await generateChartImage(chart, chart.type);
-      doc.addImage(imgData, 'PNG', 10, y, 180, 80);
-      y += 90;
-    }
-
-    // Tables
-    const tables = [
-      { title: 'Top Risks', columns: riskColumns, rows: riskRows },
-      { title: 'Attack Scenarios', columns: attackColumns, rows: attackRows },
-      { title: 'Threat Scenarios', columns: threatColumns, rows: threatRows },
-      { title: 'Damage Scenarios', columns: damageColumns, rows: damageRows },
-      { title: 'Cybersecurity Items', columns: cyberColumns, rows: cyberRows },
-    ];
-    for (const table of tables) {
-      if (y > 250) {
-        doc.addPage();
-        y = 10;
-      }
-      doc.setTextColor(colors.textPrimary);
-      doc.text(table.title, 10, y);
-      y += 5;
-      autoTable(doc, {
-        head: [table.columns.map((c) => c.headerName)],
-        body: table.rows.map((row) =>
-          table.columns.map((c) => {
-            const value = c.valueGetter ? c.valueGetter({ row }) : row[c.field];
-            return value !== null && value !== undefined ? value.toString() : 'N/A';
-          })
-        ),
-        startY: y,
-        theme: 'grid',
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-          overflow: 'linebreak',
-          textColor: colors.textPrimary,
-          fillColor: colors.paperBg,
-        },
-        headStyles: {
-          fillColor: colors.tableHeaderBg,
-          textColor: colors.textPrimary,
-        },
-        alternateRowStyles: {
-          fillColor: colors.tableRowOdd,
-        },
-        columnStyles: table.columns.reduce(
-          (styles, col, idx) => ({
-            ...styles,
-            [idx]: { cellWidth: col.width / 3.78, minCellWidth: col.width / 3.78 },
-          }),
-          {}
-        ),
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    }
-
-    doc.save(`Security_Dashboard_Report_${modelId}_${date.split(',')[0].replace(/\//g, '-')}.pdf`);
-  };
-
-  // Helper function to convert hex color to RGB
-  const hexToRgb = (hex) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? [
-        parseInt(result[1], 16) / 255,
-        parseInt(result[2], 16) / 255,
-        parseInt(result[3], 16) / 255,
-      ]
-      : [0, 0, 0];
-  };
-
-  // Table styling
-  const tableSx = {
-    '& .MuiDataGrid-root': {
-      borderColor: colors.borderColor,
-      backgroundColor: colors.paperBg,
-      color: `${colors.textPrimary} !important`, // Ensure root-level text color
-      '& .MuiDataGrid-cell': {
-        color: `${colors.textPrimary} !important`,
-        borderColor: colors.borderColor,
-        '&:focus': {
-          outline: 'none',
-        },
-      },
-      '& .MuiDataGrid-columnHeaders': {
-        backgroundColor: colors.tableHeaderBg,
-        color: `${colors.textPrimary} !important`,
-        borderColor: colors.borderColor,
-        '& .MuiDataGrid-columnHeaderTitle': {
-          fontWeight: 600,
-          color: `${colors.textPrimary} !important`,
-        },
-      },
-      '& .MuiDataGrid-row': {
-        '&:nth-of-type(odd)': {
-          backgroundColor: colors.tableRowOdd,
-          '& .MuiDataGrid-cell': {
-            color: `${colors.textPrimary} !important`,
-          },
-        },
-        '&:hover': {
-          backgroundColor: colors.tableRowHover,
-          '& .MuiDataGrid-cell': {
-            color: `${colors.textPrimary} !important`,
-          },
-        },
-      },
-      '& .MuiDataGrid-footerContainer': {
-        backgroundColor: colors.paperBg,
-        color: `${colors.textPrimary} !important`,
-        borderColor: colors.borderColor,
-        '& .MuiTablePagination-root': {
-          color: `${colors.textPrimary} !important`,
-          '& .MuiTablePagination-selectLabel': {
-            color: `${colors.textPrimary} !important`,
-          },
-          '& .MuiTablePagination-displayedRows': {
-            color: `${colors.textPrimary} !important`,
-          },
-          '& .MuiTablePagination-actions': {
-            '& .MuiIconButton-root': {
-              color: `${colors.textPrimary} !important`,
-              '&:disabled': {
-                color: colors.buttonDisabledText,
-              },
-            },
-          },
-        },
-      },
-      '& .MuiDataGrid-sortIcon, & .MuiDataGrid-menuIcon, & .MuiDataGrid-filterIcon': {
-        color: `${colors.textPrimary} !important`,
-      },
-      '& .MuiDataGrid-overlay': {
-        color: `${colors.textPrimary} !important`,
-        backgroundColor: colors.paperBg,
-      },
-    },
-  };
-
   // Helper function to calculate average impact
   const calculateAverageImpact = (data) => {
     if (!data?.damageScenarios?.length) return 0;
@@ -1464,8 +965,8 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     let count = 0;
 
     data.damageScenarios.forEach(ds => {
-      const details = ds.Details || [];
-      details.forEach(detail => {
+      const derivations = ds.Derivations || [];
+      derivations.forEach(detail => {
         if (detail.impacts) {
           const impacts = Object.values(detail.impacts);
           const avg = impacts.reduce((sum, val) => {
@@ -1513,93 +1014,16 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
   const calculateHighFeasibilityAttacks = (data) => {
     if (!data?.attackScenarios?.length) return 0;
 
-    return data.attackScenarios.filter(attack => {
-      const feasibility = attack.feasibility || '';
-      return typeof feasibility === 'string'
-        ? feasibility.toLowerCase() === 'high'
-        : feasibility >= 3; // Assuming 1-5 scale where 3+ is high
-    }).length;
+    return data.attackScenarios.reduce((count, attack) => {
+      const scenes = attack.scenes || [];
+      return count + scenes.filter(s => {
+        const feasibility = s['Attack Feasibilities Rating'] || '';
+        return feasibility.toLowerCase() === 'high';
+      }).length;
+    }, 0);
   };
 
-  const processDashboardData = (data) => {
-    // Process the dashboard data and update state
-    if (!data) return;
-
-    // Count actual asset nodes (filter out edges and other non-asset nodes)
-    const allNodes = data.components?.template?.nodes || [];
-    const assetNodes = allNodes.filter(node => {
-      if (!node || !node.id) return false;
-      return !node.id.startsWith('reactflow__edge') && 
-             (node.type === 'default' || 
-              node.type === 'asset' || 
-              (node.data && node.data.type === 'asset') ||
-              (node.data && node.data.label));
-    });
-    
-    let threatsData = [];
-    let damageScenariosData = [];
-    let derivedDamageScenarios = [];
-    
-    if (Array.isArray(data.threats) && data.threats.length > 0) {
-      threatsData = data.threats[0]?.Details || [];
-    }
-    
-    if (Array.isArray(data.damageScenarios) && data.damageScenarios.length > 0) {
-      // Get standard damage scenarios from Derivations array in the first item
-      damageScenariosData = data.damageScenarios[0]?.Derivations || [];
-      derivedDamageScenarios = data.damageScenarios[1]?.Details || [];
-    }
-    
-    const totalThreats = threatsData.length;
-    const totalDerivedDamageScenarios = derivedDamageScenarios.length;
-    const totalDamageScenarios = damageScenariosData.length;
-    const totalComponents = assetNodes.length;
-    const totalAttackScenarios = data.attackScenarios?.length || 0;
-    const cybersecurityData = data.cybersecurity || [];
-
-    // Calculate risk levels
-    let high = 0,
-      medium = 0,
-      low = 0;
-    data.riskTreatments.Details?.forEach((risk) => {
-      const damage = data.damageScenarios
-        .flatMap((ds) => ds.Details || [])
-        .find((d) => d._id === risk.damage_id);
-      if (damage) {
-        const maxImpact = Object.values(damage.impacts || {}).reduce(
-          (max, val) => {
-            const num =
-              typeof val === 'string'
-                ? { Low: 1, Medium: 2, High: 3 }[val] || 0
-                : val || 0;
-            return num > max ? num : max;
-          },
-          0
-        );
-        if (maxImpact >= 3) high++;
-        else if (maxImpact === 2) medium++;
-        else low++;
-      }
-    });
-
-    // Update state with calculated values
-    setProjectStats(prevStats => ({
-      ...prevStats,
-      totalComponents,
-      totalThreats,
-      totalDamageScenarios,
-      totalDerivedDamageScenarios,
-      totalAttackScenarios,
-      risksIdentified: high + medium + low,
-      controlsImplemented: cybersecurityData.length,
-      totalConnections: data.components?.template?.edges?.length || 0,
-      uniqueProperties: new Set(data.components?.template?.nodes?.flatMap(node => node.properties || [])).size,
-    }));
-
-    setRiskLevels({ high, medium, low });
-  };
-
-  // Memoized data fetching function to prevent unnecessary re-renders
+  // Memoized data fetching function
   const fetchDashboardData = useCallback(async () => {
     if (!modelId) return;
     
@@ -1619,7 +1043,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         { key: 'riskTreatments', endpoint: `${baseUrl}v1/get/riskDetAndTreat`, defaultValue: {} },
       ];
 
-      // Process API responses
       const processResponse = (response, defaultValue) => {
         if (response === undefined) return Array.isArray(defaultValue) ? [] : {};
         return Array.isArray(defaultValue) 
@@ -1627,7 +1050,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           : (response ? { ...response } : {});
       };
 
-      // Fetch all data
       const results = {};
       for (const { key, endpoint, defaultValue } of apiEndpoints) {
         if (!isMounted.current) return;
@@ -1644,10 +1066,83 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         }
       }
 
-      // Only update state if component is still mounted
       if (isMounted.current) {
         setDashboardData(results);
-        processDashboardData(results);
+        
+        // Process data for stats
+        const allNodes = results.components?.template?.nodes || [];
+        const assetNodes = allNodes.filter(node => {
+          if (!node || !node.id) return false;
+          return !node.id.startsWith('reactflow__edge') && 
+                 (node.type === 'default' || 
+                  node.type === 'asset' || 
+                  (node.data && node.data.type === 'asset') ||
+                  (node.data && node.data.label));
+        });
+        
+        const totalComponents = assetNodes.length;
+        const totalConnections = results.components?.template?.edges?.length || 0;
+        const uniqueProperties = new Set(assetNodes.flatMap(node => node.properties || [])).size;
+        
+        let threatsData = [];
+        let damageScenariosData = [];
+        let derivedDamageScenarios = [];
+        
+        if (Array.isArray(results.threats) && results.threats.length > 0) {
+          threatsData = results.threats[0]?.Details || [];
+        }
+        
+        if (Array.isArray(results.damageScenarios) && results.damageScenarios.length > 0) {
+          damageScenariosData = results.damageScenarios[0]?.Derivations || [];
+          derivedDamageScenarios = results.damageScenarios[1]?.Details || [];
+        }
+        
+        const totalThreats = threatsData.length;
+        const totalDamageScenarios = damageScenariosData.length;
+        const totalDerivedDamageScenarios = derivedDamageScenarios.length;
+        const totalAttackScenarios = results.attackScenarios.reduce(
+          (sum, a) => sum + (a.scenes?.length || 0),
+          0
+        );
+        
+        const cyberItems = (results.cybersecurity || []).reduce((acc, item) => {
+          if (item && item.type) {
+            switch(item.type) {
+              case 'cybersecurity_goals':
+                acc.goals = Array.isArray(item.scenes) ? item.scenes.length : 0;
+                break;
+              case 'cybersecurity_claims':
+                acc.claims = Array.isArray(item.scenes) ? item.scenes.length : 0;
+                break;
+              case 'cybersecurity_requirements':
+                acc.requirements = Array.isArray(item.scenes) ? item.scenes.length : 0;
+                break;
+              case 'cybersecurity_controls':
+                acc.controls = Array.isArray(item.scenes) ? item.scenes.length : 0;
+                break;
+            }
+          }
+          return acc;
+        }, { goals: 0, claims: 0, requirements: 0, controls: 0 });
+
+        setProjectStats({
+          totalComponents,
+          totalThreats,
+          totalDamageScenarios,
+          totalDerivedDamageScenarios,
+          totalAttackScenarios,
+          risksIdentified: results.riskTreatments.Details?.length || 0,
+          cyberGoals: cyberItems.goals,
+          cyberClaims: cyberItems.claims,
+          cyberRequirements: cyberItems.requirements,
+          cyberControls: cyberItems.controls,
+          totalConnections,
+          uniqueProperties,
+          averageImpact: calculateAverageImpact(results),
+          unmitigatedRisks: calculateUnmitigatedRisks(results),
+          coveragePercentage: calculateCoveragePercentage(results),
+          highFeasibilityAttacks: calculateHighFeasibilityAttacks(results),
+        });
       }
       
     } catch (err) {
@@ -1665,11 +1160,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     return () => {
       isMounted.current = false;
     };
-  }, [modelId]); // Only re-create when modelId changes
-
-  const fetchData = async () => {
-    await fetchDashboardData();
-  };
+  }, [modelId]);
 
   useEffect(() => {
     if (!open || !modelId) {
@@ -1830,7 +1321,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
               <Button
                 color="inherit"
                 size="small"
-                onClick={fetchData}
+                onClick={fetchDashboardData}
                 disabled={isRefreshing}
                 startIcon={<RefreshIcon />}
               >
@@ -1889,7 +1380,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
             </Box>
             <TabPanel value={tabValue} index={0}>
               <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Assets"
                     value={projectStats.totalComponents}
@@ -1898,7 +1389,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Properties"
                     value={projectStats.uniqueProperties || 0}
@@ -1907,7 +1398,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Connections"
                     value={projectStats.totalConnections || 0}
@@ -1916,7 +1407,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Damages"
                     value={projectStats.totalDamageScenarios}
@@ -1924,16 +1415,16 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     icon={WarningIcon}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
-                    title="Derived Dmg"
+                    title="D-Damage"
                     value={projectStats.totalDerivedDamageScenarios}
                     color={colors.chartColors[4]}
                     icon={WarningIcon}
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Threats"
                     value={projectStats.totalThreats}
@@ -1942,7 +1433,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Attacks"
                     value={projectStats.totalAttackScenarios}
@@ -1950,7 +1441,16 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     icon={GppBadIcon}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
+                  <StatCard
+                    title="Risks"
+                    value={projectStats.risksIdentified}
+                    color={colors.chartColors[6]}
+                    icon={ReportProblemIcon}
+                    loading={loading}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Goals"
                     value={projectStats.cyberGoals || 0}
@@ -1959,7 +1459,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Claims"
                     value={projectStats.cyberClaims || 0}
@@ -1968,7 +1468,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Reqs"
                     value={projectStats.cyberRequirements || 0}
@@ -1977,7 +1477,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     loading={loading}
                   />
                 </Grid>
-                <Grid item xs={4} sm={3} md={2} lg={1}>
+                <Grid item xs={6} sm={4} md={2} lg={1}>
                   <StatCard
                     title="Controls"
                     value={projectStats.cyberControls || 0}
@@ -2045,34 +1545,32 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   >
                     {riskLevels.high + riskLevels.medium + riskLevels.low > 0 ? (
                       <PieChart
-                        series={[
-                          {
-                            ...riskPieData.series[0],
-                            highlightScope: { faded: 'global', highlighted: 'item' },
-                            faded: { innerRadius: 30, additionalRadius: -10, color: 'gray' },
-                            arcLabel: (params) => {
-                              return params.percent > 5
-                                ? `${params.value} (${Math.round(params.percent)}%)`
-                                : '';
-                            },
-                            arcLabelMinAngle: 15,
-                            cornerRadius: 4,
-                            paddingAngle: 2,
-                            innerRadius: '40%',
-                            outerRadius: '80%',
-                            cx: '50%',
-                            cy: '50%',
-                            data: riskPieData.series[0].data.map((item, index) => ({
-                              ...item,
-                              id: `risk-${index}`,
-                            })),
-                            valueFormatter: (value, { dataIndex }) => {
-                              const total = riskPieData.series[0].data.reduce((sum, item) => sum + item.value, 0);
-                              const percentage = Math.round((value / total) * 100);
-                              return `${value} (${percentage}%)`;
-                            },
+                        series={[{
+                          ...riskPieData.series[0],
+                          highlightScope: { faded: 'global', highlighted: 'item' },
+                          faded: { innerRadius: 30, additionalRadius: -10, color: 'gray' },
+                          arcLabel: (params) => {
+                            return params.percent > 5
+                              ? `${params.value} (${Math.round(params.percent)}%)`
+                              : '';
                           },
-                        ]}
+                          arcLabelMinAngle: 15,
+                          cornerRadius: 4,
+                          paddingAngle: 2,
+                          innerRadius: '40%',
+                          outerRadius: '80%',
+                          cx: '50%',
+                          cy: '50%',
+                          data: riskPieData.series[0].data.map((item, index) => ({
+                            ...item,
+                            id: `risk-${index}`,
+                          })),
+                          valueFormatter: (value, { dataIndex }) => {
+                            const total = riskPieData.series[0].data.reduce((sum, item) => sum + item.value, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${value} (${percentage}%)`;
+                          },
+                        }]}
                         slotProps={{
                           legend: {
                             direction: 'row',
@@ -2225,25 +1723,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   </Paper>
                 </Grid>
               </Grid>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Risks Table
-                </Typography>
-                <DataGrid
-                  rows={riskRows}
-                  columns={riskColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
             </TabPanel>
             <TabPanel value={tabValue} index={2}>
               <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -2294,63 +1773,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   </Paper>
                 </Grid>
               </Grid>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Threats Table
-                </Typography>
-                <DataGrid
-                  rows={threatRows}
-                  columns={threatColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Threats and Attack Paths per Asset
-                </Typography>
-                <DataGrid
-                  rows={assetThreatAttack}
-                  columns={assetColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Damage Scenarios Table
-                </Typography>
-                <DataGrid
-                  rows={damageRows}
-                  columns={damageColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
             </TabPanel>
             <TabPanel value={tabValue} index={3}>
               <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -2423,44 +1845,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   </Paper>
                 </Grid>
               </Grid>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Attacks Table
-                </Typography>
-                <DataGrid
-                  rows={attackRows}
-                  columns={attackColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
-              <Paper
-                elevation={1}
-                sx={{ p: 1, mt: 1, borderRadius: 1, bgcolor: colors.paperBg }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: colors.title, mb: 1 }}
-                >
-                  Cybersecurity Table
-                </Typography>
-                <DataGrid
-                  rows={cyberRows}
-                  columns={cyberColumns}
-                  autoHeight
-                  pageSizeOptions={[5]}
-                  disableRowSelectionOnClick
-                  sx={tableSx}
-                />
-              </Paper>
             </TabPanel>
           </>
         )}
@@ -2483,26 +1867,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           }}
         >
           Close
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={loading}
-          onClick={exportPDF}
-          size="small"
-          sx={{
-            backgroundColor: colors.primaryButtonBg,
-            color: colors.primaryButtonText,
-            '&:hover': {
-              backgroundColor: colors.primaryButtonHoverBg,
-            },
-            '&:disabled': {
-              backgroundColor: colors.buttonDisabledBg,
-              color: colors.buttonDisabledText,
-            },
-          }}
-        >
-          {loading ? <CircularProgress size={16} color="inherit" /> : 'Export PDF'}
         </Button>
       </DialogActions>
     </Dialog>
