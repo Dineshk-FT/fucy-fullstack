@@ -11,7 +11,8 @@ import {
   Grid,
   InputLabel,
   CircularProgress,
-  Backdrop
+  Backdrop,
+  IconButton
 } from '@mui/material';
 import { createPortal } from 'react-dom';
 import useStore from '../../store/Zustand/store';
@@ -20,7 +21,6 @@ import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { setModelId } from '../../store/slices/PageSectionSlice';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
-import { IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { nanoid } from 'nanoid';
 
@@ -36,7 +36,18 @@ const GenerateModel = ({ open, handleClose }) => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [step, setStep] = useState(0); // 👈 step tracker
   const [formValues, setFormValues] = useState({ systemName: '' });
+  const [systemInputPrompt, setSystemInputPrompt] = useState('');
+  const [promptValues, setPromptValues] = useState({
+    itemDefinitionPrompt: '',
+    damageScenarioPrompt: '',
+    threatScenarioPrompt: '',
+    attackscenarioPrompt: '',
+    cybersecurityPrompt: ''
+  });
+
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [fieldsVisible, setFieldsVisible] = useState(false);
@@ -49,18 +60,34 @@ const GenerateModel = ({ open, handleClose }) => {
     }));
   };
 
+  const handlePromptChange = (field) => (event) => {
+    setPromptValues((prev) => ({
+      ...prev,
+      [field]: event.target.value
+    }));
+  };
+
   const onClose = () => {
+    setStep(0);
     setFormValues({ systemName: '' });
+    setPromptValues({
+      itemDefinitionPrompt: '',
+      damageScenarioPrompt: '',
+      threatScenarioPrompt: '',
+      attackscenarioPrompt: '',
+      cybersecurityPrompt: ''
+    });
+    setSystemInputPrompt('');
     setManualFields([]);
     setFieldsVisible(false);
     handleClose();
   };
-  // console.log('manualFields', manualFields);
 
   const handleAddManualField = () => {
     setFieldsVisible(true);
     setManualFields((prev) => [...prev, { id: nanoid(), label: '', value: '' }]);
   };
+
   const handleManualChange = (id, field, value) => {
     setManualFields((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: value } : f)));
   };
@@ -82,9 +109,17 @@ const GenerateModel = ({ open, handleClose }) => {
 
   const handleSystemInputs = async () => {
     setLoading(true);
-    await getSystemInputs(formValues.systemName);
+    await getSystemInputs(formValues.systemName, systemInputPrompt); // 👈 pass prompt too
     setLoading(false);
     setFieldsVisible(true);
+  };
+
+  const handleNext = () => {
+    if (step === 0) {
+      setStep(1);
+    } else {
+      handlegenerateFullModel();
+    }
   };
 
   const handlegenerateFullModel = async () => {
@@ -96,9 +131,10 @@ const GenerateModel = ({ open, handleClose }) => {
       ...manualFields.reduce((acc, { label, value }) => {
         if (label.trim()) acc[label] = value;
         return acc;
-      }, {})
+      }, {}),
+      ...promptValues
     };
-    // console.log('mergedFormValues', mergedFormValues);
+
     try {
       const res = await generateFullModel(mergedFormValues);
       if (!res.error) {
@@ -134,7 +170,9 @@ const GenerateModel = ({ open, handleClose }) => {
     const fetchedFields = systemInputs?.map(({ label }) => (
       <React.Fragment key={label}>
         <Grid item xs={4} display="flex" alignItems="center" gap={1}>
-          <InputLabel sx={{ color: '#000', fontWeight: 600, flexGrow: 1 }}>{label.charAt(0).toUpperCase() + label.slice(1)}</InputLabel>
+          <InputLabel sx={{ color: '#000', fontWeight: 600, flexGrow: 1 }}>
+            {label.charAt(0).toUpperCase() + label.slice(1).replace(/([A-Z])/g, ' $1')}
+          </InputLabel>
         </Grid>
         <Grid item xs={7}>
           <TextField
@@ -194,56 +232,105 @@ const GenerateModel = ({ open, handleClose }) => {
         </DialogTitle>
 
         <DialogContent dividers sx={{ bgcolor: '#f7f7f7' }}>
-          <Box sx={{ mb: 3 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={4}>
-                <InputLabel sx={{ color: '#000', fontWeight: 600 }}>SystemName</InputLabel>
-              </Grid>
-              <Grid item xs={8}>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  sx={{ '& .MuiInputBase-input': { color: '#575757' } }}
-                  value={formValues.systemName}
-                  onChange={handleChange('systemName')}
-                />
-              </Grid>
-              <Grid item xs={12} display="flex" justifyContent="space-between">
-                <Button variant="outlined" onClick={handleAddManualField} disabled={loading || !formValues.systemName.trim()}>
-                  Add Field
-                </Button>
+          {step === 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Grid container spacing={2} alignItems="center">
+                {/* System Name */}
+                <Grid item xs={4}>
+                  <InputLabel sx={{ color: '#000', fontWeight: 600 }}>System Name</InputLabel>
+                </Grid>
+                <Grid item xs={8}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-input': { color: '#575757' } }}
+                    value={formValues.systemName}
+                    onChange={handleChange('systemName')}
+                  />
+                </Grid>
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSystemInputs}
-                  disabled={loading || !formValues.systemName.trim()}
-                >
-                  {loading ? <CircularProgress size={24} /> : 'Get Fields'}
-                </Button>
-              </Grid>
+                {/* System Input Prompt */}
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    label="System Input Prompt"
+                    placeholder="Provide extra instructions for fetching system inputs..."
+                    value={systemInputPrompt}
+                    onChange={(e) => setSystemInputPrompt(e.target.value)}
+                  />
+                </Grid>
 
-              {fieldsVisible && renderDynamicFields()}
+                {/* Buttons */}
+                <Grid item xs={12} display="flex" justifyContent="space-between">
+                  <Button variant="outlined" onClick={handleAddManualField} disabled={loading || !formValues.systemName.trim()}>
+                    Add Field
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSystemInputs}
+                    disabled={loading || !formValues.systemName.trim()}
+                  >
+                    {loading ? <CircularProgress size={24} /> : 'Get Fields'}
+                  </Button>
+                </Grid>
+
+                {fieldsVisible && renderDynamicFields()}
+              </Grid>
+            </Box>
+          )}
+
+          {step === 1 && (
+            <Grid container spacing={2}>
+              <Typography variant="h4" color="dark" mt={2} ml={2.5}>
+                Enter Your Prompt
+              </Typography>
+              {[
+                { key: 'itemDefinitionPrompt', label: 'Item Definition' },
+                { key: 'damageScenarioPrompt', label: 'Damage Scenario' },
+                { key: 'threatScenarioPrompt', label: 'Threat Scenario' },
+                { key: 'attackscenarioPrompt', label: 'Attack Scenario' },
+                { key: 'cybersecurityPrompt', label: 'Cybersecurity' }
+              ].map(({ key, label }) => (
+                <Grid item xs={12} key={key}>
+                  <TextField fullWidth multiline minRows={3} label={label} value={promptValues[key]} onChange={handlePromptChange(key)} />
+                </Grid>
+              ))}
             </Grid>
-          </Box>
+          )}
         </DialogContent>
 
         <DialogActions>
           <Button variant="outlined" color="error" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handlegenerateFullModel} disabled={!fieldsVisible}>
-            Next
+          {step > 0 && (
+            <Button variant="outlined" onClick={() => setStep(step - 1)}>
+              Back
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleNext} disabled={step === 0 && !fieldsVisible}>
+            {step === 0 ? 'Next' : 'Generate'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* ⬇️ Backdrop rendered to body, always above dialog */}
+      {/* Backdrop when generating */}
       {typeof window !== 'undefined' &&
         createPortal(
           <Backdrop
             open={generating}
-            sx={{ color: '#fff', zIndex: 2000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+            sx={{
+              color: '#fff',
+              zIndex: 2000,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2
+            }}
           >
             <CircularProgress color="inherit" />
             <Typography variant="body1">Generating Model ...</Typography>

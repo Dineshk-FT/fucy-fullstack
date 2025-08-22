@@ -1288,10 +1288,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  getSystemInputs: async (system) => {
+  getSystemInputs: async (system, propmt) => {
     try {
       const formData = new FormData();
       formData.append('systemName', system);
+      formData.append('systemInputPrompt', propmt);
 
       const options = {
         method: 'POST',
