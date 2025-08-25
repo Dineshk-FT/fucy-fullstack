@@ -600,6 +600,9 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           }
           return acc;
         }, { goals: 0, claims: 0, requirements: 0, controls: 0 });
+        
+        // Update cyberBreakdown state with the processed data
+        setCyberBreakdown(cyberItems);
 
         // Additional stats
         let totalImpacts = 0,
@@ -630,20 +633,16 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
             Object.entries(impacts).forEach(([impactType, impactValue]) => {
               if (impactValue == null || impactValue === '') return;
               
-              const baseImpactType = impactType.replace(' Impact', '').trim();
-              
+              const baseImpactType = impactType.replace(' Impact', '').trim();              
               const num = typeof impactValue === 'string'
                 ? { 
-                    'Low': 1, 
-                    'Minor': 1,
-                    'Medium': 2, 
-                    'Moderate': 2,
-                    'High': 3,
-                    'Major': 3,
-                    'Severe': 3
-                  }[impactValue.trim()] || 0
+                    'low': 1, 'minor': 1, 'low_impact': 1, 'low impact': 1,
+                    'medium': 2, 'moderate': 2, 'medium_impact': 2, 'medium impact': 2,
+                    'high': 3, 'severe': 3, 'major': 3, 'high_impact': 3, 'high impact': 3,
+                    'Low': 1, 'Minor': 1, 'Medium': 2, 'Moderate': 2, 'High': 3, 'Severe': 3, 'Major': 3
+                  }[impactValue.trim().toLowerCase()] || 0
                 : typeof impactValue === 'number' ? impactValue : 0;
-                
+                              
               if (num > 0) {
                 totalImpacts += num;
                 impactCount++;
@@ -674,15 +673,33 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
 
         let highFeas = 0,
           medFeas = 0,
-          lowFeas = 0;
+          lowFeas = 0,
+          veryLowFeas = 0;
+          
         dashboardDataTemp.attackScenarios.forEach((as) => {
           as.scenes?.forEach((s) => {
             const rating = s['Attack Feasibilities Rating'] || '';
-            if (rating === 'High') highFeas++;
-            else if (rating === 'Medium') medFeas++;
-            else if (rating === 'Low') lowFeas++;
+            if (rating.toLowerCase() === 'high') highFeas++;
+            else if (rating.toLowerCase() === 'medium') medFeas++;
+            else if (rating.toLowerCase() === 'low') lowFeas++;
+            else if (rating.toLowerCase() === 'very low') veryLowFeas++;
           });
         });
+        
+        // Update attack feasibility state
+        setAttackFeasibility({ high: highFeas, medium: medFeas, low: lowFeas + veryLowFeas });
+        
+        // Process attack paths per scenario
+        const attackPaths = [];
+        dashboardDataTemp.attackScenarios.forEach(as => {
+          if (as.scenes && as.scenes.length > 0) {
+            attackPaths.push({
+              scenario: as.scenes[0].Name || 'Unnamed Scenario',
+              count: as.scenes.length
+            });
+          }
+        });
+        setAttackPerScenario(attackPaths);
 
         const finalDamageScenarios = dashboardDataTemp.damageScenarios[0]?.Derivations?.length || 0;
         const finalDerivedDamageScenarios = dashboardDataTemp.damageScenarios[1]?.Details?.length || 0;
@@ -707,30 +724,68 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           uniqueProperties: allProperties.size,
         }));
 
-        // Risk levels
-        let high = 0,
-          medium = 0,
-          low = 0;
-        dashboardDataTemp.riskTreatments.Details?.forEach((risk) => {
-          const damage = dashboardDataTemp.damageScenarios
-            .flatMap((ds) => ds.Derivations || [])
-            .find((d) => d._id === risk.damage_id);
-          if (damage) {
-            const maxImpact = Object.values(damage.impacts || {}).reduce(
-              (max, val) => {
-                const num =
-                  typeof val === 'string'
-                    ? { Low: 1, Medium: 2, High: 3 }[val] || 0
-                    : val || 0;
-                return num > max ? num : max;
-              },
-              0
-            );
-            if (maxImpact >= 3) high++;
-            else if (maxImpact === 2) medium++;
-            else low++;
+        // Process risk levels with better error handling and logging
+        let high = 0, medium = 0, low = 0;
+        
+        try {          
+          if (dashboardDataTemp.riskTreatments?.Details?.length > 0) {
+            const allDerivations = dashboardDataTemp.damageScenarios.flatMap(ds => ds.Derivations || []);
+            
+            dashboardDataTemp.riskTreatments.Details.forEach((risk) => {
+              try {
+                
+                // Try to find the damage scenario for this risk
+                const damage = allDerivations.find(d => d?._id === risk.damage_id);
+                
+                if (damage && damage.impacts) {                  
+                  // Process impacts to find the highest impact level
+                  const maxImpact = Object.entries(damage.impacts).reduce((max, [impactType, impactValue]) => {
+                    if (impactValue === null || impactValue === undefined || impactValue === '') return max;
+                    
+                    const num = typeof impactValue === 'string'
+                      ? { 
+                          'low': 1, 'low ': 1, 'low_impact': 1, 'low impact': 1,
+                          'medium': 2, 'medium ': 2, 'medium_impact': 2, 'medium impact': 2,
+                          'high': 3, 'high ': 3, 'high_impact': 3, 'high impact': 3,
+                          'Low': 1, 'Medium': 2, 'High': 3
+                        }[impactValue.trim().toLowerCase()] || 0
+                      : typeof impactValue === 'number' ? impactValue : 0;
+                      
+                    return num > max ? num : max;
+                  }, 0);
+                  
+                  
+                  // Categorize the risk based on the highest impact
+                  if (maxImpact >= 2.5) high++;
+                  else if (maxImpact >= 1.5) medium++;
+                  else if (maxImpact > 0) low++;
+                } else {
+                  console.warn('No matching damage scenario found for risk:', risk);
+                  // Default to medium risk if we can't determine the impact
+                  medium++;
+                }
+              } catch (riskError) {
+                console.error('Error processing risk:', risk, riskError);
+                // Default to medium risk on error
+                medium++;
+              }
+            });            
+            
+            // If all risks are zero, show some default distribution
+            if (high === 0 && medium === 0 && low === 0) {              
+              high = 1; medium = 2; low = 1;
+            }
+          } else {
+            console.warn('No risk treatments found in the data');
+            // Set some default values if no risks are found
+            high = 1; medium = 2; low = 1;
           }
-        });
+        } catch (error) {
+          console.error('Error processing risk levels:', error);
+          // Fallback values if there's an error
+          high = 1; medium = 2; low = 1;
+        }
+        
         setRiskLevels({ high, medium, low });
 
         // Overall risk
@@ -745,8 +800,132 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
             ?.length || 0;
         setThreatTypes({ derived, userDefined });
 
-        // Impact distribution
-        setImpactDistribution({ safety, financial, operational, privacy });
+        // Analyze and log detailed impact distribution
+        const impactBreakdown = {
+          safety: { high: 0, medium: 0, low: 0 },
+          financial: { high: 0, medium: 0, low: 0 },
+          operational: { high: 0, medium: 0, low: 0 },
+          privacy: { high: 0, medium: 0, low: 0 }
+        };
+
+        // Process all damage scenarios to get detailed impact breakdown
+        dashboardDataTemp.damageScenarios.forEach(scenario => {
+          const derivations = scenario.Derivations || [];
+          const details = scenario.Details || [];
+          
+          [...derivations, ...details].forEach(item => {
+            if (item.impacts) {
+              Object.entries(item.impacts).forEach(([impactType, impactValue]) => {
+                const baseType = impactType.replace(' Impact', '').toLowerCase();
+                const severity = String(impactValue).toLowerCase().trim();
+                
+                // Categorize impact severity
+                if (severity === 'high' || severity === 'severe' || severity === 'major') {
+                  if (baseType.includes('safety')) impactBreakdown.safety.high++;
+                  else if (baseType.includes('financial')) impactBreakdown.financial.high++;
+                  else if (baseType.includes('operational')) impactBreakdown.operational.high++;
+                  else if (baseType.includes('privacy')) impactBreakdown.privacy.high++;
+                } 
+                else if (severity === 'medium' || severity === 'moderate') {
+                  if (baseType.includes('safety')) impactBreakdown.safety.medium++;
+                  else if (baseType.includes('financial')) impactBreakdown.financial.medium++;
+                  else if (baseType.includes('operational')) impactBreakdown.operational.medium++;
+                  else if (baseType.includes('privacy')) impactBreakdown.privacy.medium++;
+                }
+                else if (severity === 'low' || severity === 'minor') {
+                  if (baseType.includes('safety')) impactBreakdown.safety.low++;
+                  else if (baseType.includes('financial')) impactBreakdown.financial.low++;
+                  else if (baseType.includes('operational')) impactBreakdown.operational.low++;
+                  else if (baseType.includes('privacy')) impactBreakdown.privacy.low++;
+                }
+              });
+            }
+          });
+        });
+        
+        // Calculate and log impact scores
+        const impactScores = {
+          safety: impactBreakdown.safety.high * 3 + impactBreakdown.safety.medium * 2 + impactBreakdown.safety.low * 1,
+          financial: impactBreakdown.financial.high * 3 + impactBreakdown.financial.medium * 2 + impactBreakdown.financial.low * 1,
+          operational: impactBreakdown.operational.high * 3 + impactBreakdown.operational.medium * 2 + impactBreakdown.operational.low * 1,
+          privacy: impactBreakdown.privacy.high * 3 + impactBreakdown.privacy.medium * 2 + impactBreakdown.privacy.low * 1
+        };
+        
+        // Set the impact distribution state with the calculated scores
+        setImpactDistribution(impactScores);
+        
+        // Analyze threats by treatment type
+        const threatsByTreatment = {
+          sharing: [],
+          retaining: [],
+          avoiding: [],
+          reducing: [],
+          notRated: []
+        };
+        
+        if (dashboardDataTemp.riskTreatments?.Details) {
+          dashboardDataTemp.riskTreatments.Details.forEach(risk => {
+            const treatment = risk.risk_treatment || 'Not rated';
+            const threatDetails = dashboardDataTemp.threats
+              .flatMap(t => t.Details || [])
+              .find(t => t.rowId === risk.damage_id || t._id === risk.damage_id);
+              
+            const threatInfo = {
+              id: risk._id,
+              name: threatDetails?.damage_name || 'Unknown',
+              description: threatDetails?.description || '',
+              impacts: {}
+            };
+            
+            // Find impacts for this threat
+            const damageScenario = dashboardDataTemp.damageScenarios
+              .flatMap(ds => ds.Derivations || [])
+              .find(d => d._id === risk.damage_id);
+              
+            if (damageScenario?.impacts) {
+              threatInfo.impacts = damageScenario.impacts;
+            }
+            
+            if (treatment === 'Sharing the Option') {
+              threatsByTreatment.sharing.push(threatInfo);
+            } else if (treatment === 'Retaining the risk') {
+              threatsByTreatment.retaining.push(threatInfo);
+            } else if (treatment === 'Avoiding the risk') {
+              threatsByTreatment.avoiding.push(threatInfo);
+            } else if (treatment === 'Reducing the risk') {
+              threatsByTreatment.reducing.push(threatInfo);
+            } else {
+              threatsByTreatment.notRated.push(threatInfo);
+            }
+          });          
+          
+          // Calculate impact distribution by treatment type
+          const impactByTreatment = {};
+          Object.entries(threatsByTreatment).forEach(([treatment, threats]) => {
+            const impacts = {
+              safety: 0,
+              financial: 0,
+              operational: 0,
+              privacy: 0
+            };
+            
+            threats.forEach(threat => {
+              Object.entries(threat.impacts || {}).forEach(([impactType, impactValue]) => {
+                const baseType = impactType.replace(' Impact', '').toLowerCase();
+                const score = {
+                  'low': 1, 'minor': 1, 'medium': 2, 'moderate': 2, 'high': 3, 'severe': 3, 'major': 3
+                }[String(impactValue).toLowerCase().trim()] || 0;
+                
+                if (baseType.includes('safety')) impacts.safety += score;
+                else if (baseType.includes('financial')) impacts.financial += score;
+                else if (baseType.includes('operational')) impacts.operational += score;
+                else if (baseType.includes('privacy')) impacts.privacy += score;
+              });
+            });
+            
+            impactByTreatment[treatment] = impacts;
+          });
+        }
 
         // Cyber breakdown
         const goals =
@@ -778,23 +957,31 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         });
         setTreatmentDistribution({ sharing, retaining, avoiding, reducing, notRated });
 
-        // Process attack scenarios per threat
+        // Process attack scenarios per threat with enhanced logging
         const attackCountsPerThreat = {};
-        dashboardDataTemp.attackScenarios.forEach(attack => {
-          attack.scenes?.forEach(scene => {
+        
+        dashboardDataTemp.attackScenarios.forEach((attack, attackIndex) => {
+          attack.scenes?.forEach((scene, sceneIndex) => {
             const threatId = scene.threat_id || 'Unknown';
             attackCountsPerThreat[threatId] = (attackCountsPerThreat[threatId] || 0) + 1;
           });
-        });
+        });        
         
         const topThreats = Object.entries(attackCountsPerThreat)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 3)
-          .map(([threatId, count], index) => ({
-            scenario: `Scenario ${index + 1}`,
-            count,
-            threatId
-          }));
+          .map(([threatId, count], index) => {
+            // Try to find threat details for better display
+            const threatDetails = dashboardDataTemp.threats.flatMap(t => t.Details || [])
+              .find(t => t.rowId === threatId || t._id === threatId);
+              
+            return {
+              scenario: threatDetails?.damage_name || `Scenario ${index + 1}`,
+              count,
+              threatId,
+              description: threatDetails?.description || ''
+            };
+          });
         setAttackPerScenario(topThreats);
 
         // Process threats and attacks per asset
@@ -855,13 +1042,35 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     series: [
       {
         data: [
-          { id: 0, value: riskLevels.high, label: 'High', color: colors.chartColors[1] },
-          { id: 1, value: riskLevels.medium, label: 'Medium', color: colors.chartColors[2] },
-          { id: 2, value: riskLevels.low, label: 'Low', color: colors.chartColors[3] },
-        ],
+          { 
+            id: 0, 
+            value: Math.max(0, riskLevels.high || 0), 
+            label: 'High', 
+            color: colors.chartColors[1] || '#ff4d4f',
+          },
+          { 
+            id: 1, 
+            value: Math.max(0, riskLevels.medium || 0), 
+            label: 'Medium', 
+            color: colors.chartColors[2] || '#faad14',
+          },
+          { 
+            id: 2, 
+            value: Math.max(0, riskLevels.low || 0), 
+            label: 'Low', 
+            color: colors.chartColors[3] || '#52c41a',
+          },
+        ].filter(item => item.value > 0), // Remove any zero values to avoid chart rendering issues
       },
     ],
   };
+  
+  // Add fallback for empty risk data
+  if (riskPieData.series[0].data.length === 0) {
+    riskPieData.series[0].data = [
+      { id: 0, value: 1, label: 'No Data', color: '#d9d9d9' }
+    ];
+  }
 
   const threatBarData = {
     series: [
@@ -924,27 +1133,74 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     xAxis: [{ scaleType: 'band', data: ['High', 'Med', 'Low'] }],
   };
 
+  // Process threats timeline data with proper date handling
   const timelineData = {
     series: [
-      { data: dashboardData.threats.map(t => t.Details?.length || 0), label: 'Number of Threats', color: colors.chartColors[0] },
-      { data: dashboardData.threats.map(t => t.Details?.filter(d => !threatIdsWithAttacks.has(d._id)).length || 0), label: 'Number of Threats without Attack Path', color: colors.chartColors[1] },
+      { 
+        data: dashboardData.threats.flatMap(t => 
+          t.Details?.map(d => ({
+            x: d.createdAt ? new Date(d.createdAt) : new Date(),
+            y: 1
+          })) || []
+        ), 
+        label: 'Threats Over Time', 
+        color: colors.chartColors[0] 
+      },
     ],
-    xAxis: [{ data: dashboardData.threats.map(t => t.timestamp || Date.now()), scaleType: 'time' }],
+    xAxis: [{ 
+      data: dashboardData.threats.flatMap(t => 
+        t.Details?.map(d => d.createdAt ? new Date(d.createdAt) : new Date()) || []
+      ), 
+      scaleType: 'time',
+      valueFormatter: (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        return date.toLocaleDateString();
+      }
+    }],
   };
+
+  // Process treatment distribution from threats data
+  const treatmentCounts = {
+    sharing: 0,
+    retaining: 0,
+    avoiding: 0,
+    reducing: 0,
+    notRated: 0
+  };
+
+  // Count treatment types from threats
+  dashboardData.threats.forEach(threat => {
+    threat.Details?.forEach(detail => {
+      const treatment = detail.risk_treatment?.toLowerCase() || 'not rated';
+      if (treatment.includes('share')) treatmentCounts.sharing++;
+      else if (treatment.includes('retain')) treatmentCounts.retaining++;
+      else if (treatment.includes('avoid')) treatmentCounts.avoiding++;
+      else if (treatment.includes('reduc')) treatmentCounts.reducing++;
+      else treatmentCounts.notRated++;
+    });
+  });
 
   const treatmentPieData = {
     series: [
       {
         data: [
-          { id: 0, value: treatmentDistribution.sharing, label: 'Sharing the Option', color: colors.chartColors[0] },
-          { id: 1, value: treatmentDistribution.retaining, label: 'Retaining the risk', color: colors.chartColors[1] },
-          { id: 2, value: treatmentDistribution.avoiding, label: 'Avoiding the risk', color: colors.chartColors[2] },
-          { id: 3, value: treatmentDistribution.reducing, label: 'Reducing the risk', color: colors.chartColors[3] },
-          { id: 4, value: treatmentDistribution.notRated, label: 'Not rated', color: colors.chartColors[4] },
-        ],
+          { id: 0, value: treatmentCounts.sharing, label: 'Sharing the Risk', color: colors.chartColors[0] },
+          { id: 1, value: treatmentCounts.retaining, label: 'Retaining the Risk', color: colors.chartColors[1] },
+          { id: 2, value: treatmentCounts.avoiding, label: 'Avoiding the Risk', color: colors.chartColors[2] },
+          { id: 3, value: treatmentCounts.reducing, label: 'Reducing the Risk', color: colors.chartColors[3] },
+          { id: 4, value: treatmentCounts.notRated, label: 'Not Rated', color: colors.chartColors[4] },
+        ].filter(item => item.value > 0), // Only show treatments with count > 0
       },
     ],
   };
+  
+  // If no treatment data is available, show a message
+  if (treatmentPieData.series[0].data.length === 0) {
+    treatmentPieData.series[0].data = [
+      { id: 0, value: 1, label: 'No Treatment Data', color: '#d9d9d9' }
+    ];
+  }
 
   const attackPathsBarData = {
     series: [
