@@ -1,19 +1,44 @@
 /*eslint-disable*/
 import React, { useState, useEffect } from 'react';
-import { List, ListItemButton, ListItemText, CircularProgress, Box, Typography, Popper, Paper, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
-import { DragIndicator } from '@mui/icons-material';
+import { 
+  List, 
+  ListItemButton, 
+  ListItemText, 
+  CircularProgress, 
+  Box, 
+  Typography, 
+  Popper, 
+  Paper, 
+  Button, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogContentText, 
+  DialogActions,
+  Collapse,
+  Divider,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import { 
+  DragIndicator,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Close as CloseIcon
+} from '@mui/icons-material';
 import useStore from '../../store/Zustand/store';
 import { toast } from 'react-hot-toast';
 import ColorTheme from '../../themes/ColorTheme';
 
 export default function LibraryModal({ open, handleClose, anchorEl }) {
   const color = ColorTheme();
-  const [libraries, setLibraries] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({});
 
   useEffect(() => {
     const checkExistingData = () => {
@@ -29,9 +54,9 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
       if (!open) return;
 
       setIsLoading(true);
-      setLibraries([]);
+      setCategories([]);
       setSelectedLibrary(null);
-      setShowErrorDialog(false); // Ensure dialog is not shown on open
+      setShowErrorDialog(false);
 
       // Check if project has existing data
       const hasData = checkExistingData();
@@ -40,22 +65,50 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
       try {
         const librariesData = await useStore.getState().getLibraries();
 
-        // Ensure we have an array of libraries
         if (Array.isArray(librariesData)) {
+          // Filter valid libraries and group by category
           const validLibraries = librariesData.filter(lib => lib?._id && lib?.name);
+          
+          // Group libraries by category
+          const categorized = validLibraries.reduce((acc, lib) => {
+            const category = lib.category || 'Uncategorized';
+            if (!acc[category]) {
+              acc[category] = [];
+            }
+            acc[category].push(lib);
+            return acc;
+          }, {});
 
-          setLibraries(validLibraries);
+          // Convert to array format and sort categories
+          const categoriesList = Object.entries(categorized).map(([name, libraries]) => ({
+            id: name.toLowerCase().replace(/\s+/g, '-'),
+            name,
+            libraries
+          })).sort((a, b) => a.name.localeCompare(b.name));
 
-          // Auto-select the first library if available
-          if (validLibraries.length > 0) {
-            setSelectedLibrary(validLibraries[0]._id);
+          // Move 'Uncategorized' to the end if it exists
+          const uncategorizedIndex = categoriesList.findIndex(cat => cat.name === 'Uncategorized');
+          if (uncategorizedIndex !== -1) {
+            const uncategorized = categoriesList.splice(uncategorizedIndex, 1)[0];
+            categoriesList.push(uncategorized);
+          }
+
+          setCategories(categoriesList);
+
+          // Auto-expand first non-empty category if none are expanded
+          if (categoriesList.length > 0 && !Object.keys(expandedCategories).some(k => expandedCategories[k])) {
+            const firstCategoryWithLibraries = categoriesList.find(cat => cat.libraries.length > 0);
+            if (firstCategoryWithLibraries) {
+              setExpandedCategories({ [firstCategoryWithLibraries.id]: true });
+            }
           }
         } else {
-          setLibraries([]);
+          setCategories([]);
         }
       } catch (error) {
         console.error('Error loading libraries:', error);
-        setLibraries([]);
+        setCategories([]);
+        toast.error('Failed to load libraries');
       } finally {
         setIsLoading(false);
       }
@@ -64,7 +117,17 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
     loadLibraries();
   }, [open]);
 
-  const handleLibraryClick = (id) => setSelectedLibrary(id);
+  const toggleCategory = (categoryId) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
+
+  const handleLibraryClick = (id, e) => {
+    e?.stopPropagation?.();
+    setSelectedLibrary(id);
+  };
 
   const handleDragStart = (e, library) => {
     try {
@@ -93,7 +156,7 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
     e.stopPropagation();
 
     try {
-      const library = draggedItem || (selectedLibrary && libraries.find(lib => lib._id === selectedLibrary));
+      const library = draggedItem || (selectedLibrary && categories.flatMap(category => category.libraries).find(lib => lib._id === selectedLibrary));
       if (!library?._id) {
 
         return;
@@ -220,146 +283,202 @@ export default function LibraryModal({ open, handleClose, anchorEl }) {
         <Paper
           onClick={(e) => e.stopPropagation()}
           sx={{
-            width: 220,
-            padding: 1,
+            width: 280,
+            padding: 1.5,
             borderRadius: 2,
             bgcolor: color?.modalBg,
-            boxShadow: 1,
-            zIndex: 1500
+            boxShadow: 2,
+            zIndex: 1500,
+            border: `1px solid ${color?.borderColor || 'rgba(0, 0, 0, 0.12)'}`,
           }}
         >
-          <Typography
-            sx={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: color?.title,
-              pb: 0.5,
-              textAlign: 'center'
-            }}
-          >
-            Select from Library
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: color?.title,
+              }}
+            >
+              Select from Library
+            </Typography>
+            <Tooltip title="Close">
+              <IconButton 
+                size="small" 
+                onClick={handleClose}
+                sx={{ color: color?.textSecondary }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
           <Box
             sx={{
-              maxHeight: '150px',
+              maxHeight: '300px',
               overflowY: 'auto',
               borderRadius: 1,
               border: '1px solid',
               borderColor: 'divider',
               bgcolor: color?.inputBg,
-              boxShadow: 1,
-              mb: 1
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
+              mb: 1.5,
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: '3px',
+              },
             }}
           >
             {isLoading ? (
-              <Box sx={{ textAlign: 'center', py: 2 }}>
-                <CircularProgress size={20} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                <CircularProgress size={24} />
               </Box>
-            ) : !libraries?.length ? (
-              <Typography variant="body2" color="text.secondary" sx={{ p: 1, textAlign: 'center', color: color?.sidebarContent }}>
-                No libraries available.
+            ) : categories.length === 0 ? (
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  p: 2, 
+                  textAlign: 'center', 
+                  color: color?.textSecondary,
+                  fontStyle: 'italic'
+                }}
+              >
+                No libraries available. Create a library first.
               </Typography>
             ) : (
               <List disablePadding>
-                {libraries.map((library) => {
-                  if (!library?._id) return null; // Skip invalid entries
-                  const isSelected = selectedLibrary === library._id;
-                  return (
+                {categories.map((category) => (
+                  <div key={category.id}>
                     <ListItemButton
-                      key={library?._id || Math.random().toString(36).substr(2, 9)}
-                      selected={isSelected}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, library)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={handleDragOver}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLibraryClick(library._id);
-                      }}
+                      onClick={() => toggleCategory(category.id)}
                       sx={{
                         py: 0.5,
-                        px: 1,
-                        borderRadius: 1,
-                        bgcolor: isSelected ? 'primary.main' : 'transparent',
-                        color: isSelected ? 'white' : color?.sidebarContent,
+                        px: 1.5,
+                        borderBottom: `1px solid ${color?.borderColor || 'rgba(0, 0, 0, 0.12)'}`,
+                        bgcolor: expandedCategories[category.id] ? 'action.hover' : 'transparent',
                         '&:hover': {
-                          bgcolor: isSelected ? 'primary.dark' : 'action.hover',
-                          cursor: 'grab',
-                          '& .drag-handle': {
-                            opacity: 1,
-                            visibility: 'visible',
-                          }
-                        },
-                        '&.Mui-selected': {
-                          bgcolor: 'primary.main',
-                          '&:hover': {
-                            bgcolor: 'primary.dark'
-                          }
-                        },
-                        position: 'relative',
-                        '&:active': {
-                          cursor: 'grabbing',
+                          bgcolor: 'action.hover',
                         },
                       }}
                     >
-                      <DragIndicator 
-                        className="drag-handle" 
-                        sx={{ 
-                          mr: 1, 
-                          opacity: 0,
-                          visibility: 'hidden',
-                          transition: 'opacity 0.2s, visibility 0.2s',
-                          '&:hover': {
-                            cursor: 'grab',
-                          },
-                          '&:active': {
-                            cursor: 'grabbing',
-                          },
-                        }} 
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            {category.name}
+                            <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>
+                              ({category.libraries.length})
+                            </Typography>
+                          </Typography>
+                        }
                       />
-                      <ListItemText 
-                        primary={library?.name || 'Unnamed Library'}
-                        primaryTypographyProps={{
-                          noWrap: true,
-                          title: library?.name || 'Unnamed Library',
-                          sx: {
-                            fontSize: '0.875rem',
-                            fontWeight: isSelected ? 600 : 400
-                          }
-                        }}
-                      />
+                      {expandedCategories[category.id] ? (
+                        <ExpandLessIcon fontSize="small" />
+                      ) : (
+                        <ExpandMoreIcon fontSize="small" />
+                      )}
                     </ListItemButton>
-                  );
-                })}
+                    <Collapse in={expandedCategories[category.id]} timeout="auto" unmountOnExit>
+                      <List component="div" disablePadding>
+                        {category.libraries.map((library) => (
+                          <ListItemButton
+                            key={library._id}
+                            selected={selectedLibrary === library._id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, library)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={handleDragOver}
+                            onClick={(e) => handleLibraryClick(library._id, e)}
+                            sx={{
+                              pl: 3,
+                              pr: 1,
+                              py: 0.75,
+                              '&.Mui-selected': {
+                                bgcolor: 'primary.main',
+                                color: 'primary.contrastText',
+                                '&:hover': {
+                                  bgcolor: 'primary.dark',
+                                },
+                              },
+                              '&:hover': {
+                                bgcolor: 'action.hover',
+                                cursor: 'grab',
+                                '& .drag-handle': {
+                                  opacity: 1,
+                                  visibility: 'visible',
+                                },
+                              },
+                              '&:active': {
+                                cursor: 'grabbing',
+                              },
+                            }}
+                          >
+                            <DragIndicator 
+                              className="drag-handle"
+                              sx={{
+                                mr: 1,
+                                opacity: 0,
+                                visibility: 'hidden',
+                                transition: 'opacity 0.2s, visibility 0.2s',
+                                color: 'inherit',
+                              }}
+                            />
+                            <ListItemText
+                              primary={
+                                <Typography 
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: selectedLibrary === library._id ? 600 : 400,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  }}
+                                  title={library.name}
+                                >
+                                  {library.name || 'Unnamed Library'}
+                                </Typography>
+                              }
+                            />
+                          </ListItemButton>
+                        ))}
+                      </List>
+                    </Collapse>
+                  </div>
+                ))}
               </List>
             )}
           </Box>
 
           <Box sx={{ mt: 1, textAlign: 'center' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: color?.textSecondary, 
+                fontSize: '0.75rem',
+                display: 'block',
+                mb: 1,
+              }}
+            >
               Drag and drop a library to open it
             </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
             <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleClose(e);
-              }}
+              onClick={handleClose}
               variant="outlined"
-              color="error"
               size="small"
+              fullWidth
               sx={{
-                fontWeight: 500,
                 textTransform: 'none',
-                fontSize: 10,
-                padding: '2px 8px',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: color?.textPrimary,
+                borderColor: color?.borderColor,
                 '&:hover': {
-                  bgcolor: 'error.main',
-                  color: 'white'
-                }
+                  borderColor: color?.primary,
+                  color: color?.primary,
+                  bgcolor: 'transparent',
+                },
               }}
             >
               Close
