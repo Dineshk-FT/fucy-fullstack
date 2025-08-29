@@ -1324,8 +1324,12 @@ const useStore = createWithEqualityFn((set, get) => ({
       // Only return the required fields that are actually used in the UI
       return Array.isArray(res.data)
         ? res.data
-            .filter((lib) => lib?._id && lib?.name) // Filter out invalid entries
-            .map(({ _id, name }) => ({ _id, name })) // Only keep needed fields
+            .filter((lib) => lib?._id && lib?.name) // Only require _id and name
+            .map(({ _id, name, category }) => ({
+              _id,
+              name,
+              category: category || 'Uncategorized' // Default to 'Uncategorized' if category is missing
+            }))
         : [];
     } catch (error) {
       console.error('Error fetching libraries:', error);
@@ -1423,7 +1427,7 @@ const useStore = createWithEqualityFn((set, get) => ({
       if (!userId) throw new Error('User ID not found in session');
       if (!modelId) throw new Error('Model ID is required');
 
-      // Get current model name for better error messages
+      // Get current model data including category
       const currentModel = useStore.getState().model;
       if (!currentModel) throw new Error('No active model found');
 
@@ -1445,6 +1449,10 @@ const useStore = createWithEqualityFn((set, get) => ({
       formData.append('keyId', modelId);
       formData.append('source', 'model');
       formData.append('userId', userId);
+      // Add category to form data if it exists in the model
+      if (currentModel.category) {
+        formData.append('category', currentModel.category);
+      }
 
       const res = await axios.post(`${configuration.apiBaseUrl}v1/cloneModelOrLibrary`, formData, {
         headers: {

@@ -446,7 +446,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     cyberRequirements: 0,
     cyberControls: 0,
     totalConnections: 0,
-    uniqueProperties: 0
   });
   const [riskLevels, setRiskLevels] = useState({ high: 0, medium: 0, low: 0 });
   const [threatTypes, setThreatTypes] = useState({ derived: 0, userDefined: 0 });
@@ -554,14 +553,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
 
         // Count connections (edges between nodes)
         const connections = (dashboardDataTemp.components.template?.edges || []).length;
-
-        // Count unique properties across all nodes
-        const allProperties = new Set();
-        assetNodes.forEach(node => {
-          if (node.properties && Array.isArray(node.properties)) {
-            node.properties.forEach(prop => allProperties.add(prop));
-          }
-        });
 
         // Count threats - handle both array and object with Details array
         let threatsData = [];
@@ -721,7 +712,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           coveragePercentage: coverage,
           highFeasibilityAttacks: highFeas,
           totalConnections: connections,
-          uniqueProperties: allProperties.size,
         }));
 
         // Process risk levels with better error handling and logging
@@ -1338,7 +1328,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
         
         const totalComponents = assetNodes.length;
         const totalConnections = results.components?.template?.edges?.length || 0;
-        const uniqueProperties = new Set(assetNodes.flatMap(node => node.properties || [])).size;
         
         let threatsData = [];
         let damageScenariosData = [];
@@ -1393,7 +1382,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           cyberRequirements: cyberItems.requirements,
           cyberControls: cyberItems.controls,
           totalConnections,
-          uniqueProperties,
           averageImpact: calculateAverageImpact(results),
           unmitigatedRisks: calculateUnmitigatedRisks(results),
           coveragePercentage: calculateCoveragePercentage(results),
@@ -1642,15 +1630,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     value={projectStats.totalComponents}
                     color={colors.chartColors[0]}
                     icon={CategoryIcon}
-                    loading={loading}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4} md={2} lg={1}>
-                  <StatCard
-                    title="Properties"
-                    value={projectStats.uniqueProperties || 0}
-                    color={colors.chartColors[1]}
-                    icon={SecurityIcon}
                     loading={loading}
                   />
                 </Grid>
