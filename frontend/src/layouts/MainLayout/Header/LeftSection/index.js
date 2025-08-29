@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem } from '@mui/material';
+import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Select } from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
@@ -84,6 +84,17 @@ const LeftSection = () => {
     convertToLibrary
   } = useStore(selector, shallow);
 
+  const categories = [
+    'Powertrain / Electric Drive Domain',
+    'Energy & Charging Systems',
+    'Chassis & Vehicle Dynamics',
+    'ADAS & Autonomous Driving',
+    'Infotainment & Connectivity',
+    'Body Control & Comfort',
+    'Cybersecurity',
+    'Uncategorized'
+  ];
+
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
@@ -95,7 +106,10 @@ const LeftSection = () => {
     AttackModal: false,
     AIModal: false
   });
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Uncategorized');
   const [isLoading, setIsLoading] = useState(false);
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
@@ -320,10 +334,28 @@ const LeftSection = () => {
     getModels(); // Assuming this refreshes the library list
   }, [getModels]);
 
+  const handleCategoryChange = useCallback((event) => {
+    setSelectedCategory(event.target.value);
+  }, []);
+
+  const handleCategoryDialogOpen = useCallback(() => {
+    setCategoryDialogOpen(true);
+  }, []);
+
+  const handleCategoryDialogClose = useCallback(() => {
+    setCategoryDialogOpen(false);
+  }, []);
+
   const handleConvertToLibrary = useCallback(
     async (e) => {
       e?.stopPropagation?.();
+      handleCategoryDialogOpen();
+    },
+    [handleCategoryDialogOpen]
+  );
 
+  const confirmConvertToLibrary = useCallback(
+    async () => {
       if (!model?._id) {
         console.error('No active model to convert');
         notify('No active model to convert', 'error');
@@ -331,24 +363,26 @@ const LeftSection = () => {
       }
 
       try {
+        // Update the model with the selected category before converting to library
+        const updatedModel = { ...model, category: selectedCategory };
+        useStore.setState({ model: updatedModel });
+
         const result = await useStore.getState().convertToLibrary(model._id);
-        // console.log('result', result);
         if (result?.success) {
-          // Success notification with model name
-          notify(`Successfully converted "${result.modelName}" to library`, 'success');
+          notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
           await getModels();
         } else if (result?.error) {
-          // Show the error message from the API or validation
           notify(result.error, 'error');
         }
       } catch (error) {
         console.error('Failed to convert model:', error);
-        // Fallback error handling
         const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
         notify(errorMessage, 'error');
+      } finally {
+        handleCategoryDialogClose();
       }
     },
-    [model?._id, getModels]
+    [model, selectedCategory, getModels]
   );
 
   const tabs = useMemo(
@@ -853,6 +887,39 @@ const LeftSection = () => {
         <MenuItem onClick={handleExportJSON}>Export as JSON</MenuItem>
         <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
       </Menu>
+
+      {/* Category Selection Dialog */}
+      <Dialog open={categoryDialogOpen} onClose={handleCategoryDialogClose}>
+        <DialogTitle>Select Category</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2, minWidth: 300 }}>
+            <InputLabel id="category-select-label">Category</InputLabel>
+            <Select
+              labelId="category-select-label"
+              value={selectedCategory}
+              label="Category"
+              onChange={handleCategoryChange}
+              sx={{ mt: 1 }}
+            >
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCategoryDialogClose}>Cancel</Button>
+          <Button 
+            onClick={confirmConvertToLibrary}
+            variant="contained"
+            color="primary"
+          >
+            Convert to Library
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Project Modals */}
       <AddModel
