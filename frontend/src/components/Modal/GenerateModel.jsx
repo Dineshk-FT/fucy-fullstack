@@ -39,13 +39,33 @@ const GenerateModel = ({ open, handleClose }) => {
 
   const [step, setStep] = useState(0); // 👈 step tracker
   const [formValues, setFormValues] = useState({ systemName: '' });
-  const [systemInputPrompt, setSystemInputPrompt] = useState('');
+  const propmt = `You are an automotive cybersecurity architect. 
+Generate a JSON list of required system inputs for TARA as per ISO/SAE 21434.
+Include:
+- System components (ECUs, sensors, actuators, cloud services)
+- Communication interfaces (CAN, LIN, Ethernet, Bluetooth, Wi-Fi, OTA)
+- Assets of interest (data, functions, control signals)
+- Operational environment (road, factory, maintenance, remote services)
+- Dependencies (external services, supply chain, infrastructure)
+Provide short, realistic example values for each and 5-6 most important inputs.`;
+
+  const [systemInputPrompt, setSystemInputPrompt] = useState(propmt);
+
   const [promptValues, setPromptValues] = useState({
-    itemDefinitionPrompt: '',
-    damageScenarioPrompt: '',
-    threatScenarioPrompt: '',
-    attackscenarioPrompt: '',
-    cybersecurityPrompt: ''
+    itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
+Include: item name, purpose, operational description, boundaries, interfaces, assumptions, dependencies, stakeholders, and a system diagram.`,
+
+    damageScenarioPrompt: `Generate damage scenarios for the system.
+Include: name, description, affected component, cyber losses (CIAA), and impact ratings (Safety, Financial, Operational, Privacy).`,
+
+    threatScenarioPrompt: `Generate threat scenarios using STRIDE categories.
+Each should include: targeted component, attack vector, attacker goal, and related damage scenario.`,
+
+    attackscenarioPrompt: `Generate attack trees for critical threat scenarios.
+Rules: root = threat scenario, must include at least one AND/OR gate, events connect through gates, not directly.`,
+
+    cybersecurityPrompt: `Generate cybersecurity goals and mitigations for each scenario.
+Each goal should link to a damage/threat/attack scenario and include objectives (CIAA) and possible countermeasures.`
   });
 
   const [loading, setLoading] = useState(false);
@@ -71,13 +91,22 @@ const GenerateModel = ({ open, handleClose }) => {
     setStep(0);
     setFormValues({ systemName: '' });
     setPromptValues({
-      itemDefinitionPrompt: '',
-      damageScenarioPrompt: '',
-      threatScenarioPrompt: '',
-      attackscenarioPrompt: '',
-      cybersecurityPrompt: ''
+      itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
+Include: item name, purpose, operational description, boundaries, interfaces, assumptions, dependencies, stakeholders, and a system diagram.`,
+
+      damageScenarioPrompt: `Generate damage scenarios for the system.
+Include: name, description, affected component, cyber losses (CIAA), and impact ratings (Safety, Financial, Operational, Privacy).`,
+
+      threatScenarioPrompt: `Generate threat scenarios using STRIDE categories.
+Each should include: targeted component, attack vector, attacker goal, and related damage scenario.`,
+
+      attackscenarioPrompt: `Generate attack trees for critical threat scenarios.
+Rules: root = threat scenario, must include at least one AND/OR gate, events connect through gates, not directly.`,
+
+      cybersecurityPrompt: `Generate cybersecurity goals and mitigations for each scenario.
+Each goal should link to a damage/threat/attack scenario and include objectives (CIAA) and possible countermeasures.`
     });
-    setSystemInputPrompt('');
+    setSystemInputPrompt(propmt);
     setManualFields([]);
     setFieldsVisible(false);
     handleClose();

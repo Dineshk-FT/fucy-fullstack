@@ -31,6 +31,17 @@ const names = [
   'Availability',
 ];
 
+const categories = [
+  'Powertrain / Electric Drive Domain',
+  'Energy & Charging Systems',
+  'Chassis & Vehicle Dynamics',
+  'ADAS & Autonomous Driving',
+  'Infotainment & Connectivity',
+  'Body Control & Comfort',
+  'Cybersecurity',
+  'Uncategorized'
+];
+
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -58,6 +69,7 @@ export default React.memo(function AddLibrary({
   const { getTemplates } = useStore(selector, shallow);
   const [templateDetails, setTemplateDetails] = useState({
     name: '',
+    category: 'Uncategorized',
     properties: [],
   });
   const [loading, setLoading] = useState(false);
@@ -86,6 +98,7 @@ export default React.memo(function AddLibrary({
       const newTemplate = {
         id: uid(),
         name: templateDetails.name.trim(),
+        category: templateDetails.category,
         template: savedTemplate,
         properties: templateDetails.properties,
       };
@@ -93,7 +106,7 @@ export default React.memo(function AddLibrary({
       getTemplates();
       setNodes([]);
       setEdges([]);
-      setTemplateDetails({ name: '', properties: [] });
+      setTemplateDetails({ name: '', category: 'Uncategorized', properties: [] });
       handleClose();
       setLoading(false);
     },
@@ -140,6 +153,28 @@ export default React.memo(function AddLibrary({
                 aria-label="Template name"
                 sx={{ bgcolor: color?.inputBg }}
               />
+            </Box>
+            <Box>
+              <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }}>
+                Category
+              </FormLabel>
+              <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                <InputLabel id="category-select-label">Category</InputLabel>
+                <Select
+                  labelId="category-select-label"
+                  name="category"
+                  value={templateDetails.category}
+                  onChange={handleChange}
+                  label="Category"
+                  sx={{ bgcolor: color?.inputBg }}
+                >
+                  {categories.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
             <Box>
               <FormLabel sx={{ fontWeight: 600, color: color?.title, mb: 1 }} required>

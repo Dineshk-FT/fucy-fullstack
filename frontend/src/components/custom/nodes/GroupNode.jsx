@@ -11,6 +11,7 @@ import DetailsIcon from '@mui/icons-material/Details';
 import { setAnchorEl, setDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
 import DeleteDialog from './DeleteDialog';
 import UnSavedDialog from './UnSavedDialog';
+import CloseIcon from '@mui/icons-material/Close';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -214,11 +215,10 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           right: '-12px',
           background: '#f83e3e',
           border: 'none',
-          fontSize: '0.8rem',
           opacity: isHovered ? 1 : 0
         }}
       >
-        x
+        <CloseIcon sx={{ fontSize: '0.9rem' }} />
       </div>
       <div
         className="my-group-node"

@@ -120,7 +120,7 @@ iframe#webpack-dev-server-client-overlay {
   padding: 10px 15px;
 } */
 .edge-container {
-  z-index: 1500;
+  z-index: 10001;
 }
 
 .react-flow__resize-control {
