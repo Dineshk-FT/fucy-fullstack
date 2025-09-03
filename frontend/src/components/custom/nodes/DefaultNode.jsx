@@ -8,6 +8,7 @@ import { iconStyle } from '../../../themes/constant';
 import { setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
 import { shallow } from 'zustand/shallow';
 import useStore from '../../../store/Zustand/store';
+import CloseIcon from '@mui/icons-material/Close';
 import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
@@ -313,11 +314,10 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              fontSize: '0.8rem',
               opacity: isHovered ? 1 : 0
             }}
           >
-            x
+            <CloseIcon sx={{ fontSize: '1rem', mb: 0.1 }} />
           </div>
         </div>
       </ClickAwayListener>

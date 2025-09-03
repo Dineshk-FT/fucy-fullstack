@@ -9,6 +9,7 @@ import { setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices
 import { shallow } from 'zustand/shallow';
 import useStore from '../../../store/Zustand/store';
 import DetailsIcon from '@mui/icons-material/Details';
+import CloseIcon from '@mui/icons-material/Close';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -344,11 +345,10 @@ export default function DataNode({ id, data, isConnectable, type }) {
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              fontSize: '0.8rem',
               opacity: isHovered ? 1 : 0
             }}
           >
-            x
+            <CloseIcon sx={{ fontSize: '1rem', mb: 0.1 }} />
           </div>
         </div>
       </ClickAwayListener>
