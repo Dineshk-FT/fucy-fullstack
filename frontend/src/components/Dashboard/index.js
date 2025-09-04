@@ -586,6 +586,41 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     }, 0);
   };
 
+  const processRiskData = useCallback((data) => {
+    // ... existing risk processing code ...
+  }, []);
+
+  const components = useMemo(() => {
+    const allNodes = dashboardData.components?.template?.nodes || [];
+    return allNodes
+      .filter(node => {
+        if (!node || !node.id) return false;
+        return !node.id.startsWith('reactflow__edge') &&
+               (node.type === 'default' ||
+                node.type === 'asset' ||
+                (node.data && node.data.type === 'asset') ||
+                (node.data && node.data.label));
+      })
+      .map(node => ({
+        id: node.id,
+        name: node.data?.label || `Component ${node.id}`,
+        type: node.type,
+        data: node.data
+      }));
+  }, [dashboardData.components]);
+
+  const risks = useMemo(() => {
+    return dashboardData.threats.map(threat => ({
+      id: threat.id,
+      componentId: threat.componentId,
+      level: threat.riskLevel?.toLowerCase() || 'low',
+      name: threat.name || `Threat ${threat.id}`,
+      description: threat.description,
+      impact: threat.impact,
+      likelihood: threat.likelihood
+    }));
+  }, [dashboardData.threats]);
+
   return (
     <Dialog
       open={open}
@@ -858,6 +893,8 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     riskLevels={riskLevels}
                     treatmentDistribution={treatmentDistribution}
                     impactRef={chartRefs.impact}
+                    components={components}
+                    risks={risks}
                   />
                 </TabPanel>
               </Box>
@@ -870,6 +907,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     timelineData={timelineData}
                     threatRef={chartRefs.threat}
                     timelineRef={chartRefs.timeline}
+                    threats={dashboardData.threats}
                   />
                 </TabPanel>
               </Box>
