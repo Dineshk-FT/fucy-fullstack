@@ -641,36 +641,39 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
             Project Dashboard
           </Typography>
         </Box>
-        <Box>
-          <Tooltip title="Refresh Data" arrow>
-            <IconButton 
-              onClick={handleRefresh} 
-              disabled={isRefreshing}
-              color="primary"
-              size="small"
-              sx={{ 
-                position: 'absolute', 
-                right: 50, 
-                top: 8,
-                '&.Mui-disabled': {
-                  color: 'text.secondary',
-                }
-              }}
-            >
-              {isRefreshing ? (
-                <CircularProgress size={24} />
-              ) : (
-                <Tooltip title="Refresh Data">
+        <Box display="flex" alignItems="center" gap={1}>
+          <Tooltip title={isRefreshing ? 'Refreshing...' : 'Refresh Data'} arrow>
+            <span> {/* Wrapper for disabled tooltip */}
+              <IconButton 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                color="primary"
+                size="small"
+                sx={{
+                  p: 1,
+                  '&.Mui-disabled': {
+                    color: 'text.secondary',
+                    opacity: 0.7,
+                  },
+                  '&:hover:not(:disabled)': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  },
+                }}
+              >
+                {isRefreshing ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
                   <RefreshIcon />
-                </Tooltip>
-              )}
-            </IconButton>
+                )}
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title="Close" arrow>
             <IconButton
               onClick={onClose}
               size="small"
               sx={{
+                p: 1,
                 '&:hover': {
                   bgcolor: alpha(theme.palette.error.main, 0.1),
                   color: theme.palette.error.main,
@@ -752,77 +755,137 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
           </Alert>
         ) : (
           <>
-            <Box sx={{ borderBottom: 1, borderColor: colors.tabBorder, mb: 2 }}>
+            <Box sx={{ borderBottom: 1, borderColor: colors.tabBorder, mb: 2, position: 'relative' }}>
               <Tabs
                 value={tabValue}
                 onChange={(e, newValue) => setTabValue(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                aria-label="dashboard tabs"
                 sx={{
                   '& .MuiTabs-indicator': {
                     backgroundColor: colors.logo,
+                    height: 3,
+                  },
+                  '& .MuiTabScrollButton-root': {
+                    color: colors.tabContentClr,
+                    '&.Mui-disabled': {
+                      opacity: 0.3,
+                    },
                   },
                 }}
               >
                 <Tab
                   label="Overview"
                   sx={{
+                    minHeight: 48,
                     color: colors.tabContentClr,
-                    '&.Mui-selected': { color: colors.logo },
+                    '&.Mui-selected': { 
+                      color: colors.logo,
+                      fontWeight: 600,
+                    },
+                    '&:hover': {
+                      backgroundColor: alpha(colors.logo, 0.08),
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 />
                 <Tab
                   label="Risks & Impacts"
                   sx={{
+                    minHeight: 48,
                     color: colors.tabContentClr,
-                    '&.Mui-selected': { color: colors.logo },
+                    '&.Mui-selected': { 
+                      color: colors.logo,
+                      fontWeight: 600,
+                    },
+                    '&:hover': {
+                      backgroundColor: alpha(colors.logo, 0.08),
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 />
                 <Tab
                   label="Threats & Damages"
                   sx={{
+                    minHeight: 48,
                     color: colors.tabContentClr,
-                    '&.Mui-selected': { color: colors.logo },
+                    '&.Mui-selected': { 
+                      color: colors.logo,
+                      fontWeight: 600,
+                    },
+                    '&:hover': {
+                      backgroundColor: alpha(colors.logo, 0.08),
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 />
                 <Tab
                   label="Attacks & Cyber"
                   sx={{
+                    minHeight: 48,
                     color: colors.tabContentClr,
-                    '&.Mui-selected': { color: colors.logo },
+                    '&.Mui-selected': { 
+                      color: colors.logo,
+                      fontWeight: 600,
+                    },
+                    '&:hover': {
+                      backgroundColor: alpha(colors.logo, 0.08),
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 />
               </Tabs>
             </Box>
-            <TabPanel value={tabValue} index={0}>
-              <OverviewContent
-                projectStats={projectStats}
-                loading={loading}
-                overviewRiskCounts={overviewRiskCounts}
-                handleRefresh={handleRefresh}
-              />
-            </TabPanel>
-            <TabPanel value={tabValue} index={1}>
-              <RisksContent
-                impactDistribution={impactDistribution}
-                riskLevels={riskLevels}
-                treatmentDistribution={treatmentDistribution}
-                impactRef={chartRefs.impact}
-              />
-            </TabPanel>
-            <TabPanel value={tabValue} index={2}>
-              <ThreatsContent
-                threatTypes={threatTypes}
-                timelineData={timelineData}
-                threatRef={chartRefs.threat}
-              />
-            </TabPanel>
-            <TabPanel value={tabValue} index={3}>
-              <AttacksContent
-                cyberBreakdown={cyberBreakdown}
-                attackPerScenario={attackPerScenario}
-                attackFeasibility={attackFeasibility}
-                feasRef={chartRefs.feas}
-              />
-            </TabPanel>
+            <Slide direction="right" in={tabValue === 0} mountOnEnter unmountOnExit>
+              <Box>
+                <TabPanel value={tabValue} index={0}>
+                  <OverviewContent
+                    projectStats={projectStats}
+                    loading={loading}
+                    overviewRiskCounts={overviewRiskCounts}
+                    handleRefresh={handleRefresh}
+                  />
+                </TabPanel>
+              </Box>
+            </Slide>
+            <Slide direction={tabValue > 1 ? 'left' : 'right'} in={tabValue === 1} mountOnEnter unmountOnExit>
+              <Box>
+                <TabPanel value={tabValue} index={1}>
+                  <RisksContent
+                    impactDistribution={impactDistribution}
+                    riskLevels={riskLevels}
+                    treatmentDistribution={treatmentDistribution}
+                    impactRef={chartRefs.impact}
+                  />
+                </TabPanel>
+              </Box>
+            </Slide>
+            <Slide direction={tabValue > 2 ? 'left' : 'right'} in={tabValue === 2} mountOnEnter unmountOnExit>
+              <Box>
+                <TabPanel value={tabValue} index={2}>
+                  <ThreatsContent
+                    threatTypes={threatTypes}
+                    timelineData={timelineData}
+                    threatRef={chartRefs.threat}
+                    timelineRef={chartRefs.timeline}
+                  />
+                </TabPanel>
+              </Box>
+            </Slide>
+            <Slide direction="left" in={tabValue === 3} mountOnEnter unmountOnExit>
+              <Box>
+                <TabPanel value={tabValue} index={3}>
+                  <AttacksContent
+                    cyberBreakdown={cyberBreakdown}
+                    attackPerScenario={attackPerScenario}
+                    attackFeasibility={attackFeasibility}
+                    feasRef={chartRefs.feas}
+                  />
+                </TabPanel>
+              </Box>
+            </Slide>
           </>
         )}
       </DialogContent>

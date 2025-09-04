@@ -1,27 +1,67 @@
 /*eslint-disable*/
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Grid, Paper, Typography, Box } from '@mui/material';
-import { BarChart, PieChart } from '@mui/x-charts';
-import { useTheme } from '@mui/material/styles';
+import { Grid, Paper, Typography, Box, useMediaQuery } from '@mui/material';
+import { BarChart, PieChart, pieArcClasses, pieArcLabelClasses } from '@mui/x-charts';
+import { useTheme, alpha } from '@mui/material/styles';
 import ColorTheme from '../../themes/ColorTheme';
+import EnhancedChartCard from './EnhancedChartCard';
 
 const RisksContent = ({ impactDistribution, riskLevels, treatmentDistribution, impactRef }) => {
   const theme = useTheme();
   const colors = ColorTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const chartOptions = {
     sx: {
-      '.MuiChartsAxis-tick': { stroke: colors.chartText },
-      '.MuiChartsAxis-line': { stroke: colors.chartGrid },
-      '.MuiChartsAxis-label': { fill: colors.chartText },
-      '.MuiChartsLegend-root': { fill: colors.chartText },
+      '& .MuiChartsAxis-tick': { 
+        stroke: colors.chartText,
+        '& text': {
+          fill: colors.chartText,
+          fontSize: isMobile ? '0.6rem' : '0.75rem',
+        },
+      },
+      '& .MuiChartsAxis-line': { 
+        stroke: colors.chartGrid,
+        strokeWidth: 1,
+      },
+      '& .MuiChartsAxis-label': { 
+        fill: colors.chartText,
+        fontSize: isMobile ? '0.7rem' : '0.85rem',
+      },
+      '& .MuiChartsLegend-root': { 
+        '& text': {
+          fill: colors.chartText,
+          fontSize: isMobile ? '0.65rem' : '0.75rem',
+        },
+      },
+      '& .MuiBarElement-root': {
+        rx: 4,
+        ry: 4,
+      },
       backgroundColor: colors.chartBackground,
+      borderRadius: 1,
     },
     slotProps: {
       legend: {
-        labelStyle: { fill: colors.chartText },
+        direction: isMobile ? 'row' : 'column',
+        position: { vertical: 'bottom', horizontal: 'middle' },
+        itemMarkWidth: 10,
+        itemMarkHeight: 10,
+        markGap: 8,
+        itemGap: isMobile ? 16 : 8,
+        padding: { top: 20, bottom: 10, left: 10, right: 10 },
+        labelStyle: { 
+          fill: colors.chartText,
+          fontSize: isMobile ? '0.7rem' : '0.75rem',
+        },
       },
+    },
+    margin: { 
+      top: 20, 
+      right: 20, 
+      bottom: isMobile ? 120 : 90,  // Increased bottom margin for legend
+      left: 40,
     },
   };
 
@@ -120,6 +160,21 @@ const RisksContent = ({ impactDistribution, riskLevels, treatmentDistribution, i
 
   const hasTreatmentData = treatmentTypes.length > 0;
 
+  const treatmentBarData = {
+    series: [
+      {
+        data: treatmentTypes.map(type => type.value),
+        label: 'Count',
+      },
+    ],
+    xAxis: [
+      {
+        scaleType: 'band',
+        data: treatmentTypes.map(type => type.label),
+      },
+    ],
+  };
+
   const treatmentPieData = {
     series: [
       {
@@ -136,171 +191,190 @@ const RisksContent = ({ impactDistribution, riskLevels, treatmentDistribution, i
   };
 
   return (
-    <Grid container spacing={2} sx={{ mt: 1 }}>
+    <Grid container spacing={2} sx={{ mt: 0.5 }}>
       <Grid item xs={12} md={6}>
-        <Paper elevation={1} sx={{ p: 1, borderRadius: 1, bgcolor: colors.paperBg }}>
-          <Typography variant="subtitle2" sx={{ color: colors.title }}>
-            Impact Distribution
-          </Typography>
-          <Box ref={impactRef} sx={{ height: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            {hasImpactData ? (
-              <BarChart
-                {...impactBarData}
-                height={300}
-                margin={{ top: 20, right: 30, left: 40, bottom: 70 }}
-                {...chartOptions}
-                yAxis={[{
-                  label: 'Count',
-                  labelStyle: { 
-                    fill: colors.chartText,
-                    fontSize: '0.75rem',
-                  },
-                  tickLabelStyle: {
-                    fill: colors.chartText,
-                    fontSize: '0.7rem',
-                  },
-                }]}
-                xAxis={[{
-                  ...impactBarData.xAxis[0],
-                  label: 'Impact Categories',
-                  labelStyle: { 
-                    fill: colors.chartText,
-                    fontSize: '0.75rem',
-                  },
-                  tickLabelStyle: {
-                    fill: colors.chartText,
-                    fontSize: '0.7rem',
-                  },
-                }]}
-              />
-            ) : (
-              <Box sx={{ textAlign: 'center', p: 3 }}>
-                <Typography variant="body2" color="textSecondary">
-                  No impact distribution data available
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Paper>
+        <EnhancedChartCard 
+          title="Impact Distribution" 
+          titleTooltip="Distribution of risks by impact category"
+          chartRef={impactRef}
+          noData={!hasImpactData}
+          noDataText="No impact distribution data available"
+        >
+          <BarChart
+            {...impactBarData}
+            height={300}
+            {...chartOptions}
+            yAxis={[{
+              label: 'Count',
+              labelStyle: { 
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.7rem' : '0.75rem',
+              },
+              tickLabelStyle: {
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.6rem' : '0.65rem',
+              },
+            }]}
+            xAxis={[{
+              ...impactBarData.xAxis[0],
+              label: 'Impact Categories',
+              labelStyle: { 
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.7rem' : '0.75rem',
+              },
+              tickLabelStyle: {
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.6rem' : '0.65rem',
+              },
+            }]}
+            colors={[colors.chartColors[0]]}
+          />
+        </EnhancedChartCard>
       </Grid>
       <Grid item xs={12} md={6}>
-        <Paper elevation={1} sx={{ p: 1, borderRadius: 1, bgcolor: colors.paperBg }}>
-          <Typography variant="subtitle2" sx={{ color: colors.title }}>
-            Risk Levels Pie
-          </Typography>
-          <Box sx={{ height: 300, position: 'relative' }}>
-            <Box sx={{ 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              justifyContent: 'center',
-              opacity: hasRiskData ? 1 : 0.4
-            }}>
-              <PieChart
-                series={riskPieData.series}
-                height={300}
-                {...chartOptions}
-                slotProps={{
-                  ...chartOptions.slotProps,
-                  legend: { 
-                    hidden: true 
-                  },
-                  pie: {
-                    ...chartOptions.slotProps?.pie,
-                    onClick: (event, itemIdentifier, item) => {
-                      if (item.id === 'no-data') return; // Prevent interaction with no-data slice
-                    },
-                  },
-                }}
-              />
-            </Box>
-            {!hasRiskData && (
-              <Box sx={{ 
-                position: 'absolute', 
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                textAlign: 'center',
-                p: 2,
-              }}>
-                <Typography variant="body2" color="textSecondary">
-                  No risk level data available
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Paper>
+        <EnhancedChartCard 
+          title="Risk Levels" 
+          titleTooltip="Distribution of risks by severity level"
+          noData={!hasRiskData}
+          noDataText="No risk level data available"
+        >
+          <PieChart
+            series={[
+              {
+                data: hasRiskData ? riskLevelsData : [{ 
+                  id: 'no-data', 
+                  value: 1, 
+                  label: 'No Data', 
+                  color: colors.chartColors[6] || '#d9d9d9' 
+                }],
+                innerRadius: isMobile ? 40 : 60,
+                outerRadius: isMobile ? 80 : 100,
+                paddingAngle: 2,
+                cornerRadius: 4,
+                highlightScope: { faded: 'global', highlighted: 'item' },
+                faded: { innerRadius: 20, additionalRadius: -10, color: 'gray' },
+                arcLabel: (params) => {
+                  if (!hasRiskData) return '';
+                  return `${params.label}: ${params.value}`;
+                },
+                arcLabelMinAngle: 15,
+              },
+            ]}
+            {...chartOptions}
+            slotProps={{
+              ...chartOptions.slotProps,
+              legend: {
+                ...chartOptions.slotProps.legend,
+                itemMarkWidth: 12,
+                itemMarkHeight: 12,
+              },
+            }}
+            sx={{
+              ...chartOptions.sx,
+              [`& .${pieArcClasses.arcLabel}`]: {
+                fill: colors.paperBg,
+                fontWeight: 'bold',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+              },
+            }}
+          />
+        </EnhancedChartCard>
       </Grid>
-      <Grid item xs={12} md={6}>
-        <Paper elevation={1} sx={{ p: 1, borderRadius: 1, bgcolor: colors.paperBg }}>
-          <Typography variant="subtitle2" sx={{ color: colors.title }}>
-            Threats Scenarios by Treatment
-          </Typography>
-          <Box sx={{ height: 300, position: 'relative' }}>
-            <Box sx={{ 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              justifyContent: 'center',
-              opacity: hasTreatmentData ? 1 : 0.4
-            }}>
-              <PieChart
-                series={treatmentPieData.series}
-                height={300}
-                {...chartOptions}
-                slotProps={{
-                  ...chartOptions.slotProps,
-                  legend: { 
-                    hidden: true,
-                    labelStyle: {
-                      fontSize: '0.7rem',
-                    },
-                  },
-                  pie: {
-                    ...chartOptions.slotProps?.pie,
-                    onClick: (event, itemIdentifier, item) => {
-                      if (item.id === 'no-treatment-data') return; // Prevent interaction with no-data slice
-                    },
-                  },
-                }}
-              />
-            </Box>
-            {!hasTreatmentData && (
-              <Box sx={{ 
-                position: 'absolute', 
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                textAlign: 'center',
-                p: 2,
-              }}>
-                <Typography variant="body2" color="textSecondary">
-                  No treatment data available
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Paper>
+      <Grid item xs={12}>
+        <EnhancedChartCard 
+          title="Risk Treatment Distribution" 
+          titleTooltip="Distribution of risk treatment approaches"
+          noData={!hasTreatmentData}
+          noDataText="No risk treatment data available"
+        >
+          <BarChart
+            {...treatmentBarData}
+            height={300}
+            {...chartOptions}
+            margin={{ 
+              top: 20, 
+              right: 20, 
+              bottom: isMobile ? 120 : 80, 
+              left: 40 
+            }}
+            yAxis={[{
+              label: 'Count',
+              labelStyle: { 
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.7rem' : '0.75rem',
+              },
+              tickLabelStyle: {
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.6rem' : '0.65rem',
+              },
+            }]}
+            xAxis={[{
+              ...treatmentBarData.xAxis[0],
+              label: 'Treatment Types',
+              labelStyle: { 
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.7rem' : '0.75rem',
+              },
+              tickLabelStyle: {
+                fill: colors.chartText,
+                fontSize: isMobile ? '0.6rem' : '0.65rem',
+                angle: isMobile ? -45 : 0,
+                textAnchor: isMobile ? 'end' : 'middle',
+              },
+            }]}
+            colors={treatmentBarData.series.map((_, index) => colors.chartColors[index % colors.chartColors.length])}
+          />
+        </EnhancedChartCard>
       </Grid>
     </Grid>
   );
 };
 
 RisksContent.propTypes = {
-  impactDistribution: PropTypes.object.isRequired,
-  riskLevels: PropTypes.object.isRequired,
-  treatmentDistribution: PropTypes.object.isRequired,
-  impactRef: PropTypes.object.isRequired
+  impactDistribution: PropTypes.shape({
+    safety: PropTypes.number,
+    financial: PropTypes.number,
+    operational: PropTypes.number,
+    privacy: PropTypes.number,
+  }).isRequired,
+  riskLevels: PropTypes.shape({
+    high: PropTypes.number,
+    medium: PropTypes.number,
+    low: PropTypes.number,
+  }).isRequired,
+  treatmentDistribution: PropTypes.shape({
+    sharing: PropTypes.number,
+    retaining: PropTypes.number,
+    avoiding: PropTypes.number,
+    reducing: PropTypes.number,
+    notRated: PropTypes.number,
+  }).isRequired,
+  impactRef: PropTypes.oneOfType([
+    PropTypes.func,
+    PropTypes.shape({ current: PropTypes.instanceOf(Element) })
+  ]),
+};
+
+RisksContent.defaultProps = {
+  impactDistribution: {
+    safety: 0,
+    financial: 0,
+    operational: 0,
+    privacy: 0,
+  },
+  riskLevels: {
+    high: 0,
+    medium: 0,
+    low: 0,
+  },
+  treatmentDistribution: {
+    sharing: 0,
+    retaining: 0,
+    avoiding: 0,
+    reducing: 0,
+    notRated: 0,
+  },
+  impactRef: null,
 };
 
 export default RisksContent;
