@@ -151,6 +151,16 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     }
   };
 
+  const checkFullModelStatus = async (taskId) => {
+    const url = `${configuration.apiBaseUrl}v1/generate/full-model/status/${taskId}`;
+    try {
+      const res = await axios.get(url);
+      return res.data;
+    } catch (error) {
+      return { status: 'failed', error: error.message };
+    }
+  };
+
   const handlegenerateFullModel = async () => {
     setGenerating(true);
 
@@ -165,18 +175,38 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     };
 
     try {
+      // Step 1: Start the job
       const res = await generateFullModel(mergedFormValues);
-      if (!res.error) {
-        toast.success(res?.message ?? 'Generated Successfully');
-        setTimeout(() => {
-          navigate(`/Models/${res?.model?.model_id}`);
-          dispatch(setModelId(res?.model?.model_id));
-          dispatch(closeAll());
-          onClose();
-        }, 1000);
-      } else {
-        toast.error(res?.error ?? 'Something went wrong');
+      const taskId = res?.task_id;
+
+      if (!taskId) {
+        toast.error('Failed to start generation');
+        return;
       }
+
+      // Step 2: Poll until done
+      let result = null;
+      while (!result) {
+        const status = await checkFullModelStatus(taskId);
+
+        if (status.status === 'done') {
+          result = status.result;
+        } else if (status.status === 'failed') {
+          toast.error(status.error ?? 'Generation failed');
+          return;
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // wait 5s
+        }
+      }
+
+      // Step 3: Success
+      toast.success(result?.message ?? 'Generated Successfully');
+      setTimeout(() => {
+        navigate(`/Models/${result?.model?.model_id}`);
+        dispatch(setModelId(result?.model?.model_id));
+        dispatch(closeAll());
+        onClose();
+      }, 1000);
     } finally {
       setGenerating(false);
     }

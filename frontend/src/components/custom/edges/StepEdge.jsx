@@ -48,6 +48,7 @@ export default React.memo(function StepEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const isSelected = selectedBlock?.id === id;
 
   const edges = getEdges();
   const currentEdge = edges.find((edge) => edge.id === id);
@@ -283,7 +284,6 @@ export default React.memo(function StepEdge({
     );
   }, [isMarkerVisible]);
 
-  const isSelected = selectedBlock?.id === id;
   const edgeStyle = {
     ...style,
     filter: isSelected ? 'drop-shadow(0px 0px 8px #BF00FF)' : 'none'
@@ -351,7 +351,7 @@ export default React.memo(function StepEdge({
             </Box>
           </ClickAwayListener>
 
-          <Box className="edge-buttons" display="flex" gap={0.5} sx={{ opacity: !isSelected ? 0 : 1 }}>
+          <Box className="edge-buttons" display={isSelected ? 'flex' : 'none'} gap={0.5}>
             <Box onClick={handleSwap}>{renderButton}</Box>
             <Box className="edgebutton" onClick={onEditEdge}>
               <EditIcon sx={{ fontSize: '0.6rem', ml: 0.5, mt: 0.4 }} />

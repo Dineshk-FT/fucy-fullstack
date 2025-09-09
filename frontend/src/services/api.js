@@ -12,12 +12,12 @@ export const verifyCard = async (paymentMethodId) => {
     const response = await axios.post(
       `${configuration.apiBaseUrl}verify-card`,
       new URLSearchParams({
-        payment_method_id: paymentMethodId,
+        payment_method_id: paymentMethodId
       }),
       {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       }
     );
     return response.data;
@@ -35,18 +35,18 @@ export const login = createAsyncThunk('login', async ({ username, password, org 
   if (org) {
     data.append('org', org);
   }
-  
+
   const URL = `${configuration.apiBaseUrl}login`;
   try {
     const res = await axios.post(URL, data);
-    
+
     // Check if response has license data
     const licenseEndDate = res.data?.license_end;
-    
+
     if (licenseEndDate) {
       const isExpiring = isLicenseExpiring(licenseEndDate);
       const expiryMessage = getExpiryMessage(licenseEndDate);
-      
+
       if (isExpiring) {
         thunkAPI.dispatch({
           type: 'userDetails/setLicenseWarning',
@@ -57,7 +57,7 @@ export const login = createAsyncThunk('login', async ({ username, password, org 
         });
       }
     }
-    
+
     return res;
   } catch (error) {
     if (error) return thunkAPI.rejectWithValue({ ...error.response, name: 'login' });
@@ -67,7 +67,7 @@ export const login = createAsyncThunk('login', async ({ username, password, org 
 export const register = createAsyncThunk('register', async (data, { rejectWithValue }) => {
   const FormData = require('form-data');
   const formData = new FormData();
-  
+
   // Append all data fields to formData
   Object.entries(data).forEach(([key, value]) => {
     formData.append(key, value);
@@ -250,6 +250,25 @@ export const ADD_CALL = async (details, url) => {
   }
   // const res = await axios(options);
   // return res.data;
+};
+
+export const ADD_CALL_MODEL = async (details, url) => {
+  const trimmed = Object.fromEntries(
+    Object.entries(details).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+  );
+
+  try {
+    const res = await axios.post(url, trimmed, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      ...createHeaders()
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error in ADD_CALL:', error);
+    return error.response;
+  }
 };
 
 export const DELETE_CALL = async (details, url) => {

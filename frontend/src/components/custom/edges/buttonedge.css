@@ -33,9 +33,8 @@
 }
 
 .edge-buttons {
-  display: flex;
   /* opacity: 0; */
-  transition: opacity 0.2s ease-in-out;
+  transition: display 0.2s ease-in-out;
 }
 
 /* .edge-container:hover .edge-buttons {

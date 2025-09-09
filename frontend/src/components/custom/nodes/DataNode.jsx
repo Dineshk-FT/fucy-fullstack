@@ -30,7 +30,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
   const labelRef = useRef(null);
@@ -46,11 +45,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
     };
   }, []);
 
-  const checkSelection = () => selectedBlock?.id === id;
-  const isSelected = checkSelection();
-
-  // console.log('isSelected', isSelected);
-
+  const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   useEffect(() => {
     setLabelValue(data?.label || '');
@@ -280,8 +275,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
@@ -321,7 +314,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               handleInfoClick();
             }}
-            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
+            style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
           >
             <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
           </div>
@@ -330,7 +323,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               handleDetailClick();
             }}
-            style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+            style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}
           >
             <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
@@ -345,7 +338,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              opacity: isHovered ? 1 : 0
+              display: isSelected ? 'flex' : 'none'
             }}
           >
             <CloseIcon sx={{ fontSize: '1rem', mb: 0.1 }} />

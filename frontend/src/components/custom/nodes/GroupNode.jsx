@@ -32,10 +32,8 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
     width: data?.style?.width || 200,
     height: data?.style?.height || 200
   });
-  const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const checkSelection = () => selectedBlock?.id === id;
-  const isSelected = checkSelection();
+  const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   const [value, setValue] = useState(data?.label || '');
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
@@ -155,8 +153,6 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
         opacity: data?.style?.opacity ?? 1,
         borderRadius: data?.style?.borderRadius ?? 4
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <input
         type="text"
@@ -191,7 +187,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           e.stopPropagation();
           handleInfoClick(false);
         }}
-        style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
+        style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
       >
         <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
       </div>
@@ -200,7 +196,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           e.stopPropagation();
           handleInfoClick(true);
         }}
-        style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+        style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}
       >
         <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
       </div>
@@ -215,7 +211,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
           right: '-12px',
           background: '#f83e3e',
           border: 'none',
-          opacity: isHovered ? 1 : 0
+          display: isSelected ? 'flex' : 'none'
         }}
       >
         <CloseIcon sx={{ fontSize: '0.9rem' }} />
