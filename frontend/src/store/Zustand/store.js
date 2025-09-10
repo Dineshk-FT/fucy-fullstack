@@ -2132,7 +2132,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
       return response.data;
     } catch (err) {
-      console.log('err', err);
+      // console.log('err', err);
       throw err; // Re-throwing the error to handle it in calling code if needed
     }
   },
