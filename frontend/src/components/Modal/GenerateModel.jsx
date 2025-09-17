@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -23,35 +24,34 @@ import { setModelId } from '../../store/slices/PageSectionSlice';
 import { closeAll } from '../../store/slices/CurrentIdSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { nanoid } from 'nanoid';
+import { ADD_CALL } from '../../services/api';
+import { configuration } from '../../services/baseApiService';
 
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
-  systemInputs: state.systemInputs,
-  generateFullModel: state.generateFullModel
+  systemInputs: state.systemInputs
 });
 
 const GenerateModel = ({ open, handleClose }) => {
-  const { systemInputs, getSystemInputs, generateFullModel } = useStore(selector);
+  const { systemInputs, getSystemInputs } = useStore(selector);
   const { userDetails } = useSelector((state) => state?.userDetails);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [step, setStep] = useState(0); // 👈 step tracker
+  const [step, setStep] = useState(0);
   const [formValues, setFormValues] = useState({ systemName: '' });
-  const propmt = `You are an automotive cybersecurity architect. 
-Generate a JSON list of required system inputs for TARA as per ISO/SAE 21434.
-Include:
-- System components (ECUs, sensors, actuators, cloud services)
-- Communication interfaces (CAN, LIN, Ethernet, Bluetooth, Wi-Fi, OTA)
-- Assets of interest (data, functions, control signals)
-- Operational environment (road, factory, maintenance, remote services)
-- Dependencies (external services, supply chain, infrastructure)
-Provide short, realistic example values for each and 5-6 most important inputs.`;
+  const [stepResult, setStepResult] = useState(null);
+  const [modelMeta, setModelMeta] = useState({
+    modelId: null,
+    template: null,
+    systemName: null
+  });
 
-  const [systemInputPrompt, setSystemInputPrompt] = useState(propmt);
+  console.log('modelMeta', modelMeta);
 
-  const [promptValues, setPromptValues] = useState({
+  // 🔑 Base prompts (default values)
+  const basePrompts = {
     itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
 Include: item name, purpose, operational description, boundaries, interfaces, assumptions, dependencies, stakeholders, and a system diagram.`,
 
@@ -66,7 +66,20 @@ Rules: root = threat scenario, must include at least one AND/OR gate, events con
 
     cybersecurityPrompt: `Generate cybersecurity goals and mitigations for each scenario.
 Each goal should link to a damage/threat/attack scenario and include objectives (CIAA) and possible countermeasures.`
-  });
+  };
+
+  const [promptValues, setPromptValues] = useState(basePrompts);
+  const propmt = `You are an automotive cybersecurity architect. 
+Generate a JSON list of required system inputs for TARA as per ISO/SAE 21434.
+Include:
+- System components (ECUs, sensors, actuators, cloud services)
+- Communication interfaces (CAN, LIN, Ethernet, Bluetooth, Wi-Fi, OTA)
+- Assets of interest (data, functions, control signals)
+- Operational environment (road, factory, maintenance, remote services)
+- Dependencies (external services, supply chain, infrastructure)
+Provide short, realistic example values for each and 5-6 most important inputs.`;
+
+  const [systemInputPrompt, setSystemInputPrompt] = useState(propmt);
 
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -74,38 +87,18 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
   const [manualFields, setManualFields] = useState([]);
 
   const handleChange = (field) => (event) => {
-    setFormValues((prev) => ({
-      ...prev,
-      [field]: event.target.value
-    }));
+    setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
   const handlePromptChange = (field) => (event) => {
-    setPromptValues((prev) => ({
-      ...prev,
-      [field]: event.target.value
-    }));
+    setPromptValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
   const onClose = () => {
     setStep(0);
+    setStepResult(null);
     setFormValues({ systemName: '' });
-    setPromptValues({
-      itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
-Include: item name, purpose, operational description, boundaries, interfaces, assumptions, dependencies, stakeholders, and a system diagram.`,
-
-      damageScenarioPrompt: `Generate damage scenarios for the system.
-Include: name, description, affected component, cyber losses (CIAA), and impact ratings (Safety, Financial, Operational, Privacy).`,
-
-      threatScenarioPrompt: `Generate threat scenarios using STRIDE categories.
-Each should include: targeted component, attack vector, attacker goal, and related damage scenario.`,
-
-      attackscenarioPrompt: `Generate attack trees for critical threat scenarios.
-Rules: root = threat scenario, must include at least one AND/OR gate, events connect through gates, not directly.`,
-
-      cybersecurityPrompt: `Generate cybersecurity goals and mitigations for each scenario.
-Each goal should link to a damage/threat/attack scenario and include objectives (CIAA) and possible countermeasures.`
-    });
+    setPromptValues(basePrompts);
     setSystemInputPrompt(propmt);
     setManualFields([]);
     setFieldsVisible(false);
@@ -138,109 +131,111 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
   const handleSystemInputs = async () => {
     setLoading(true);
-    await getSystemInputs(formValues.systemName, systemInputPrompt); // 👈 pass prompt too
+    await getSystemInputs(formValues.systemName, systemInputPrompt);
     setLoading(false);
     setFieldsVisible(true);
   };
 
-  const handleNext = () => {
-    if (step === 0) {
-      setStep(1);
-    } else {
-      handlegenerateFullModel();
-    }
-  };
+  const mergedFormValues = () => ({
+    createdBy: userDetails?.username,
+    ...formValues,
+    ...manualFields.reduce((acc, { label, value }) => {
+      if (label.trim()) acc[label] = value;
+      return acc;
+    }, {}),
+    ...promptValues
+  });
 
-  const checkFullModelStatus = async (taskId) => {
-    const url = `${configuration.apiBaseUrl}v1/generate/full-model/status/${taskId}`;
-    try {
-      const res = await axios.get(url);
-      return res.data;
-    } catch (error) {
-      return { status: 'failed', error: error.message };
-    }
-  };
-
-  const handlegenerateFullModel = async () => {
+  const handleGenerateStep = async () => {
     setGenerating(true);
-
-    const mergedFormValues = {
-      createdBy: userDetails?.username,
-      ...formValues,
-      ...manualFields.reduce((acc, { label, value }) => {
-        if (label.trim()) acc[label] = value;
-        return acc;
-      }, {}),
-      ...promptValues
-    };
-
     try {
-      // Step 1: Start the job
-      const res = await generateFullModel(mergedFormValues);
-      const taskId = res?.task_id;
+      if (step === 1) {
+        const itemDef_res = await ADD_CALL(mergedFormValues(), `${configuration.apiBaseUrl}v1/generate/model`);
 
-      if (!taskId) {
-        toast.error('Failed to start generation');
+        setStepResult(itemDef_res);
+        navigate(`/Models/${itemDef_res?.model_id}`);
+        dispatch(setModelId(itemDef_res?.model_id));
+        dispatch(closeAll());
+
+        // ✅ Update state object with values
+        setModelMeta({
+          modelId: itemDef_res?.model_id,
+          template: itemDef_res?.template,
+          systemName: itemDef_res?.system_name
+        });
+
+        toast.success('✅ Item Definition generated successfully');
+      } else if (step === 2) {
+        const res = await ADD_CALL(
+          {
+            modelId: modelMeta.modelId,
+            damageScenarioPrompt: promptValues.damageScenarioPrompt,
+            template: JSON.stringify(modelMeta.template),
+            systemName: modelMeta.systemName
+          },
+          `${configuration.apiBaseUrl}v1/generate/damage-scenarios`
+        );
+        setStepResult(res);
+        toast.success('✅ Damage Scenarios generated successfully');
+      } else if (step === 3) {
+        const res = await ADD_CALL(
+          {
+            modelId: modelMeta.modelId,
+            threatScenarioPrompt: promptValues.threatScenarioPrompt
+          },
+          `${configuration.apiBaseUrl}v1/generate/full-threat-scenario`
+        );
+        setStepResult(res);
+        toast.success('✅ Threat + Derived Threat Scenarios generated successfully');
+      } else if (step === 4) {
+        const res = await ADD_CALL(
+          {
+            modelId: modelMeta.modelId,
+            attackscenarioPrompt: promptValues.attackscenarioPrompt
+          },
+          `${configuration.apiBaseUrl}v1/generate/full-attack-scenario`
+        );
+        setStepResult(res);
+        toast.success('✅ Full Attack Pipeline executed successfully');
+      } else if (step === 5) {
+        await ADD_CALL(
+          {
+            modelId: modelMeta.modelId,
+            cybersecurityPrompt: promptValues.cybersecurityPrompt,
+            systemName: modelMeta.systemName
+          },
+          `${configuration.apiBaseUrl}v1/generate/cybersecurity-artifacts`
+        );
+        toast.success('✅ Cybersecurity Artifacts generated successfully');
+        onClose();
         return;
       }
 
-      // Step 2: Poll until done
-      let result = null;
-      while (!result) {
-        const status = await checkFullModelStatus(taskId);
-
-        if (status.status === 'done') {
-          result = status.result;
-        } else if (status.status === 'failed') {
-          toast.error(status.error ?? 'Generation failed');
-          return;
-        } else {
-          await new Promise((resolve) => setTimeout(resolve, 5000)); // wait 5s
-        }
-      }
-
-      // Step 3: Success
-      toast.success(result?.message ?? 'Generated Successfully');
-      setTimeout(() => {
-        navigate(`/Models/${result?.model?.model_id}`);
-        dispatch(setModelId(result?.model?.model_id));
-        dispatch(closeAll());
-        onClose();
-      }, 1000);
+      setStep((prev) => prev + 1);
+    } catch (err) {
+      toast.error(err.message || 'Step failed');
     } finally {
       setGenerating(false);
     }
   };
-
   useEffect(() => {
     if (systemInputs?.length) {
       const inputMap = systemInputs.reduce((acc, { label, value }) => {
         acc[label] = value;
         return acc;
       }, {});
-      setFormValues((prev) => ({
-        ...prev,
-        ...inputMap
-      }));
+      setFormValues((prev) => ({ ...prev, ...inputMap }));
     }
   }, [systemInputs]);
 
   const renderDynamicFields = () => {
     const fetchedFields = systemInputs?.map(({ label }) => (
       <React.Fragment key={label}>
-        <Grid item xs={4} display="flex" alignItems="center" gap={1}>
-          <InputLabel sx={{ color: '#000', fontWeight: 600, flexGrow: 1 }}>
-            {label.charAt(0).toUpperCase() + label.slice(1).replace(/([A-Z])/g, ' $1')}
-          </InputLabel>
+        <Grid item xs={4}>
+          <InputLabel sx={{ color: '#000', fontWeight: 600 }}>{label.charAt(0).toUpperCase() + label.slice(1)}</InputLabel>
         </Grid>
         <Grid item xs={7}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            sx={{ '& .MuiInputBase-input': { color: '#575757' } }}
-            value={formValues[label] || ''}
-            onChange={handleChange(label)}
-          />
+          <TextField fullWidth variant="outlined" value={formValues[label] || ''} onChange={handleChange(label)} />
         </Grid>
         <Grid item xs={1}>
           <IconButton onClick={() => handleRemoveField(label)} color="error">
@@ -253,22 +248,10 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     const manualInputFields = manualFields.map(({ id, label, value }) => (
       <React.Fragment key={`manual-${id}`}>
         <Grid item xs={4}>
-          <TextField
-            fullWidth
-            placeholder="Label"
-            variant="outlined"
-            value={label}
-            onChange={(e) => handleManualChange(id, 'label', e.target.value)}
-          />
+          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value)} />
         </Grid>
         <Grid item xs={7}>
-          <TextField
-            fullWidth
-            placeholder="Value"
-            variant="outlined"
-            value={value}
-            onChange={(e) => handleManualChange(id, 'value', e.target.value)}
-          />
+          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value)} />
         </Grid>
         <Grid item xs={1}>
           <IconButton onClick={() => handleRemoveField(id, true)} color="error">
@@ -283,57 +266,41 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} sx={{ '& .MuiPaper-root': { maxWidth: 700 } }}>
+      <Dialog open={open} onClose={onClose} sx={{ '& .MuiPaper-root': { maxWidth: 700, minWidth: 500 } }}>
         <DialogTitle>
           <Typography variant="h4" color="primary">
             Create With AI
           </Typography>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ bgcolor: '#f7f7f7' }}>
+        <DialogContent dividers>
           {step === 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Grid container spacing={2} alignItems="center">
-                {/* System Name */}
+            <Box>
+              <Grid container spacing={2}>
                 <Grid item xs={4}>
-                  <InputLabel sx={{ color: '#000', fontWeight: 600 }}>System Name</InputLabel>
+                  <InputLabel>System Name</InputLabel>
                 </Grid>
                 <Grid item xs={8}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    sx={{ '& .MuiInputBase-input': { color: '#575757' } }}
-                    value={formValues.systemName}
-                    onChange={handleChange('systemName')}
-                  />
+                  <TextField fullWidth value={formValues.systemName} onChange={handleChange('systemName')} />
                 </Grid>
 
-                {/* System Input Prompt */}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
                     multiline
                     minRows={2}
                     label="System Input Prompt"
-                    placeholder="Provide extra instructions for fetching system inputs..."
                     value={systemInputPrompt}
                     onChange={(e) => setSystemInputPrompt(e.target.value)}
                   />
                 </Grid>
 
-                {/* Buttons */}
                 <Grid item xs={12} display="flex" justifyContent="space-between">
-                  <Button variant="outlined" onClick={handleAddManualField} disabled={loading || !formValues.systemName.trim()}>
+                  <Button variant="outlined" onClick={handleAddManualField}>
                     Add Field
                   </Button>
-
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSystemInputs}
-                    disabled={loading || !formValues.systemName.trim()}
-                  >
-                    {loading ? <CircularProgress size={24} /> : 'Get Fields'}
+                  <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
+                    {loading ? <CircularProgress size={20} /> : 'Get Fields'}
                   </Button>
                 </Grid>
 
@@ -342,60 +309,122 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
             </Box>
           )}
 
-          {step === 1 && (
-            <Grid container spacing={2}>
-              <Typography variant="h4" color="dark" mt={2} ml={2.5}>
-                Enter Your Prompt
-              </Typography>
-              {[
-                { key: 'itemDefinitionPrompt', label: 'Item Definition' },
-                { key: 'damageScenarioPrompt', label: 'Damage Scenario' },
-                { key: 'threatScenarioPrompt', label: 'Threat Scenario' },
-                { key: 'attackscenarioPrompt', label: 'Attack Scenario' },
-                { key: 'cybersecurityPrompt', label: 'Cybersecurity' }
-              ].map(({ key, label }) => (
-                <Grid item xs={12} key={key}>
-                  <TextField fullWidth multiline minRows={3} label={label} value={promptValues[key]} onChange={handlePromptChange(key)} />
-                </Grid>
-              ))}
-            </Grid>
+          {step > 0 && (
+            <Box>
+              {/* Prompt input for each step */}
+              {step === 1 && (
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  label="Item Definition Prompt"
+                  value={promptValues.itemDefinitionPrompt}
+                  onChange={handlePromptChange('itemDefinitionPrompt')}
+                />
+              )}
+              {step === 2 && (
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  label="Damage Scenario Prompt"
+                  value={promptValues.damageScenarioPrompt}
+                  onChange={handlePromptChange('damageScenarioPrompt')}
+                />
+              )}
+              {step === 3 && (
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  label="Threat Scenario Prompt"
+                  value={promptValues.threatScenarioPrompt}
+                  onChange={handlePromptChange('threatScenarioPrompt')}
+                />
+              )}
+              {step === 4 && (
+                <>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    label="Threat Scenario Prompt (Optional Override)"
+                    value={promptValues.threatScenarioPrompt}
+                    onChange={handlePromptChange('threatScenarioPrompt')}
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    label="Attack Scenario Prompt"
+                    value={promptValues.attackscenarioPrompt}
+                    onChange={handlePromptChange('attackscenarioPrompt')}
+                  />
+                </>
+              )}
+              {step === 5 && (
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  label="Cybersecurity Prompt"
+                  value={promptValues.cybersecurityPrompt}
+                  onChange={handlePromptChange('cybersecurityPrompt')}
+                />
+              )}
+
+              {stepResult && (
+                <Box
+                  sx={{
+                    bgcolor: '#f8f8f8',
+                    mt: 2,
+                    p: 2,
+                    borderRadius: 2,
+                    maxHeight: 200,
+                    overflowY: 'auto'
+                  }}
+                >
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {JSON.stringify(stepResult, null, 2)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           )}
         </DialogContent>
 
         <DialogActions>
-          <Button variant="outlined" color="error" onClick={onClose}>
+          <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          {step > 0 && (
-            <Button variant="outlined" onClick={() => setStep(step - 1)}>
-              Back
+          {step === 0 ? (
+            <Button variant="contained" disabled={!fieldsVisible} onClick={() => setStep(1)}>
+              Next
+            </Button>
+          ) : (
+            <Button variant="contained" onClick={handleGenerateStep}>
+              {step === 6 ? 'Finish' : 'Continue'}
             </Button>
           )}
-          <Button variant="contained" onClick={handleNext} disabled={step === 0 && !fieldsVisible}>
-            {step === 0 ? 'Next' : 'Generate'}
-          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Backdrop when generating */}
-      {typeof window !== 'undefined' &&
-        createPortal(
-          <Backdrop
-            open={generating}
-            sx={{
-              color: '#fff',
-              zIndex: 2000,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2
-            }}
-          >
-            <CircularProgress color="inherit" />
-            <Typography variant="body1">Generating Model ...</Typography>
-          </Backdrop>,
-          document.body
-        )}
+      {createPortal(
+        <Backdrop
+          open={generating}
+          sx={{
+            color: '#fff',
+            zIndex: 2000,
+            flexDirection: 'column',
+            gap: 2
+          }}
+        >
+          <CircularProgress color="inherit" />
+          <Typography>Processing step {step} ...</Typography>
+        </Backdrop>,
+        document.body
+      )}
     </>
   );
 };

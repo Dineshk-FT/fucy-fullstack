@@ -1317,7 +1317,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   generateFullModel: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/generate/full-model`;
     try {
-      const res = await ADD_CALL_MODEL(details, url);
+      const res = await ADD_CALL(details, url);
       return res; // this will be { task_id: "..." }
     } catch (error) {
       return error;
