@@ -1,6 +1,22 @@
 /* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Select } from '@mui/material';
+import {
+  Box,
+  Tooltip,
+  Typography,
+  IconButton,
+  Collapse,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  FormControl,
+  InputLabel,
+  Select
+} from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
@@ -39,6 +55,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import GenerateModel from '../../../../components/Modal/GenerateModel';
 import DashboardDialog from '../../../../components/Dashboard';
+import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
 
 const notify = (message, status) => toast[status](message);
 
@@ -58,7 +75,8 @@ const selector = (state) => ({
   importProject: state.importProject,
   isChanged: state.isChanged,
   isAttackChanged: state.isAttackChanged,
-  setOpenSave: state.setOpenSave
+  setOpenSave: state.setOpenSave,
+  assets: state.assets
 });
 
 const LeftSection = () => {
@@ -81,6 +99,7 @@ const LeftSection = () => {
     isChanged,
     isAttackChanged,
     setOpenSave,
+    assets,
     convertToLibrary
   } = useStore(selector, shallow);
 
@@ -121,6 +140,19 @@ const LeftSection = () => {
   const [hoveredTab, setHoveredTab] = useState(null);
   const [openDashboard, setOpenDashboard] = useState(false);
   const hoverTimeoutRef = useRef(null);
+  const [scenarioType, setScenarioType] = useState(null);
+  const [openScenarioModal, setOpenScenarioModal] = useState(false);
+
+  const handleOpenScenarioAI = (type, e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setScenarioType(type);
+    setOpenScenarioModal(true);
+  };
+
+  const handleCloseScenarioAI = () => {
+    setOpenScenarioModal(false);
+    setScenarioType(null);
+  };
 
   const handleMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -354,48 +386,43 @@ const LeftSection = () => {
     [handleCategoryDialogOpen]
   );
 
-  const confirmConvertToLibrary = useCallback(
-    async () => {
-      if (!model?._id) {
-        console.error('No active model to convert');
-        notify('No active model to convert', 'error');
-        return;
-      }
+  const confirmConvertToLibrary = useCallback(async () => {
+    if (!model?._id) {
+      console.error('No active model to convert');
+      notify('No active model to convert', 'error');
+      return;
+    }
 
-      try {
-        // Update the model with the selected category before converting to library
-        const updatedModel = { ...model, category: selectedCategory };
-        useStore.setState({ model: updatedModel });
+    try {
+      // Update the model with the selected category before converting to library
+      const updatedModel = { ...model, category: selectedCategory };
+      useStore.setState({ model: updatedModel });
 
-        const result = await useStore.getState().convertToLibrary(model._id);
-        if (result?.success) {
-          notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
-          await getModels();
-        } else if (result?.error) {
-          notify(result.error, 'error');
-        }
-      } catch (error) {
-        console.error('Failed to convert model:', error);
-        const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
-        notify(errorMessage, 'error');
-      } finally {
-        handleCategoryDialogClose();
+      const result = await useStore.getState().convertToLibrary(model._id);
+      if (result?.success) {
+        notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
+        await getModels();
+      } else if (result?.error) {
+        notify(result.error, 'error');
       }
-    },
-    [model, selectedCategory, getModels]
-  );
+    } catch (error) {
+      console.error('Failed to convert model:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
+      notify(errorMessage, 'error');
+    } finally {
+      handleCategoryDialogClose();
+    }
+  }, [model, selectedCategory, getModels]);
 
   const tabs = useMemo(
     () => [
       {
         name: 'Dashboard',
         options: [
-          { 
-            label: 'Open Dashboard', 
-            icon: () => (
-              <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />
-            ),
-            action: () => setOpenDashboard(true) 
+          {
+            label: 'Open Dashboard',
+            icon: () => <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />,
+            action: () => setOpenDashboard(true)
           }
         ]
       },
@@ -408,7 +435,7 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
-          { label: 'CreateWithAI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
       {
@@ -449,7 +476,8 @@ const LeftSection = () => {
               />
             ),
             action: handleGroupDrag
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('item', e) }
         ]
       },
       {
@@ -482,7 +510,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Damage Scenarios - Impact Ratings')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
         ]
       },
       {
@@ -515,7 +544,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Derived Threat Scenarios')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
         ]
       },
       {
@@ -538,7 +568,8 @@ const LeftSection = () => {
               />
             ),
             action: (e) => handleContext('AI Assistant', e)
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) }
         ]
       },
       {
@@ -599,7 +630,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Cybersecurity Claims')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
         ]
       },
       {
@@ -765,7 +797,7 @@ const LeftSection = () => {
           borderRadius: '10px',
           padding: '6px 8px',
           boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
-          marginBottom: '6px',
+          marginBottom: '6px'
         }}
       >
         {tabs.map((tab) => (
@@ -901,7 +933,7 @@ const LeftSection = () => {
               onChange={handleCategoryChange}
               sx={{ mt: 1 }}
             >
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <MenuItem key={category} value={category}>
                   {category}
                 </MenuItem>
@@ -911,11 +943,7 @@ const LeftSection = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCategoryDialogClose}>Cancel</Button>
-          <Button 
-            onClick={confirmConvertToLibrary}
-            variant="contained"
-            color="primary"
-          >
+          <Button onClick={confirmConvertToLibrary} variant="contained" color="primary">
             Convert to Library
           </Button>
         </DialogActions>
@@ -930,7 +958,16 @@ const LeftSection = () => {
         style={{ position: 'fixed' }}
       />
       <GenerateModel open={openModal.NewAI} handleClose={(e) => handleCloseModal(e, 'NewAI')} />
-
+      <ScenarioAIModal
+        open={openScenarioModal}
+        handleClose={handleCloseScenarioAI}
+        scenarioType={scenarioType}
+        modelMeta={{
+          modelId: model?._id,
+          template: assets?.template,
+          systemName: model?.name
+        }}
+      />
       <RenameProject
         open={openModal.Rename}
         handleClose={(e) => handleCloseModal(e, 'Rename')}
@@ -988,9 +1025,9 @@ const LeftSection = () => {
           getAttackScenario={getAttackScenario}
         />
       )}
-      
-      <DashboardDialog 
-        open={openDashboard} 
+
+      <DashboardDialog
+        open={openDashboard}
         onClose={() => setOpenDashboard(false)}
         modelId={model?._id}
         projectData={{

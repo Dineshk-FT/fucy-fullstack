@@ -18,12 +18,15 @@ import { useSelector } from 'react-redux';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { base64ToBlob } from './Base64Convert';
+import generateDiagramSVG from '../../utils/generateDiagramSVG';
+import { getRectOfNodes, getTransformForBounds } from 'reactflow';
 
 const selector = (state) => ({
   template: state.assets.template,
   image: state?.assets?.image,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
+  edges: state.edges,
   canvasImage: state.canvasImage
 });
 
@@ -67,7 +70,7 @@ const items = [
 ];
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, canvasImage, image } = useStore(selector, shallow);
+  const { template, generateDocument, nodes, canvasImage, image, edges } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -89,45 +92,41 @@ const DocumentDialog = ({ open, onClose }) => {
   }, []);
 
   // Handle document download
+
   const handleDownload = async (e) => {
     e.stopPropagation();
     setIsGenerating(true);
-    const formData = new FormData();
-    formData.append('model-id', modelId);
-    formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
-    formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
-    formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
-    formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
-    formData.append('cyberSecurityGoals', selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
-    formData.append(
-      'cyberSecurityRequirements',
-      selectedItems.includes(52) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0
-    );
-    formData.append('cyberSecurityControls', selectedItems.includes(53) || selectedItems.includes(5) ? 1 : 0);
-    formData.append('cyberSecurityClaims', selectedItems.includes(54) || selectedItems.includes(5) ? 1 : 0);
-
-    if (selectedItems.includes(1)) {
-      if (image) {
-        const baseimage = 'data:image/png;base64,' + image;
-        const blob = base64ToBlob(baseimage);
-        if (blob) {
-          formData.append('image', blob, 'itemModelImage.png');
-        } else {
-          console.error('Failed to convert base64 image to Blob.');
-          setIsGenerating(false);
-          return;
-        }
-      } else {
-        console.warn('No image available for Item Definition.');
-        setIsGenerating(false);
-        return;
-      }
-    }
 
     try {
+      // ✅ Step 1: Generate SVG dynamically for DOCX
+      // Use smaller width so the drawing fits in the page frame
+      const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 2500, 600);
+
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+
+      // ✅ Step 2: Build FormData
+      const formData = new FormData();
+      formData.append('model-id', modelId);
+      formData.append('threatScenariosTable', selectedItems.includes(31) || selectedItems.includes(32) ? 1 : 0);
+      formData.append('attackTreatScenariosTable', selectedItems.includes(41) || selectedItems.includes(42) ? 1 : 0);
+      formData.append('damageScenariosTable', selectedItems.includes(21) || selectedItems.includes(22) ? 1 : 0);
+      formData.append('riskTreatmentTable', selectedItems.includes(81) ? 1 : 0);
+      formData.append('cyberSecurityGoals', selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0);
+      formData.append(
+        'cyberSecurityRequirements',
+        selectedItems.includes(52) || selectedItems.includes(51) || selectedItems.includes(5) ? 1 : 0
+      );
+      formData.append('cyberSecurityControls', selectedItems.includes(53) || selectedItems.includes(5) ? 1 : 0);
+      formData.append('cyberSecurityClaims', selectedItems.includes(54) || selectedItems.includes(5) ? 1 : 0);
+
+      if (selectedItems.includes(1)) {
+        formData.append('svg', svgBlob, 'itemModelImage.svg');
+      }
+
+      // ✅ Step 3: Send request to generate .docx
       const response = await generateDocument(formData);
+
       if (response instanceof Blob) {
-        // Download the file
         const url = window.URL.createObjectURL(response);
         const a = document.createElement('a');
         a.href = url;
