@@ -1,13 +1,13 @@
 /*eslint-disable*/
 import React, { useState, useEffect, createContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useTheme } from '@mui/material/styles';
-import { Box, Drawer, useMediaQuery, IconButton } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
+import { Box, Drawer, useMediaQuery, IconButton, Tooltip } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { BrowserView, MobileView } from 'react-device-detect';
-import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import { useDispatch, useSelector } from 'react-redux';
 import toast, { Toaster } from 'react-hot-toast';
@@ -20,6 +20,46 @@ import ColorTheme from '../../../themes/ColorTheme';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { sidebarSteps } from '../../../utils/Steps';
 import AutoGuidePopper from '../../../components/Poppers/AutoGuidePopper';
+
+// Custom resize handle component with improved styling and hit area
+const ResizeHandle = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  right: -4, // Extend the hit area
+  top: 0,
+  bottom: 0,
+  width: 12, // Wider hit area
+  cursor: 'ew-resize',
+  zIndex: 1000,
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    right: 4, // Position the visual handle
+    top: 0,
+    bottom: 0,
+    width: 2,
+    backgroundColor: 'transparent',
+    transition: 'background-color 0.2s ease',
+  },
+  '&:hover::after, &:active::after': {
+    backgroundColor: theme.palette.primary.main,
+  },
+}));
+
+const StyledScrollbar = styled(PerfectScrollbar)(({ theme }) => ({
+  padding: theme.spacing(1, 1.5, 1, 1.5),
+  height: 'calc(100% - 16px)',
+  '& .ps__rail-y': {
+    '&:hover, &:active': {
+      backgroundColor: 'transparent',
+    },
+  },
+  '& .ps__thumb-y': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.4),
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.6),
+    },
+  },
+}));
 
 export const ToasterContext = createContext();
 
@@ -47,9 +87,34 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     dispatch(clearProperties());
   }, []);
 
-  const handleResize = (event, { size }) => {
-    setSidebarWidth(size.width);
-    dispatch(setDrawerwidth(size.width));
+  const handleResize = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+    
+    const onMouseMove = (moveEvent) => {
+      moveEvent.preventDefault();
+      const newWidth = startWidth + moveEvent.clientX - startX;
+      const constrainedWidth = Math.max(250, Math.min(newWidth, 650));
+      setSidebarWidth(constrainedWidth);
+      dispatch(setDrawerwidth(constrainedWidth));
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    // Prevent text selection during resize
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ew-resize';
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp, { once: true });
   };
 
   const handleDrawerToggle = (e) => {
@@ -64,71 +129,55 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
     () => (
       <>
         <BrowserView>
-          <PerfectScrollbar
-            component="div"
-            style={{
-              paddingRight: '10px',
-              paddingLeft: '10px',
-              paddingTop: '10px'
-            }}
-          >
-            <BrowserCard
-              template={template}
-              models={models}
-              isCollapsed={isCollapsed}
-              isNavbarClose={isNavbarClose}
-              sidebarWidth={sidebarWidth}
-            />
-          </PerfectScrollbar>
-          {/* <IconButton
-            sx={{
-              position: 'absolute',
-              marginTop: 5.7,
-              marginRight: -1,
-              padding: '0px',
-              width: '0.8em',
-              height: '0.8em',
-              top: 5,
-              right: 30,
-              color: '#1976d2',
-              zIndex: 1400,
-              '&:hover': { transform: 'scale(1.1)' },
-              transition: 'transform 0.2s ease'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setRunTour(true);
-            }}
-            size="small"
-          >
-            <HelpOutlineIcon fontSize="small" />
-          </IconButton> */}
-          <IconButton
-            onClick={handleDrawerToggle}
-            sx={{
-              position: 'absolute',
-              border: `1px solid ${color?.title}`,
-              marginTop: 2.7,
-              marginRight: 2.5,
-              padding: '0px',
-              width: '0.8em',
-              height: '0.8em',
-              top: 3,
-              right: 0,
-              color: color?.iconColor,
-              zIndex: 1400,
-              '&:hover': { transform: 'scale(1.1)' },
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-          </IconButton>
+          <StyledScrollbar>
+            <Box sx={{ pr: 0.5 }}>
+              <BrowserCard
+                template={template}
+                models={models}
+                isCollapsed={isCollapsed}
+                isNavbarClose={isNavbarClose}
+                sidebarWidth={sidebarWidth}
+              />
+            </Box>
+          </StyledScrollbar>
+          <Tooltip title={draweropen ? 'Collapse sidebar' : 'Expand sidebar'} arrow>
+            <IconButton
+              onClick={handleDrawerToggle}
+              sx={{
+                position: 'absolute',
+                border: `1px solid ${alpha(color?.title, 0.2)}`,
+                backgroundColor: color?.sidebarBG,
+                boxShadow: theme.shadows[2],
+                p: 0.5,
+                width: 24,
+                height: 24,
+                top: 16,
+                right: 8,
+                color: color?.iconColor,
+                zIndex: 1400,
+                '&:hover': { 
+                  transform: 'translateX(-2px)',
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  borderColor: theme.palette.primary.main,
+                },
+                transition: theme.transitions.create(['transform', 'background-color', 'border-color'], {
+                  duration: theme.transitions.duration.shorter,
+                  easing: theme.transitions.easing.easeInOut,
+                }),
+              }}
+            >
+              {draweropen ? 
+                <ChevronLeftIcon fontSize="small" /> : 
+                <ChevronRightIcon fontSize="small" />
+              }
+            </IconButton>
+          </Tooltip>
         </BrowserView>
         {/* <MobileView>
-        <Box sx={{ px: 2 }}>
-          <MenuCard />
-        </Box>
-      </MobileView> */}
+          <Box sx={{ px: 2 }}>
+            <MenuCard />
+          </Box>
+        </MobileView> */}
       </>
     ),
     []
@@ -142,30 +191,25 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
       <AutoGuidePopper steps={sidebarSteps} runTour={runTour} setRunTour={setRunTour} />
 
       <ToasterContext.Provider value={values}>
-        <ResizableBox
-          width={sidebarWidth}
-          height={Infinity}
-          axis="x"
-          minConstraints={[250, 0]}
-          maxConstraints={[650, Infinity]}
-          onResize={handleResize}
-          handle={
-            <span
-              className="custom-handle"
-              style={{
-                position: 'absolute',
-                right: '-8px',
-                top: 0,
-                bottom: 0,
-                cursor: 'ew-resize',
-                width: '10px',
-                backgroundColor: 'transparent'
-              }}
-            />
-          }
-          handleSize={[8, Infinity]}
-          style={{ height: '100%' }}
+        <div
+          style={{
+            width: sidebarWidth,
+            height: '100%',
+            position: 'relative',
+            transition: theme.transitions.create('width', {
+              duration: theme.transitions.duration.standard,
+              easing: theme.transitions.easing.easeInOut,
+            }),
+          }}
         >
+          <ResizeHandle 
+            onMouseDown={handleResize}
+            onDoubleClick={() => {
+              const newWidth = sidebarWidth < 500 ? 500 : 370;
+              setSidebarWidth(newWidth);
+              dispatch(setDrawerwidth(newWidth));
+            }}
+          />
           <Box
             component="nav"
             sx={{
@@ -173,30 +217,50 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
               width: sidebarWidth,
               height: '100%',
               background: color?.sidebarBG,
-              mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px'
+              mt: !draweropen ? getNavbarHeight(isCollapsed) : '0px',
+              borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+              boxShadow: theme.shadows[2],
+              transition: theme.transitions.create(['width', 'margin'], {
+                duration: theme.transitions.duration.standard,
+                easing: theme.transitions.easing.easeInOut,
+              }),
+              '&:hover': {
+                boxShadow: theme.shadows[4],
+              },
             }}
             aria-label="mailbox folders"
           >
             {!draweropen && (
-              <IconButton
-                onClick={handleDrawerToggle}
-                sx={{
-                  position: 'absolute',
-                  border: `1px solid ${color?.title}`,
-                  padding: '0px',
-                  width: '0.8em',
-                  height: '0.8em',
-                  left: '5px',
-                  top: 5,
-                  marginTop: `${getNavbarHeight(isCollapsed)}px`,
-                  color: color?.iconColor,
-                  zIndex: 1400,
-                  '&:hover': { transform: 'scale(1.1)' },
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                {draweropen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-              </IconButton>
+              <Tooltip title="Expand sidebar" arrow>
+                <IconButton
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    position: 'absolute',
+                    border: `1px solid ${alpha(color?.title, 0.2)}`,
+                    backgroundColor: color?.sidebarBG,
+                    boxShadow: theme.shadows[2],
+                    p: 0.5,
+                    width: 24,
+                    height: 24,
+                    left: 4,
+                    top: 16,
+                    marginTop: `${getNavbarHeight(isCollapsed)}px`,
+                    color: color?.iconColor,
+                    zIndex: 1400,
+                    '&:hover': { 
+                      transform: 'translateX(2px)',
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      borderColor: theme.palette.primary.main,
+                    },
+                    transition: theme.transitions.create(['transform', 'background-color', 'border-color'], {
+                      duration: theme.transitions.duration.shorter,
+                      easing: theme.transitions.easing.easeInOut,
+                    }),
+                  }}
+                >
+                  <ChevronRightIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             )}
 
             <Drawer
@@ -228,7 +292,7 @@ const Sidebar = ({ draweropen, drawerToggle, window }) => {
             </Drawer>
             <Toaster position="top-right" reverseOrder={false} />
           </Box>
-        </ResizableBox>
+        </div>
       </ToasterContext.Provider>
     </>
   );

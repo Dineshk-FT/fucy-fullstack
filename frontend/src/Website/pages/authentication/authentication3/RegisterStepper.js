@@ -1,6 +1,7 @@
 /*eslint-disable*/
 import { useState } from 'react';
-import { Box, Button, Divider, Step, StepLabel, Stepper } from '@mui/material';
+import { Box, Divider, Step, StepLabel, Stepper } from '@mui/material';
+import Button from '../../../../components/Buttons/Button';
 import StepOneUserInfo from './StepOneUserInfo';
 import StepTwoPlanSelection from './StepTwoPlanSelection';
 import StepThreePayment from './StepThreePayment';

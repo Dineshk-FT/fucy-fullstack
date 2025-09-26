@@ -1,5 +1,6 @@
 import React from 'react';
-import { Container, Button, Box, Typography } from '@mui/material';
+import { Container, Box, Typography } from '@mui/material';
+import Button from '../../../components/Buttons/Button';
 import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -67,10 +68,19 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(4)
   },
   help: {
+    fontSize: '1.2rem',
+    padding: '12px 32px',
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 600,
     backgroundColor: 'white',
     color: 'black',
-    fontSize: 23,
-    padding: 10
+    '&:hover': {
+      backgroundColor: '#f5f5f5',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+    },
+    transition: 'all 0.3s ease'
   },
   footer: {
     backgroundColor: '#000',
@@ -93,8 +103,12 @@ export default function MainSection() {
               <Typography variant="h5" textAlign="left" paragraph color="inherit" fontSize={20}>
                 TARA automation, BOM and vulnerability management, cybersecurity monitoring, and more.
               </Typography>
-              <Button variant="contained" className={classes.help}>
-                How Can We Help ?
+              <Button 
+                variant="contained" 
+                className={classes.help}
+                pulse
+              >
+                How Can We Help?
               </Button>
             </Box>
           </Box>

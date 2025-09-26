@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import {
   Box,
-  Button,
   Checkbox,
   Divider,
   FormControl,
@@ -29,7 +28,7 @@ import { Formik } from 'formik';
 
 // project imports
 import useScriptRef from '../../../../hooks/useScriptRef';
-import AnimateButton from '../../../../components/extended/AnimateButton';
+import Button from '../../../../components/Buttons/Button';
 
 // assets
 import Visibility from '@mui/icons-material/Visibility';
@@ -315,19 +314,17 @@ const FirebaseLogin = ({ ...others }) => {
             )}
 
             <Box sx={{ mt: 2 }}>
-              <AnimateButton>
-                <Button
-                  disableElevation
-                  disabled={isSubmitting || checkingStatus}
-                  fullWidth
-                  size="large"
-                  type="submit"
-                  variant="contained"
-                  color="secondary"
-                >
-                  {checkingStatus ? 'Checking...' : 'Sign in'}
-                </Button>
-              </AnimateButton>
+              <Button
+                fullWidth
+                size="large"
+                type="submit"
+                variant="contained"
+                color="primary"
+                loading={checkingStatus}
+                loadingText="Checking..."
+              >
+                Sign in
+              </Button>
             </Box>
           </form>
         )}
