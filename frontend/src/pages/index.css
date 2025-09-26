@@ -53,6 +53,7 @@ iframe#webpack-dev-server-client-overlay {
 
 .react-flow__node {
   padding: 0 !important;
+  width: auto !important;
   color: white;
   display: flex;
   align-items: center;

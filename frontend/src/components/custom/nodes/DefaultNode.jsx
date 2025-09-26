@@ -38,6 +38,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const [labelValue, setLabelValue] = useState(data?.label || '');
   const isMounted = useRef(true);
 
+  // console.log('width', width);
   // Cleanup on unmount
   useEffect(() => {
     return () => {

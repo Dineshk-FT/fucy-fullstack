@@ -20,6 +20,7 @@ import {
 import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
+  Backspace as BackspaceIcon,
   TableChart as TableIcon,
   LibraryBooks as LibraryBooksIcon,
   CreateNewFolderOutlined as CreateNewFolderOutlinedIcon,
@@ -56,6 +57,7 @@ import { useNavigate } from 'react-router';
 import GenerateModel from '../../../../components/Modal/GenerateModel';
 import DashboardDialog from '../../../../components/Dashboard';
 import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
+import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 
 const notify = (message, status) => toast[status](message);
 
@@ -63,6 +65,7 @@ const selector = (state) => ({
   Models: state.Models,
   model: state.model,
   getModels: state.getModels,
+  getModelById: state.getModelById,
   deleteModels: state.deleteModels,
   getSidebarNode: state.getSidebarNode,
   getTemplates: state.getTemplates,
@@ -76,7 +79,8 @@ const selector = (state) => ({
   isChanged: state.isChanged,
   isAttackChanged: state.isAttackChanged,
   setOpenSave: state.setOpenSave,
-  assets: state.assets
+  assets: state.assets,
+  clearModel: state.clearModel
 });
 
 const LeftSection = () => {
@@ -86,6 +90,7 @@ const LeftSection = () => {
     Models,
     model,
     getModels,
+    getModelById,
     deleteModels,
     getSidebarNode,
     getTemplates,
@@ -100,7 +105,8 @@ const LeftSection = () => {
     isAttackChanged,
     setOpenSave,
     assets,
-    convertToLibrary
+    convertToLibrary,
+    clearModel
   } = useStore(selector, shallow);
 
   const categories = [
@@ -123,6 +129,7 @@ const LeftSection = () => {
     Delete: false,
     Library: false,
     AttackModal: false,
+    Clear: false,
     AIModal: false
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -149,7 +156,8 @@ const LeftSection = () => {
     setOpenScenarioModal(true);
   };
 
-  const handleCloseScenarioAI = () => {
+  const handleCloseScenarioAI = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
     setOpenScenarioModal(false);
     setScenarioType(null);
   };
@@ -159,12 +167,16 @@ const LeftSection = () => {
     setHoveredTab(tabName);
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    // Only hide the hovered tab if no modal is open
-    if (!openModal.Open && !openModal.Delete && !openModal.Library) {
-      hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
-    }
-  }, [openModal.Open, openModal.Delete, openModal.Library]);
+  const handleMouseLeave = useCallback(
+    (e) => {
+      if (e?.stopPropagation) e.stopPropagation();
+      // Only hide the hovered tab if no modal is open
+      if (!openModal.Open && !openModal.Delete && !openModal.Library) {
+        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+      }
+    },
+    [openModal.Open, openModal.Delete, openModal.Library]
+  );
 
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -293,7 +305,20 @@ const LeftSection = () => {
     },
     [setCollapsed]
   );
-
+  const handleClear = () => {
+    clearModel(model._id)
+      .then((res) => {
+        // console.log('res', res);
+        if (!res.error) {
+          notify(res.message ?? 'Cleared successfully', 'success');
+          getModelById(model._id);
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -356,7 +381,13 @@ const LeftSection = () => {
   }, []);
 
   const handleOpenModal = (modalKey, e) => {
+    console.log('modalKey', modalKey);
     if (e?.stopPropagation) e.stopPropagation();
+    if (isChanged) {
+      setOpenSave(true);
+      handleMouseLeave(e);
+      return;
+    }
     setAnchorEl(e.currentTarget);
     setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
   };
@@ -432,6 +463,7 @@ const LeftSection = () => {
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
           { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
+          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
@@ -654,7 +686,7 @@ const LeftSection = () => {
         ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleOpenScenarioAI]
   );
 
   const handleCloseModal = useCallback((e, modalKey) => {
@@ -800,7 +832,7 @@ const LeftSection = () => {
           marginBottom: '6px'
         }}
       >
-        {tabs.map((tab) => (
+        {tabs?.map((tab) => (
           <Box
             key={tab.name}
             sx={{
@@ -1037,6 +1069,15 @@ const LeftSection = () => {
           controls: model?.controls || []
         }}
       />
+      {openModal?.Clear && (
+        <ConfirmDeleteDialog
+          open={openModal?.Clear}
+          onClose={() => setOpenModal((prev) => ({ ...prev, Clear: false }))}
+          onConfirm={handleClear}
+          name={model?.name}
+          mode="clear"
+        />
+      )}
     </Box>
   );
 };

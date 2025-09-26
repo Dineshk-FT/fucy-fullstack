@@ -2169,6 +2169,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
+
+  clearModel: async (modelId) => {
+    // console.log('details', details);
+    let url = `${configuration.apiBaseUrl}v1/clear_model_data`;
+    const res = await ADD_CALL({ modelId: modelId }, url);
+    return res;
+  },
   deleteDamageScenario: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/damage_scenario`;
     const res = await DELETE_CALL(details, url);

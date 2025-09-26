@@ -10,12 +10,18 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Backdrop
+  Backdrop,
+  Grid,
+  InputLabel,
+  IconButton
 } from '@mui/material';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 import { ADD_CALL } from '../../services/api';
 import { configuration } from '../../services/baseApiService';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { nanoid } from 'nanoid';
+import useStore from '../../store/Zustand/store';
 
 const basePrompts = {
   itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
@@ -34,12 +40,29 @@ Rules: root = threat scenario, must include at least one AND/OR gate, events con
 Each goal should link to a damage/threat/attack scenario and include objectives (CIAA) and possible countermeasures.`
 };
 
+const systemInputPromptDefault = `You are an automotive cybersecurity architect. Based on the given system name, generate a JSON list of the most important system inputs required to perform a Threat Analysis and Risk Assessment (TARA) according to ISO/SAE 21434. Provide 5–6 key inputs with short, realistic example values that reflect the technical elements, operational context, and dependencies of the system and its ecosystem.`;
+
+const selector = (state) => ({
+  getSystemInputs: state.getSystemInputs,
+  systemInputs: state.systemInputs
+});
+
 const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
+  const [step, setStep] = useState(0);
   const [promptValue, setPromptValue] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState(null);
 
-  // Set default prompt whenever scenarioType changes
+  // for item definition extra step
+  const [fieldsVisible, setFieldsVisible] = useState(false);
+  const [manualFields, setManualFields] = useState([]);
+  const [formValues, setFormValues] = useState({ systemName: '' });
+  const [systemInputPrompt, setSystemInputPrompt] = useState(systemInputPromptDefault);
+  const [loading, setLoading] = useState(false);
+
+  const { systemInputs, getSystemInputs } = useStore(selector);
+
+  // default prompt setup
   useEffect(() => {
     if (!scenarioType) return;
     const defaultPromptMap = {
@@ -50,8 +73,97 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       cybersecurity: basePrompts.cybersecurityPrompt
     };
     setPromptValue(defaultPromptMap[scenarioType] || '');
+    setStep(0);
+    setFormValues({ systemName: '' });
+    setManualFields([]);
+    setFieldsVisible(false);
+    setSystemInputPrompt(systemInputPromptDefault);
+    setResult(null);
   }, [scenarioType]);
 
+  // field management (like GenerateModel)
+  const handleAddManualField = () => {
+    setFieldsVisible(true);
+    setManualFields((prev) => [...prev, { id: nanoid(), label: '', value: '' }]);
+  };
+
+  const handleManualChange = (id, field, value) => {
+    setManualFields((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: value } : f)));
+  };
+
+  const handleRemoveField = (id, isManual = false) => {
+    if (isManual) {
+      setManualFields((prev) => prev.filter((field) => field.id !== id));
+    } else {
+      setFormValues((prev) => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+      useStore.setState((state) => ({
+        systemInputs: state.systemInputs.filter((field) => field.label !== id)
+      }));
+    }
+  };
+
+  const handleChange = (field) => (event) => {
+    setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleSystemInputs = async () => {
+    setLoading(true);
+    await getSystemInputs(formValues.systemName, systemInputPrompt);
+    setLoading(false);
+    setFieldsVisible(true);
+  };
+
+  useEffect(() => {
+    if (systemInputs?.length) {
+      const inputMap = systemInputs.reduce((acc, { label, value }) => {
+        acc[label] = value;
+        return acc;
+      }, {});
+      setFormValues((prev) => ({ ...prev, ...inputMap }));
+    }
+  }, [systemInputs]);
+
+  const renderDynamicFields = () => {
+    const fetchedFields = systemInputs?.map(({ label }) => (
+      <React.Fragment key={label}>
+        <Grid item xs={4}>
+          <InputLabel sx={{ color: '#000', fontWeight: 600 }}>{label.charAt(0).toUpperCase() + label.slice(1)}</InputLabel>
+        </Grid>
+        <Grid item xs={7}>
+          <TextField fullWidth variant="outlined" value={formValues[label] || ''} onChange={handleChange(label)} />
+        </Grid>
+        <Grid item xs={1}>
+          <IconButton onClick={() => handleRemoveField(label)} color="error">
+            <DeleteIcon />
+          </IconButton>
+        </Grid>
+      </React.Fragment>
+    ));
+
+    const manualInputFields = manualFields.map(({ id, label, value }) => (
+      <React.Fragment key={`manual-${id}`}>
+        <Grid item xs={4}>
+          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value)} />
+        </Grid>
+        <Grid item xs={7}>
+          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value)} />
+        </Grid>
+        <Grid item xs={1}>
+          <IconButton onClick={() => handleRemoveField(id, true)} color="error">
+            <DeleteIcon />
+          </IconButton>
+        </Grid>
+      </React.Fragment>
+    ));
+
+    return [...(fetchedFields || []), ...manualInputFields];
+  };
+
+  // config
   const scenarioConfig = {
     item: {
       label: 'Item Definition Prompt',
@@ -59,7 +171,15 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       payload: () => ({
         modelId: modelMeta?.modelId,
         itemDefinitionPrompt: promptValue,
-        systemName: modelMeta?.systemName
+        systemName: formValues.systemName,
+        ...manualFields.reduce((acc, { label, value }) => {
+          if (label.trim()) acc[label] = value;
+          return acc;
+        }, {}),
+        ...systemInputs?.reduce((acc, { label, value }) => {
+          if (label.trim()) acc[label] = value;
+          return acc;
+        }, {})
       }),
       successMsg: '✅ Item definition generated successfully'
     },
@@ -110,18 +230,55 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     try {
       setGenerating(true);
       const res = await ADD_CALL(config.payload(), config.api);
-      setResult(res);
+      setResult(res?.message);
       toast.success(config.successMsg);
+
+      // After successful generation, update the UI by calling Zustand store methods
+      if (modelMeta?.modelId) {
+        switch (scenarioType) {
+          case 'item':
+            // Call getAssets to update item definitions in the UI
+            await useStore.getState().getAssets(modelMeta.modelId);
+            break;
+
+          case 'damage':
+            // Call getDamageScenarios to update damage scenarios in the UI
+            await useStore.getState().getDamageScenarios(modelMeta.modelId);
+            break;
+
+          case 'threat':
+            // Call getThreatScenarios to update threat scenarios in the UI
+            await useStore.getState().getThreatScenario(modelMeta.modelId);
+            break;
+
+          case 'attack':
+            // Call getAttackScenarios to update attack scenarios in the UI
+            await useStore.getState().getAttackScenario(modelMeta.modelId);
+            break;
+
+          case 'cybersecurity':
+            // Call getCybersecurityArtifacts to update cybersecurity artifacts in the UI
+            await useStore.getState().getCyberSecurityScenario(modelMeta.modelId);
+            break;
+
+          default:
+            break;
+        }
+      }
     } catch (err) {
       toast.error(err.message || 'Generation failed');
     } finally {
       setGenerating(false);
     }
   };
-
   const onClose = () => {
     setPromptValue('');
     setResult(null);
+    setStep(0);
+    setManualFields([]);
+    setFieldsVisible(false);
+    setFormValues({ systemName: '' });
+    setSystemInputPrompt(systemInputPromptDefault);
     handleClose();
   };
 
@@ -139,22 +296,81 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
         </DialogTitle>
 
         <DialogContent dividers>
-          <TextField fullWidth multiline minRows={4} label={label} value={promptValue} onChange={(e) => setPromptValue(e.target.value)} />
-          {result && (
-            <Box
-              sx={{
-                bgcolor: '#f8f8f8',
-                mt: 2,
-                p: 2,
-                borderRadius: 2,
-                maxHeight: 200,
-                overflowY: 'auto'
-              }}
-            >
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                {JSON.stringify(result, null, 2)}
-              </Typography>
-            </Box>
+          {scenarioType === 'item' ? (
+            step === 0 ? (
+              <Box>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <InputLabel>System Name</InputLabel>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <TextField
+                      fullWidth
+                      value={formValues.systemName}
+                      onChange={(e) => setFormValues({ ...formValues, systemName: e.target.value })}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      label="System Input Prompt"
+                      value={systemInputPrompt}
+                      onChange={(e) => setSystemInputPrompt(e.target.value)}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} display="flex" justifyContent="space-between">
+                    <Button variant="outlined" onClick={handleAddManualField}>
+                      Add Field
+                    </Button>
+                    <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
+                      {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
+                    </Button>
+                  </Grid>
+
+                  {fieldsVisible && renderDynamicFields()}
+                </Grid>
+              </Box>
+            ) : (
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                label={label}
+                value={promptValue}
+                onChange={(e) => setPromptValue(e.target.value)}
+              />
+            )
+          ) : (
+            <>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                label={label}
+                value={promptValue}
+                onChange={(e) => setPromptValue(e.target.value)}
+              />
+              {result && (
+                <Box
+                  sx={{
+                    bgcolor: '#f8f8f8',
+                    mt: 2,
+                    p: 2,
+                    borderRadius: 2,
+                    maxHeight: 200,
+                    overflowY: 'auto'
+                  }}
+                >
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {JSON.stringify(result, null, 2)}
+                  </Typography>
+                </Box>
+              )}
+            </>
           )}
         </DialogContent>
 
@@ -162,9 +378,25 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
           <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleGenerate} disabled={!promptValue.trim()}>
-            Generate
-          </Button>
+          {scenarioType === 'item' ? (
+            step === 0 ? (
+              <Button
+                variant="contained"
+                onClick={() => setStep(1)}
+                disabled={!formValues.systemName.trim() && manualFields.length === 0 && !systemInputs?.length}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button variant="contained" onClick={handleGenerate} disabled={!promptValue.trim()}>
+                Generate
+              </Button>
+            )
+          ) : (
+            <Button variant="contained" onClick={handleGenerate} disabled={!promptValue.trim()}>
+              Generate
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

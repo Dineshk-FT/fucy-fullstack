@@ -48,7 +48,7 @@ const GenerateModel = ({ open, handleClose }) => {
     systemName: null
   });
 
-  console.log('modelMeta', modelMeta);
+  // console.log('modelMeta', modelMeta);
 
   // 🔑 Base prompts (default values)
   const basePrompts = {
@@ -69,15 +69,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
   };
 
   const [promptValues, setPromptValues] = useState(basePrompts);
-  const propmt = `You are an automotive cybersecurity architect. 
-Generate a JSON list of required system inputs for TARA as per ISO/SAE 21434.
-Include:
-- System components (ECUs, sensors, actuators, cloud services)
-- Communication interfaces (CAN, LIN, Ethernet, Bluetooth, Wi-Fi, OTA)
-- Assets of interest (data, functions, control signals)
-- Operational environment (road, factory, maintenance, remote services)
-- Dependencies (external services, supply chain, infrastructure)
-Provide short, realistic example values for each and 5-6 most important inputs.`;
+  const propmt = `You are an automotive cybersecurity architect. Based on the given system name, generate a JSON list of the most important system inputs required to perform a Threat Analysis and Risk Assessment (TARA) according to ISO/SAE 21434. Provide 5–6 key inputs with short, realistic example values that reflect the technical elements, operational context, and dependencies of the system and its ecosystem.`;
 
   const [systemInputPrompt, setSystemInputPrompt] = useState(propmt);
 
@@ -105,7 +97,8 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
     handleClose();
   };
 
-  const handleAddManualField = () => {
+  const handleAddManualField = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
     setFieldsVisible(true);
     setManualFields((prev) => [...prev, { id: nanoid(), label: '', value: '' }]);
   };
@@ -152,7 +145,7 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
       if (step === 1) {
         const itemDef_res = await ADD_CALL(mergedFormValues(), `${configuration.apiBaseUrl}v1/generate/model`);
 
-        setStepResult(itemDef_res);
+        setStepResult(itemDef_res?.message);
         navigate(`/Models/${itemDef_res?.model_id}`);
         dispatch(setModelId(itemDef_res?.model_id));
         dispatch(closeAll());
@@ -175,7 +168,7 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
           },
           `${configuration.apiBaseUrl}v1/generate/damage-scenarios`
         );
-        setStepResult(res);
+        setStepResult(res?.message);
         toast.success('✅ Damage Scenarios generated successfully');
       } else if (step === 3) {
         const res = await ADD_CALL(
@@ -185,7 +178,7 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
           },
           `${configuration.apiBaseUrl}v1/generate/full-threat-scenario`
         );
-        setStepResult(res);
+        setStepResult(res?.message);
         toast.success('✅ Threat + Derived Threat Scenarios generated successfully');
       } else if (step === 4) {
         const res = await ADD_CALL(
@@ -195,7 +188,7 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
           },
           `${configuration.apiBaseUrl}v1/generate/full-attack-scenario`
         );
-        setStepResult(res);
+        setStepResult(res?.message);
         toast.success('✅ Full Attack Pipeline executed successfully');
       } else if (step === 5) {
         await ADD_CALL(
@@ -300,7 +293,7 @@ Provide short, realistic example values for each and 5-6 most important inputs.`
                     Add Field
                   </Button>
                   <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
-                    {loading ? <CircularProgress size={20} /> : 'Get Fields'}
+                    {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
                   </Button>
                 </Grid>
 
