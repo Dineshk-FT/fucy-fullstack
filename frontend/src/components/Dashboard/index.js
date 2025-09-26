@@ -504,33 +504,48 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
     return counts;
   }, [dashboardData.riskTreatments]);
 
-  const timelineData = useMemo(() => ({
-    series: [
-      {
-        data: dashboardData.threats.flatMap(t =>
-          t.Details?.map(d => ({
-            x: d.createdAt ? new Date(d.createdAt) : new Date(),
-            y: 1
-          })) || []
-        ),
-        label: 'Threats Over Time',
-        color: colors.chartColors[0]
-      },
-    ],
-    xAxis: [
-      {
-        data: dashboardData.threats.flatMap(t =>
-          t.Details?.map(d => d.createdAt ? new Date(d.createdAt) : new Date()) || []
-        ),
-        scaleType: 'time',
-        valueFormatter: (value) => {
-          if (!value) return '';
-          const date = new Date(value);
-          return date.toLocaleDateString();
-        }
-      },
-    ],
-  }), [dashboardData.threats, colors]);
+  const timelineData = useMemo(() => {
+    // Ensure we have valid data before processing
+    const threats = Array.isArray(dashboardData?.threats) ? dashboardData.threats : [];
+    const chartColors = Array.isArray(colors?.chartColors) ? colors.chartColors : [];
+    
+    return {
+      series: [
+        {
+          data: threats.flatMap(t => 
+            Array.isArray(t?.Details) 
+              ? t.Details.map(d => ({
+                  x: d?.createdAt ? new Date(d.createdAt) : new Date(),
+                  y: 1
+                })) 
+              : []
+          ),
+          label: 'Threats Over Time',
+          color: chartColors[0] || '#000000'
+        },
+      ],
+      xAxis: [
+        {
+          data: threats.flatMap(t => 
+            Array.isArray(t?.Details) 
+              ? t.Details.map(d => d?.createdAt ? new Date(d.createdAt) : new Date()) 
+              : []
+          ),
+          scaleType: 'time',
+          valueFormatter: (value) => {
+            if (!value) return '';
+            try {
+              const date = new Date(value);
+              return isNaN(date) ? '' : date.toLocaleDateString();
+            } catch (error) {
+              console.error('Error formatting date:', error);
+              return '';
+            }
+          }
+        },
+      ],
+    };
+  }, [dashboardData?.threats, colors?.chartColors]);
 
   const calculateAverageImpact = (data) => {
     if (!data?.damageScenarios?.length) return 0;
@@ -827,7 +842,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                   }}
                 />
                 <Tab
-                  label="Risks & Impacts"
+                  label="Risks"
                   sx={{
                     minHeight: 48,
                     color: colors.tabContentClr,
@@ -889,7 +904,6 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
               <Box>
                 <TabPanel value={tabValue} index={1}>
                   <RisksContent
-                    impactDistribution={impactDistribution}
                     riskLevels={riskLevels}
                     treatmentDistribution={treatmentDistribution}
                     impactRef={chartRefs.impact}
@@ -908,6 +922,7 @@ const DashboardDialog = ({ open, onClose, modelId }) => {
                     threatRef={chartRefs.threat}
                     timelineRef={chartRefs.timeline}
                     threats={dashboardData.threats}
+                    impactDistribution={impactDistribution}
                   />
                 </TabPanel>
               </Box>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Button, Container, Grid } from '@mui/material';
+import { Box, Typography, Container, Grid } from '@mui/material';
+import Button from '../../../components/Buttons/Button';
 import { makeStyles } from '@mui/styles';
 import nextidea from '../../../assets/images/others/nextidea.jpg';
 
@@ -29,18 +30,13 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'left',
   },
   button: {
-    backgroundColor: 'black',
-    color: 'white',
-    fontSize: 23,
-    padding: theme.spacing(1.5, 4), // Adjusted padding for a better button size
-    borderRadius: 4,
-    transition: 'background-color 0.3s, color 0.3s, transform 0.2s',
-    '&:hover': {
-      backgroundColor: 'white',
-      color: 'black',
-      boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-      transform: 'scale(1.05)', // Added scale effect on hover
-    },
+    fontSize: '1.2rem',
+    padding: '12px 32px',
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 600,
+    alignSelf: 'flex-start',
+    transition: 'all 0.3s ease',
   },
   image: {
     width: '100%',
@@ -80,7 +76,14 @@ export default function CyberSecuritySection() {
             </Typography>
             <Typography variant="body1" paragraph className={classes.paragraph}>
               In a cyber-physical system, cybersecurity requires systems engineering. The right hardware needs to be matched with the right software via the right interface.            </Typography>
-            <Button className={classes.button}>Learn More About Us</Button>
+            <Button 
+              variant="contained" 
+              color="primary"
+              className={classes.button}
+              pulse
+            >
+              Learn More About Us
+            </Button>
           </Box>
         </Grid>
       </Grid>

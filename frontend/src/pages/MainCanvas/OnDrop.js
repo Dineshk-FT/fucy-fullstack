@@ -15,7 +15,17 @@ export const onDrop = (event, createGroup, reactFlowInstance, dragAdd, dragAddNo
     y: event.clientY
   });
 
-  const dropType = parsedDragItem ? 'dragItem' : file ? 'file' : group ? 'group' : 'template';
+  const reactFlowType = event.dataTransfer.getData('application/reactflow');
+  
+  const dropType = reactFlowType === 'carImage' 
+    ? 'carImage' 
+    : parsedDragItem 
+      ? 'dragItem' 
+      : file 
+        ? 'file' 
+        : group 
+          ? 'group' 
+          : 'template';
 
   switch (dropType) {
     case 'dragItem':
@@ -30,6 +40,19 @@ export const onDrop = (event, createGroup, reactFlowInstance, dragAdd, dragAddNo
     case 'template':
       parsedTemplate = JSON.parse(template);
       break;
+    case 'carImage': {
+      const carNode = {
+        id: `car-${uid()}`,
+        type: 'carImage',
+        position,
+        style: {
+          width: 1000,  
+          height: 750  
+        }
+      };
+      dragAddNode(carNode);
+      return;
+    }
     default:
       console.error('Unsupported drop type');
   }

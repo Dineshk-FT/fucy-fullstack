@@ -12,7 +12,8 @@ const ThreatsContent = ({
   timelineData, 
   threatRef, 
   timelineRef,
-  threats = [] // Add threats prop for the new chart
+  threats = [],
+  impactDistribution = { safety: 0, financial: 0, operational: 0, privacy: 0 }
 }) => {
   const theme = useTheme();
   const colors = ColorTheme();
@@ -84,6 +85,34 @@ const ThreatsContent = ({
     ({ key }) => threatTypes?.[key] > 0
   );
 
+  // Impact Distribution Data
+  const impactCategories = [
+    { key: 'safety', label: 'Safety' },
+    { key: 'financial', label: 'Financial' },
+    { key: 'operational', label: 'Operational' },
+    { key: 'privacy', label: 'Privacy' },
+  ];
+
+  const hasImpactData = impactCategories.some(
+    ({ key }) => impactDistribution?.[key] > 0
+  );
+
+  const impactBarData = {
+    series: [
+      {
+        data: impactCategories.map(({ key }) => impactDistribution?.[key] || 0),
+        label: 'Impact Scores',
+        color: colors.chartColors[0],
+      },
+    ],
+    xAxis: [
+      {
+        scaleType: 'band',
+        data: impactCategories.map(({ label }) => label),
+      },
+    ],
+  };
+
   const threatBarData = {
     series: [
       {
@@ -104,6 +133,45 @@ const ThreatsContent = ({
 
   return (
     <Grid container spacing={2} sx={{ mt: 0.5 }}>
+      {/* Impact Distribution Chart */}
+      <Grid item xs={12} md={6} ref={threatRef}>
+        <EnhancedChartCard
+          title="Impact Distribution"
+          subtitle="Distribution of impact scores across different categories"
+          chartContainerStyle={{
+            height: 300,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {hasImpactData ? (
+            <BarChart
+              {...chartOptions}
+              series={impactBarData.series}
+              xAxis={impactBarData.xAxis}
+              yAxis={[
+                {
+                  scaleType: 'linear',
+                  min: 0,
+                  max: Math.max(...impactCategories.map(cat => impactDistribution[cat.key] || 0)) * 1.2 || 10,
+                  label: 'Impact Score',
+                },
+              ]}
+            />
+          ) : (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height={300}
+              color="text.secondary"
+            >
+              No impact distribution data available
+            </Box>
+          )}
+        </EnhancedChartCard>
+      </Grid>
+      {/* Threat Types Bar Chart */}
       <Grid item xs={12} md={6}>
         <EnhancedChartCard 
           title="Threat Types" 
@@ -302,6 +370,12 @@ const ThreatsContent = ({
 };
 
 ThreatsContent.propTypes = {
+  impactDistribution: PropTypes.shape({
+    safety: PropTypes.number,
+    financial: PropTypes.number,
+    operational: PropTypes.number,
+    privacy: PropTypes.number,
+  }),
   threatTypes: PropTypes.shape({
     derived: PropTypes.number,
     userDefined: PropTypes.number,
@@ -367,6 +441,12 @@ const getLikelihoodValue = (likelihood) => {
 };
 
 ThreatsContent.defaultProps = {
+  impactDistribution: {
+    safety: 0,
+    financial: 0,
+    operational: 0,
+    privacy: 0,
+  },
   threatTypes: {
     derived: 0,
     userDefined: 0,

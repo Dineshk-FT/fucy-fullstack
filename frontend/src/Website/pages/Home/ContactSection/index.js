@@ -1,5 +1,6 @@
 import React from 'react';
-import { TextField, Button, Box, Typography, Grid } from '@mui/material';
+import { TextField, Box, Typography, Grid } from '@mui/material';
+import Button from '../../../../components/Buttons/Button';
 import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -38,7 +39,17 @@ function ContactForm() {
           </Grid>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Button type="submit" variant="contained" color="primary" sx={{ width: '300px', px: 5, py: 1 }}>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary" 
+              sx={{ 
+                width: '300px', 
+                py: 1.5,
+                fontSize: '1rem'
+              }}
+              pulse
+            >
               Send
             </Button>
           </Box>
