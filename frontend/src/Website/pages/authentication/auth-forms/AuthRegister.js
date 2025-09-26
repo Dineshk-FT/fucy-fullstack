@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import {
   Box,
-  Button,
   Checkbox,
   Divider,
   FormControl,
@@ -30,7 +29,7 @@ import { Formik } from 'formik';
 // project imports
 import useScriptRef from '../../../../hooks/useScriptRef';
 import Google from '../../../../assets/images/icons/social-google.svg';
-import AnimateButton from '../../../../components/extended/AnimateButton';
+import Button from '../../../../components/Buttons/Button';
 import { strengthColor, strengthIndicator } from '../../../../utils/password-strength';
 
 // assets
@@ -298,20 +297,20 @@ const FirebaseRegister = ({ ...others }) => {
             )}
 
             <Box sx={{ mt: 2 }}>
-              <AnimateButton>
-                <Button
-                  disableElevation
-                  onClick={() => handleRegister(values)}
-                  disabled={isSubmitting}
-                  fullWidth
-                  size="large"
-                  type="submit"
-                  variant="contained"
-                  color="secondary"
-                >
-                  Sign up
-                </Button>
-              </AnimateButton>
+              <Button
+                fullWidth
+                size="large"
+                type="submit"
+                variant="contained"
+                color="primary"
+                loading={isSubmitting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleRegister(values);
+                }}
+              >
+                Sign up
+              </Button>
             </Box>
           </form>
         )}

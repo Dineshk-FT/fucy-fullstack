@@ -1,5 +1,6 @@
 import React from 'react';
-import { TextField, Button, Box, Typography, Container } from '@mui/material';
+import { TextField, Box, Typography, Container } from '@mui/material';
+import Button from '../../../components/Buttons/Button';
 import ColorTheme from '../../../themes/ColorTheme';
 
 function ContactForm() {
@@ -14,7 +15,19 @@ function ContactForm() {
         <TextField required fullWidth label="Email" margin="normal" variant="outlined" />
         <TextField required fullWidth label="How did you hear about us?" margin="normal" variant="outlined" />
         <TextField fullWidth label="Message" margin="normal" variant="outlined" multiline rows={4} />
-        <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2, width: 'fit-content', alignSelf: 'center' }}>
+        <Button 
+          type="submit" 
+          variant="contained" 
+          color="primary" 
+          sx={{ 
+            mt: 2, 
+            width: 'fit-content', 
+            alignSelf: 'center',
+            px: 4,
+            py: 1.5
+          }}
+          pulse
+        >
           Send
         </Button>
       </Box>

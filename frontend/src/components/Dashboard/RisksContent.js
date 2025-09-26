@@ -11,7 +11,6 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 
 const RisksContent = ({ 
-  impactDistribution, 
   riskLevels, 
   treatmentDistribution, 
   impactRef, 
@@ -76,32 +75,6 @@ const RisksContent = ({
     },
   };
 
-  const impactCategories = [
-    { key: 'safety', label: 'Safety' },
-    { key: 'financial', label: 'Financial' },
-    { key: 'operational', label: 'Operational' },
-    { key: 'privacy', label: 'Privacy' },
-  ];
-
-  const hasImpactData = impactCategories.some(
-    ({ key }) => impactDistribution?.[key] > 0
-  );
-
-  const impactBarData = {
-    series: [
-      {
-        data: impactCategories.map(({ key }) => impactDistribution?.[key] || 0),
-        label: 'Impact Scores',
-        color: colors.chartColors[0],
-      },
-    ],
-    xAxis: [
-      {
-        scaleType: 'band',
-        data: impactCategories.map(({ label }) => label),
-      },
-    ],
-  };
 
   const riskLevelsData = [
     { 
@@ -237,45 +210,6 @@ const RisksContent = ({
           </Grid>
           <Grid item xs={12} md={6}>
             <EnhancedChartCard 
-              title="Impact Distribution" 
-              titleTooltip="Distribution of risks by impact category"
-              chartRef={impactRef}
-              noData={!hasImpactData}
-              noDataText="No impact distribution data available"
-            >
-              <BarChart
-                {...impactBarData}
-                height={300}
-                {...chartOptions}
-                yAxis={[{
-                  label: 'Count',
-                  labelStyle: { 
-                    fill: colors.chartText,
-                    fontSize: isMobile ? '0.7rem' : '0.75rem',
-                  },
-                  tickLabelStyle: {
-                    fill: colors.chartText,
-                    fontSize: isMobile ? '0.6rem' : '0.65rem',
-                  },
-                }]}
-                xAxis={[{
-                  ...impactBarData.xAxis[0],
-                  label: 'Impact Categories',
-                  labelStyle: { 
-                    fill: colors.chartText,
-                    fontSize: isMobile ? '0.7rem' : '0.75rem',
-                  },
-                  tickLabelStyle: {
-                    fill: colors.chartText,
-                    fontSize: isMobile ? '0.6rem' : '0.65rem',
-                  },
-                }]}
-                colors={[colors.chartColors[0]]}
-              />
-            </EnhancedChartCard>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <EnhancedChartCard 
               title="Risk Levels" 
               titleTooltip="Distribution of risks by severity level"
               noData={!hasRiskData}
@@ -388,12 +322,6 @@ const RisksContent = ({
 };
 
 RisksContent.propTypes = {
-  impactDistribution: PropTypes.shape({
-    safety: PropTypes.number,
-    financial: PropTypes.number,
-    operational: PropTypes.number,
-    privacy: PropTypes.number,
-  }),
   riskLevels: PropTypes.shape({
     high: PropTypes.number,
     medium: PropTypes.number,
@@ -415,12 +343,6 @@ RisksContent.propTypes = {
 };
 
 RisksContent.defaultProps = {
-  impactDistribution: {
-    safety: 0,
-    financial: 0,
-    operational: 0,
-    privacy: 0,
-  },
   riskLevels: {
     high: 0,
     medium: 0,

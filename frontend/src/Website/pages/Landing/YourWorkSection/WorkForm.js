@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
-import { TextField, Button, Box, Typography, Container } from '@mui/material';
+import { TextField, Box, Typography, Container } from '@mui/material';
+import Button from '../../../../components/Buttons/Button';
 import ColorTheme from '../../../../themes/ColorTheme';
 
 function WorkSubmissionForm() {
@@ -41,10 +42,17 @@ function WorkSubmissionForm() {
         />
         <Button 
           type="submit" 
-          fullWidth 
           variant="contained" 
           color="primary" 
-          sx={{ mt: 2, width: 'fit-content', alignSelf: 'center' }}
+          sx={{ 
+            mt: 2, 
+            width: 'fit-content', 
+            alignSelf: 'center',
+            px: 4,
+            py: 1.5,
+            fontSize: '1rem'
+          }}
+          pulse
         >
           Submit
         </Button>

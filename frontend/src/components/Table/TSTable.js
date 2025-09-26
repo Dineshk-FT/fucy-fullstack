@@ -78,15 +78,59 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-    borderRight: '1px solid rgba(224, 224, 224, 1)',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
     padding: '10px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
   }
 }));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  // '&:last-child td, &:last-child th': { border: 0 }
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  }
 }));
 
 const Tstable = () => {
@@ -119,7 +163,23 @@ const Tstable = () => {
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  const TableContainerStyled = styled(TableContainer)(({ theme }) => ({
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: theme.shadows[1],
+    '&::-webkit-scrollbar': {
+      height: '8px',
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: theme.palette.grey[400],
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: theme.palette.grey[100],
+    },
+  }));
   const [openModal, setOpenModal] = useState({ threat: false, select: false, derived: false });
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedRow, setSelectedRow] = useState({});
@@ -548,12 +608,16 @@ const Tstable = () => {
       <AutoGuidePopper steps={TsSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
-          overflow: 'auto',
-          height: '-webkit-fill-available',
-          minHeight: 'moz-available',
-          padding: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          borderRadius: 1,
+          boxShadow: 'none',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          overflow: 'hidden',
           '&::-webkit-scrollbar': {
-            width: '4px'
+            width: '8px',
+            height: '8px'
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -716,18 +780,40 @@ const Tstable = () => {
           </Table>
         </TableContainer>
         <TablePagination
-          sx={{
-            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-            '& .MuiSelect-select': { color: color?.sidebarContent },
-            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
-          }}
+          rowsPerPageOptions={[10, 25, 50, 100]}
           component="div"
           count={filteredRows.length}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 1,
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              margin: 0,
+              fontSize: '0.8125rem',
+            },
+            '& .MuiTablePagination-actions': {
+              marginLeft: '8px',
+            },
+            '& .MuiButtonBase-root': {
+              '&.Mui-disabled': {
+                opacity: 0.5,
+              },
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                }
+              }
+            }
+          }}
         />
         <AddThreatScenarios open={openModal?.threat} handleClose={handleCloseTs} id={model._id} />
         {openModal?.select && (
