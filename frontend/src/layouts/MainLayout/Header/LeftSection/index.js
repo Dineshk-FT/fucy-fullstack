@@ -1,9 +1,26 @@
 /* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Select } from '@mui/material';
+import {
+  Box,
+  Tooltip,
+  Typography,
+  IconButton,
+  Collapse,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  FormControl,
+  InputLabel,
+  Select
+} from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
+  Backspace as BackspaceIcon,
   TableChart as TableIcon,
   LibraryBooks as LibraryBooksIcon,
   CreateNewFolderOutlined as CreateNewFolderOutlinedIcon,
@@ -41,6 +58,8 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import GenerateModel from '../../../../components/Modal/GenerateModel';
 import DashboardDialog from '../../../../components/Dashboard';
+import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
+import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 
 const notify = (message, status) => toast[status](message);
 
@@ -48,6 +67,7 @@ const selector = (state) => ({
   Models: state.Models,
   model: state.model,
   getModels: state.getModels,
+  getModelById: state.getModelById,
   deleteModels: state.deleteModels,
   getSidebarNode: state.getSidebarNode,
   getTemplates: state.getTemplates,
@@ -60,7 +80,9 @@ const selector = (state) => ({
   importProject: state.importProject,
   isChanged: state.isChanged,
   isAttackChanged: state.isAttackChanged,
-  setOpenSave: state.setOpenSave
+  setOpenSave: state.setOpenSave,
+  assets: state.assets,
+  clearModel: state.clearModel
 });
 
 const LeftSection = () => {
@@ -71,6 +93,7 @@ const LeftSection = () => {
     Models,
     model,
     getModels,
+    getModelById,
     deleteModels,
     getSidebarNode,
     getTemplates,
@@ -84,7 +107,9 @@ const LeftSection = () => {
     isChanged,
     isAttackChanged,
     setOpenSave,
-    convertToLibrary
+    assets,
+    convertToLibrary,
+    clearModel
   } = useStore(selector, shallow);
 
   const categories = [
@@ -107,6 +132,7 @@ const LeftSection = () => {
     Delete: false,
     Library: false,
     AttackModal: false,
+    Clear: false,
     AIModal: false
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -124,18 +150,36 @@ const LeftSection = () => {
   const [hoveredTab, setHoveredTab] = useState(null);
   const [openDashboard, setOpenDashboard] = useState(false);
   const hoverTimeoutRef = useRef(null);
+  const [scenarioType, setScenarioType] = useState(null);
+  const [openScenarioModal, setOpenScenarioModal] = useState(false);
+
+  const handleOpenScenarioAI = (type, e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setScenarioType(type);
+    setOpenScenarioModal(true);
+  };
+
+  const handleCloseScenarioAI = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setOpenScenarioModal(false);
+    setScenarioType(null);
+  };
 
   const handleMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    // Only hide the hovered tab if no modal is open
-    if (!openModal.Open && !openModal.Delete && !openModal.Library) {
-      hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
-    }
-  }, [openModal.Open, openModal.Delete, openModal.Library]);
+  const handleMouseLeave = useCallback(
+    (e) => {
+      if (e?.stopPropagation) e.stopPropagation();
+      // Only hide the hovered tab if no modal is open
+      if (!openModal.Open && !openModal.Delete && !openModal.Library) {
+        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+      }
+    },
+    [openModal.Open, openModal.Delete, openModal.Library]
+  );
 
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -264,7 +308,20 @@ const LeftSection = () => {
     },
     [setCollapsed]
   );
-
+  const handleClear = () => {
+    clearModel(model._id)
+      .then((res) => {
+        // console.log('res', res);
+        if (!res.error) {
+          notify(res.message ?? 'Cleared successfully', 'success');
+          getModelById(model._id);
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -327,7 +384,13 @@ const LeftSection = () => {
   }, []);
 
   const handleOpenModal = (modalKey, e) => {
+    console.log('modalKey', modalKey);
     if (e?.stopPropagation) e.stopPropagation();
+    if (isChanged) {
+      setOpenSave(true);
+      handleMouseLeave(e);
+      return;
+    }
     setAnchorEl(e.currentTarget);
     setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
   };
@@ -357,48 +420,43 @@ const LeftSection = () => {
     [handleCategoryDialogOpen]
   );
 
-  const confirmConvertToLibrary = useCallback(
-    async () => {
-      if (!model?._id) {
-        console.error('No active model to convert');
-        notify('No active model to convert', 'error');
-        return;
-      }
+  const confirmConvertToLibrary = useCallback(async () => {
+    if (!model?._id) {
+      console.error('No active model to convert');
+      notify('No active model to convert', 'error');
+      return;
+    }
 
-      try {
-        // Update the model with the selected category before converting to library
-        const updatedModel = { ...model, category: selectedCategory };
-        useStore.setState({ model: updatedModel });
+    try {
+      // Update the model with the selected category before converting to library
+      const updatedModel = { ...model, category: selectedCategory };
+      useStore.setState({ model: updatedModel });
 
-        const result = await useStore.getState().convertToLibrary(model._id);
-        if (result?.success) {
-          notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
-          await getModels();
-        } else if (result?.error) {
-          notify(result.error, 'error');
-        }
-      } catch (error) {
-        console.error('Failed to convert model:', error);
-        const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
-        notify(errorMessage, 'error');
-      } finally {
-        handleCategoryDialogClose();
+      const result = await useStore.getState().convertToLibrary(model._id);
+      if (result?.success) {
+        notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
+        await getModels();
+      } else if (result?.error) {
+        notify(result.error, 'error');
       }
-    },
-    [model, selectedCategory, getModels]
-  );
+    } catch (error) {
+      console.error('Failed to convert model:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
+      notify(errorMessage, 'error');
+    } finally {
+      handleCategoryDialogClose();
+    }
+  }, [model, selectedCategory, getModels]);
 
   const tabs = useMemo(
     () => [
       {
         name: 'Dashboard',
         options: [
-          { 
-            label: 'Open Dashboard', 
-            icon: () => (
-              <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />
-            ),
-            action: () => setOpenDashboard(true) 
+          {
+            label: 'Open Dashboard',
+            icon: () => <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />,
+            action: () => setOpenDashboard(true)
           }
         ]
       },
@@ -408,6 +466,7 @@ const LeftSection = () => {
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
           { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
+          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
@@ -419,7 +478,7 @@ const LeftSection = () => {
               setTaraDialogOpen(true);
             }
           }
-          // { label: 'CreateWithAI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
       {
@@ -460,7 +519,8 @@ const LeftSection = () => {
               />
             ),
             action: handleGroupDrag
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('item', e) }
         ]
       },
       {
@@ -493,7 +553,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Damage Scenarios - Impact Ratings')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
         ]
       },
       {
@@ -526,7 +587,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Derived Threat Scenarios')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
         ]
       },
       {
@@ -549,7 +611,8 @@ const LeftSection = () => {
               />
             ),
             action: (e) => handleContext('AI Assistant', e)
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) }
         ]
       },
       {
@@ -610,7 +673,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Cybersecurity Claims')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
         ]
       },
       {
@@ -633,7 +697,7 @@ const LeftSection = () => {
         ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleOpenScenarioAI]
   );
 
   const handleCloseModal = useCallback((e, modalKey) => {
@@ -776,10 +840,10 @@ const LeftSection = () => {
           borderRadius: '10px',
           padding: '6px 8px',
           boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
-          marginBottom: '6px',
+          marginBottom: '6px'
         }}
       >
-        {tabs.map((tab) => (
+        {tabs?.map((tab) => (
           <Box
             key={tab.name}
             sx={{
@@ -912,7 +976,7 @@ const LeftSection = () => {
               onChange={handleCategoryChange}
               sx={{ mt: 1 }}
             >
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <MenuItem key={category} value={category}>
                   {category}
                 </MenuItem>
@@ -922,11 +986,7 @@ const LeftSection = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCategoryDialogClose}>Cancel</Button>
-          <Button 
-            onClick={confirmConvertToLibrary}
-            variant="contained"
-            color="primary"
-          >
+          <Button onClick={confirmConvertToLibrary} variant="contained" color="primary">
             Convert to Library
           </Button>
         </DialogActions>
@@ -946,7 +1006,16 @@ const LeftSection = () => {
         style={{ position: 'fixed' }}
       />
       <GenerateModel open={openModal.NewAI} handleClose={(e) => handleCloseModal(e, 'NewAI')} />
-
+      <ScenarioAIModal
+        open={openScenarioModal}
+        handleClose={handleCloseScenarioAI}
+        scenarioType={scenarioType}
+        modelMeta={{
+          modelId: model?._id,
+          template: assets?.template,
+          systemName: model?.name
+        }}
+      />
       <RenameProject
         open={openModal.Rename}
         handleClose={(e) => handleCloseModal(e, 'Rename')}
@@ -1004,9 +1073,9 @@ const LeftSection = () => {
           getAttackScenario={getAttackScenario}
         />
       )}
-      
-      <DashboardDialog 
-        open={openDashboard} 
+
+      <DashboardDialog
+        open={openDashboard}
         onClose={() => setOpenDashboard(false)}
         modelId={model?._id}
         projectData={{
@@ -1016,6 +1085,15 @@ const LeftSection = () => {
           controls: model?.controls || []
         }}
       />
+      {openModal?.Clear && (
+        <ConfirmDeleteDialog
+          open={openModal?.Clear}
+          onClose={() => setOpenModal((prev) => ({ ...prev, Clear: false }))}
+          onConfirm={handleClear}
+          name={model?.name}
+          mode="clear"
+        />
+      )}
     </Box>
   );
 };

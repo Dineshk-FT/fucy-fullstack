@@ -8,6 +8,7 @@ import { iconStyle } from '../../../themes/constant';
 import { setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
 import { shallow } from 'zustand/shallow';
 import useStore from '../../../store/Zustand/store';
+import CloseIcon from '@mui/icons-material/Close';
 import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
@@ -29,7 +30,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
   const labelRef = useRef(null);
@@ -38,17 +38,16 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const [labelValue, setLabelValue] = useState(data?.label || '');
   const isMounted = useRef(true);
 
+  // console.log('width', width);
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       isMounted.current = false; // Set to false when component unmounts
     };
   }, []);
-
-  const checkSelection = () => selectedBlock?.id === id;
-  const isSelected = checkSelection();
-
+  const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+
   useEffect(() => {
     setLabelValue(data?.label || '');
   }, [data?.label]);
@@ -247,8 +246,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
@@ -289,7 +286,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               e.stopPropagation();
               handleInfoClick(false);
             }}
-            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
+            style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
           >
             <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
           </div>
@@ -298,7 +295,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               e.stopPropagation();
               handleInfoClick(true);
             }}
-            style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+            style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}
           >
             <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
@@ -313,11 +310,10 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              fontSize: '0.8rem',
-              opacity: isHovered ? 1 : 0
+              display: isSelected ? 'flex' : 'none'
             }}
           >
-            x
+            <CloseIcon sx={{ fontSize: '1rem', mb: 0.1 }} />
           </div>
         </div>
       </ClickAwayListener>

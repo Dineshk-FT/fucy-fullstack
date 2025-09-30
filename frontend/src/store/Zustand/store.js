@@ -4,7 +4,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../../services/baseApiService';
-import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../services/api';
+import { ADD_CALL, ADD_CALL_MODEL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../services/api';
 import {
   DSTableHeader,
   DsDerivationHeader,
@@ -88,6 +88,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   derivedIds: [],
   isEditDerived: false,
   derivationId: '',
+  systemInputs: [],
 
   subSystems: {
     id: '6',
@@ -1287,6 +1288,42 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  getSystemInputs: async (system, propmt) => {
+    try {
+      const formData = new FormData();
+      formData.append('systemName', system);
+      formData.append('systemInputPrompt', propmt);
+
+      const options = {
+        method: 'POST',
+        url: `${configuration.apiBaseUrl}v1/generate/get_system_inputs`,
+        headers: {
+          ...createHeaders().headers,
+          'Content-Type': 'multipart/form-data'
+        },
+        data: formData
+      };
+
+      const res = await axios(options);
+      // console.log(res);
+      set({
+        systemInputs: res?.data?.inputs || []
+      });
+    } catch (error) {
+      console.error('Error fetching sidebar nodes:', error);
+    }
+  },
+
+  generateFullModel: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generate/full-model`;
+    try {
+      const res = await ADD_CALL(details, url);
+      return res; // this will be { task_id: "..." }
+    } catch (error) {
+      return error;
+    }
+  },
+
   // getTemplate: async (id) => {
   //   const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
   //   set({
@@ -1340,12 +1377,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  /**
-   * Clones library data to an existing model
-   * @param {string} libraryId - The ID of the library to clone from
-   * @param {string} targetModelId - The ID of the target model to clone to
-   * @returns {Promise<{success: boolean, message?: string}>}
-   */
   openLibrary: async (libraryId, targetModelId) => {
     try {
       const userId = sessionStorage.getItem('user-id') || '';
@@ -1358,18 +1389,14 @@ const useStore = createWithEqualityFn((set, get) => ({
       formData.append('targetModelId', targetModelId);
       formData.append('userId', userId);
 
-      await axios.post(
-        `${configuration.apiBaseUrl}v1/cloneModelDataToExistingModel`,
-        formData,
-        {
-          headers: {
-            ...createHeaders().headers,
-            'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data'
-          },
-          validateStatus: () => true // Ensure we handle all status codes
-        }
-      );
+      await axios.post(`${configuration.apiBaseUrl}v1/cloneModelDataToExistingModel`, formData, {
+        headers: {
+          ...createHeaders().headers,
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data'
+        },
+        validateStatus: () => true // Ensure we handle all status codes
+      });
 
       // Refresh the model data to reflect the changes
       const refreshModel = async () => {
@@ -1379,7 +1406,7 @@ const useStore = createWithEqualityFn((set, get) => ({
           if (currentModel?._id === targetModelId) {
             // Refresh the entire model data
             await useStore.getState().getModelById(targetModelId);
-            
+
             // Refresh related data
             await Promise.all([
               useStore.getState().getAssets(targetModelId),
@@ -1389,7 +1416,7 @@ const useStore = createWithEqualityFn((set, get) => ({
               useStore.getState().getCyberSecurityScenario(targetModelId),
               useStore.getState().getRiskTreatment({ modelId: targetModelId })
             ]);
-            
+
             console.log('Model data refreshed successfully');
           }
         } catch (refreshError) {
@@ -1401,21 +1428,20 @@ const useStore = createWithEqualityFn((set, get) => ({
       // Run the refresh in the background
       refreshModel();
 
-      return { 
+      return {
         success: true,
         message: 'Library data successfully applied to model',
         modelId: targetModelId
       };
-      
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
-      console.error('Open library failed:', errorMessage, { 
+      console.error('Open library failed:', errorMessage, {
         error,
         requestData: { libraryId, userId: sessionStorage.getItem('user-id') }
       });
-      return { 
-        success: false, 
-        error: errorMessage 
+      return {
+        success: false,
+        error: errorMessage
       };
     }
   },
@@ -2106,7 +2132,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
       return response.data;
     } catch (err) {
-      console.log('err', err);
+      // console.log('err', err);
       throw err; // Re-throwing the error to handle it in calling code if needed
     }
   },
@@ -2141,6 +2167,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('details', details);
     let url = `${configuration.apiBaseUrl}v1/delete/models`;
     const res = await DELETE_CALL(details, url);
+    return res;
+  },
+
+  clearModel: async (modelId) => {
+    // console.log('details', details);
+    let url = `${configuration.apiBaseUrl}v1/clear_model_data`;
+    const res = await ADD_CALL({ modelId: modelId }, url);
     return res;
   },
   deleteDamageScenario: async (details) => {
