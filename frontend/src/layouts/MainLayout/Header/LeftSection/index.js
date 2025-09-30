@@ -477,7 +477,7 @@ const LeftSection = () => {
               e?.stopPropagation();
               setTaraDialogOpen(true);
             }
-          }
+          },
           { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
