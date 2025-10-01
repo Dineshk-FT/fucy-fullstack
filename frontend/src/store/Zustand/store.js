@@ -4,7 +4,16 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../../services/baseApiService';
-import { ADD_CALL, ADD_CALL_MODEL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../services/api';
+import {
+  ADD_CALL,
+  ADD_CALL_MODEL,
+  DELETE_CALL,
+  GET_CALL,
+  GET_CALL_WITH_DETAILS,
+  PATCH_CALL,
+  POST_CALL,
+  UPDATE_CALL
+} from '../../services/api';
 import {
   DSTableHeader,
   DsDerivationHeader,
@@ -2064,6 +2073,12 @@ const useStore = createWithEqualityFn((set, get) => ({
   createPropmt: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/generateAndStoreAttack`;
     const res = await ADD_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
+  autoGenerateRiskTreatement: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generate/generate-risk-treatments`;
+    const res = await POST_CALL(details, url);
     // console.log('res', res);
     return res;
   },

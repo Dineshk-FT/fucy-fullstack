@@ -44,7 +44,12 @@ const systemInputPromptDefault = `You are an automotive cybersecurity architect.
 
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
-  systemInputs: state.systemInputs
+  systemInputs: state.systemInputs,
+  assets: state.assets,
+  damageScenarios: state.damageScenarios,
+  threatScenarios: state.threatScenarios,
+  attackScenarios: state.attackScenarios,
+  cybersecurity: state.cybersecurity
 });
 
 const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
@@ -60,7 +65,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const [systemInputPrompt, setSystemInputPrompt] = useState(systemInputPromptDefault);
   const [loading, setLoading] = useState(false);
 
-  const { systemInputs, getSystemInputs } = useStore(selector);
+  const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity } = useStore(selector);
 
   // default prompt setup
   useEffect(() => {
@@ -227,40 +232,65 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const handleGenerate = async () => {
     const config = scenarioConfig[scenarioType];
     if (!config) return;
+
+    // 🔹 Dependency Validation
+    switch (scenarioType) {
+      case 'damage':
+        if (!assets?.Details?.length) {
+          toast.error('Please generate Item Definition first before creating Damage Scenarios.');
+          return;
+        }
+        break;
+
+      case 'threat':
+        if (!damageScenarios.subs[0]?.Details?.length) {
+          toast.error('Please generate Damage Scenarios first before creating Threat Scenarios.');
+          return;
+        }
+        break;
+
+      case 'attack':
+        if (!threatScenarios?.subs[0]?.Details?.length) {
+          toast.error('Please generate Threat Scenarios first before creating Attack Scenarios.');
+          return;
+        }
+        break;
+
+      case 'cybersecurity':
+        if (!attackScenarios?.subs[0]?.scenes?.length) {
+          toast.error('Please generate Attack Scenarios first before creating Cybersecurity Artifacts.');
+          return;
+        }
+        break;
+
+      default:
+        break;
+    }
+
     try {
       setGenerating(true);
       const res = await ADD_CALL(config.payload(), config.api);
       setResult(res?.message);
       toast.success(config.successMsg);
 
-      // After successful generation, update the UI by calling Zustand store methods
+      // ✅ After successful generation, update store data
       if (modelMeta?.modelId) {
         switch (scenarioType) {
           case 'item':
-            // Call getAssets to update item definitions in the UI
             await useStore.getState().getAssets(modelMeta.modelId);
             break;
-
           case 'damage':
-            // Call getDamageScenarios to update damage scenarios in the UI
             await useStore.getState().getDamageScenarios(modelMeta.modelId);
             break;
-
           case 'threat':
-            // Call getThreatScenarios to update threat scenarios in the UI
             await useStore.getState().getThreatScenario(modelMeta.modelId);
             break;
-
           case 'attack':
-            // Call getAttackScenarios to update attack scenarios in the UI
             await useStore.getState().getAttackScenario(modelMeta.modelId);
             break;
-
           case 'cybersecurity':
-            // Call getCybersecurityArtifacts to update cybersecurity artifacts in the UI
             await useStore.getState().getCyberSecurityScenario(modelMeta.modelId);
             break;
-
           default:
             break;
         }
@@ -271,6 +301,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       setGenerating(false);
     }
   };
+
   const onClose = () => {
     setPromptValue('');
     setResult(null);
@@ -291,7 +322,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       <Dialog open={open} onClose={onClose} sx={{ '& .MuiPaper-root': { maxWidth: 700, minWidth: 500 } }}>
         <DialogTitle>
           <Typography variant="h4" color="primary">
-            {`Create ${scenarioType.charAt(0).toUpperCase() + scenarioType.slice(1)} With AI`}
+            {`Create ${scenarioType?.charAt(0).toUpperCase() + scenarioType.slice(1)} With AI`}
           </Typography>
         </DialogTitle>
 

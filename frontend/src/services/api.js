@@ -252,6 +252,31 @@ export const ADD_CALL = async (details, url) => {
   // return res.data;
 };
 
+export const POST_CALL = async (details, url) => {
+  const trimmed = Object.fromEntries(
+    Object.entries(details).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+  );
+  // console.log('trimmed', trimmed);
+  let data = new FormData();
+  for (const [key, value] of Object.entries(trimmed)) {
+    data.append(key, value);
+  }
+
+  try {
+    const res = await axios({
+      method: 'POST',
+      url: url,
+      ...createHeaders(),
+      data: data
+    });
+    return res;
+  } catch (error) {
+    console.error('Error in ADD_CALL:', error);
+    return error.response;
+  }
+  // const res = await axios(options);
+  // return res.data;
+};
 export const ADD_CALL_MODEL = async (details, url) => {
   const trimmed = Object.fromEntries(
     Object.entries(details).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])

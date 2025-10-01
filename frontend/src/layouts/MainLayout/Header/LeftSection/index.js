@@ -80,7 +80,9 @@ const selector = (state) => ({
   isAttackChanged: state.isAttackChanged,
   setOpenSave: state.setOpenSave,
   assets: state.assets,
-  clearModel: state.clearModel
+  clearModel: state.clearModel,
+  autoGenerateRiskTreatement: state.autoGenerateRiskTreatement,
+  getRiskTreatment: state.getRiskTreatment
 });
 
 const LeftSection = () => {
@@ -106,7 +108,9 @@ const LeftSection = () => {
     setOpenSave,
     assets,
     convertToLibrary,
-    clearModel
+    clearModel,
+    autoGenerateRiskTreatement,
+    getRiskTreatment
   } = useStore(selector, shallow);
 
   const categories = [
@@ -417,6 +421,23 @@ const LeftSection = () => {
     [handleCategoryDialogOpen]
   );
 
+  const handleGenerateRisk = (e) => {
+    e.stopPropagation();
+    autoGenerateRiskTreatement({ modelId: model._id })
+      .then((res) => {
+        // console.log('res', res);
+        if (res.status === 200) {
+          notify(res.message ?? 'Risk Treatement generated successfully', 'success');
+          getRiskTreatment({ modelId: model._id });
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
   const confirmConvertToLibrary = useCallback(async () => {
     if (!model?._id) {
       console.error('No active model to convert');
@@ -682,6 +703,20 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Threat Assessment & Risk Treatment')
+          },
+          {
+            label: 'Auto Generate',
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
+            action: (e) => handleGenerateRisk(e)
           }
         ]
       }
