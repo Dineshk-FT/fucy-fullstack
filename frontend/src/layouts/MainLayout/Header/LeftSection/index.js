@@ -491,9 +491,9 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
-          { 
-            label: 'Vehicle TARA', 
-            icon: DirectionsCarIcon, 
+          {
+            label: 'Vehicle TARA',
+            icon: DirectionsCarIcon,
             action: (e) => {
               e?.stopPropagation();
               setTaraDialogOpen(true);
@@ -719,7 +719,7 @@ const LeftSection = () => {
             label: 'Auto Generate',
             icon: () => (
               <img
-                src="https://img.icons8.com/?size=100&id=bCEo3v0j2MJ7&format=png&color=000000"
+                src="https://img.icons8.com/?size=100&id=48129&format=png&color=000000"
                 style={{
                   width: 24,
                   height: 24,
@@ -1027,10 +1027,7 @@ const LeftSection = () => {
         </DialogActions>
       </Dialog>
 
-      <VehicleTARADialog 
-        open={taraDialogOpen} 
-        onClose={() => setTaraDialogOpen(false)} 
-      />
+      <VehicleTARADialog open={taraDialogOpen} onClose={() => setTaraDialogOpen(false)} />
 
       {/* Project Modals */}
       <AddModel
