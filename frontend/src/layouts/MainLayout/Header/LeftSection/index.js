@@ -31,7 +31,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Help as HelpIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  DirectionsCar as DirectionsCarIcon
 } from '@mui/icons-material';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import TemplateList from '../../../../pages/Libraries';
@@ -52,6 +53,7 @@ import { setModelId, setTitle } from '../../../../store/slices/PageSectionSlice'
 import PromptModal from '../../../../components/Modal/PromptModal';
 import { shallow } from 'zustand/shallow';
 import { Export, Import } from 'iconsax-react';
+import VehicleTARADialog from '../../../../components/VehicleTARADialog';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 import GenerateModel from '../../../../components/Modal/GenerateModel';
@@ -88,6 +90,7 @@ const selector = (state) => ({
 const LeftSection = () => {
   const { isDark } = useSelector((state) => state?.currentId);
   const color = ColorTheme();
+  const [taraDialogOpen, setTaraDialogOpen] = useState(false);
   const {
     Models,
     model,
@@ -488,6 +491,14 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
+          { 
+            label: 'Vehicle TARA', 
+            icon: DirectionsCarIcon, 
+            action: (e) => {
+              e?.stopPropagation();
+              setTaraDialogOpen(true);
+            }
+          },
           { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
         ]
       },
@@ -1015,6 +1026,11 @@ const LeftSection = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <VehicleTARADialog 
+        open={taraDialogOpen} 
+        onClose={() => setTaraDialogOpen(false)} 
+      />
 
       {/* Project Modals */}
       <AddModel

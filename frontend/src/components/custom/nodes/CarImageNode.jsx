@@ -137,9 +137,9 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       style={{
         width: '100%',
         height: '100%',
-        border: `2px solid ${isSelected ? '#784be8' : '#A9A9A9'}`,
+        border: `2px solid ${isSelected ? '#784be8' : 'transparent'}`,
         borderRadius: '5px',
-        backgroundColor: 'white',
+        backgroundColor: 'transparent',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -188,10 +188,12 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           backgroundSize: 'contain',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
+          backgroundClip: 'padding-box',
           padding: '10px',
           position: 'relative',
           overflow: 'hidden',
-          transition: 'all 0.2s ease-in-out'
+          transition: 'all 0.2s ease-in-out',
+          backgroundColor: 'transparent'
         }}
       >
         {value && (

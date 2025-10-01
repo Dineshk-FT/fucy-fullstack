@@ -3,7 +3,6 @@ import { Box, Tooltip, IconButton } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import GridOnIcon from '@mui/icons-material/GridOn';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 // import UndoIcon from '@mui/icons-material/Undo';
 // import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -89,36 +88,6 @@ export default function CanvasToolbar({
           aria-label="Save canvas"
         >
           {loading ? <CircularProgress size={19} sx={{ color: '#32CD32' }} /> : <SaveIcon sx={{ fontSize: 19 }} />}
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Add Car Image">
-        <IconButton
-          onDragStart={(e) => {
-            e.dataTransfer.setData('application/reactflow', 'carImage');
-            e.dataTransfer.effectAllowed = 'move';
-          }}
-          draggable={true}
-          sx={{
-            color: isDark == true ? '#64B5F6' : '#2196F3',
-            padding: '4px',
-            '&:hover': {
-              background:
-                isDark == true
-                  ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                  : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
-              transform: 'scale(1.1)',
-              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
-              filter: isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
-            },
-            '&:focus': {
-              outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
-              outlineOffset: '2px'
-            }
-          }}
-          tabIndex={0}
-          aria-label="Add car image to canvas"
-        >
-          <DirectionsCarIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Tooltip>
       <Tooltip title="Group Selected Nodes">
