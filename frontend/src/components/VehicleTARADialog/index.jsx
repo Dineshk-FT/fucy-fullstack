@@ -30,6 +30,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ReactFlow, {
   ReactFlowProvider,
+  useReactFlow,
   addEdge,
   useNodesState,
   Controls,
@@ -71,8 +72,27 @@ const darkenColor = (hexColor, percent) => {
 };
 
 // Wrapper component to provide React Flow context
-const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges }) => {
+const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, onNodeDragStop }) => {
   const dispatch = useDispatch();
+  const reactFlowInstance = useReactFlow();
+  const prevNodesLength = useRef(nodes?.length || 0);
+  
+  // Fit view when nodes are loaded or changed
+  useEffect(() => {
+    if (nodes.length > 0 && (nodes.length !== prevNodesLength.current || nodes.some(n => n.id.startsWith('car-')))) {
+      // Use setTimeout to ensure the nodes are rendered before fitting the view
+      const timer = setTimeout(() => {
+        reactFlowInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: false,
+          duration: 300,
+        });
+      }, 100);
+      
+      prevNodesLength.current = nodes.length;
+      return () => clearTimeout(timer);
+    }
+  }, [nodes, reactFlowInstance]);
   
   const onNodeClick = useCallback((event, node) => {
     if (node) {
@@ -92,6 +112,7 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges }) 
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
         defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
@@ -217,21 +238,30 @@ const VehicleTARADialog = ({ open, onClose }) => {
   // Update car node reference and save to localStorage when nodes change
   useEffect(() => {
     if (nodes.length > 0) {
-      const carNode = nodes.find(node => node && node.id && node.id.startsWith('car-'));
+      const carNode = nodes.find(node => node?.id?.startsWith('car-'));
       if (carNode) {
         carNodeRef.current = { ...carNode };
       }
       
-      // Auto-save nodes to localStorage whenever they change
-      // Use setTimeout to debounce the save operation
       const timer = setTimeout(() => {
         try {
-          // Only save if we have a car node
-          if (nodes.some(n => n && n.id && n.id.startsWith('car-'))) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
+          if (nodes.some(n => n?.id?.startsWith('car-'))) {
+            // Clone and strip read-only props before save
+            const nodesToSave = nodes.map(node => ({
+              ...node,
+              // Force undefined to prevent persisting measurements
+              width: undefined,
+              height: undefined,
+              // Strip transients
+              positionAbsolute: undefined,
+              selected: false,
+              dragging: false
+            }));
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nodesToSave));
           }
         } catch (error) {
-          console.error('Error saving nodes to localStorage:', error);
+          console.error('Error saving nodes:', error);
         }
       }, 100);
       
@@ -241,42 +271,35 @@ const VehicleTARADialog = ({ open, onClose }) => {
   
   // Define handleAddCarImage first since it's used in the effect
   const handleAddCarImage = useCallback(() => {
-    // Calculate size to be 90% of the dialog's content area
-    const dialogWidth = window.innerWidth * 0.9 * 0.9; // 90% of 90% of viewport width
-    const dialogHeight = window.innerHeight * 0.9 * 0.9; // 90% of 90% of viewport height
+    // Compute large sizes (90% of 90% = 81% viewport)
+    const dialogWidth = Math.floor(window.innerWidth * 0.81);
+    const dialogHeight = Math.floor(window.innerHeight * 0.81);
+    
+    // Cap to prevent overflow on large screens
+    const cappedWidth = Math.min(dialogWidth, 1200);
+    const cappedHeight = Math.min(dialogHeight, 800);
     
     const carNodeId = `car-${uuidv4()}`;
     const newNode = {
       id: carNodeId,
       type: 'carImage',
-      position: { x: 50, y: 50 }, // Slight offset from the top-left corner
-      data: { 
-        properties: []
-      },
+      position: { x: 50, y: 50 },
+      data: { properties: [] },
       style: {
-        width: dialogWidth,
-        height: dialogHeight,
+        width: `${cappedWidth}px`,  // String px for CSS
+        height: `${cappedHeight}px`,
         maxWidth: '100%',
         maxHeight: '100%',
         objectFit: 'contain'
       },
-      width: dialogWidth,
-      height: dialogHeight,
       draggable: true,
       selectable: true,
-      // Mark this as the parent node
       isParent: true
     };
-    
-    console.log('Creating new car node:', newNode);
-    
-    // If there are existing nodes, replace any existing car node
+        
     setNodes(nds => {
-      // Filter out any existing car node
       const otherNodes = nds.filter(n => !n.id.startsWith('car-'));
-      const updatedNodes = [...otherNodes, newNode];
-      console.log('Updated nodes after adding car:', updatedNodes);
-      return updatedNodes;
+      return [...otherNodes, newNode];
     });
     
     return newNode;
@@ -292,44 +315,50 @@ const VehicleTARADialog = ({ open, onClose }) => {
     
     const loadSavedNodes = () => {
       try {
-        // Always check localStorage first
         const savedNodes = localStorage.getItem(STORAGE_KEY);
         
         if (savedNodes) {
           const parsedNodes = JSON.parse(savedNodes);
           
           if (Array.isArray(parsedNodes) && parsedNodes.length > 0) {
-            // Ensure all nodes have required properties
-            const validNodes = parsedNodes.map(node => ({
-              ...node,
-              // Ensure position exists and has x,y coordinates
-              position: node.position && typeof node.position === 'object' 
-                ? { x: node.position.x || 0, y: node.position.y || 0 } 
-                : { x: 0, y: 0 },
-              // Ensure data exists
-              data: node.data || { properties: [] },
-              // Ensure style exists
-              style: node.style || {},
-              // Ensure dimensions are numbers
-              width: typeof node.width === 'number' ? node.width : 200,
-              height: typeof node.height === 'number' ? node.height : 200,
-              // Ensure default properties
-              draggable: node.draggable !== false,
-              selectable: node.selectable !== false
-            }));
+            const validNodes = parsedNodes.map(node => {
+              // For car: Recompute style if needed
+              if (node.id?.startsWith('car-')) {
+                const dialogWidth = Math.floor(window.innerWidth * 0.81);
+                const dialogHeight = Math.floor(window.innerHeight * 0.81);
+                const cappedWidth = Math.min(dialogWidth, 1200);
+                const cappedHeight = Math.min(dialogHeight, 800);
+                
+                node.style = {
+                  ...node.style,
+                  width: `${cappedWidth}px`,
+                  height: `${cappedHeight}px`
+                };
+              }
+              
+              return {
+                ...node,
+                position: node.position && typeof node.position === 'object' 
+                  ? { x: node.position.x || 0, y: node.position.y || 0 } 
+                  : { x: 0, y: 0 },
+                data: node.data || { properties: [] },
+                style: node.style || {},
+                // Force undefined – RF will re-measure large based on style
+                width: undefined,
+                height: undefined,
+                draggable: node.draggable !== false,
+                selectable: node.selectable !== false
+              };
+            });
             
-            console.log('Loaded and validated nodes:', validNodes);
             setNodes(validNodes);
             return;
           }
         }
         
-        // If we get here, either no saved data or invalid data
-        console.log('No valid saved nodes found, creating default car...');
         handleAddCarImage();
         
       } catch (error) {
-        console.error('Error loading saved nodes:', error);
         handleAddCarImage();
       }
     };
@@ -383,7 +412,15 @@ const VehicleTARADialog = ({ open, onClose }) => {
   const handleSave = useCallback(() => {
     setIsSaving(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
+      const nodesToSave = nodes.map(node => ({
+        ...node,
+        width: undefined,
+        height: undefined,
+        positionAbsolute: undefined,
+        selected: false,
+        dragging: false
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nodesToSave));
       toast.success('Progress saved successfully');
     } catch (error) {
       console.error('Error saving nodes:', error);
