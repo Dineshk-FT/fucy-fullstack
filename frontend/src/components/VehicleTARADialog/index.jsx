@@ -75,21 +75,20 @@ const darkenColor = (hexColor, percent) => {
 const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, onNodeDragStop }) => {
   const dispatch = useDispatch();
   const reactFlowInstance = useReactFlow();
-  const prevNodesLength = useRef(nodes?.length || 0);
+  const hasFittedView = useRef(false);
   
-  // Fit view when nodes are loaded or changed
+  // Fit view only once when nodes are first loaded
   useEffect(() => {
-    if (nodes.length > 0 && (nodes.length !== prevNodesLength.current || nodes.some(n => n.id.startsWith('car-')))) {
-      // Use setTimeout to ensure the nodes are rendered before fitting the view
+    if (nodes.length > 0 && !hasFittedView.current) {
       const timer = setTimeout(() => {
         reactFlowInstance.fitView({
           padding: 0.2,
           includeHiddenNodes: false,
           duration: 300,
         });
+        hasFittedView.current = true;
       }, 100);
       
-      prevNodesLength.current = nodes.length;
       return () => clearTimeout(timer);
     }
   }, [nodes, reactFlowInstance]);
