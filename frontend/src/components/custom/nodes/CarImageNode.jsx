@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow, useUpdateNodeInternals } from 'reactflow';
 import { shallow } from 'zustand/shallow';
 import { useDispatch, useSelector } from 'react-redux';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import useThrottle from '../../../hooks/useThrottle';
 import useStore from '../../../store/Zustand/store';
 import { setAnchorEl, setDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
@@ -25,6 +26,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   const { selectedBlock } = useSelector((state) => state?.canvas);
   
   const [isHovered, setIsHovered] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   const [value, setValue] = useState(data?.label || '');
@@ -118,6 +120,17 @@ const CarImageNode = ({ id, data, isConnectable }) => {
 
   const handleClick = (e) => {
     e.stopPropagation();
+    setOpenDialog(true);
+  };
+
+  const handleDialogClose = (e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setOpenDialog(false);
+  };
+
+  const handleConfirm = () => {
     dispatch(setSelectedBlock({ 
       id, 
       type: 'carImage', 
@@ -131,6 +144,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       } 
     }));
     handleInfoClick(true);
+    setOpenDialog(false);
   };
 
   // Import the car blueprint image
@@ -282,6 +296,36 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         }}
         isConnectable={isConnectable}
       />
+
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Open Subset Model
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Do you want to open the subset model for node: <strong>{value || 'Untitled Node'}</strong>?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={(e) => {
+            e.stopPropagation();
+            handleDialogClose();
+          }} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={(e) => {
+            e.stopPropagation();
+            handleConfirm();
+          }} color="primary" autoFocus>
+            Open
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
