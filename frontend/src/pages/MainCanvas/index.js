@@ -81,7 +81,7 @@ const selector = (state) => ({
   setOpenSave: state.setOpenSave
 });
 
-// Edge line styling
+// Enhanced connection line styling for better visual feedback
 const connectionLineStyle = {
   stroke: '#64B5F6',
   strokeWidth: 2,
@@ -120,8 +120,8 @@ const edgeOptions = {
       padding: '2px 4px',
       fontFamily: "'Poppins', Arial, sans-serif",
       fontSize: '12px',
-      color: '#000000', // Higher contrast for clarity
-      fontWeight: '500' // Slightly bolder for better legibility
+      color: '#000000',
+      fontWeight: '500'
     }
   }
 };
@@ -411,22 +411,15 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDragStop = useCallback(() => {
-    latestNodesRef.current = [...nodes]; // Update ref after drag stops
+    latestNodesRef.current = [...nodes];
+    checkForNodes(); // ✅ re-evaluate group-child relationships
   }, [nodes]);
-
-  function downloadImage(dataUrl) {
-    const a = document.createElement('a');
-    a.setAttribute('download', 'canvas-diagram.png');
-    a.setAttribute('href', dataUrl);
-    a.click();
-  }
 
   const imageWidth = 1920;
   const imageHeight = 1080;
 
   const handleDownload = () => {
     const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 1920);
-
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
 

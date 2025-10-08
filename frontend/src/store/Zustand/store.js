@@ -872,16 +872,25 @@ const useStore = createWithEqualityFn((set, get) => ({
       edges: updatedEdges // set the updated edges
     }));
   },
+  // In your index.js file, update the connectionLineStyle and edgeOptions:
+
+  // Enhanced connection line styling for better visual feedback
+
+  // Update the onConnect function to handle specific handle connections
   onConnect: (connection) => {
-    // console.log('connection', connection);
-    const Connect = { ...connection };
-    Connect.data = { label: '' };
+    const Connect = {
+      ...connection,
+      data: {
+        label: '',
+        sourceHandle: connection.sourceHandle, // Include which handle was used
+        targetHandle: connection.targetHandle
+      }
+    };
     set({
       edges: addEdge(Connect, get().edges),
       isChanged: true
     });
   },
-
   onConnectAttack: (connection) => {
     const { attackNodes: nodes, attackEdges: edges } = useStore.getState(); // Access Zustand state
 

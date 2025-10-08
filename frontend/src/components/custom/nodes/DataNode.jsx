@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../themes/constant';
@@ -36,6 +36,9 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const [tempLabelValue, setTempLabelValue] = useState(data?.label || '');
+  const textFieldRef = useRef(null);
+  const inputRef = useRef(null);
   const isMounted = useRef(true);
 
   // Cleanup on unmount
@@ -49,6 +52,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   useEffect(() => {
     setLabelValue(data?.label || '');
+    setTempLabelValue(data?.label || '');
   }, [data?.label]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
@@ -95,14 +99,18 @@ export default function DataNode({ id, data, isConnectable, type }) {
     );
   };
 
-  const handleLabelDoubleClick = () => {
+  const handleLabelDoubleClick = (e) => {
+    e.stopPropagation();
     setIsEditing(true);
+    setTempLabelValue(labelValue);
     dispatch(setSelectedBlock({ id, data }));
   };
 
   const handleLabelRightClick = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsEditing(true);
+    setTempLabelValue(labelValue);
   };
 
   const handleLabelBlur = () => {
@@ -110,6 +118,12 @@ export default function DataNode({ id, data, isConnectable, type }) {
     const newLabel = labelRef.current?.textContent || '';
     setLabelValue(newLabel);
     updateNodeLabel(newLabel);
+    dispatch(setDetails({ ...details, name: newLabel }));
+  };
+
+  const handleLabelCancel = () => {
+    setIsEditing(false);
+    setTempLabelValue(labelValue);
   };
 
   const handleKeyDown = (e) => {
@@ -119,7 +133,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
     } else if (e.key === 'Escape') {
       setIsEditing(false);
       if (labelRef.current) {
-        labelRef.current.textContent = labelValue;
+        handleLabelCancel();
       }
     }
   };
@@ -137,18 +151,16 @@ export default function DataNode({ id, data, isConnectable, type }) {
     };
   }, [id, selectedBlock]);
 
+  const handleTextFieldMouseDown = (e) => {
+    e.stopPropagation();
+  };
+
   useEffect(() => {
-    if (isEditing && labelRef.current) {
-      labelRef.current.textContent = labelValue; // ✅ Manually insert current label
-      labelRef.current.focus();
-      const range = document.createRange();
-      range.selectNodeContents(labelRef.current);
-      range.collapse(false); // Put cursor at end
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      // Remove this line: inputRef.current.select();
     }
-  }, [isEditing, labelValue]);
+  }, [isEditing]);
 
   const handleInfoClick = () => {
     setPropertiesOpen(false);
@@ -278,35 +290,70 @@ export default function DataNode({ id, data, isConnectable, type }) {
         >
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
           <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
-          <Box
-            ref={labelRef}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onClick={handleLabelDoubleClick}
-            onContextMenu={handleLabelRightClick}
-            onBlur={handleLabelBlur}
-            onKeyDown={handleKeyDown}
-            onInput={(e) => {
-              const newText = e.currentTarget.textContent || '';
-              setLabelValue(newText);
-              setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: newText } } : node)));
-              dispatch(setDetails({ ...details, name: newText }));
-            }}
-            style={{
-              maxWidth: width - 10,
-              textAlign: 'center',
-              outline: 'none',
-              cursor: 'text',
-              ...(isEditing && {
-                color: 'black',
+          {isEditing ? (
+            <TextField
+              ref={textFieldRef}
+              inputRef={inputRef}
+              value={tempLabelValue}
+              onChange={(e) => setTempLabelValue(e.target.value)}
+              onBlur={handleLabelBlur}
+              onKeyDown={handleKeyDown}
+              onMouseDown={handleTextFieldMouseDown}
+              onDragStart={(e) => e.stopPropagation()}
+              variant="standard"
+              size="small"
+              sx={{
+                '& .MuiInputBase-root': {
+                  fontSize: '12px',
+                  textAlign: 'center',
+                  padding: '0 4px',
+                  minWidth: '60px',
+                  maxWidth: `${width - 20}px`,
+                  pointerEvents: 'auto' // Ensure text field is interactive
+                },
+                '& .MuiInputBase-input': {
+                  textAlign: 'center',
+                  padding: '2px 4px',
+                  cursor: 'text'
+                },
+                // Add these styles to remove the border-bottom
+                '& .MuiInput-underline:before': {
+                  borderBottom: 'none'
+                },
+                '& .MuiInput-underline:after': {
+                  borderBottom: 'none'
+                },
+                // Optional: If you want to remove the hover effect underline as well
+                '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
+                  borderBottom: 'none'
+                }
+              }}
+              inputProps={{
+                style: {
+                  textAlign: 'center',
+                  padding: '2px 4px'
+                }
+              }}
+            />
+          ) : (
+            <Box
+              onClick={handleLabelDoubleClick}
+              onContextMenu={handleLabelRightClick}
+              onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking label
+              sx={{
+                maxWidth: width - 10,
+                textAlign: 'center',
+                cursor: 'text',
                 padding: '0 4px',
                 borderRadius: '4px',
-                minWidth: '60px'
-              })
-            }}
-          >
-            {!isEditing && labelValue}
-          </Box>
+                '&:hover': {
+                  backgroundColor: isSelected ? 'rgba(120, 75, 232, 0.1)' : 'rgba(169, 169, 169, 0.1)'
+                }
+              }}
+            >
+              {labelValue}
+            </Box>
+          )}
           <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
           <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
           <div
