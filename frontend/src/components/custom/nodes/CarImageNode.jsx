@@ -1,8 +1,9 @@
 /* eslint-disable */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position, useReactFlow, useUpdateNodeInternals } from 'reactflow';
 import { shallow } from 'zustand/shallow';
 import { useDispatch, useSelector } from 'react-redux';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import useThrottle from '../../../hooks/useThrottle';
 import useStore from '../../../store/Zustand/store';
 import { setAnchorEl, setDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
@@ -21,13 +22,21 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   const dispatch = useDispatch();
   const { nodes, setSelectedElement, setPropertiesOpen } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();  // For forcing re-measure
   const { selectedBlock } = useSelector((state) => state?.canvas);
   
+  const [isHovered, setIsHovered] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const isSelected = selectedBlock?.id === id;
+  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+  const [value, setValue] = useState(data?.label || '');
+  const imgRef = useRef(null);  // Ref for image
+
   const [dimensions, setDimensions] = useState({
-    width: data?.style?.width || 1000,  
-    height: data?.style?.height || 750   
+    width: data?.style?.width || 1000,
+    height: data?.style?.height || 750
   });
-  
+
   // Update dimensions when data changes
   useEffect(() => {
     if (data?.style?.width && data.style.width !== dimensions.width) {
@@ -37,24 +46,12 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       setDimensions(prev => ({ ...prev, height: data.style.height }));
     }
   }, [data?.style?.width, data?.style?.height]);
-  
-  const [isHovered, setIsHovered] = useState(false);
-  const isSelected = selectedBlock?.id === id;
-  const bgColor = isSelected ? '#784be8' : '#A9A9A9';
-  const [value, setValue] = useState(data?.label || '');
-  const isMounted = useRef(true);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   const throttledResize = useThrottle((newWidth, newHeight) => {
-    // Remove the minimum size constraints here as they're already handled by NodeResizer
+    // Update local dimensions
     setDimensions({ width: newWidth, height: newHeight });
     
+    // Update node data
     setNodes((nodes) =>
       nodes.map((node) =>
         node.id === id 
@@ -77,20 +74,33 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           : node
       )
     );
-  }, 16); // ~60fps
+  }, 16);
 
   const handleResize = useCallback(
     (_, { width: newWidth, height: newHeight }) => {
       requestAnimationFrame(() => {
         throttledResize(newWidth, newHeight);
+        updateNodeInternals(id);  // Force RF re-measure after resize
       });
     },
-    [throttledResize]
+    [throttledResize, updateNodeInternals]
   );
 
   useEffect(() => {
     setValue(data?.label || '');
   }, [data?.label]);
+
+  // Trigger re-measure on image load
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img) {
+      const handleLoad = () => {
+        updateNodeInternals(id);  // Force RF to re-measure node
+      };
+      img.addEventListener('load', handleLoad);
+      return () => img.removeEventListener('load', handleLoad);
+    }
+  }, [updateNodeInternals]);
 
   const handleInfoClick = (open) => {
     setPropertiesOpen(open);
@@ -110,6 +120,17 @@ const CarImageNode = ({ id, data, isConnectable }) => {
 
   const handleClick = (e) => {
     e.stopPropagation();
+    setOpenDialog(true);
+  };
+
+  const handleDialogClose = (e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setOpenDialog(false);
+  };
+
+  const handleConfirm = () => {
     dispatch(setSelectedBlock({ 
       id, 
       type: 'carImage', 
@@ -123,6 +144,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       } 
     }));
     handleInfoClick(true);
+    setOpenDialog(false);
   };
 
   // Import the car blueprint image
@@ -135,7 +157,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        width: '100%',
+        width: '100%',  // Fill RF wrapper
         height: '100%',
         border: `2px solid ${isSelected ? '#784be8' : 'transparent'}`,
         borderRadius: '5px',
@@ -158,7 +180,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         minHeight={150}
         isVisible={isSelected}
         onResize={handleResize}
-        onResizeEnd={() => {}}
+        onResizeEnd={() => updateNodeInternals(id)}  // Re-measure on end
         color="#ff0071"
         handleStyle={{
           width: '10px',
@@ -170,9 +192,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           zIndex: 10
         }}
         lineStyle={{
-          borderColor: '#ff0071',
-          borderWidth: '1px',
-          borderStyle: 'dashed'
+          border: '1px dashed #ff0071'
         }}
       />
       
@@ -184,18 +204,28 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          backgroundImage: `url(${carImage})`,
           backgroundSize: 'contain',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           backgroundClip: 'padding-box',
-          padding: '10px',
           position: 'relative',
           overflow: 'hidden',
           transition: 'all 0.2s ease-in-out',
           backgroundColor: 'transparent'
         }}
       >
+        <img 
+          ref={imgRef}
+          src={carImage}
+          alt="Car Blueprint"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block'
+          }}
+          onError={() => console.error('Car image load failed')}
+        />
         {value && (
           <div style={{
             position: 'absolute',
@@ -266,6 +296,36 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         }}
         isConnectable={isConnectable}
       />
+
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Open Subset Model
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Do you want to open the subset model for node: <strong>{value || 'Untitled Node'}</strong>?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={(e) => {
+            e.stopPropagation();
+            handleDialogClose();
+          }} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={(e) => {
+            e.stopPropagation();
+            handleConfirm();
+          }} color="primary" autoFocus>
+            Open
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
