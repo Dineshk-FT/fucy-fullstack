@@ -46,6 +46,11 @@ export default React.memo(function StepEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const [currentPosition, setCurrentPosition] = useState({
+    t: data?.t !== undefined ? data.t : 0.5,
+    offset: data?.offset !== undefined ? data.offset : 0
+  });
+
   const isSelected = selectedBlock?.id === id;
 
   const edges = getEdges();
@@ -60,6 +65,14 @@ export default React.memo(function StepEdge({
     targetY,
     targetPosition
   });
+
+  // Update local position state when data changes
+  useEffect(() => {
+    setCurrentPosition({
+      t: data?.t !== undefined ? data.t : 0.5,
+      offset: data?.offset !== undefined ? data.offset : 0
+    });
+  }, [data?.t, data?.offset]);
 
   // --- Helper for sampling points along SVG path ---
   const getPointOnPath = useCallback(
@@ -87,18 +100,8 @@ export default React.memo(function StepEdge({
     [labelX, labelY]
   );
 
-  // FIX: Properly read position data with fallbacks
-  const tNorm = data?.t !== undefined ? data.t : 0.5;
-  const offsetPx = data?.offset !== undefined ? data.offset : 0;
-
-  console.log(`Edge ${id} position data:`, {
-    t: data?.t,
-    offset: data?.offset,
-    finalT: tNorm,
-    finalOffset: offsetPx
-  });
-
-  const { x: finalX, y: finalY } = getPointOnPath(tNorm, offsetPx);
+  // Use currentPosition state instead of reading directly from data
+  const { x: finalX, y: finalY } = getPointOnPath(currentPosition.t, currentPosition.offset);
 
   useEffect(() => {
     setLabelValue(data?.label || '');
@@ -107,7 +110,6 @@ export default React.memo(function StepEdge({
   // --- Update edge helper ---
   const updateEdgeData = useCallback(
     (updates) => {
-      console.log(`Updating edge ${id}:`, updates);
       setEdges((eds) => eds.map((edge) => (edge.id === id ? { ...edge, ...updates } : edge)));
     },
     [id, setEdges]
@@ -127,9 +129,9 @@ export default React.memo(function StepEdge({
       const total = el.getTotalLength();
       if (total === 0) return;
 
-      // FIX: Use the actual current position values
-      let s = tNorm * total;
-      let off = offsetPx;
+      // Use current position values from state
+      let s = currentPosition.t * total;
+      let off = currentPosition.offset;
 
       let lastX = e.clientX;
       let lastY = e.clientY;
@@ -170,11 +172,17 @@ export default React.memo(function StepEdge({
         const constrainedT = Math.max(0.1, Math.min(0.9, s / total));
         const constrainedOffset = Math.max(-30, Math.min(30, off));
 
+        // Update both edge data and local state
+        const newPosition = {
+          t: constrainedT,
+          offset: constrainedOffset
+        };
+
+        setCurrentPosition(newPosition);
         updateEdgeData({
           data: {
             ...data,
-            t: constrainedT,
-            offset: constrainedOffset,
+            ...newPosition,
             label: labelValue
           }
         });
@@ -188,19 +196,8 @@ export default React.memo(function StepEdge({
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp, { once: true });
     },
-    [data, isEditing, labelValue, updateEdgeData, tNorm, offsetPx]
+    [data, isEditing, labelValue, updateEdgeData, currentPosition]
   );
-
-  // --- Reset label position to center ---
-  const resetLabelPosition = useCallback(() => {
-    updateEdgeData({
-      data: {
-        ...data,
-        t: 0.5,
-        offset: 0
-      }
-    });
-  }, [data, updateEdgeData]);
 
   // --- Marker direction swap ---
   const handleSwap = useCallback(
@@ -221,7 +218,15 @@ export default React.memo(function StepEdge({
     (e) => {
       e.stopPropagation();
       dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
-      dispatch(setSelectedBlock({ id, data: { ...data, t: tNorm, offset: offsetPx } }));
+      dispatch(
+        setSelectedBlock({
+          id,
+          data: {
+            ...data,
+            ...currentPosition
+          }
+        })
+      );
       dispatch(
         setEdgeDetails({
           name: data?.label ?? '',
@@ -233,13 +238,25 @@ export default React.memo(function StepEdge({
         })
       );
     },
-    [currentEdge, data, dispatch, id, markerEnd, markerStart, style, tNorm, offsetPx]
+    [currentEdge, currentPosition, data, dispatch, id, markerEnd, markerStart, style]
   );
 
-  const handleLabelDoubleClick = useCallback(() => {
-    setIsEditing(true);
-    dispatch(setSelectedBlock({ id, data: { ...data, t: tNorm, offset: offsetPx } }));
-  }, [data, dispatch, id, tNorm, offsetPx]);
+  const handleLabelDoubleClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIsEditing(true);
+      dispatch(
+        setSelectedBlock({
+          id,
+          data: {
+            ...data,
+            ...currentPosition
+          }
+        })
+      );
+    },
+    [data, dispatch, id, currentPosition]
+  );
 
   const handleLabelRightClick = useCallback((e) => {
     e.preventDefault();
@@ -250,15 +267,16 @@ export default React.memo(function StepEdge({
     setIsEditing(false);
     const newLabel = editableRef.current?.textContent || '';
     setLabelValue(newLabel);
+
+    // Preserve current position when updating label
     updateEdgeData({
       data: {
         ...data,
-        label: newLabel,
-        t: tNorm,
-        offset: offsetPx
+        ...currentPosition, // Keep current position
+        label: newLabel
       }
     });
-  }, [data, updateEdgeData, tNorm, offsetPx]);
+  }, [data, currentPosition, updateEdgeData]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -272,17 +290,6 @@ export default React.memo(function StepEdge({
       }
     },
     [dispatch, handleLabelBlur, labelValue]
-  );
-
-  // Handle double-click to reset position
-  const handleContainerDoubleClick = useCallback(
-    (e) => {
-      if (!isEditing) {
-        e.stopPropagation();
-        resetLabelPosition();
-      }
-    },
-    [isEditing, resetLabelPosition]
   );
 
   useEffect(() => {
@@ -323,6 +330,7 @@ export default React.memo(function StepEdge({
     ...(isEditing && { color: 'black', borderRadius: '4px' })
   };
 
+  // console.log('currentPosition', currentPosition);
   return (
     <>
       <BaseEdge
@@ -349,7 +357,6 @@ export default React.memo(function StepEdge({
         <Box
           ref={containerRef}
           onMouseDown={handleDragStart}
-          onDoubleClick={handleContainerDoubleClick}
           sx={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${finalX}px, ${finalY}px)`,
