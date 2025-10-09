@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ColorTheme from '../../themes/ColorTheme';
 import {
   Dialog,
   DialogTitle,
@@ -24,6 +25,7 @@ import {
   Tooltip,
   CircularProgress
 } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -79,6 +81,7 @@ const darkenColor = (hexColor, percent) => {
 // Wrapper component to provide React Flow context
 const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, onNodeDragStop }) => {
   const dispatch = useDispatch();
+  const colors = ColorTheme();
   const reactFlowInstance = useReactFlow();
   const hasFittedView = useRef(false);
   
@@ -107,8 +110,9 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
       }));
     }
   }, [dispatch]);
+
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', backgroundColor: colors.canvasBG }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -123,13 +127,33 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}
-        connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
+        connectionLineStyle={{ 
+          stroke: colors.borderColor, 
+          strokeWidth: 2 
+        }}
         connectionLineType="smoothstep"
-        proOptions={{ hideAttribution: true }}
+        proOptions={{ 
+          hideAttribution: true 
+        }}
       >
-        <Controls />
+        <Controls 
+          style={{
+            backgroundColor: colors.paperBg,
+            borderRadius: '4px',
+            border: `1px solid ${colors.borderColor}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}
+        />
         {/* <MiniMap /> */}
-        <Background variant="dots" gap={12} size={1} />
+        <Background 
+          variant="dots" 
+          gap={12} 
+          size={1} 
+          color={colors.borderColor}
+          style={{
+            backgroundColor: colors.canvasBG
+          }}
+        />
       </ReactFlow>
     </div>
   );
@@ -155,16 +179,33 @@ const pastelColors = [
 ];
 
 // Simple component for threat/vulnerability nodes
-const ThreatNode = ({ data }) => {
+const ThreatNode = ({ id, data }) => {
+  const colors = ColorTheme();
+  const reactFlowInstance = useReactFlow();
+
+  const onDelete = (event) => {
+    // Prevent the click from reaching React Flow's node selection/dragging
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Remove the node from the flow
+    reactFlowInstance.setNodes((nodes) => nodes.filter((node) => node.id !== id));
+    
+    // Also remove any connected edges
+    reactFlowInstance.setEdges((edges) => 
+      edges.filter(edge => edge.source !== id && edge.target !== id)
+    );
+  };
+
   return (
     <Tooltip title={data.label || data.name || ''} arrow>
       <div style={{
         position: 'relative',
-        padding: '8px 30px',
-        backgroundColor: data.bgColor || '#f5f5f5',
-        color: data.textColor || '#333',
+        padding: '8px 25px 8px 30px',
+        backgroundColor: data.bgColor || colors.paperBg,
+        color: data.textColor || colors.textPrimary,
         borderRadius: '4px',
-        border: `1px solid ${data.borderColor || '#ddd'}`,
+        border: `1px solid ${data.borderColor || colors.borderColor}`,
         fontSize: '12px',
         fontWeight: 'bold',
         whiteSpace: 'nowrap',
@@ -194,6 +235,37 @@ const ThreatNode = ({ data }) => {
           position={Position.Right}
           style={{ background: '#555' }}
         />
+        <IconButton
+          onClick={onDelete}
+          size="small"
+          sx={{
+            position: 'absolute',
+            right: -8,
+            top: -8,
+            width: 18,
+            height: 18,
+            minHeight: 18,
+            color: 'error.main',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            opacity: 0,
+            visibility: 'hidden',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'error.main',
+              color: 'error.contrastText',
+              opacity: 1,
+              transform: 'scale(1.1)'
+            },
+            '.react-flow__node:hover &': {
+              opacity: 0.9,
+              visibility: 'visible'
+            }
+          }}
+        >
+          <DeleteOutlineIcon sx={{ fontSize: 12 }} />
+        </IconButton>
       </div>
     </Tooltip>
   );
@@ -253,6 +325,7 @@ const STORAGE_KEY_VIEWPORT = 'vehicleTaraViewport';
 
 const VehicleTARADialog = ({ open, onClose }) => {
   const theme = useTheme();
+  const colors = ColorTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -738,9 +811,15 @@ const VehicleTARADialog = ({ open, onClose }) => {
         }
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2 }}>
+      <DialogTitle sx={{ 
+        m: 0, 
+        p: 2,
+        backgroundColor: colors.sidebarBG,
+        color: colors.textPrimary,
+        borderBottom: `1px solid ${colors.borderColor}`
+      }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Vehicle TARA Analysis</Typography>
+          <Typography variant="h6" sx={{ color: colors.textPrimary }}>Vehicle TARA Analysis</Typography>
           <Box>
             <Tooltip title="Save progress">
               <IconButton 
@@ -766,9 +845,24 @@ const VehicleTARADialog = ({ open, onClose }) => {
           </Box>
         </Box>
       </DialogTitle>
-      <DialogContent sx={{ p: 0, flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', position: 'relative' }}>
+      <DialogContent sx={{ 
+        p: 0, 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'row', 
+        overflow: 'hidden', 
+        position: 'relative',
+        backgroundColor: colors.canvasBG,
+        color: colors.textPrimary
+      }}>
         {/* Main Content Area */}
-        <Box sx={{ flex: 1, position: 'relative', minHeight: '60vh', borderRight: '1px solid #e0e0e0' }}>
+        <Box sx={{ 
+          flex: 1, 
+          position: 'relative', 
+          minHeight: '60vh', 
+          borderRight: `1px solid ${colors.borderColor}`,
+          backgroundColor: colors.canvasBG
+        }}>
           <ReactFlowProvider>
             <Provider store={store}>
               <div 
@@ -804,11 +898,13 @@ const VehicleTARADialog = ({ open, onClose }) => {
             <IconButton 
               onClick={() => setIsPanelOpen(!isPanelOpen)}
               sx={{
-                backgroundColor: 'background.paper',
+                backgroundColor: colors.paperBg,
+                color: colors.textPrimary,
                 borderRadius: '4px 0 0 4px',
-                boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
+                border: `1px solid ${colors.borderColor}`,
+                borderRight: 'none',
                 '&:hover': {
-                  backgroundColor: 'action.hover'
+                  backgroundColor: colors.buttonHoverBg
                 }
               }}
             >
@@ -823,16 +919,32 @@ const VehicleTARADialog = ({ open, onClose }) => {
             width: isPanelOpen ? '300px' : 0,
             height: '100%',
             overflow: 'hidden',
-            bgcolor: 'background.paper',
+            backgroundColor: colors.paperBg,
+            color: colors.textPrimary,
+            borderLeft: `1px solid ${colors.borderColor}`,
             transition: 'width 0.2s ease-in-out',
             borderLeft: isPanelOpen ? '1px solid #e0e0e0' : 'none'
           }}
         >
-          <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0', whiteSpace: 'nowrap' }}>
-            <Typography variant="h6" component="div" noWrap>
+          <Box sx={{ 
+            p: 2, 
+            borderBottom: `1px solid ${colors.borderColor}`, 
+            whiteSpace: 'nowrap',
+            backgroundColor: colors.sidebarBG
+          }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              noWrap
+              sx={{ color: colors.textPrimary }}
+            >
               TARA Library
             </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography 
+              variant="body2" 
+              noWrap
+              sx={{ color: colors.textSecondary }}
+            >
               Drag items to the canvas
             </Typography>
           </Box>
