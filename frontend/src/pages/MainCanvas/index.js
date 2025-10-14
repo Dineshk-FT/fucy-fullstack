@@ -470,6 +470,7 @@ export default function MainCanvas() {
     getDamageScenarios(model?._id).catch((err) => {
       notify('Failed to fetch damage scenarios: ' + err.message, 'error');
     });
+    setIsChanged(false);
   };
 
   const handleClose = () => {
@@ -638,6 +639,7 @@ export default function MainCanvas() {
       nodes: nodes,
       edges: edges
     };
+    console.log('nodes', nodes);
     const details = {
       assetId: assets?._id,
       'model-id': model?._id,

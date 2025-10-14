@@ -1,12 +1,13 @@
+/*eslint-disable*/
 import React, { useCallback, useState } from 'react';
 import {
   Autocomplete,
   Avatar,
   Box,
   Button,
-  // Checkbox,
   Chip,
   ClickAwayListener,
+  IconButton,
   InputLabel,
   Paper,
   Popper,
@@ -14,6 +15,7 @@ import {
   Tabs,
   TextField
 } from '@mui/material';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { makeStyles } from '@mui/styles';
 import { useSelector } from 'react-redux';
 import toast, { Toaster } from 'react-hot-toast';
@@ -93,19 +95,13 @@ export default React.memo(function EditNode({
     (event, newValue) => {
       const updatedProperties = newValue.map((prop) => prop.name);
       dispatch(setDetails({ ...details, properties: updatedProperties }));
-      updateElement((element) => ({ ...element, properties: updatedProperties }));
+      updateElement((element) => ({
+        ...element,
+        properties: updatedProperties
+      }));
     },
     [dispatch, details, updateElement]
   );
-
-  // const handleIsAssetChange = useCallback(
-  //   (e) => {
-  //     const isChecked = e.target.checked;
-  //     dispatch(setDetails({ ...details, isAsset: isChecked }));
-  //     updateElement((element) => ({ ...element, isAsset: isChecked }));
-  //   },
-  //   [dispatch, details, updateElement],
-  // );
 
   const handleSave = useCallback(
     (e) => {
@@ -125,41 +121,71 @@ export default React.memo(function EditNode({
         anchorEl={anchorEl}
         placement="bottom-start"
         sx={{
-          width: '300px',
-          maxWidth: '90vw',
+          width: 'auto',
+          maxWidth: '25.5rem',
+          maxHeight: '25rem',
+          overflow: 'visible',
           zIndex: 1300,
-          borderRadius: '8px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+          borderRadius: '6px',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
         }}
       >
         <ClickAwayListener onClickAway={handleClosePopper}>
           <Paper
             sx={{
-              p: 2,
+              position: 'relative',
+              p: 1.2,
               bgcolor: color?.modalBg,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              gap: 1,
+              maxHeight: '25vh',
+              width: 'auto',
+              maxWidth: '45vw',
+              overflow: 'visible'
             }}
           >
+            {/* Close icon - absolutely positioned */}
+            <IconButton
+              onClick={handleClosePopper}
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                zIndex: 10,
+                color: color?.sidebarContent,
+                p: 0.3,
+                '&:hover': { bgcolor: color?.hoverBg }
+              }}
+            >
+              <HighlightOffIcon color="error" fontSize="small" />
+            </IconButton>
+
             <Tabs
               value={tabIndex}
               onChange={handleTabChange}
               variant="fullWidth"
               sx={{
-                '& .MuiTab-root': { fontSize: '14px', textTransform: 'none' },
+                minHeight: '36px',
+                mt: 0.5,
+                '& .MuiTab-root': {
+                  fontSize: '13px',
+                  textTransform: 'none',
+                  minHeight: '32px',
+                  py: 0.5
+                },
                 '& .MuiTabs-indicator': { bgcolor: color?.primary }
               }}
-              aria-label="Node edit tabs"
             >
               <Tab label="General" />
               <Tab label="Style" />
             </Tabs>
 
             {tabIndex === 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box>
-                  <InputLabel className={classes.inputlabel}>Name :</InputLabel>
+                  <InputLabel className={classes.inputlabel}>Name:</InputLabel>
                   <TextField
                     variant="outlined"
                     size="small"
@@ -167,36 +193,17 @@ export default React.memo(function EditNode({
                     onChange={handleNameChange}
                     placeholder="Enter node name"
                     fullWidth
-                    aria-label="Node name"
                     sx={{
                       bgcolor: color?.inputBg,
-                      '& .MuiInputBase-input': { fontSize: '14px', p: '6px 8px' },
+                      '& .MuiInputBase-input': { fontSize: '13px', p: '4px 6px' },
                       '& .MuiOutlinedInput-notchedOutline': { borderRadius: '4px' }
                     }}
                   />
                 </Box>
 
-                {/* <FormControlLabel
-                  sx={{
-                    '& .MuiTypography-root': {
-                      fontSize: '14px',
-                      color: color?.sidebarContent,
-                    },
-                  }}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={Boolean(details?.isAsset)}
-                      onChange={handleIsAssetChange}
-                      aria-label="Mark as asset"
-                    />
-                  }
-                  label="Asset"
-                /> */}
-
                 {selectedBlock?.type === 'group' && (
                   <Box>
-                    <InputLabel className={classes.inputlabel}>Properties :</InputLabel>
+                    <InputLabel className={classes.inputlabel}>Properties:</InputLabel>
                     <Autocomplete
                       multiple
                       options={Properties}
@@ -207,11 +214,20 @@ export default React.memo(function EditNode({
                       sx={{
                         bgcolor: color?.inputBg,
                         '& .MuiOutlinedInput-root': { p: '2px', borderRadius: '4px' },
-                        '& .MuiInputBase-input': { fontSize: '14px' }
+                        '& .MuiInputBase-input': { fontSize: '13px' }
                       }}
                       renderOption={(props, option) => (
-                        <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: '4px' }}>
-                          <Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />
+                        <Box
+                          component="li"
+                          {...props}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.8,
+                            p: '2px 4px'
+                          }}
+                        >
+                          <Avatar src={option?.image} alt={option?.name} sx={{ width: 18, height: 18 }} />
                           {option?.name}
                         </Box>
                       )}
@@ -219,28 +235,20 @@ export default React.memo(function EditNode({
                         value.map((option, index) => (
                           <Chip
                             key={option?.name}
-                            avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 16, height: 16 }} />}
+                            avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 14, height: 14 }} />}
                             variant="outlined"
                             label={option?.name}
                             {...getTagProps({ index })}
                             sx={{
-                              fontSize: '12px',
-                              height: '24px',
+                              fontSize: '11px',
+                              height: '22px',
                               bgcolor: color?.inputBg,
                               borderColor: color?.border
                             }}
                           />
                         ))
                       }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="outlined"
-                          size="small"
-                          placeholder="Select properties"
-                          aria-label="Node properties"
-                        />
-                      )}
+                      renderInput={(params) => <TextField {...params} variant="outlined" size="small" placeholder="Select" />}
                     />
                   </Box>
                 )}
@@ -249,21 +257,13 @@ export default React.memo(function EditNode({
 
             {tabIndex === 1 && <Header selectedElement={selectedElement} setNodes={setNodes} setSelectedElement={setSelectedElement} />}
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleClosePopper}
-                sx={{ textTransform: 'none', fontSize: '14px', px: 2, py: 0.5 }}
-              >
-                Close
-              </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleSave}
                 disabled={!details?.name?.trim()}
-                sx={{ textTransform: 'none', fontSize: '14px', px: 2, py: 0.5 }}
+                sx={{ textTransform: 'none', fontSize: '13px', px: 1.5, py: 0.3 }}
               >
                 Update
               </Button>
@@ -271,6 +271,7 @@ export default React.memo(function EditNode({
           </Paper>
         </ClickAwayListener>
       </Popper>
+
       <Toaster position="top-right" reverseOrder={false} />
     </>
   );

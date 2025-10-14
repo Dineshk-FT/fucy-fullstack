@@ -4,14 +4,14 @@ import Box from '@mui/material/Box';
 const fontFamily = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'Inter'];
 export default function FontSelector({ font, handleChange, handleInputClick }) {
   return (
-    <Box sx={{ minWidth: 120 }}>
+    <Box>
       {/* eslint-disable-next-line */}
       <select
         type="select"
         onChange={(e) => handleChange(e, 'font')}
         value={font}
         style={{
-          width: '150px',
+          width: '100px',
           height: '20px'
         }}
         onClick={handleInputClick}

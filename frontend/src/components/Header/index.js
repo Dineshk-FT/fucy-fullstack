@@ -19,6 +19,7 @@ import LineWeightIcon from '@mui/icons-material/LineWeight';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import { useDispatch } from 'react-redux';
 import { closeHeader } from '../../store/slices/CanvasSlice';
+import BorderWidthSelector from './BorderWidthSelector';
 
 const useStyles = makeStyles(() => ({
   header: {
@@ -76,7 +77,6 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
   const color = ColorTheme();
   const classes = useStyles();
   const { iconColor } = color;
-  const dispatch = useDispatch();
   const [highlight, setHighlight] = useState({
     bold: false,
     italic: false,
@@ -310,7 +310,8 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     if (!selectedElement?.id) return;
 
     const currentWidth = number(styles.borderWidth) || 2;
-    const newWidth = name === 'inc' ? Math.min(currentWidth + 1, 10) : Math.max(currentWidth - 1, 1);
+    // Restrict range between 0 and 6 px
+    const newWidth = name === 'inc' ? Math.min(currentWidth + 1, 6) : Math.max(currentWidth - 1, 0);
 
     setNodes((prevNodes) =>
       prevNodes.map((node) => {
@@ -321,7 +322,9 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
         };
       })
     );
+
     setStyles((prev) => ({ ...prev, borderWidth: `${newWidth}px` }));
+
     setSelectedElement((prev) => ({
       ...prev,
       data: { ...prev.data, style: { ...prev.data.style, borderWidth: `${newWidth}px` } }
@@ -552,10 +555,10 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
           </Box>
         </Tooltip>
         <Tooltip title="Border Width">
-          <FontSizeSelector
-            fontSize={number(styles.borderWidth)}
-            handleFontSizeChange={handleBorderWidthChange}
-            changeFontSize={changeBorderWidth}
+          <BorderWidthSelector
+            borderWidth={number(styles.borderWidth)}
+            handleBorderWidthChange={handleBorderWidthChange}
+            changeBorderWidth={changeBorderWidth}
           />
         </Tooltip>
       </Box>

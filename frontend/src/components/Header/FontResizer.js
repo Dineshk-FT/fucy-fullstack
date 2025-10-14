@@ -48,6 +48,7 @@ const FontSizeSelector = ({ fontSize, changeFontSize, handleFontSizeChange }) =>
       <select
         className={classes.select}
         id="fontSizeSelector"
+        style={{ width: 'auto' }}
         value={`${fontSize}px`}
         onChange={handleFontSizeChange}
         onClick={(e) => e.stopPropagation()}

@@ -32,6 +32,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
     width: data?.style?.width || 200,
     height: data?.style?.height || 200
   });
+
   const [isVisible, setIsVisible] = useState(false);
   const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
@@ -42,27 +43,36 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isMounted.current = false; // Set to false when component unmounts
+      isMounted.current = false;
     };
   }, []);
-
-  const fontSize = Math.max(12, Math.min(dimensions.width / 10, 30));
 
   const throttledResize = useThrottle((newWidth, newHeight) => {
     setDimensions({ width: newWidth, height: newHeight });
 
     setNodes((nodes) =>
       nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, style: { ...node.data.style, width: newWidth, height: newHeight } } } : node
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                style: {
+                  ...node.data.style,
+                  width: newWidth,
+                  height: newHeight
+                }
+              }
+            }
+          : node
       )
     );
   }, 50);
 
+  // console.log('data.style', data.style);
   const handleResize = useCallback(
     (_, { width: newWidth, height: newHeight }) => {
-      requestAnimationFrame(() => {
-        throttledResize(newWidth, newHeight);
-      });
+      requestAnimationFrame(() => throttledResize(newWidth, newHeight));
     },
     [throttledResize]
   );
@@ -74,18 +84,18 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
   const handleChange = (e) => {
     const val = e.target.value;
     setValue(val);
-    setNodes(nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node)));
+    setNodes((nodes) => nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: val } } : node)));
   };
 
   const onNodeClick = () => {
     setNodes((nodes) => nodes?.filter((node) => node.id !== id));
     setIsVisible(false);
   };
-  // console.log('data.style', data.style);
+
   const handleInfoClick = (open) => {
     setPropertiesOpen(open);
     const selectedNode = nodes.find((node) => node.id === id);
-    const { isAsset, properties } = selectedNode;
+    const { isAsset, properties } = selectedNode || {};
     dispatch(setSelectedBlock({ id, data }));
     dispatch(setAnchorEl({ type: 'node', value: id }));
     setSelectedElement(selectedNode);
@@ -103,17 +113,15 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       console.error('Missing assetId or modelId');
       return;
     }
-    // Close dialogs immediately
     if (isMounted.current) {
       setIsUnsavedDialogVisible(false);
       setIsVisible(false);
     }
+
     deleteNode({ assetId: assets._id, nodeId: id })
       .then(() => {
         if (isMounted.current) {
-          // Remove node from canvas immediately
           setNodes((nodes) => nodes.filter((node) => node.id !== id));
-          // Fetch updated assets (optional, depending on your app's needs)
           getAssets(model._id);
         }
       })
@@ -131,16 +139,11 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       });
   }, [assets, model, id, deleteNode, getAssets, setNodes]);
 
-  const handlePermanentDeleteClick = () => {
-    if (nodes.length > originalNodes.length) {
-      setIsUnsavedDialogVisible(true);
-    } else {
-      handleDelete();
-    }
-  };
+  const handlePermanentDeleteClick = () => handleDelete();
   const handleUnsavedDialogClose = () => setIsUnsavedDialogVisible(false);
   const handleUnsavedDialogContinue = () => handleDelete();
 
+  // console.log('data.style', data.style);
   return (
     <div
       style={{
@@ -148,8 +151,10 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
         width: dimensions.width,
         transition: 'width 0.2s ease, height 0.2s ease',
         backgroundColor: data?.style?.backgroundColor ?? 'transparent',
-        borderColor: data?.style?.borderColor ?? 'gray',
+        // border: `${data?.style?.borderWidth ?? 1}px ${data?.style?.borderStyle ?? 'solid'} ${data?.style?.borderColor ?? 'gray'}`,
         borderStyle: data?.style?.borderStyle ?? 'solid',
+        borderWidth: data?.style?.borderWidth ?? 1,
+        borderColor: data?.style?.borderColor ?? 'gray',
         opacity: data?.style?.opacity ?? 1,
         borderRadius: data?.style?.borderRadius ?? 4
       }}
@@ -159,21 +164,18 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
         value={value}
         onChange={handleChange}
         style={{
-          fontSize: `${fontSize}px`,
-          fontWeight: 600,
-          marginTop: '0.5rem',
-          textAlign: 'center',
-          border: 'none',
-          background: 'transparent',
-          outline: 'none',
-          minWidth: 100,
-          width: '100%',
-          color: data?.style?.color ?? '#000000',
+          fontSize: `${data?.style?.fontSize ?? '14px'}`,
           fontWeight: data?.style?.fontWeight ?? 500,
           fontStyle: data?.style?.fontStyle ?? 'normal',
           textDecoration: data?.style?.textDecoration ?? 'none',
+          color: data?.style?.color ?? '#000000',
           fontFamily: data?.style?.fontFamily ?? 'Inter',
-          textAlign: data?.style?.textAlign ?? 'center'
+          textAlign: data?.style?.textAlign ?? 'center',
+          marginTop: '0.5rem',
+          width: '100%',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none'
         }}
       />
 
@@ -182,6 +184,8 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       <Handle style={{ backgroundColor: bgColor }} id="b" position={Position.Left} isConnectable={isConnectable} />
       <Handle style={{ backgroundColor: bgColor }} id="c" position={Position.Bottom} isConnectable={isConnectable} />
       <Handle style={{ backgroundColor: bgColor }} id="d" position={Position.Right} isConnectable={isConnectable} />
+
+      {/* Edit Icon */}
       <div
         onClick={(e) => {
           e.stopPropagation();
@@ -191,6 +195,8 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       >
         <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
       </div>
+
+      {/* Details Icon */}
       <div
         onClick={(e) => {
           e.stopPropagation();
@@ -200,6 +206,8 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       >
         <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
       </div>
+
+      {/* Delete Icon */}
       <div
         className="delete-icon"
         onClick={(e) => {
@@ -216,22 +224,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
       >
         <CloseIcon sx={{ fontSize: '0.9rem' }} />
       </div>
-      <div
-        className="my-group-node"
-        style={{
-          position: 'relative'
-        }}
-      >
-        <div
-          style={{
-            color: 'black',
-            textShadow: 'none',
-            fontWeight: 600,
-            height: 'inherit',
-            width: 'inherit'
-          }}
-        />
-      </div>
+
       <DeleteDialog
         isVisible={isVisible}
         setIsVisible={setIsVisible}
