@@ -8,6 +8,7 @@ import useStore from '../../store/Zustand/store';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ColorTheme from '../../themes/ColorTheme';
+import { fetchTaraModel, updateTaraModel, storeTaraModel } from '../../services/api';
 import {
   Dialog,
   DialogTitle,
@@ -335,65 +336,55 @@ const VehicleTARADialog = ({ open, onClose }) => {
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isPanelOpen, setIsPanelOpen] = useState(true);
-  const { getLibraries } = useStore();
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [models, setModels] = useState([]);
+  const [isModelsLoading, setIsModelsLoading] = useState(false);
+  const { getLibraries, getModels: fetchModels } = useStore();
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 0.7 });
   const reactFlowInstance = useReactFlow();
   
   // Track the car node's previous position
   const carNodeRef = useRef(null);
+
+  // Fetch models when component mounts
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setIsModelsLoading(true);
+        await fetchModels();
+        const { Models } = useStore.getState();
+        setModels(Models || []);
+      } catch (error) {
+        console.error('Error loading models:', error);
+      } finally {
+        setIsModelsLoading(false);
+      }
+    };
+
+    if (open) {
+      loadModels();
+    }
+  }, [open, fetchModels]);
   
   // Handle viewport changes
   const onMove = useCallback((event, viewport) => {
     setViewport(viewport);
   }, []);
 
-  // Save viewport to localStorage
+  // Save viewport to state
   const saveViewport = useCallback((vp) => {
-    try {
-      localStorage.setItem(STORAGE_KEY_VIEWPORT, JSON.stringify(vp));
-    } catch (error) {
-      console.error('Error saving viewport:', error);
-    }
+    setViewport(vp);
   }, []);
 
-  // Update car node reference and save to localStorage when nodes or edges change
+  // Update car node reference when nodes change
   useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
+    if (nodes.length > 0) {
       const carNode = nodes.find(node => node?.id?.startsWith('car-'));
       if (carNode) {
         carNodeRef.current = { ...carNode };
       }
-      
-      const timer = setTimeout(() => {
-        try {
-          if (nodes.some(n => n?.id?.startsWith('car-'))) {
-            // Clone and strip read-only props before save for nodes
-            const nodesToSave = nodes.map(node => ({
-              ...node,
-              // Keep position data
-              position: { ...node.position },
-              // Force undefined to prevent persisting measurements
-              width: undefined,
-              height: undefined,
-              // Strip transients
-              positionAbsolute: undefined,
-              selected: false,
-              dragging: false
-            }));
-            
-            // Save nodes, edges, and viewport to their respective storage keys
-            localStorage.setItem(STORAGE_KEY_NODES, JSON.stringify(nodesToSave));
-            localStorage.setItem(STORAGE_KEY_EDGES, JSON.stringify(edges));
-            saveViewport(reactFlowInstance.getViewport());
-          }
-        } catch (error) {
-          console.error('Error saving nodes and edges:', error);
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
     }
-  }, [nodes, edges, saveViewport, reactFlowInstance]);
+  }, [nodes]);
   
   // Define handleAddCarImage first since it's used in the effect
   const handleAddCarImage = useCallback(() => {
@@ -431,7 +422,70 @@ const VehicleTARADialog = ({ open, onClose }) => {
     return newNode;
   }, [setNodes]);
 
-  // Load saved nodes and edges from localStorage when component mounts or opens
+  // Get model ID from store or URL
+  const modelId = useStore(state => state.model?._id) || window.location.pathname.split('/').pop();
+
+  // Fetch saved TARA model data when dialog opens
+  const fetchTaraModelData = useCallback(async () => {
+    if (!open || !modelId) {
+      console.error('No model ID available for fetching TARA model');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await fetchTaraModel(modelId);
+      
+      if (data.vehicleTaraNodes && data.vehicleTaraEdges) {
+      // Parse the nodes and edges from the response
+      const parsedNodes = Array.isArray(data.vehicleTaraNodes) 
+        ? data.vehicleTaraNodes 
+        : JSON.parse(data.vehicleTaraNodes);
+        
+      const parsedEdges = Array.isArray(data.vehicleTaraEdges)
+        ? data.vehicleTaraEdges
+        : JSON.parse(data.vehicleTaraEdges);
+      
+      // Process nodes to ensure they have the correct structure
+      const processedNodes = parsedNodes.map(node => ({
+        ...node,
+        position: node.position || { x: 0, y: 0 },
+        data: node.data || { properties: [] },
+        style: node.style || {},
+        draggable: node.draggable !== false,
+        selectable: node.selectable !== false,
+        // Ensure these are not persisted
+        width: undefined,
+        height: undefined,
+        selected: false,
+        dragging: false,
+        positionAbsolute: undefined
+      }));
+      
+      setNodes(processedNodes);
+      setEdges(parsedEdges);
+      
+      // Set viewport if available
+      if (data.vehicleTaraViewport) {
+        const viewport = typeof data.vehicleTaraViewport === 'string' 
+          ? JSON.parse(data.vehicleTaraViewport)
+          : data.vehicleTaraViewport;
+        reactFlowInstance.setViewport(viewport);
+      }
+    } else {
+      // If no saved data, start with a fresh car image
+      handleAddCarImage();
+    }
+  } catch (error) {
+    console.error('Error fetching TARA model:', error);
+    // On error, start with a fresh car image
+    handleAddCarImage();
+  } finally {
+    setIsLoading(false);
+  }
+}, [open, reactFlowInstance, handleAddCarImage]);
+
+  // Initialize with saved data or default car image when dialog opens or modelId changes
   useEffect(() => {
     if (!open) {
       // Reset nodes and edges when dialog is closed
@@ -440,79 +494,19 @@ const VehicleTARADialog = ({ open, onClose }) => {
       return;
     }
     
-    const loadSavedData = () => {
-      try {
-        // Load nodes
-        const savedNodes = localStorage.getItem(STORAGE_KEY_NODES);
-        // Load edges
-        const savedEdges = localStorage.getItem(STORAGE_KEY_EDGES);
-        
-        if (savedNodes && savedEdges) {
-          try {
-            const parsedNodes = JSON.parse(savedNodes);
-            const parsedEdges = JSON.parse(savedEdges);
-            
-            if (Array.isArray(parsedNodes) && Array.isArray(parsedEdges)) {
-              const validNodes = parsedNodes.map(node => {
-                // For car: Recompute style if needed
-                if (node.id?.startsWith('car-')) {
-                  const dialogWidth = Math.floor(window.innerWidth * 0.81);
-                  const dialogHeight = Math.floor(window.innerHeight * 0.81);
-                  const cappedWidth = Math.min(dialogWidth, 1200);
-                  const cappedHeight = Math.min(dialogHeight, 800);
-                  
-                  node.style = {
-                    ...node.style,
-                    width: `${cappedWidth}px`,
-                    height: `${cappedHeight}px`
-                  };
-                }
-                
-                return {
-                  ...node,
-                  position: node.position && typeof node.position === 'object' 
-                    ? { x: node.position.x || 0, y: node.position.y || 0 } 
-                    : { x: 0, y: 0 },
-                  data: node.data || { properties: [] },
-                  style: node.style || {},
-                  // Force undefined – RF will re-measure large based on style
-                  width: undefined,
-                  height: undefined,
-                  draggable: node.draggable !== false,
-                  selectable: node.selectable !== false
-                };
-              });
-              
-              setNodes(validNodes);
-              setEdges(parsedEdges);
-              
-              return;
-            }
-          } catch (error) {
-            console.error('Error loading saved data:', error);
-            handleAddCarImage();
-          }
-        }
-        
-        // If no saved data, initialize with default car image
-        handleAddCarImage();
-        
-      } catch (error) {
-        console.error('Error loading saved data:', error);
-        handleAddCarImage();
-      }
-    };
+    // Reset state when dialog is opened or modelId changes
+    setNodes([]);
+    setEdges([]);
     
-    // Use requestAnimationFrame to ensure React has finished any pending updates
-    const timer = requestAnimationFrame(loadSavedData);
+    // Fetch saved TARA model when dialog opens or modelId changes
+    fetchTaraModelData();
     
     // Cleanup function
     return () => {
-      cancelAnimationFrame(timer);
       setNodes([]);
       setEdges([]);
     };
-  }, [open, setNodes, setEdges, handleAddCarImage]);
+  }, [open, modelId, setNodes, setEdges, fetchTaraModelData]);
 
   // Fetch libraries when component mounts or opens
   useEffect(() => {
@@ -549,8 +543,37 @@ const VehicleTARADialog = ({ open, onClose }) => {
     fetchLibraries();
   }, [open, getLibraries]);
 
-  // Save nodes, edges, and viewport to localStorage
-  const handleSave = useCallback(() => {
+  // Update TARA model in the database
+  const handleUpdateTaraModel = useCallback(async (nodesToUpdate, edgesToUpdate, viewport) => {
+    if (!modelId) {
+      console.error('No model ID available for updating TARA model');
+      throw new Error('No model ID available');
+    }
+    try {
+      return await updateTaraModel(modelId, nodesToUpdate, edgesToUpdate, viewport);
+    } catch (error) {
+      console.error('Error updating TARA model:', error);
+      throw error;
+    }
+  }, [modelId]);
+
+  // Track if we have existing model data
+  const hasExistingData = useRef(false);
+
+  // Update hasExistingData when nodes/edges are loaded
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      hasExistingData.current = true;
+    }
+  }, [nodes, edges]);
+
+  // Save nodes, edges, and viewport to the API
+  const handleSave = useCallback(async () => {
+    if (!modelId) {
+      toast.error('No model ID available. Please ensure you have an active model.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const nodesToSave = nodes.map(node => ({
@@ -564,41 +587,58 @@ const VehicleTARADialog = ({ open, onClose }) => {
         height: undefined,
         positionAbsolute: undefined
       }));
+
+      // Get the current viewport
+      const viewport = reactFlowInstance.getViewport();
       
-      // Save everything
-      localStorage.setItem(STORAGE_KEY_NODES, JSON.stringify(nodesToSave));
-      localStorage.setItem(STORAGE_KEY_EDGES, JSON.stringify(edges));
-      saveViewport(reactFlowInstance.getViewport());
-      
-      toast.success('Progress saved successfully');
+      // Use updateTaraModel if we have existing data, otherwise use storeTaraModel
+      if (hasExistingData.current) {
+        await updateTaraModel(modelId, nodesToSave, edges, viewport);
+        toast.success('TARA model updated successfully');
+      } else {
+        await storeTaraModel(modelId, nodesToSave, edges, viewport);
+        hasExistingData.current = true; // Update the ref for future saves
+        toast.success('TARA model saved successfully');
+      }
     } catch (error) {
-      console.error('Error saving data:', error);
-      toast.error('Failed to save progress');
+      console.error('Error saving TARA model:', error);
+      toast.error(`Failed to save TARA model: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
-  }, [nodes, edges, saveViewport, reactFlowInstance]);
+  }, [nodes, edges, reactFlowInstance, modelId]);
 
-  // Clear all nodes, edges, and viewport, then reset to default car
-  const handleClear = useCallback(() => {
-    if (window.confirm('Are you sure you want to clear all nodes and edges? This action cannot be undone.')) {
-      try {
-        localStorage.removeItem(STORAGE_KEY_NODES);
-        localStorage.removeItem(STORAGE_KEY_EDGES);
-        localStorage.removeItem(STORAGE_KEY_VIEWPORT);
-        setNodes([]);
-        setEdges([]);
-        // Add a small delay to ensure nodes are cleared before adding new car
-        setTimeout(() => {
-          handleAddCarImage();
-        }, 100);
-        toast.success('Canvas cleared');
-      } catch (error) {
-        console.error('Error clearing nodes:', error);
-        toast.error('Failed to clear canvas');
-      }
+  // Clear all nodes and edges, then reset to default car
+  const handleClear = useCallback(async () => {
+    if (!window.confirm('Are you sure you want to clear all nodes and edges? This action cannot be undone.')) {
+      return;
     }
-  }, [setNodes, setEdges, handleAddCarImage]);
+
+    try {
+      // Clear the canvas
+      setNodes([]);
+      setEdges([]);
+      
+      // Reset the viewport to default
+      if (reactFlowInstance) {
+        reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
+      }
+      
+      // Reset the existing data flag since we're clearing everything
+      hasExistingData.current = false;
+      
+      // Add a small delay to ensure nodes are cleared before adding new car
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Add the default car image
+      await handleAddCarImage();
+      
+      toast.success('Canvas cleared and reset to default');
+    } catch (error) {
+      console.error('Error clearing canvas:', error);
+      toast.error('Failed to clear canvas');
+    }
+  }, [setNodes, setEdges, handleAddCarImage, reactFlowInstance]);
   
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => ({
@@ -855,13 +895,140 @@ const VehicleTARADialog = ({ open, onClose }) => {
         backgroundColor: colors.canvasBG,
         color: colors.textPrimary
       }}>
+        {/* Left Panel - Models */}
+        <Box 
+          sx={{ 
+            width: isLeftPanelOpen ? '250px' : 0,
+            height: '100%',
+            overflow: 'hidden',
+            backgroundColor: colors.paperBg,
+            color: colors.textPrimary,
+            borderRight: `1px solid ${colors.borderColor}`,
+            transition: 'width 0.2s ease-in-out',
+            position: 'relative',
+            zIndex: 5
+          }}
+        >
+          <Box sx={{ 
+            p: 2, 
+            borderBottom: `1px solid ${colors.borderColor}`, 
+            whiteSpace: 'nowrap',
+            backgroundColor: colors.sidebarBG
+          }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              noWrap
+              sx={{ color: colors.textPrimary }}
+            >
+              Vehicle Models
+            </Typography>
+            <Typography 
+              variant="body2" 
+              noWrap
+              sx={{ color: colors.textSecondary }}
+            >
+              Select a model to start
+            </Typography>
+          </Box>
+          
+          {isModelsLoading ? (
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : models.length === 0 ? (
+            <Box sx={{ p: 2, color: 'text.secondary' }}>
+              <Typography variant="body2">No models found</Typography>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {models.map((model) => (
+                <ListItemButton
+                  key={model.id || model._id}
+                  sx={{
+                    py: 1,
+                    px: 2,
+                    '&:hover': { 
+                      backgroundColor: 'action.hover',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: 'action.selected',
+                    },
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Typography 
+                        variant="body2"
+                        sx={{
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {model.name || model.model_name || 'Unnamed Model'}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography 
+                        variant="caption" 
+                        sx={{
+                          color: 'text.secondary',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {model.description || 'No description'}
+                      </Typography>
+                    }
+                  />
+                </ListItemButton>
+              ))}
+            </List>
+          )}
+        </Box>
+
+        {/* Left Panel Toggle Button */}
+        <Box 
+          sx={{ 
+            position: 'absolute',
+            left: isLeftPanelOpen ? '250px' : 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+            transition: 'left 0.2s ease-in-out'
+          }}
+        >
+          <Tooltip title={isLeftPanelOpen ? 'Hide models' : 'Show models'}>
+            <IconButton 
+              onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+              sx={{
+                backgroundColor: colors.paperBg,
+                color: colors.textPrimary,
+                borderRadius: '0 4px 4px 0',
+                border: `1px solid ${colors.borderColor}`,
+                borderLeft: 'none',
+                '&:hover': {
+                  backgroundColor: colors.buttonHoverBg
+                }
+              }}
+            >
+              {isLeftPanelOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+
         {/* Main Content Area */}
         <Box sx={{ 
           flex: 1, 
           position: 'relative', 
           minHeight: '60vh', 
           borderRight: `1px solid ${colors.borderColor}`,
-          backgroundColor: colors.canvasBG
+          backgroundColor: colors.canvasBG,
+          marginLeft: isLeftPanelOpen ? 0 : '-1px',
+          transition: 'margin-left 0.2s ease-in-out'
         }}>
           <ReactFlowProvider>
             <Provider store={store}>
