@@ -7,6 +7,56 @@ import { isLicenseExpiring, getExpiryMessage } from '../utils/licenseUtils';
 
 const FormData = require('form-data');
 
+// TARA Model API functions
+export const storeTaraModel = async (modelId, nodes, edges, viewport) => {
+  const formData = new FormData();
+  formData.append('modelId', modelId);
+  formData.append('vehicleTaraNodes', JSON.stringify(nodes));
+  formData.append('vehicleTaraEdges', JSON.stringify(edges));
+  formData.append('vehicleTaraViewport', JSON.stringify(viewport));
+
+  const URL = `${configuration.apiBaseUrl}v1/taraModel/store`;
+  try {
+    const response = await axios.post(URL, formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error storing TARA model:', error);
+    throw error;
+  }
+};
+
+export const fetchTaraModel = async (modelId) => {
+  const formData = new FormData();
+  formData.append('modelId', modelId);
+  
+  const URL = `${configuration.apiBaseUrl}v1/taraModel/fetch`;
+  try {
+    const response = await axios.post(URL, formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching TARA model:', error);
+    throw error;
+  }
+};
+
+export const updateTaraModel = async (modelId, nodes, edges, viewport) => {
+  const formData = new FormData();
+  formData.append('modelId', modelId);
+  formData.append('vehicleTaraNodes', JSON.stringify(nodes));
+  formData.append('vehicleTaraEdges', JSON.stringify(edges));
+  formData.append('vehicleTaraViewport', JSON.stringify(viewport));
+
+  const URL = `${configuration.apiBaseUrl}v1/taraModel/update`;
+  try {
+    const response = await axios.post(URL, formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating TARA model:', error);
+    throw error;
+  }
+};
+
+
 export const verifyCard = async (paymentMethodId) => {
   try {
     const response = await axios.post(
