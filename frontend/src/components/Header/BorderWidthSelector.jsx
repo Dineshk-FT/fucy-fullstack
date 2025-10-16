@@ -1,66 +1,87 @@
 /* eslint-disable */
 import React from 'react';
 import { makeStyles } from '@mui/styles';
+import { Box, Button, Select, MenuItem } from '@mui/material';
+import { Remove, Add } from '@mui/icons-material';
 
-const useStyles = makeStyles(() => ({
-  decrease: {
-    backgroundColor: 'white',
-    border: '0.5px solid gray',
-    borderTopLeftRadius: '5px',
-    borderBottomLeftRadius: '5px',
-    padding: '1.4px 3px',
-    cursor: 'pointer'
+const useStyles = makeStyles((theme) => ({
+  container: {
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    border: '1px solid',
+    borderColor: 'divider',
+    '&:hover': {
+      borderColor: 'primary.main'
+    }
   },
-  increase: {
-    backgroundColor: 'white',
-    border: '0.5px solid gray',
-    borderTopRightRadius: '5px',
-    borderBottomRightRadius: '5px',
-    padding: '1.4px 3px',
-    cursor: 'pointer'
+  button: {
+    minWidth: '32px',
+    width: '32px',
+    height: '32px',
+    borderRadius: 0,
+    backgroundColor: 'background.paper',
+    border: 'none',
+    '&:hover': {
+      backgroundColor: 'action.hover'
+    },
+    '&:active': {
+      backgroundColor: 'action.selected'
+    }
   },
   select: {
-    width: '80px',
-    height: '21px',
-    borderRadius: '0px',
-    borderLeft: 'none',
-    borderRight: 'none',
-    cursor: 'pointer'
+    height: '32px',
+    borderRadius: 0,
+    border: 'none',
+    borderLeft: '1px solid',
+    borderRight: '1px solid',
+    borderColor: 'divider',
+    '& .MuiSelect-select': {
+      padding: '6px 12px',
+      fontSize: '0.875rem'
+    },
+    '&:hover': {
+      backgroundColor: 'action.hover'
+    }
   }
 }));
 
 const BorderWidthSelector = ({ borderWidth, changeBorderWidth, handleBorderWidthChange }) => {
   const classes = useStyles();
 
-  // Generate range 0–6 (inclusive)
   const range = () => Array.from({ length: 7 }, (_, i) => i);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <button className={classes.decrease} onClick={() => changeBorderWidth('dec')}>
-        -
-      </button>
+    <Box className={classes.container}>
+      <Button className={classes.button} onClick={() => changeBorderWidth('dec')} size="small">
+        <Remove fontSize="small" />
+      </Button>
 
-      {/* eslint-disable-next-line */}
-      <select
+      <Select
         className={classes.select}
-        id="borderWidthSelector"
         value={`${borderWidth}px`}
         onChange={handleBorderWidthChange}
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 'auto' }}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: 200
+            }
+          }
+        }}
       >
         {range().map((it) => (
-          <option key={it} value={`${it}px`}>
+          <MenuItem key={it} value={`${it}px`}>
             {it}px
-          </option>
+          </MenuItem>
         ))}
-      </select>
+      </Select>
 
-      <button className={classes.increase} onClick={() => changeBorderWidth('inc')}>
-        +
-      </button>
-    </div>
+      <Button className={classes.button} onClick={() => changeBorderWidth('inc')} size="small">
+        <Add fontSize="small" />
+      </Button>
+    </Box>
   );
 };
 

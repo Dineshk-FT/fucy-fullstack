@@ -392,7 +392,7 @@ export default React.memo(function StepEdge({
                   handleDragStart(e);
                 }
               }}
-              sx={labelStyle}
+              sx={{ ...labelStyle, fontSize: style?.fontSize }}
             >
               {labelValue || 'connect'}
             </Box>

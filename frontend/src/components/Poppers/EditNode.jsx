@@ -1,5 +1,5 @@
-/*eslint-disable*/
-import React, { useCallback, useState } from 'react';
+/* eslint-disable */
+import React, { useCallback } from 'react';
 import {
   Autocomplete,
   Avatar,
@@ -11,8 +11,6 @@ import {
   InputLabel,
   Paper,
   Popper,
-  Tab,
-  Tabs,
   TextField
 } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -63,7 +61,6 @@ export default React.memo(function EditNode({
   const color = ColorTheme();
   const classes = useStyles();
   const { selectedBlock } = useSelector((state) => state?.canvas);
-  const [tabIndex, setTabIndex] = useState(0);
 
   const updateElement = useCallback(
     (updateFn) => {
@@ -72,11 +69,6 @@ export default React.memo(function EditNode({
     },
     [nodes, selectedBlock, setNodes]
   );
-
-  const handleTabChange = useCallback((event, newValue) => {
-    event.stopPropagation();
-    setTabIndex(newValue);
-  }, []);
 
   const handleNameChange = useCallback(
     (e) => {
@@ -122,154 +114,134 @@ export default React.memo(function EditNode({
         placement="bottom-start"
         sx={{
           width: 'auto',
-          maxWidth: '25.5rem',
-          maxHeight: '25rem',
+          maxWidth: '25.65rem',
+          maxHeight: '30rem',
           overflow: 'visible',
           zIndex: 1300,
           borderRadius: '6px',
           boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
         }}
       >
-        <ClickAwayListener onClickAway={handleClosePopper}>
-          <Paper
+        {/* <ClickAwayListener onClickAway={handleClosePopper}> */}
+        <Paper
+          sx={{
+            position: 'relative',
+            p: 1.2,
+            bgcolor: color?.modalBg,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            // maxHeight: '25rem',
+            width: 'auto',
+            maxWidth: '45vw',
+            overflow: 'visible'
+          }}
+        >
+          {/* Close icon */}
+          <IconButton
+            onClick={handleClosePopper}
+            size="small"
             sx={{
-              position: 'relative',
-              p: 1.2,
-              bgcolor: color?.modalBg,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-              maxHeight: '25vh',
-              width: 'auto',
-              maxWidth: '45vw',
-              overflow: 'visible'
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              zIndex: 10,
+              color: color?.sidebarContent,
+              p: 0.3,
+              '&:hover': { bgcolor: color?.hoverBg }
             }}
           >
-            {/* Close icon - absolutely positioned */}
-            <IconButton
-              onClick={handleClosePopper}
+            <HighlightOffIcon color="error" fontSize="small" />
+          </IconButton>
+
+          {/* Name input */}
+          <Box>
+            <InputLabel className={classes.inputlabel}>Name:</InputLabel>
+            <TextField
+              variant="outlined"
               size="small"
+              value={details?.name || ''}
+              onChange={handleNameChange}
+              placeholder="Enter node name"
+              fullWidth
               sx={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                zIndex: 10,
-                color: color?.sidebarContent,
-                p: 0.3,
-                '&:hover': { bgcolor: color?.hoverBg }
+                bgcolor: color?.inputBg,
+                '& .MuiInputBase-input': { fontSize: '13px', p: '4px 6px' },
+                '& .MuiOutlinedInput-notchedOutline': { borderRadius: '4px' }
               }}
-            >
-              <HighlightOffIcon color="error" fontSize="small" />
-            </IconButton>
+            />
+          </Box>
 
-            <Tabs
-              value={tabIndex}
-              onChange={handleTabChange}
-              variant="fullWidth"
-              sx={{
-                minHeight: '36px',
-                mt: 0.5,
-                '& .MuiTab-root': {
-                  fontSize: '13px',
-                  textTransform: 'none',
-                  minHeight: '32px',
-                  py: 0.5
-                },
-                '& .MuiTabs-indicator': { bgcolor: color?.primary }
-              }}
-            >
-              <Tab label="General" />
-              <Tab label="Style" />
-            </Tabs>
-
-            {tabIndex === 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box>
-                  <InputLabel className={classes.inputlabel}>Name:</InputLabel>
-                  <TextField
-                    variant="outlined"
-                    size="small"
-                    value={details?.name || ''}
-                    onChange={handleNameChange}
-                    placeholder="Enter node name"
-                    fullWidth
+          {/* Properties */}
+          {selectedBlock?.type === 'group' && (
+            <Box>
+              <InputLabel className={classes.inputlabel}>Properties:</InputLabel>
+              <Autocomplete
+                multiple
+                options={Properties}
+                getOptionLabel={(option) => option.name}
+                value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
+                onChange={handlePropertiesChange}
+                isOptionEqualToValue={(option, value) => option?.name === value?.name}
+                sx={{
+                  bgcolor: color?.inputBg,
+                  '& .MuiOutlinedInput-root': { p: '2px', borderRadius: '4px' },
+                  '& .MuiInputBase-input': { fontSize: '13px' }
+                }}
+                renderOption={(props, option) => (
+                  <Box
+                    component="li"
+                    {...props}
                     sx={{
-                      bgcolor: color?.inputBg,
-                      '& .MuiInputBase-input': { fontSize: '13px', p: '4px 6px' },
-                      '& .MuiOutlinedInput-notchedOutline': { borderRadius: '4px' }
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.8,
+                      p: '2px 4px'
                     }}
-                  />
-                </Box>
-
-                {selectedBlock?.type === 'group' && (
-                  <Box>
-                    <InputLabel className={classes.inputlabel}>Properties:</InputLabel>
-                    <Autocomplete
-                      multiple
-                      options={Properties}
-                      getOptionLabel={(option) => option.name}
-                      value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
-                      onChange={handlePropertiesChange}
-                      isOptionEqualToValue={(option, value) => option?.name === value?.name}
-                      sx={{
-                        bgcolor: color?.inputBg,
-                        '& .MuiOutlinedInput-root': { p: '2px', borderRadius: '4px' },
-                        '& .MuiInputBase-input': { fontSize: '13px' }
-                      }}
-                      renderOption={(props, option) => (
-                        <Box
-                          component="li"
-                          {...props}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.8,
-                            p: '2px 4px'
-                          }}
-                        >
-                          <Avatar src={option?.image} alt={option?.name} sx={{ width: 18, height: 18 }} />
-                          {option?.name}
-                        </Box>
-                      )}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            key={option?.name}
-                            avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 14, height: 14 }} />}
-                            variant="outlined"
-                            label={option?.name}
-                            {...getTagProps({ index })}
-                            sx={{
-                              fontSize: '11px',
-                              height: '22px',
-                              bgcolor: color?.inputBg,
-                              borderColor: color?.border
-                            }}
-                          />
-                        ))
-                      }
-                      renderInput={(params) => <TextField {...params} variant="outlined" size="small" placeholder="Select" />}
-                    />
+                  >
+                    <Avatar src={option?.image} alt={option?.name} sx={{ width: 18, height: 18 }} />
+                    {option?.name}
                   </Box>
                 )}
-              </Box>
-            )}
-
-            {tabIndex === 1 && <Header selectedElement={selectedElement} setNodes={setNodes} setSelectedElement={setSelectedElement} />}
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSave}
-                disabled={!details?.name?.trim()}
-                sx={{ textTransform: 'none', fontSize: '13px', px: 1.5, py: 0.3 }}
-              >
-                Update
-              </Button>
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option?.name}
+                      avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 14, height: 14 }} />}
+                      variant="outlined"
+                      label={option?.name}
+                      {...getTagProps({ index })}
+                      sx={{
+                        fontSize: '11px',
+                        height: '22px',
+                        bgcolor: color?.inputBg,
+                        borderColor: color?.border
+                      }}
+                    />
+                  ))
+                }
+                renderInput={(params) => <TextField {...params} variant="outlined" size="small" placeholder="Select" />}
+              />
             </Box>
-          </Paper>
-        </ClickAwayListener>
+          )}
+
+          {/* Style Section (Header Component) */}
+          <Header selectedElement={selectedElement} setNodes={setNodes} setSelectedElement={setSelectedElement} />
+
+          {/* Update Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              disabled={!details?.name?.trim()}
+              sx={{ textTransform: 'none', fontSize: '13px', px: 1.5, py: 0.3 }}
+            >
+              Update
+            </Button>
+          </Box>
+        </Paper>
+        {/* </ClickAwayListener> */}
       </Popper>
 
       <Toaster position="top-right" reverseOrder={false} />
