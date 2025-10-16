@@ -152,6 +152,29 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
 // Import your custom node components
 import CarImageNode from '../custom/nodes/CarImageNode';
 
+// Memoized Edge Direction Select component
+const EdgeDirectionSelect = React.memo(({ value, onChange, colors }) => (
+  <Select
+    value={value}
+    onChange={onChange}
+    size="small"
+    sx={{
+      color: colors.textPrimary,
+      bgcolor: colors.paperBg,
+      '.MuiSelect-select': {
+        py: 0.5,
+      },
+      minWidth: '120px'
+    }}
+  >
+    <MenuItem value="bidirectional">Bidirectional</MenuItem>
+    <MenuItem value="leftToRight">Left to Right</MenuItem>
+    <MenuItem value="rightToLeft">Right to Left</MenuItem>
+  </Select>
+));
+
+EdgeDirectionSelect.displayName = 'EdgeDirectionSelect';
+
 // Pastel color palette
 const pastelColors = [
   '#FFD1DC', '#FFECB8', '#B5EAD7', '#C7CEEA', '#E2F0CB',
@@ -298,6 +321,11 @@ const VehicleTARADialog = ({ open, onClose }) => {
   const { getLibraries, getModels: fetchModels } = useStore();
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 0.7 });
   const [edgeDirection, setEdgeDirection] = useState('bidirectional');
+  
+  // Memoized edge direction change handler
+  const handleEdgeDirectionChange = useCallback((e) => {
+    setEdgeDirection(e.target.value);
+  }, []);
   const reactFlowInstance = useReactFlow();
   const carNodeRef = useRef(null);
   const dragRef = useRef(null);
@@ -755,22 +783,11 @@ const VehicleTARADialog = ({ open, onClose }) => {
           <Typography variant="h6" sx={{ color: colors.textPrimary }}>Vehicle TARA Analysis</Typography>
           <Box display="flex" alignItems="center" gap={1}>
             <Tooltip title="Select edge direction">
-              <Select
-                value={edgeDirection}
-                onChange={(e) => setEdgeDirection(e.target.value)}
-                size="small"
-                sx={{
-                  color: colors.textPrimary,
-                  bgcolor: colors.paperBg,
-                  '.MuiSelect-select': {
-                    py: 0.5,
-                  }
-                }}
-              >
-                <MenuItem value="bidirectional">Bidirectional</MenuItem>
-                <MenuItem value="leftToRight">Left to Right</MenuItem>
-                <MenuItem value="rightToLeft">Right to Left</MenuItem>
-              </Select>
+              <EdgeDirectionSelect 
+                value={edgeDirection} 
+                onChange={handleEdgeDirectionChange}
+                colors={colors}
+              />
             </Tooltip>
             <Tooltip title="Save progress">
               <IconButton 
