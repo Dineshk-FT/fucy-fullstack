@@ -388,7 +388,7 @@ const LeftSection = () => {
   }, []);
 
   const handleOpenModal = (modalKey, e) => {
-    console.log('modalKey', modalKey);
+    // console.log('modalKey', modalKey);
     if (e?.stopPropagation) e.stopPropagation();
     if (isChanged) {
       setOpenSave(true);

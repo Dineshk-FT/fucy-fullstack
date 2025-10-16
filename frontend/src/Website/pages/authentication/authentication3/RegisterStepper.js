@@ -8,7 +8,7 @@ import StepThreePayment from './StepThreePayment';
 import { register } from '../../../../services/api';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 const steps = ['User Info', 'Select Plan', 'Payment'];
 
@@ -18,7 +18,7 @@ const RegisterStepper = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const notify = (message, status) => toast[status](message);
-  
+
   const allPlans = [
     { id: 'trial', name: 'Free Trial', details: '2 Weeks Free', price: '₹0' },
     { id: '1month', name: 'Monthly', details: '₹499 per month', price: '₹499' },
@@ -43,7 +43,7 @@ const RegisterStepper = () => {
       password: formValues?.password,
       role: formValues?.role,
       license_type: formValues?.plan,
-      payment_method_id: values?.payment_method_id, // Include payment_method_id
+      payment_method_id: values?.payment_method_id // Include payment_method_id
     };
 
     try {
@@ -60,7 +60,7 @@ const RegisterStepper = () => {
       }
     } catch (error) {
       console.error('Registration failed:', error);
-      notify(error?.data?.message ?? 'Something went wrong', 'error');
+      notify(error?.error ?? 'Something went wrong', 'error');
     }
   };
 
@@ -71,14 +71,7 @@ const RegisterStepper = () => {
       case 1:
         return <StepTwoPlanSelection handleNext={handleNext} handleBack={handleBack} data={formValues} plans={allPlans} />;
       case 2:
-        return (
-          <StepThreePayment
-            handleBack={handleBack}
-            data={formValues}
-            handleSubmit={handleSubmit}
-            selectedPlan={formValues.plan}
-          />
-        );
+        return <StepThreePayment handleBack={handleBack} data={formValues} handleSubmit={handleSubmit} selectedPlan={formValues.plan} />;
       default:
         return null;
     }
@@ -95,6 +88,7 @@ const RegisterStepper = () => {
       </Stepper>
       <Divider sx={{ my: 2, borderColor: 'white', boxShadow: '1px 0px 1px gray' }} />
       <Box>{getStepContent(activeStep)}</Box>
+      <Toaster position="top-center" reverseOrder={false} />
     </Box>
   );
 };

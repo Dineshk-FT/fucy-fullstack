@@ -1,7 +1,7 @@
 /* eslint-disable */
-import { Box, Grid, TextField, Typography, LinearProgress, Paper, Fade, Zoom, Slide, Collapse, keyframes } from '@mui/material';
+import { Box, Grid, TextField, Typography, LinearProgress, Paper, Fade, Zoom, Slide, Collapse, keyframes, Button } from '@mui/material';
 import { InputAdornment, IconButton } from '@mui/material';
-import Button from '../../../../components/Buttons/Button';
+import { LoadingButton } from '@mui/lab';
 import { Visibility, VisibilityOff, CheckCircle, ErrorOutline, Refresh } from '@mui/icons-material';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -31,22 +31,20 @@ const PasswordStrength = ({ password = '' }) => {
 
   return (
     <Box sx={{ mt: 1, width: '100%' }}>
-      <LinearProgress 
-        variant="determinate" 
-        value={strength} 
+      <LinearProgress
+        variant="determinate"
+        value={strength}
         color={getColor(strength)}
         sx={{
           height: 6,
           borderRadius: 3,
           '& .MuiLinearProgress-bar': {
-            borderRadius: 3,
-          },
+            borderRadius: 3
+          }
         }}
       />
       <Typography variant="caption" color="text.secondary">
-        {!password ? 'Password strength' : 
-         strength < 30 ? 'Weak' : 
-         strength < 70 ? 'Moderate' : 'Strong'}
+        {!password ? 'Password strength' : strength < 30 ? 'Weak' : strength < 70 ? 'Moderate' : 'Strong'}
       </Typography>
     </Box>
   );
@@ -57,6 +55,7 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [formValues, setFormValues] = useState({});
   const [isVerified, setIsVerified] = useState(false);
   const [formSnapshot, setFormSnapshot] = useState({});
   const [loading, setLoading] = useState(false);
@@ -67,7 +66,6 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
   const [otpInputs, setOtpInputs] = useState(Array(6).fill(''));
   const [shake, setShake] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: null, message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Animation for OTP input shake
   const shakeAnimation = keyframes`
@@ -93,95 +91,82 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
     }
   }, [otpSent, canResend]);
 
-  const validateForm = async (values) => {
-    const errors = {};
-    
-    try {
-      await validationSchema.validate(values, { abortEarly: false });
-    } catch (err) {
-      err.inner.forEach((error) => {
-        errors[error.path] = error.message;
-      });
+  const validationSchema = Yup.object().shape({
+    fname: Yup.string()
+      .required('First name is required')
+      .min(2, 'First name must be at least 2 characters')
+      .max(50, 'First name must be less than 50 characters')
+      .matches(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+
+    lname: Yup.string()
+      .required('Last name is required')
+      .min(2, 'Last name must be at least 2 characters')
+      .max(50, 'Last name must be less than 50 characters')
+      .matches(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+
+    email: Yup.string()
+      .email('Please enter a valid email address')
+      .required('Email is required')
+      .matches(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, 'Invalid email format'),
+
+    password: Yup.string()
+      .required('Password is required')
+      .min(8, 'Password must be at least 8 characters')
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      ),
+
+    organization: Yup.string().required('Organization is required').min(2, 'Must be at least 2 characters'),
+
+    role: Yup.string()
+      .required('Please select a role')
+      .oneOf(['developer', 'designer', 'manager', 'executive', 'admin', 'other'], 'Invalid role selected')
+  });
+
+  const handleOtpChange = (index, value) => {
+    if (value && !/^[0-9]$/.test(value)) return;
+
+    const newOtpInputs = [...otpInputs];
+    newOtpInputs[index] = value;
+    setOtpInputs(newOtpInputs);
+    setOtp(newOtpInputs.join(''));
+    setVerificationError('');
+
+    // Auto focus next input
+    if (value && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus();
     }
-    
-    // Custom validation for email domain
-    if (values.email && !/^[^@]+@[^@]+\.[^@]+$/.test(values.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-    
-    return Object.keys(errors).length === 0 ? null : errors;
   };
 
-  const handleSubmit = async (values, { setSubmitting, setFieldError, setTouched }) => {
-    setIsSubmitting(true);
-    setSubmitStatus({ type: null, message: '' });
-    setFormValues(values);
-    setSubmitting(true);
-    
-    // Manually validate all fields
-    const errors = await validateForm(values);
-    if (errors) {
-      Object.keys(errors).forEach(field => {
-        setFieldError(field, errors[field]);
-        setFieldTouched(field, true, false);
-      });
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setIsSubmitting(false);
-      setSubmitting(false);
-      return;
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpInputs[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
     }
+  };
 
-    try {
-      const res = await SendVerificationOTP({ email: values.email });
-      if (!res.error) {
-        setOtpSent(true);
-        setFormValues(values);
-        setSubmitStatus({ 
-          type: 'success', 
-          message: 'Verification code sent to your email',
-          email: values.email
-        });
-        toast.success('Verification code sent!');
-      } else {
-        const errorMsg = res.error?.message || 'Failed to send verification code';
-        setSubmitStatus({ 
-          type: 'error', 
-          message: errorMsg 
-        });
-        toast.error(errorMsg);
-        // Shake form on error
-        setShake(true);
-        setTimeout(() => setShake(false), 500);
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      const errorMsg = 'An error occurred. Please try again.';
-      setSubmitStatus({ 
-        type: 'error', 
-        message: errorMsg 
-      });
-      toast.error(errorMsg);
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-    } finally {
-      setIsSubmitting(false);
-      setSubmitting(false);
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text/plain').trim();
+    if (/^\d{6}$/.test(pasteData)) {
+      const pastedOtp = pasteData.split('');
+      setOtpInputs(pastedOtp);
+      setOtp(pasteData);
+      document.getElementById(`otp-5`)?.focus();
     }
   };
 
   const handleResendOTP = async () => {
     if (!canResend) return;
-    
+
     setLoading(true);
     try {
-      // Validate email before resending OTP
       if (!formValues.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
         toast.error('Please enter a valid email address');
         setLoading(false);
         return;
       }
-      
+
       const res = await SendVerificationOTP({ email: formValues.email });
       if (!res.error) {
         toast.success('New verification code sent!');
@@ -189,8 +174,7 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
         setResendTimer(30);
         setOtpInputs(Array(6).fill(''));
         setVerificationError('');
-        
-        // Show success message in the UI
+
         setSubmitStatus({
           type: 'success',
           message: 'New verification code sent to your email',
@@ -213,135 +197,64 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
     }
   };
 
-  const handleOtpChange = (index, value) => {
-    if (value && !/^[0-9]$/.test(value)) return;
-    
-    const newOtpInputs = [...otpInputs];
-    newOtpInputs[index] = value;
-    setOtpInputs(newOtpInputs);
-    setOtp(newOtpInputs.join(''));
-    setVerificationError('');
-    
-    // Auto focus next input
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus();
-    }
-  };
-  
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otpInputs[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`)?.focus();
-    }
-  };
-  
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData('text/plain').trim();
-    if (/^\d{6}$/.test(pasteData)) {
-      const pastedOtp = pasteData.split('');
-      setOtpInputs(pastedOtp);
-      setOtp(pasteData);
-      document.getElementById(`otp-5`)?.focus();
-    }
-  };
-
-  const handleOtpVerification = async () => {
-    // Reset error state
-    setVerificationError('');
-    
-    // Validate OTP format
-    if (!/^\d{6}$/.test(otp)) {
-      setVerificationError('Please enter a valid 6-digit code');
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      return;
-    }
-    
-    // Additional OTP validation (e.g., check for all same digits, sequential numbers)
-    if (/(\d)\1{5}/.test(otp)) {
-      setVerificationError('Please enter a valid verification code');
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      return;
-    }
-  };
-
-  const validationSchema = Yup.object().shape({
-    fname: Yup.string()
-      .required('First name is required')
-      .min(2, 'First name must be at least 2 characters')
-      .max(50, 'First name must be less than 50 characters')
-      .matches(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
-      
-    lname: Yup.string()
-      .required('Last name is required')
-      .min(2, 'Last name must be at least 2 characters')
-      .max(50, 'Last name must be less than 50 characters')
-      .matches(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
-      
-    email: Yup.string()
-      .email('Please enter a valid email address')
-      .required('Email is required')
-      .matches(
-        /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-        'Invalid email format'
-      ),
-      
-    password: Yup.string()
-      .required('Password is required')
-      .min(8, 'Password must be at least 8 characters')
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-      ),
-      
-    confirmPassword: Yup.string()
-      .required('Please confirm your password')
-      .oneOf([Yup.ref('password'), null], 'Passwords must match'),
-      
-    phone: Yup.string()
-      .required('Phone number is required')
-      .matches(
-        /^[0-9]{10}$/, 
-        'Phone number must be exactly 10 digits'
-      ),
-      
-    role: Yup.string()
-      .required('Please select a role')
-      .oneOf(['user', 'admin', 'manager', 'executive', 'other'], 'Invalid role selected'),
-      
-    organization: Yup.string()
-      .required('Organization is required')
-      .min(2, 'Must be at least 2 characters')
-  });
-
   return (
     <>
       <Formik
         initialValues={{
-          fname: '',
-          lname: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          phone: '',
-          role: ''
+          fname: data.fname || '',
+          lname: data.lname || '',
+          email: data.email || '',
+          password: data.password || '',
+          organization: data.organization || '',
+          role: data.role || ''
         }}
-        validateOnChange={true}
-        validateOnBlur={true}
-        validateOnMount={false}
         validationSchema={validationSchema}
-        validate={validateForm}
-        onSubmit={handleSubmit}
+        onSubmit={async (values) => {
+          setLoading(true);
+          setFormValues(values);
+
+          await SendVerificationOTP({ email: values.email })
+            .then((res) => {
+              if (!res.error) {
+                toast.success(res?.data?.message || 'Verification code sent successfully');
+                setOtpSent(true);
+                setFormSnapshot(values);
+                setSubmitStatus({
+                  type: 'success',
+                  message: 'Verification code sent to your email',
+                  email: values.email
+                });
+              } else {
+                const errorMsg = res?.error?.message || 'Failed to send verification code';
+                toast.error(errorMsg);
+                setSubmitStatus({
+                  type: 'error',
+                  message: errorMsg
+                });
+                setShake(true);
+                setTimeout(() => setShake(false), 500);
+              }
+            })
+            .catch((err) => {
+              const errorMsg = err?.response?.data?.error ?? 'An error occurred. Please try again.';
+              toast.error(errorMsg);
+              setSubmitStatus({
+                type: 'error',
+                message: errorMsg
+              });
+              setShake(true);
+              setTimeout(() => setShake(false), 500);
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+        }}
       >
-        {({ values, handleChange, handleBlur, handleSubmit, errors, touched }) => (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit(e);
-          }}>
-            <Box 
-              sx={{ 
-                textAlign: 'center', 
+        {({ values, handleChange, handleSubmit, handleBlur, errors, touched }) => (
+          <form onSubmit={handleSubmit}>
+            <Box
+              sx={{
+                textAlign: 'center',
                 mb: 4,
                 animation: shake ? `${shakeAnimation} 0.5s ease-in-out` : 'none'
               }}
@@ -353,14 +266,12 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     {otpSent ? 'Verify Your Email' : 'Create Your Account'}
                   </Typography>
                   <Typography color="text.secondary" variant="body1" mb={2}>
-                    {otpSent 
-                      ? `We've sent a 6-digit code to ${submitStatus.email || 'your email'}`
-                      : 'Fill in your details to get started'}
+                    {otpSent ? `We've sent a 6-digit code to ${submitStatus.email || 'your email'}` : 'Fill in your details to get started'}
                   </Typography>
-                  
+
                   {submitStatus.type === 'success' && (
                     <Fade in={submitStatus.type === 'success'} timeout={500}>
-                      <Box 
+                      <Box
                         sx={{
                           backgroundColor: 'success.light',
                           color: 'success.contrastText',
@@ -374,16 +285,14 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                         }}
                       >
                         <CheckCircle fontSize="small" />
-                        <Typography variant="body2">
-                          {submitStatus.message}
-                        </Typography>
+                        <Typography variant="body2">{submitStatus.message}</Typography>
                       </Box>
                     </Fade>
                   )}
-                  
+
                   {submitStatus.type === 'error' && (
                     <Fade in={submitStatus.type === 'error'} timeout={500}>
-                      <Box 
+                      <Box
                         sx={{
                           backgroundColor: 'error.light',
                           color: 'error.contrastText',
@@ -397,15 +306,14 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                         }}
                       >
                         <ErrorOutline fontSize="small" />
-                        <Typography variant="body2">
-                          {submitStatus.message}
-                        </Typography>
+                        <Typography variant="body2">{submitStatus.message}</Typography>
                       </Box>
                     </Fade>
                   )}
                 </Box>
               </Fade>
             </Box>
+
             <Grid container spacing={2} sx={{ '& .MuiGrid-item': { py: 1 } }}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -423,16 +331,16 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
-                    },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
+                    }
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 />
               </Grid>
@@ -452,16 +360,16 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
-                    },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
+                    }
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 />
               </Grid>
@@ -475,23 +383,23 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   error={Boolean(errors.email && touched.email)}
-                  helperText={touched.email && (errors.email || 'We\'ll send a verification code to this email')}
+                  helperText={touched.email && (errors.email || "We'll send a verification code to this email")}
                   variant="outlined"
                   margin="normal"
                   InputProps={{
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
-                    },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
+                    }
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 />
               </Grid>
@@ -512,16 +420,16 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
                     },
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton 
+                        <IconButton
                           onClick={(e) => {
                             e.preventDefault();
                             setShowPassword(!showPassword);
@@ -531,7 +439,7 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                             color: 'text.secondary',
                             '&:hover': {
                               backgroundColor: 'transparent',
-                              color: theme.palette.primary.main,
+                              color: theme.palette.primary.main
                             }
                           }}
                         >
@@ -541,7 +449,7 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     )
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 />
                 {values.password && <PasswordStrength password={values.password} />}
@@ -563,16 +471,16 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
-                    },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
+                    }
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 />
               </Grid>
@@ -594,16 +502,16 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                     style: {
                       borderRadius: '8px',
                       backgroundColor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s ease'
                     },
                     sx: {
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main + ' !important',
-                      },
-                    },
+                        borderColor: theme.palette.primary.main + ' !important'
+                      }
+                    }
                   }}
                   InputLabelProps={{
-                    style: { color: theme.palette.text.secondary },
+                    style: { color: theme.palette.text.secondary }
                   }}
                 >
                   <option value="">Select your role</option>
@@ -621,12 +529,12 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
               {!otpSent ? (
                 <Fade in={!otpSent} timeout={500}>
                   <Box>
-                    <Button 
-                      type="submit" 
-                      variant="contained" 
+                    <LoadingButton
+                      type="submit"
+                      variant="contained"
                       size="large"
                       fullWidth
-                      disabled={isSubmitting}
+                      loading={loading}
                       sx={{
                         height: 48,
                         borderRadius: 2,
@@ -642,58 +550,11 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                           transform: 'translateY(0)',
                           boxShadow: '0 2px 10px 0 rgba(0, 0, 0, 0.1)'
                         },
-                        '&.Mui-disabled': {
-                          backgroundColor: 'action.disabledBackground',
-                          color: 'action.disabled'
-                        },
-                        transition: 'all 0.2s ease',
+                        transition: 'all 0.2s ease'
                       }}
-                      startIcon={
-                        isSubmitting ? (
-                          <Box 
-                            component="span" 
-                            sx={{
-                              display: 'inline-block',
-                              width: 20,
-                              height: 20,
-                              border: '2px solid',
-                              borderColor: 'primary.contrastText',
-                              borderTopColor: 'transparent',
-                              borderRadius: '50%',
-                              animation: 'spin 1s linear infinite',
-                              '@keyframes spin': {
-                                '0%': { transform: 'rotate(0deg)' },
-                                '100%': { transform: 'rotate(360deg)' },
-                              },
-                            }}
-                          />
-                        ) : null
-                      }
                     >
-                      {isSubmitting ? 'Sending...' : 'Send Verification Code'}
-                    </Button>
-                    
-                    {!isSubmitting && submitStatus.type === 'error' && (
-                      <Fade in={!isSubmitting && submitStatus.type === 'error'} timeout={500}>
-                        <Typography 
-                          variant="caption" 
-                          color="error" 
-                          sx={{
-                            display: 'block',
-                            mt: 1,
-                            textAlign: 'center',
-                            animation: 'pulse 2s infinite',
-                            '@keyframes pulse': {
-                              '0%': { opacity: 0.6 },
-                              '50%': { opacity: 1 },
-                              '100%': { opacity: 0.6 },
-                            },
-                          }}
-                        >
-                          {submitStatus.message}
-                        </Typography>
-                      </Fade>
-                    )}
+                      {loading ? 'Sending...' : 'Send Verification Code'}
+                    </LoadingButton>
                   </Box>
                 </Fade>
               ) : !isVerified ? (
@@ -703,13 +564,13 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                       Enter Verification Code
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mb={2}>
-                      We've sent a 6-digit code to {formSnapshot.email}
+                      We've sent a 6-digit code to {formSnapshot.email || formValues.email}
                     </Typography>
-                    
-                    <Box 
-                      sx={{ 
-                        display: 'flex', 
-                        gap: 1.5, 
+
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 1.5,
                         mb: 2,
                         animation: shake ? `${shakeAnimation} 0.5s ease-in-out` : 'none'
                       }}
@@ -727,8 +588,8 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                                 padding: '12px',
                                 height: '60px',
                                 width: '100%',
-                                caretColor: theme.palette.primary.main,
-                              },
+                                caretColor: theme.palette.primary.main
+                              }
                             }}
                             value={otpInputs[i]}
                             onChange={(e) => handleOtpChange(i, e.target.value)}
@@ -744,35 +605,36 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                                 '& input': {
                                   textAlign: 'center',
                                   '&::selection': {
-                                    backgroundColor: 'transparent',
-                                  },
+                                    backgroundColor: 'transparent'
+                                  }
                                 },
                                 '& fieldset': {
                                   borderWidth: '2px',
-                                  borderColor: verificationError ? theme.palette.error.main : 
-                                    otpInputs[i] ? theme.palette.primary.main : theme.palette.divider,
-                                  transition: 'all 0.3s ease',
+                                  borderColor: verificationError
+                                    ? theme.palette.error.main
+                                    : otpInputs[i]
+                                    ? theme.palette.primary.main
+                                    : theme.palette.divider,
+                                  transition: 'all 0.3s ease'
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: verificationError ? theme.palette.error.dark : 
-                                    theme.palette.primary.main,
+                                  borderColor: verificationError ? theme.palette.error.dark : theme.palette.primary.main
                                 },
                                 '&.Mui-focused fieldset': {
-                                  borderColor: verificationError ? theme.palette.error.main : 
-                                    theme.palette.primary.main,
+                                  borderColor: verificationError ? theme.palette.error.main : theme.palette.primary.main,
                                   borderWidth: '2px',
-                                  boxShadow: `0 0 0 3px ${theme.palette.primary.light}40`,
-                                },
-                              },
+                                  boxShadow: `0 0 0 3px ${theme.palette.primary.light}40`
+                                }
+                              }
                             }}
                           />
                         </Fade>
                       ))}
                     </Box>
-                    
+
                     <Box sx={{ mt: 2 }}>
                       <Collapse in={!!verificationError}>
-                        <Box 
+                        <Box
                           sx={{
                             backgroundColor: theme.palette.error.light,
                             color: theme.palette.error.contrastText,
@@ -789,7 +651,7 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                           <Typography variant="body2">{verificationError}</Typography>
                         </Box>
                       </Collapse>
-                      
+
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                         <Button
                           variant="text"
@@ -803,40 +665,41 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                             '&:hover': {
                               backgroundColor: 'transparent',
                               textDecoration: 'underline',
-                              transform: 'rotate(-30deg)',
+                              transform: 'rotate(-30deg)'
                             },
                             '& .MuiButton-startIcon': {
-                              transition: 'transform 0.3s ease',
+                              transition: 'transform 0.3s ease'
                             },
                             '&:hover .MuiButton-startIcon': {
-                              transform: 'rotate(180deg)',
+                              transform: 'rotate(180deg)'
                             },
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.3s ease'
                           }}
                         >
                           {loading ? 'Sending...' : canResend ? 'Resend Code' : `Resend in ${resendTimer}s`}
                         </Button>
-                        
+
                         <Zoom in={otp.length === 6}>
-                          <Button
+                          <LoadingButton
                             variant="contained"
                             color="primary"
+                            loading={verifying}
                             onClick={async () => {
                               if (otp.length !== 6) {
                                 setVerificationError('Please enter a 6-digit code');
                                 setShake(true);
                                 return;
                               }
-                              
+
                               setVerifying(true);
                               setVerificationError('');
-                              
+
                               try {
-                                const verifyRes = await VerifyOTP({ 
-                                  email: formSnapshot.email, 
-                                  otp 
+                                const verifyRes = await VerifyOTP({
+                                  email: formSnapshot.email || formValues.email,
+                                  otp
                                 });
-                                
+
                                 if (verifyRes?.data?.message) {
                                   setIsVerified(true);
                                   toast.success(verifyRes.data.message);
@@ -856,7 +719,6 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                                 setVerifying(false);
                               }
                             }}
-                            disabled={verifying}
                             sx={{
                               textTransform: 'none',
                               fontWeight: 600,
@@ -865,50 +727,29 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                               height: 44,
                               '&:hover': {
                                 transform: 'translateY(-2px)',
-                                boxShadow: theme.shadows[4],
+                                boxShadow: theme.shadows[4]
                               },
                               '&:active': {
                                 transform: 'translateY(0)',
-                                boxShadow: theme.shadows[2],
+                                boxShadow: theme.shadows[2]
                               },
-                              transition: 'all 0.2s ease',
+                              transition: 'all 0.2s ease'
                             }}
                           >
-                            {verifying ? (
-                              <>
-                                <Box 
-                                  component="span" 
-                                  sx={{
-                                    display: 'inline-block',
-                                    width: 20,
-                                    height: 20,
-                                    border: `2px solid ${theme.palette.primary.contrastText}`,
-                                    borderTopColor: 'transparent',
-                                    borderRadius: '50%',
-                                    animation: 'spin 1s linear infinite',
-                                    mr: 1,
-                                    '@keyframes spin': {
-                                      '0%': { transform: 'rotate(0deg)' },
-                                      '100%': { transform: 'rotate(360deg)' },
-                                    },
-                                  }}
-                                />
-                                Verifying...
-                              </>
-                            ) : 'Verify Code'}
-                          </Button>
+                            Verify Code
+                          </LoadingButton>
                         </Zoom>
                       </Box>
                     </Box>
                   </Box>
                 </>
               ) : (
-                <Button 
-                  variant="contained" 
-                  color="primary" 
+                <Button
+                  variant="contained"
+                  color="primary"
                   size="large"
                   fullWidth
-                  onClick={() => handleNext(formSnapshot)}
+                  onClick={() => handleNext(formSnapshot || formValues)}
                   sx={{
                     height: 48,
                     borderRadius: 2,
@@ -921,26 +762,21 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                       boxShadow: '0 6px 20px 0 rgba(76, 175, 80, 0.3)',
                       transform: 'translateY(-1px)'
                     },
-                    transition: 'all 0.3s ease',
+                    transition: 'all 0.3s ease'
                   }}
                   startIcon={<CheckCircle />}
                 >
                   Continue to Plan Selection
                 </Button>
               )}
-              
-              <Button 
-                variant="text" 
+
+              <Button
+                variant="text"
                 color="inherit"
                 onClick={() => {
                   if (otpSent && !isVerified) {
                     setOtpSent(false);
                     setOtp('');
-                  } else if (isVerified) {
-                    // Handle back from verified state if needed
-                  } else {
-                    // Handle back from initial state (go to previous step)
-                    // You might want to add a back handler prop for this
                   }
                 }}
                 sx={{
@@ -950,8 +786,8 @@ const StepOneUserInfo = ({ handleNext, data, setIsFirstTimer }) => {
                   color: theme.palette.text.secondary,
                   '&:hover': {
                     backgroundColor: 'transparent',
-                    textDecoration: 'underline',
-                  },
+                    textDecoration: 'underline'
+                  }
                 }}
               >
                 {otpSent ? (isVerified ? '' : 'Back to form') : 'Back'}

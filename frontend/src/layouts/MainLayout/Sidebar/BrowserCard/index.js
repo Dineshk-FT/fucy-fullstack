@@ -97,22 +97,19 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.contrastText,
       '& .MuiTreeItem-label': {
-        color: theme.palette.primary.contrastText,
+        color: theme.palette.primary.contrastText
       }
     },
     marginLeft: '-2px',
     color: 'inherit',
     '&:hover': {
-      background: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      background:
+        theme.palette.mode === 'dark'
+          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
       transform: 'scale(1.02)',
-      boxShadow: theme.palette.mode === 'dark' 
-        ? '0 2px 6px rgba(0,0,0,0.4)' 
-        : '0 2px 6px rgba(0,0,0,0.1)',
-      filter: theme.palette.mode === 'dark'
-        ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' 
-        : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+      boxShadow: theme.palette.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+      filter: theme.palette.mode === 'dark' ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
     },
     '&:focus': {
       outline: `2px solid ${theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3'}`,
@@ -152,9 +149,10 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '6px',
     transition: 'all 0.3s ease',
     '&:hover': {
-      background: theme.palette.mode === 'dark'
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      background:
+        theme.palette.mode === 'dark'
+          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
       transform: 'scale(1.02)',
       boxShadow: theme.palette.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
       filter: theme.palette.mode === 'dark' ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
@@ -172,9 +170,10 @@ const useStyles = makeStyles((theme) => ({
       transition: 'all 0.3s ease'
     },
     '&:not(:last-child)': {
-      borderBottom: theme.palette.mode === 'dark'
-        ? '1px solid rgba(255,255,255,0.05)' // Softer divider
-        : '1px solid rgba(0,0,0,0.05)'
+      borderBottom:
+        theme.palette.mode === 'dark'
+          ? '1px solid rgba(255,255,255,0.05)' // Softer divider
+          : '1px solid rgba(0,0,0,0.05)'
     }
   },
   lossItem: {
@@ -185,9 +184,10 @@ const useStyles = makeStyles((theme) => ({
     transition: 'all 0.3s ease',
     borderRadius: '6px',
     '&:hover': {
-      background: theme.palette.mode === 'dark'
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      background:
+        theme.palette.mode === 'dark'
+          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
       transform: 'scale(1.02)',
       boxShadow: theme.palette.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
       filter: theme.palette.mode === 'dark' ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
@@ -203,9 +203,10 @@ const useStyles = makeStyles((theme) => ({
     transition: 'all 0.3s ease',
     borderRadius: '6px',
     '&:hover': {
-      background: theme.palette.mode === 'dark'
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+      background:
+        theme.palette.mode === 'dark'
+          ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.05) 100%)'
+          : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
       transform: 'scale(1.02)',
       boxShadow: theme.palette.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
       filter: theme.palette.mode === 'dark' ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
@@ -223,8 +224,8 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     '& svg': {
       fontSize: '1.1rem',
-      color: 'inherit',
-    },
+      color: 'inherit'
+    }
   },
   labelText: {
     fontWeight: 500,
@@ -233,7 +234,7 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    transition: 'all 0.2s ease-in-out',
+    transition: 'all 0.2s ease-in-out'
   },
   sectionHeader: {
     padding: theme.spacing(1, 2, 0.5, 2),
@@ -247,12 +248,12 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     '&:not(:first-of-type)': {
       borderTop: `1px solid ${theme.palette.divider}`,
-      paddingTop: theme.spacing(2),
+      paddingTop: theme.spacing(2)
     },
     '& svg': {
       marginRight: theme.spacing(1),
-      fontSize: '1rem',
-    },
+      fontSize: '1rem'
+    }
   },
   treeView: {
     flexGrow: 1,
@@ -260,32 +261,32 @@ const useStyles = makeStyles((theme) => ({
     overflowY: 'auto',
     padding: theme.spacing(0, 1),
     '&::-webkit-scrollbar': {
-      width: '6px',
+      width: '6px'
     },
     '&::-webkit-scrollbar-track': {
-      background: theme.palette.background.default,
+      background: theme.palette.background.default
     },
     '&::-webkit-scrollbar-thumb': {
       background: theme.palette.divider,
       borderRadius: '3px',
       '&:hover': {
-        background: theme.palette.action.hover,
-      },
-    },
+        background: theme.palette.action.hover
+      }
+    }
   },
   treeItem: {
     '& .MuiTreeItem-content': {
       padding: theme.spacing(0.25, 0),
       '&:hover': {
-        backgroundColor: 'transparent',
-      },
+        backgroundColor: 'transparent'
+      }
     },
     '& .MuiTreeItem-group': {
       marginLeft: theme.spacing(2),
       borderLeft: `1px dashed ${theme.palette.divider}`,
-      paddingLeft: theme.spacing(1.5),
-    },
-  },
+      paddingLeft: theme.spacing(1.5)
+    }
+  }
 }));
 
 const CardStyle = styled(Card, {
@@ -293,31 +294,32 @@ const CardStyle = styled(Card, {
 })(({ theme, $iscollapsed, $isnavbarclose }) => {
   const isDark = theme.palette.mode === 'dark';
   return {
-  marginBottom: '16px',
-  overflow: 'hidden',
-  position: 'relative',
-  height: $isnavbarclose ? '100vh' : `calc(95vh - ${getNavbarHeight($iscollapsed)}px)`,
-  border: 'none',
-  borderRadius: '12px',
-  background: theme.palette.mode === 'dark'
-    ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
-    : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
-  backdropFilter: 'blur(12px)',
-  boxShadow: theme.palette.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
-  [theme.breakpoints.down('sm')]: {
-    marginBottom: '8px'
-  },
-  [theme.breakpoints.down('xs')]: {
-    marginBottom: '4px'
-  },
-  '& .MuiCardContent-root': {
-    '&::-webkit-scrollbar-thumb': {
-      background: isDark
-        ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
-        : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)',
-      borderRadius: '3px'
+    marginBottom: '16px',
+    overflow: 'hidden',
+    position: 'relative',
+    height: $isnavbarclose ? '100vh' : `calc(95vh - ${getNavbarHeight($iscollapsed)}px)`,
+    border: 'none',
+    borderRadius: '12px',
+    background:
+      theme.palette.mode === 'dark'
+        ? 'linear-gradient(145deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.85) 100%)'
+        : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.9) 100%)',
+    backdropFilter: 'blur(12px)',
+    boxShadow: theme.palette.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.5)' : '0 6px 20px rgba(0,0,0,0.15)',
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: '8px'
+    },
+    [theme.breakpoints.down('xs')]: {
+      marginBottom: '4px'
+    },
+    '& .MuiCardContent-root': {
+      '&::-webkit-scrollbar-thumb': {
+        background: isDark
+          ? 'linear-gradient(90deg, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0.1) 100%)'
+          : 'linear-gradient(90deg, rgba(33,150,243,0.2) 0%, rgba(33,150,243,0.05) 100%)',
+        borderRadius: '3px'
+      }
     }
-  }
   };
 });
 
@@ -455,7 +457,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     if (e.key === 'Enter') {
       setIsEditing(false);
       updateModelName({ 'model-id': model?._id, name: currentName }).then((res) => {
-        if (res) {
+        if (res.success) {
+          notify('Name Updated Successfully', 'success');
           getModels();
         }
       });
@@ -672,12 +675,19 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
                   : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
                 : 'transparent',
-            boxShadow: clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            boxShadow:
+              clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
           }}
           tabIndex={0} // Added for keyboard navigation
           onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
         >
-          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none' }} />}
+          {Image && (
+            <img
+              src={Image}
+              alt={name}
+              style={{ height: '20px', width: '20px', filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none' }}
+            />
+          )}
           <Typography
             variant="body2"
             ml={1.25}
@@ -715,13 +725,20 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                   ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
                   : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
                 : 'transparent',
-            boxShadow: clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+            boxShadow:
+              clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
           }}
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleClick(e, model?._id, name.toLowerCase(), id)}
           onContextMenu={(e) => imported && (e.stopPropagation(), e.preventDefault(), handleopenCybersecurityExport(e))}
         >
-          {Image && <img src={Image} alt={name} style={{ height: '20px', width: '20px', filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none' }} />}
+          {Image && (
+            <img
+              src={Image}
+              alt={name}
+              style={{ height: '20px', width: '20px', filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none' }}
+            />
+          )}
           <Typography variant="body2" ml={1} className={classes.parentLabelTypo} noWrap>
             {name}
           </Typography>
@@ -769,13 +786,16 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                     ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
                     : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
                   : 'transparent',
-              boxShadow: clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+              boxShadow:
+                clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
             }}
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleOpenTable(e, id, name)}
             onClick={(e) => onClick && onClick(e)}
           >
-            {IconComponent && <IconComponent color={theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />}
+            {IconComponent && (
+              <IconComponent color={theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3'} sx={{ fontSize: 18, opacity: 0.9 }} />
+            )}
             <Typography variant="body2" ml={1} className={classes.labelTypo} noWrap>
               {index && `${index}. `}
               {name}
@@ -1163,7 +1183,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   });
 
   const handleSectionToggle = (section) => (isOpen) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
       [section]: isOpen
     }));
@@ -1201,10 +1221,14 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             expanded={clickedItem}
             onClick={handleTitleClick}
             defaultCollapseIcon={
-              <ExpandMoreIcon sx={{ color: theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }} />
+              <ExpandMoreIcon
+                sx={{ color: theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }}
+              />
             }
             defaultExpandIcon={
-              <ChevronRightIcon sx={{ color: theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }} />
+              <ChevronRightIcon
+                sx={{ color: theme.palette.mode === 'dark' ? '#64B5F6' : '#2196F3', fontSize: 22, transition: 'transform 0.3s ease' }}
+              />
             }
             sx={{ height: '100%' }}
           >

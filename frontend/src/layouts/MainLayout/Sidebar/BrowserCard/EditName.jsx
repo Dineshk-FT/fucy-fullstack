@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import debounce from 'lodash.debounce';
-import { Box, TextField, Typography } from '@mui/material';
+import { Box, TextField, Tooltip, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import useStore from '../../../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
@@ -103,9 +103,22 @@ const EditName = React.forwardRef(({ detail, index, onUpdate }, ref) => {
           }}
         />
       ) : (
-        <Typography component="span" noWrap>
-          {value}
-        </Typography>
+        <Tooltip title={value || ''} placement="top" disableInteractive PopperProps={{ disablePortal: false }}>
+          <Typography
+            component="span"
+            noWrap
+            sx={{
+              maxWidth: 180,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: 'inline-block',
+              verticalAlign: 'middle',
+              cursor: 'default'
+            }}
+          >
+            {value}
+          </Typography>
+        </Tooltip>
       )}
     </Box>
   );
