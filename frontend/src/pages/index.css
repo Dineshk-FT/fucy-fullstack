@@ -53,8 +53,8 @@ iframe#webpack-dev-server-client-overlay {
 
 .react-flow__node {
   padding: 0 !important;
+  width: auto !important;
   color: white;
-  /* text-shadow: 1px 1px 1px black  !important; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,9 +62,6 @@ iframe#webpack-dev-server-client-overlay {
   background-color: inherit !important;
   font-family: 'Inter', sans-serif;
   transition: transform 0.1s ease-out;
-  /* height: initial; */
-  /* width: auto !important; */
-  /* width: initial; */
   box-shadow: none !important;
 }
 .react-flow__node-default,
@@ -82,21 +79,15 @@ iframe#webpack-dev-server-client-overlay {
     }
   }
 }
-.react-flow__edge {
+.react-flow__edges {
   z-index: 10000 !important;
 }
 .react-flow__node-group {
-  border: 3px solid darkgray !important;
-  /* align-items: flex-start; */
-  /* min-height: 200px;
-  min-width: 200px; */
+  /* border: 3px solid darkgray !important; */
   width: auto !important;
   height: auto !important;
-  /* display: flex; */
-  /* z-index: 0 !important; */
   &.selected {
     border: 3px solid #5fbdff !important;
-    /* z-index: 0 !important; */
   }
 }
 
@@ -129,8 +120,8 @@ iframe#webpack-dev-server-client-overlay {
   border-radius: 3px;
   padding: 10px 15px;
 } */
-.edge-container{
-  z-index: 1500;
+.edge-container {
+  z-index: 10001;
 }
 
 .react-flow__resize-control {
@@ -218,10 +209,11 @@ iframe#webpack-dev-server-client-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50% / 25%;
+  border-radius: 999px; /* Full pill shape */
+  padding: 10px 20px;
   /* background: linear-gradient(180deg, #ddd, #ea4848); */
-  padding: 10px 15px;
 }
+
 /* 
 .modal {
     position: absolute;
@@ -238,4 +230,28 @@ iframe#webpack-dev-server-client-overlay {
 .react-joyride__tooltip {
   max-width: 300px; /* or whatever suits your layout */
   word-break: break-word;
+}
+
+/* Add to your CSS file */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border: 2px solid white;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(100, 181, 246, 0.8);
+}
+
+.react-flow__handle-connecting {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.react-flow__handle-valid {
+  background: #51cf66;
+  border-color: #51cf66;
 }

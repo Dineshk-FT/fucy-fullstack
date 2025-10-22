@@ -44,28 +44,86 @@ import { ThreatIcon } from '../../assets/icons';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import { cyberSteps } from '../../utils/Steps';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    fontSize: 13,
-    padding: '2px 8px',
-    textAlign: 'center'
+    borderRight: '1px solid rgba(255, 255, 255, 0.2) !important',
+    padding: '12px 8px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textAlign: 'center',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    lineHeight: 1.4,
+    '&:first-of-type': {
+      borderTopLeftRadius: theme.shape.borderRadius,
+    },
+    '&:last-child': {
+      borderTopRightRadius: theme.shape.borderRadius,
+      borderRight: 'none !important'
+    }
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '0px 8px',
-    textAlign: 'center'
-  }
-}));
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08) !important',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+    padding: '10px 8px',
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px',
+      borderRight: 'none !important'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
+}}));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': {
-    border: 0
-  }
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 const selector = (state) => ({
@@ -109,6 +167,7 @@ export default function CybersecurityTable() {
   const [columnWidths, setColumnWidths] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const [openFilter, setOpenFilter] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
 
@@ -387,6 +446,7 @@ export default function CybersecurityTable() {
             case isEditableField:
               cellContent = (
                 <StyledTableCell
+                  id="edit-name"
                   key={index}
                   onMouseEnter={() => setHoveredField(item.name)}
                   onMouseLeave={() => {
@@ -475,6 +535,8 @@ export default function CybersecurityTable() {
 
   return (
     <>
+      <AutoGuidePopper steps={cyberSteps} runTour={runTour} setRunTour={setRunTour} />
+
       <Box
         sx={{
           overflow: 'auto',
@@ -497,8 +559,12 @@ export default function CybersecurityTable() {
             <Typography sx={{ color: color?.title, fontWeight: 600, fontSize: '16px' }}>{title}</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
+            <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
             <Button
               variant="outlined"
+              id="add-btn"
               sx={{ borderRadius: 1.5 }}
               onClick={handleAddNewRow}
               startIcon={<ControlPointIcon sx={{ fontSize: 'inherit' }} />}
@@ -507,7 +573,7 @@ export default function CybersecurityTable() {
               Add new
             </Button>
             <TextField
-              id="outlined-size-small"
+              id="search-input"
               placeholder="Search"
               size="small"
               value={searchTerm}
@@ -524,6 +590,7 @@ export default function CybersecurityTable() {
               }}
             />
             <Button
+              id="filter-columns-btn"
               sx={{
                 fontSize: '0.85rem',
                 backgroundColor: '#4caf50',
@@ -538,6 +605,7 @@ export default function CybersecurityTable() {
               Filter Columns
             </Button>
             <Button
+              id="delete-btn"
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}

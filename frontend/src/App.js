@@ -13,6 +13,7 @@ import themes from './themes';
 import NavigationScroll from './layouts/NavigationScroll';
 import MockErrorBoundary from './Website/pages/Error/index';
 import { ReactFlowProvider } from 'reactflow';
+import LicenseExpiryModal from './components/Modal/LicenseExpiryModal';
 
 // ==============================|| APP ||============================== //
 
@@ -26,6 +27,7 @@ const App = () => {
           <CssBaseline />
           <NavigationScroll>
             <MockErrorBoundary>
+              <LicenseExpiryModal />
               <Routes />
             </MockErrorBoundary>
           </NavigationScroll>

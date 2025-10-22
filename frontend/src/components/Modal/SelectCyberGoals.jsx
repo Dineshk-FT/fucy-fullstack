@@ -105,10 +105,15 @@ export default React.memo(function SelectCyberGoals({
                 <FormControlLabel
                   key={detail?.ID}
                   sx={{
-                    my: -0.5,
+                    my: 0.5,
+                    maxWidth: '500px', // ✅ Limit label width
+                    alignItems: 'center', // ✅ Keep checkbox aligned with first line
                     '& .MuiTypography-root': {
                       fontSize: '14px',
-                      color: color?.sidebarContent
+                      color: color?.sidebarContent,
+                      whiteSpace: 'normal', // ✅ Allow wrapping
+                      wordBreak: 'break-word', // ✅ Prevent overflow
+                      lineHeight: 1.4 // ✅ Better spacing for multi-line
                     }
                   }}
                   control={

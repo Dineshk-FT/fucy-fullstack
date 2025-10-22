@@ -9,6 +9,7 @@ import { logout } from '../../../../store/slices/UserDetailsSlice';
 import { useNavigate } from 'react-router';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HelpPopper from '../../../../components/Poppers/HelpPopper';
+import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 
 function RightSection() {
   const [open, setOpen] = useState(false);
@@ -19,9 +20,15 @@ function RightSection() {
   const handleHelpClick = (event) => {
     setHelpAnchorEl((prev) => (prev ? null : event.currentTarget));
   };
+
   const handleHelpClose = () => {
     setHelpAnchorEl(null);
   };
+
+  const handleDocumentationClick = useCallback(() => {
+    window.open(pdfFile, '_blank', 'noopener,noreferrer');
+  }, []);
+
   const isHelpOpen = Boolean(helpAnchorEl);
 
   const handleChangeMode = useCallback(
@@ -113,7 +120,12 @@ function RightSection() {
           </Button>
         </DialogActions>
       </Dialog>
-      <HelpPopper open={isHelpOpen} anchorEl={helpAnchorEl} onClose={handleHelpClose} />
+      <HelpPopper 
+        open={isHelpOpen} 
+        anchorEl={helpAnchorEl} 
+        onClose={handleHelpClose}
+        onDocumentationClick={handleDocumentationClick}
+      />
     </>
   );
 }

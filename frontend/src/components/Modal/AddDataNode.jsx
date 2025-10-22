@@ -19,7 +19,6 @@ import {
 import { v4 as uid } from 'uuid';
 import { useTheme } from '@mui/material/styles';
 import { useDispatch, useSelector } from 'react-redux';
-import toast, { Toaster } from 'react-hot-toast';
 import useStore from '../../store/Zustand/store';
 import { getNodeDetails } from '../../utils/Constraints';
 import { setSelectedNodeGroupId } from '../../store/slices/PageSectionSlice';
@@ -29,7 +28,8 @@ import ColorTheme from '../../themes/ColorTheme';
 import CancelTwoToneIcon from '@mui/icons-material/CancelTwoTone';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { shallow } from 'zustand/shallow';
-import Joyride from 'react-joyride';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import { addDataSteps } from '../../utils/Steps';
 
 const properties = ['Confidentiality', 'Integrity', 'Authenticity', 'Authorization', 'Non-repudiation', 'Availability'];
 
@@ -49,26 +49,6 @@ const selector = (state) => ({
   nodes: state.nodes,
   setIsChanged: state.setIsChanged
 });
-
-const steps = [
-  {
-    target: '#data-node-name-input',
-    content: 'Enter a name for your new data node here.',
-    disableBeacon: true
-  },
-  {
-    target: '#data-node-properties-select',
-    content: 'Select one or more security properties for this data node from the dropdown.'
-  },
-  {
-    target: '#add-data-node-btn',
-    content: 'Click here to create the data node with the specified properties.'
-  },
-  {
-    target: '#cancel-data-node-btn',
-    content: 'Click here to cancel data node creation and close the form.'
-  }
-];
 
 export default React.memo(function AddDataNode() {
   const color = ColorTheme();
@@ -103,14 +83,6 @@ export default React.memo(function AddDataNode() {
       };
     }
   }, []);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   const handleTourStart = () => {
     setRunTour(true);
@@ -161,36 +133,7 @@ export default React.memo(function AddDataNode() {
 
   return (
     <Box sx={{ background: `${color?.sidebarBG} !important`, color: color?.sidebarContent, position: 'relative' }}>
-      <Joyride
-        steps={steps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-        floaterProps={{
-          styles: {
-            arrow: {
-              color: '#1976d2'
-            }
-          }
-        }}
-      />
+      <AutoGuidePopper steps={addDataSteps} runTour={runTour} setRunTour={setRunTour} />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, my: 1, mx: 1, p: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

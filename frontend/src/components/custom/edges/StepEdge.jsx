@@ -1,14 +1,16 @@
-/*eslint-disable*/
+/* eslint-disable */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from 'reactflow';
-import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import CloseIcon from '@mui/icons-material/Close';
+import WestIcon from '@mui/icons-material/West';
+import EastIcon from '@mui/icons-material/East';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import EditIcon from '@mui/icons-material/Edit';
 import { Box, ClickAwayListener } from '@mui/material';
-import { ArrowSwapHorizontal } from 'iconsax-react';
-import './buttonedge.css';
 import ColorTheme from '../../../themes/ColorTheme';
 import { useDispatch, useSelector } from 'react-redux';
-import EditIcon from '@mui/icons-material/Edit';
 import { setAnchorEl, setEdgeDetails, setSelectedBlock } from '../../../store/slices/CanvasSlice';
+import './buttonedge.css';
 
 const markerStates = [
   { start: true, end: true },
@@ -34,8 +36,9 @@ export default React.memo(function StepEdge({
   const { getEdges, setEdges } = useReactFlow();
   const color = ColorTheme();
   const editableRef = useRef(null);
+  const pathRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // Derive marker visibility from props instead of local state
   const isMarkerVisible = {
     start: style?.start !== false,
     end: style?.end !== false
@@ -43,31 +46,160 @@ export default React.memo(function StepEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const [currentPosition, setCurrentPosition] = useState({
+    t: data?.t !== undefined ? data.t : 0.5,
+    offset: data?.offset !== undefined ? data.offset : 0
+  });
+
+  const isSelected = selectedBlock?.id === id;
 
   const edges = getEdges();
   const currentEdge = edges.find((edge) => edge.id === id);
 
+  // Real path calculation
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
-    targetPosition,
-    borderRadius: 0
+    targetPosition
   });
+
+  // Update local position state when data changes
+  useEffect(() => {
+    setCurrentPosition({
+      t: data?.t !== undefined ? data.t : 0.5,
+      offset: data?.offset !== undefined ? data.offset : 0
+    });
+  }, [data?.t, data?.offset]);
+
+  // --- Helper for sampling points along SVG path ---
+  const getPointOnPath = useCallback(
+    (tNorm, offsetPx) => {
+      const el = pathRef.current;
+      if (!el || typeof el.getTotalLength !== 'function') return { x: labelX, y: labelY };
+
+      const total = el.getTotalLength();
+      if (total === 0) return { x: labelX, y: labelY };
+
+      const s = Math.max(0, Math.min(total, (tNorm ?? 0.5) * total));
+      const p = el.getPointAtLength(s);
+      const p2 = el.getPointAtLength(Math.min(total, s + 0.1));
+      let tx = p2.x - p.x;
+      let ty = p2.y - p.y;
+      const mag = Math.hypot(tx, ty) || 1;
+      tx /= mag;
+      ty /= mag;
+
+      const nx = -ty;
+      const ny = tx;
+      const off = offsetPx ?? 0;
+      return { x: p.x + nx * off, y: p.y + ny * off };
+    },
+    [labelX, labelY]
+  );
+
+  // Use currentPosition state instead of reading directly from data
+  const { x: finalX, y: finalY } = getPointOnPath(currentPosition.t, currentPosition.offset);
 
   useEffect(() => {
     setLabelValue(data?.label || '');
   }, [data?.label]);
 
-  const updateEdge = useCallback(
+  // --- Update edge helper ---
+  const updateEdgeData = useCallback(
     (updates) => {
       setEdges((eds) => eds.map((edge) => (edge.id === id ? { ...edge, ...updates } : edge)));
     },
     [id, setEdges]
   );
 
+  // --- Improved Drag along path ---
+  const handleDragStart = useCallback(
+    (e) => {
+      if (isEditing) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const el = pathRef.current;
+      if (!el || typeof el.getTotalLength !== 'function') return;
+
+      const total = el.getTotalLength();
+      if (total === 0) return;
+
+      // Use current position values from state
+      let s = currentPosition.t * total;
+      let off = currentPosition.offset;
+
+      let lastX = e.clientX;
+      let lastY = e.clientY;
+
+      // More generous margins for better dragging experience
+      const leftMargin = 20;
+      const rightMargin = 20;
+      const minS = leftMargin;
+      const maxS = Math.max(minS, total - rightMargin);
+      const maxOffset = 25;
+
+      const onMouseMove = (moveEvent) => {
+        const dx = moveEvent.clientX - lastX;
+        const dy = moveEvent.clientY - lastY;
+        lastX = moveEvent.clientX;
+        lastY = moveEvent.clientY;
+
+        const p = el.getPointAtLength(Math.max(0, Math.min(total, s)));
+        const p2 = el.getPointAtLength(Math.max(0, Math.min(total, s + 1)));
+        let tx = p2.x - p.x;
+        let ty = p2.y - p.y;
+        const tlen = Math.hypot(tx, ty) || 1;
+        tx /= tlen;
+        ty /= tlen;
+
+        const nx = -ty;
+        const ny = tx;
+
+        // Calculate movement along and perpendicular to the path
+        const along = dx * tx + dy * ty;
+        const perp = dx * nx + dy * ny;
+
+        // Update position along path with constraints
+        s = Math.max(minS, Math.min(maxS, s + along));
+        off = Math.max(-maxOffset, Math.min(maxOffset, off + perp));
+
+        // Apply constraints to prevent extreme values
+        const constrainedT = Math.max(0.1, Math.min(0.9, s / total));
+        const constrainedOffset = Math.max(-30, Math.min(30, off));
+
+        // Update both edge data and local state
+        const newPosition = {
+          t: constrainedT,
+          offset: constrainedOffset
+        };
+
+        setCurrentPosition(newPosition);
+        updateEdgeData({
+          data: {
+            ...data,
+            ...newPosition,
+            label: labelValue
+          }
+        });
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp, { once: true });
+    },
+    [data, isEditing, labelValue, updateEdgeData, currentPosition]
+  );
+
+  // --- Marker direction swap ---
   const handleSwap = useCallback(
     (e) => {
       e.stopPropagation();
@@ -75,18 +207,26 @@ export default React.memo(function StepEdge({
       const nextIndex = (currentIndex + 1) % markerStates.length;
       const newState = markerStates[nextIndex];
 
-      updateEdge({
+      updateEdgeData({
         style: { ...style, ...newState }
       });
     },
-    [isMarkerVisible, style, updateEdge]
+    [isMarkerVisible, style, updateEdgeData]
   );
 
   const onEditEdge = useCallback(
     (e) => {
       e.stopPropagation();
       dispatch(setAnchorEl({ type: 'edge', value: `rf__edge-${id}` }));
-      dispatch(setSelectedBlock({ id, data }));
+      dispatch(
+        setSelectedBlock({
+          id,
+          data: {
+            ...data,
+            ...currentPosition
+          }
+        })
+      );
       dispatch(
         setEdgeDetails({
           name: data?.label ?? '',
@@ -98,13 +238,25 @@ export default React.memo(function StepEdge({
         })
       );
     },
-    [currentEdge, data, dispatch, id, markerEnd, markerStart, style]
+    [currentEdge, currentPosition, data, dispatch, id, markerEnd, markerStart, style]
   );
 
-  const handleLabelDoubleClick = useCallback(() => {
-    setIsEditing(true);
-    dispatch(setSelectedBlock({ id, data }));
-  }, [data, dispatch, id]);
+  const handleLabelDoubleClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIsEditing(true);
+      dispatch(
+        setSelectedBlock({
+          id,
+          data: {
+            ...data,
+            ...currentPosition
+          }
+        })
+      );
+    },
+    [data, dispatch, id, currentPosition]
+  );
 
   const handleLabelRightClick = useCallback((e) => {
     e.preventDefault();
@@ -115,23 +267,26 @@ export default React.memo(function StepEdge({
     setIsEditing(false);
     const newLabel = editableRef.current?.textContent || '';
     setLabelValue(newLabel);
-    updateEdge({
-      data: { ...data, label: newLabel }
+
+    // Preserve current position when updating label
+    updateEdgeData({
+      data: {
+        ...data,
+        ...currentPosition, // Keep current position
+        label: newLabel
+      }
     });
-  }, [data, updateEdge]);
+  }, [data, currentPosition, updateEdgeData]);
 
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Enter') {
-        console.log('enter');
         e.preventDefault();
         handleLabelBlur();
         dispatch(setSelectedBlock({}));
       } else if (e.key === 'Escape') {
         setIsEditing(false);
-        if (editableRef.current) {
-          editableRef.current.textContent = labelValue;
-        }
+        if (editableRef.current) editableRef.current.textContent = labelValue;
       }
     },
     [dispatch, handleLabelBlur, labelValue]
@@ -150,23 +305,18 @@ export default React.memo(function StepEdge({
 
   const renderButton = useMemo(() => {
     const { start, end } = isMarkerVisible;
-    let Icon = start && end ? ArrowRightAltIcon : ArrowSwapHorizontal;
-    const iconProps = { className: 'icons', size: 15 };
-
-    if (!start && end) {
-      if (Icon.muiName) {
-        iconProps.sx = { ...iconProps.sx, transform: 'rotate(180deg)' };
-      }
-    }
+    let Icon;
+    if (start && end) Icon = EastIcon;
+    else if (!start && end) Icon = WestIcon;
+    else Icon = SwapHorizIcon;
 
     return (
       <button className="edgebutton">
-        <Icon {...iconProps} />
+        <Icon className="icons" sx={{ fontSize: 15 }} />
       </button>
     );
   }, [isMarkerVisible]);
 
-  const isSelected = selectedBlock?.id === id;
   const edgeStyle = {
     ...style,
     filter: isSelected ? 'drop-shadow(0px 0px 8px #BF00FF)' : 'none'
@@ -174,15 +324,13 @@ export default React.memo(function StepEdge({
 
   const labelStyle = {
     outline: 'none',
-    cursor: 'text',
-    color: labelValue && isSelected ? 'black' : labelValue ? color?.title : color?.label,
+    cursor: isEditing ? 'text' : 'move',
+    color: labelValue ? (isSelected ? 'black' : color?.title) : color?.label,
     whiteSpace: 'nowrap',
-    ...(isEditing && {
-      color: 'black',
-      borderRadius: '4px'
-    })
+    ...(isEditing && { color: 'black', borderRadius: '4px' })
   };
 
+  // console.log('currentPosition', currentPosition);
   return (
     <>
       <BaseEdge
@@ -192,26 +340,40 @@ export default React.memo(function StepEdge({
         markerStart={isMarkerVisible.start ? markerStart : undefined}
         style={edgeStyle}
       />
+      {/* Invisible path for calculations - ensure it's properly rendered */}
+      <path
+        d={edgePath}
+        ref={pathRef}
+        style={{
+          fill: 'none',
+          stroke: 'transparent',
+          strokeWidth: 20,
+          pointerEvents: 'none',
+          opacity: 0
+        }}
+      />
+
       <EdgeLabelRenderer>
         <Box
-          role="button"
-          tabIndex={0}
+          ref={containerRef}
+          onMouseDown={handleDragStart}
           sx={{
             position: 'absolute',
-            top: '-10px',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            fontSize: 12,
+            transform: `translate(-50%, -50%) translate(${finalX}px, ${finalY}px)`,
             pointerEvents: 'all',
             display: 'flex',
             alignItems: 'center',
-            height: 'auto',
             gap: 1,
             borderRadius: '20px',
             zIndex: 1,
-            cursor: 'pointer',
-            outline: 'none',
             backgroundColor: isSelected ? 'wheat' : 'transparent',
-            padding: '4px 8px'
+            padding: '4px 8px',
+            cursor: isEditing ? 'text' : 'move',
+            userSelect: 'none',
+            transition: isEditing ? 'none' : 'transform 0.1s ease',
+            '&:hover': {
+              backgroundColor: isSelected ? 'wheat' : 'rgba(255, 255, 255, 0.1)'
+            }
           }}
           className="nodrag nopan edge-container"
         >
@@ -220,23 +382,30 @@ export default React.memo(function StepEdge({
               ref={editableRef}
               contentEditable={isEditing}
               suppressContentEditableWarning
-              onClick={handleLabelDoubleClick}
+              onDoubleClick={handleLabelDoubleClick}
               onContextMenu={handleLabelRightClick}
               onBlur={handleLabelBlur}
               onKeyDown={handleKeyDown}
-              sx={labelStyle}
+              onMouseDown={(e) => {
+                if (!isEditing) {
+                  e.stopPropagation();
+                  handleDragStart(e);
+                }
+              }}
+              sx={{ ...labelStyle, fontSize: style?.fontSize }}
             >
               {labelValue || 'connect'}
             </Box>
           </ClickAwayListener>
-          <Box className="edge-buttons" display="flex" gap={0.5}>
+
+          <Box className="edge-buttons" display={isSelected ? 'flex' : 'none'} gap={0.5}>
             <Box onClick={handleSwap}>{renderButton}</Box>
             <Box className="edgebutton" onClick={onEditEdge}>
               <EditIcon sx={{ fontSize: '0.6rem', ml: 0.5, mt: 0.4 }} />
             </Box>
-            <button className="edgebutton" onClick={() => setEdges((eds) => eds.filter((edge) => edge.id !== id))}>
-              X
-            </button>
+            <Box className="edgebutton" onClick={() => setEdges((eds) => eds.filter((edge) => edge.id !== id))}>
+              <CloseIcon sx={{ fontSize: '0.8rem', ml: 0.33, mt: 0.3 }} />
+            </Box>
           </Box>
         </Box>
       </EdgeLabelRenderer>

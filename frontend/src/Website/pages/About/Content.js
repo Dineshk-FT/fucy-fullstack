@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Grid, Button } from '@mui/material';
+import { Box, Typography, Grid } from '@mui/material';
+import Button from '../../../components/Buttons/Button';
 // import { styled } from '@mui/system';
 import Team from '../../../assets/images/others/Team.webp';
 // import network from '../../assets/images/others/network.webp';
@@ -15,16 +16,13 @@ const useStyles = makeStyles((theme) => ({
     margin: '0 1rem'
   },
   button: {
-    backgroundColor: 'black',
-    color: 'white',
-    fontSize: 23,
-    padding: '8px 20px',
+    fontSize: '1.2rem',
+    padding: '12px 32px',
     width: 'fit-content',
-    '&:hover': {
-      backgroundColor: 'white',
-      color: 'black',
-      boxShadow: '0px 0px 5px gray'
-    }
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 600,
+    transition: 'all 0.3s ease'
   },
   image: {
     width: '100%',
@@ -60,7 +58,14 @@ export default function ContentPage() {
                 cybersecurity and provide an automated and autonomous modeling environment built with threat libraries focused on
                 cyber-physical systems.
               </Typography>
-              <Button className={classes.button}>Schedule a Demo</Button>
+              <Button 
+                variant="contained" 
+                color="primary"
+                className={classes.button}
+                pulse
+              >
+                Schedule a Demo
+              </Button>
             </Box>
           </Grid>
         </Grid>

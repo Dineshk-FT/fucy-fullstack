@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { makeStyles } from '@mui/styles';
-import { Box, Tooltip, Button, Slider } from '@mui/material';
+import { Box, Tooltip, Button, Slider, Popover } from '@mui/material';
 import React, { useEffect, useState, useCallback } from 'react';
 import { BrushBig } from 'iconsax-react';
 import FontSizeSelector from './FontResizer';
@@ -19,6 +19,8 @@ import LineWeightIcon from '@mui/icons-material/LineWeight';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import { useDispatch } from 'react-redux';
 import { closeHeader } from '../../store/slices/CanvasSlice';
+import BorderWidthSelector from './BorderWidthSelector';
+import { SketchPicker } from 'react-color';
 
 const useStyles = makeStyles(() => ({
   header: {
@@ -43,13 +45,14 @@ const useStyles = makeStyles(() => ({
   },
   colorGroup: {
     display: 'flex',
-    gap: '4px',
+    gap: '12px',
     padding: '4px',
     border: '1px solid #ddd',
     borderRadius: '4px'
   },
   borderGroup: {
     display: 'flex',
+    alignItems: 'center',
     gap: '4px',
     padding: '4px',
     border: '1px solid #ddd',
@@ -62,13 +65,42 @@ const useStyles = makeStyles(() => ({
     padding: '4px',
     border: '1px solid #ddd',
     borderRadius: '4px',
-    width: '120px'
+    width: '110px'
   },
   icon: {
-    fontSize: '18px',
+    fontSize: '24px',
+    marginRight: '6px',
     padding: '2px',
     borderRadius: '4px',
     cursor: 'pointer'
+  },
+  colorPickerContainer: {
+    position: 'relative',
+    display: 'inline-block'
+  },
+  colorPreview: {
+    width: '26px',
+    height: '26px',
+    borderRadius: '4px',
+    border: '2px solid #ddd',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  popover: {
+    position: 'absolute',
+    zIndex: 2,
+    top: '100%',
+    left: 0,
+    marginTop: '8px'
+  },
+  cover: {
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0
   }
 }));
 
@@ -76,7 +108,6 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
   const color = ColorTheme();
   const classes = useStyles();
   const { iconColor } = color;
-  const dispatch = useDispatch();
   const [highlight, setHighlight] = useState({
     bold: false,
     italic: false,
@@ -102,11 +133,19 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     boxShadow: ''
   });
 
+  // Color picker states
+  const [colorPicker, setColorPicker] = useState({
+    open: false,
+    type: null, // 'text', 'background', 'border'
+    anchorEl: null
+  });
+
   const number = useCallback((size) => {
     if (!size) return 12;
     return parseInt(size, 10);
   }, []);
 
+  // console.log('styles', styles);
   useEffect(() => {
     if (selectedElement?.data?.style) {
       setStyles({
@@ -115,7 +154,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
         fontFamily: selectedElement.data.style.fontFamily || 'Inter',
         fontStyle: selectedElement.data.style.fontStyle || 'normal',
         textAlign: selectedElement.data.style.textAlign || 'center',
-        color: selectedElement.data.style.color || 'white',
+        color: selectedElement.data.style.color || '#000000',
         fontWeight: parseInt(selectedElement.data.style.fontWeight, 10) || 500,
         textDecoration: selectedElement.data.style.textDecoration || 'none',
         borderColor: selectedElement.data.style.borderColor || 'none',
@@ -136,9 +175,65 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     }
   }, [selectedElement, number]);
 
+  // Color picker handlers
+  const handleColorPickerOpen = (event, type) => {
+    event.stopPropagation();
+    setColorPicker({
+      open: true,
+      type,
+      anchorEl: event.currentTarget
+    });
+  };
+
+  const handleColorPickerClose = () => {
+    setColorPicker({
+      open: false,
+      type: null,
+      anchorEl: null
+    });
+  };
+
+  const handleColorChange = (color, type) => {
+    if (!selectedElement?.id) return;
+
+    const colorValue = color.hex;
+
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id !== selectedElement.id) return node;
+        const style = { ...node.data.style };
+
+        if (type === 'text') {
+          style.color = colorValue;
+        } else if (type === 'background') {
+          style.backgroundColor = colorValue;
+        } else if (type === 'border') {
+          style.borderColor = colorValue;
+        }
+
+        return { ...node, data: { ...node.data, style } };
+      })
+    );
+
+    setStyles((prev) => ({
+      ...prev,
+      [type === 'text' ? 'color' : type === 'background' ? 'backgroundColor' : 'borderColor']: colorValue
+    }));
+
+    setSelectedElement((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        style: {
+          ...prev.data.style,
+          [type === 'text' ? 'color' : type === 'background' ? 'backgroundColor' : 'borderColor']: colorValue
+        }
+      }
+    }));
+  };
+
   const handleFontStyle = (e, name) => {
     e.stopPropagation();
-    // console.log('name', name);
     if (!selectedElement?.id) return;
     const highlightKey = {
       bold: 'bold',
@@ -310,7 +405,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
     if (!selectedElement?.id) return;
 
     const currentWidth = number(styles.borderWidth) || 2;
-    const newWidth = name === 'inc' ? Math.min(currentWidth + 1, 10) : Math.max(currentWidth - 1, 1);
+    const newWidth = name === 'inc' ? Math.min(currentWidth + 1, 6) : Math.max(currentWidth - 1, 0);
 
     setNodes((prevNodes) =>
       prevNodes.map((node) => {
@@ -321,9 +416,11 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
         };
       })
     );
+
     setStyles((prev) => ({ ...prev, borderWidth: `${newWidth}px` }));
+
     setSelectedElement((prev) => ({
-      ...hypothetical,
+      ...prev,
       data: { ...prev.data, style: { ...prev.data.style, borderWidth: `${newWidth}px` } }
     }));
   };
@@ -377,20 +474,13 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
         const style = { ...node.data.style };
         if (name === 'font') {
           style.fontFamily = event.target.value;
-        } else if (name === 'border') {
-          style.borderColor = event.target.value;
-        } else if (name === 'bgColor') {
-          style.backgroundColor = event.target.value;
-        } else {
-          style.color = event.target.value;
         }
         return { ...node, data: { ...node.data, style } };
       })
     );
     setStyles((prev) => ({
       ...prev,
-      [name === 'font' ? 'fontFamily' : name === 'border' ? 'borderColor' : name === 'bgColor' ? 'backgroundColor' : 'color']:
-        event.target.value
+      [name === 'font' ? 'fontFamily' : 'color']: event.target.value
     }));
     setSelectedElement((prev) => ({
       ...prev,
@@ -398,8 +488,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
         ...prev.data,
         style: {
           ...prev.data.style,
-          [name === 'font' ? 'fontFamily' : name === 'border' ? 'borderColor' : name === 'bgColor' ? 'backgroundColor' : 'color']:
-            event.target.value
+          [name === 'font' ? 'fontFamily' : 'color']: event.target.value
         }
       }
     }));
@@ -413,10 +502,11 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
       <FontSizeSelector fontSize={styles?.fontSize} handleFontSizeChange={handleFontSizeChange} changeFontSize={changeFontSize} />
 
       {/* Font Family Selector */}
-      <FontSelector font={styles?.fontFamily} handleChange={handleChange} handleInputClick={handleInputClick} />
-
+      <Box mx={1}>
+        <FontSelector font={styles?.fontFamily} handleChange={handleChange} handleInputClick={handleInputClick} />
+      </Box>
       {/* Text Style Buttons Group */}
-      <Box className={classes.styleGroup}>
+      <Box className={classes.styleGroup} sx={{ mr: 1 }}>
         <Tooltip title="Bold">
           <FormatBoldIcon
             onClick={(e) => handleFontStyle(e, 'bold')}
@@ -453,7 +543,7 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
       </Box>
 
       {/* Text Alignment Group */}
-      <Box className={classes.styleGroup}>
+      <Box className={classes.styleGroup} mx={1}>
         <Tooltip title="Align Left">
           <FormatAlignLeftIcon
             onClick={(e) => handleFontStyle(e, 'alignLeft')}
@@ -488,45 +578,104 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
 
       {/* Color Pickers Group */}
       <Box className={classes.colorGroup}>
+        {/* Text Color Picker */}
         <Tooltip title="Text Color">
-          <label htmlFor="color" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
-            <CreateIcon
-              className={classes.icon}
-              sx={{
-                color: iconColor,
-                border: `2px solid ${styles.color || '#000'}`,
-                borderRadius: '4px'
+          <div className={classes.colorPickerContainer}>
+            <div
+              className={classes.colorPreview}
+              style={{ borderColor: styles.color || '#000' }}
+              onClick={(e) => handleColorPickerOpen(e, 'text')}
+            >
+              <CreateIcon
+                sx={{
+                  color: iconColor,
+                  fontSize: '20px'
+                }}
+              />
+            </div>
+            <Popover
+              open={colorPicker.open && colorPicker.type === 'text'}
+              anchorEl={colorPicker.anchorEl}
+              onClose={handleColorPickerClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left'
               }}
-            />
-            <input type="color" id="color" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'color')} />
-          </label>
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left'
+              }}
+            >
+              <SketchPicker color={styles.color || '#000000'} onChange={(color) => handleColorChange(color, 'text')} />
+            </Popover>
+          </div>
         </Tooltip>
+
+        {/* Background Color Picker */}
         <Tooltip title="Background Color">
-          <label htmlFor="bgColor" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
-            <BrushBig
-              size="18"
-              className={classes.icon}
-              style={{
-                color: iconColor,
-                border: `2px solid ${styles.backgroundColor || '#000'}`,
-                borderRadius: '4px'
+          <div className={classes.colorPickerContainer}>
+            <div
+              className={classes.colorPreview}
+              style={{ borderColor: styles.backgroundColor || '#000' }}
+              onClick={(e) => handleColorPickerOpen(e, 'background')}
+            >
+              <BrushBig
+                style={{
+                  color: iconColor,
+                  width: '18px',
+                  height: '18px'
+                }}
+              />
+            </div>
+            <Popover
+              open={colorPicker.open && colorPicker.type === 'background'}
+              anchorEl={colorPicker.anchorEl}
+              onClose={handleColorPickerClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left'
               }}
-            />
-            <input type="color" id="bgColor" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'bgColor')} />
-          </label>
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left'
+              }}
+            >
+              <SketchPicker color={styles.backgroundColor || '#000000'} onChange={(color) => handleColorChange(color, 'background')} />
+            </Popover>
+          </div>
         </Tooltip>
+
+        {/* Border Color Picker */}
         <Tooltip title="Border Color">
-          <label htmlFor="border" style={{ display: 'flex', alignItems: 'center' }} onClick={handleInputClick}>
-            <BorderOuterIcon
-              className={classes.icon}
-              sx={{
-                color: iconColor,
-                border: `2px solid ${styles.borderColor || '#000'}`,
-                borderRadius: '4px'
+          <div className={classes.colorPickerContainer}>
+            <div
+              className={classes.colorPreview}
+              style={{ borderColor: styles.borderColor || '#000' }}
+              onClick={(e) => handleColorPickerOpen(e, 'border')}
+            >
+              <BorderOuterIcon
+                sx={{
+                  color: iconColor,
+                  fontSize: '20px'
+                }}
+              />
+            </div>
+            <Popover
+              open={colorPicker.open && colorPicker.type === 'border'}
+              anchorEl={colorPicker.anchorEl}
+              onClose={handleColorPickerClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left'
               }}
-            />
-            <input type="color" id="border" style={{ visibility: 'hidden', width: '0px' }} onChange={(e) => handleChange(e, 'border')} />
-          </label>
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left'
+              }}
+            >
+              <SketchPicker color={styles.borderColor || '#000000'} onChange={(color) => handleColorChange(color, 'border')} />
+            </Popover>
+          </div>
         </Tooltip>
       </Box>
 
@@ -552,10 +701,10 @@ export default function Header({ selectedElement, setSelectedElement, setNodes }
           </Box>
         </Tooltip>
         <Tooltip title="Border Width">
-          <FontSizeSelector
-            fontSize={number(styles.borderWidth)}
-            handleFontSizeChange={handleBorderWidthChange}
-            changeFontSize={changeBorderWidth}
+          <BorderWidthSelector
+            borderWidth={number(styles.borderWidth)}
+            handleBorderWidthChange={handleBorderWidthChange}
+            changeBorderWidth={changeBorderWidth}
           />
         </Tooltip>
       </Box>

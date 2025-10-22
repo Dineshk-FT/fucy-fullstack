@@ -19,10 +19,10 @@ import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 import StepEdgeAttackTree from '../../components/custom/edges/StepEdgeAttackTree';
 import RestoreIcon from '@mui/icons-material/Restore';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
-import Joyride from 'react-joyride';
 import { attackCanvasSteps } from '../../utils/Steps';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
+import AutoGuidePopper from '../../components/Poppers/AutoGuidePopper';
 
 const elk = new ELK();
 
@@ -232,13 +232,6 @@ export default function AttackBlock({ attackScene, color }) {
   const flowWrapper = useRef(null);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   // console.log('isChanged', isChanged);
   // console.log('attackScene', attackScene);
@@ -770,29 +763,7 @@ export default function AttackBlock({ attackScene, color }) {
 
   return (
     <>
-      <Joyride
-        steps={attackCanvasSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={attackCanvasSteps} runTour={runTour} setRunTour={setRunTour} />
       <div ref={flowWrapper} style={{ height: '100%', background: 'white' }} onContextMenu={handleCanvasContextMenu}>
         <ReactFlowProvider>
           <ReactFlow

@@ -41,8 +41,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import Joyride from 'react-joyride';
 import { TsDerivedSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -67,23 +67,78 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '5px',
-    fontSize: 13,
-    textAlign: 'center'
+    borderRight: '1px solid rgba(255, 255, 255, 0.2) !important',
+    padding: '12px 8px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textAlign: 'center',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    lineHeight: 1.4,
+    '&:first-of-type': {
+      borderTopLeftRadius: theme.shape.borderRadius,
+    },
+    '&:last-child': {
+      borderTopRightRadius: theme.shape.borderRadius,
+      borderRight: 'none !important'
+    }
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08) !important',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
     padding: '10px 8px',
-    textAlign: 'center'
-  }
-}));
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px',
+      borderRight: 'none !important'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
+}}));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': {
-    border: 0
-  }
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 export default function TsDerivedTable() {
@@ -127,13 +182,6 @@ export default function TsDerivedTable() {
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(Head?.map((col) => [col.id, col.w])));
   const [selectedRows, setSelectedRows] = useState([]);
   const [runTour, setRunTour] = useState(false);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -544,29 +592,7 @@ export default function TsDerivedTable() {
 
   return (
     <>
-      <Joyride
-        steps={TsDerivedSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={TsDerivedSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           overflow: 'auto',
@@ -671,8 +697,16 @@ export default function TsDerivedTable() {
 
         <TableContainer
           component={Paper}
-          sx={{ borderRadius: '0px', maxHeight: tableHeight, scrollbarWidth: 'thin', padding: 0.25 }}
-          onDragOver={(e) => e.preventDefault()}
+          elevation={2}
+          sx={{
+            '&.MuiPaper-elevation2': {
+              overflow: 'auto !important'
+            },
+            borderRadius: '0px',
+            padding: 0.25,
+            maxHeight: tableHeight,
+            scrollbarWidth: 'thin'
+          }}
         >
           <Table stickyHeader sx={{ width: '100%' }} aria-label="simple table">
             <TableHead>
@@ -746,15 +780,6 @@ export default function TsDerivedTable() {
         )}
         <Toaster position="top-right" reverseOrder={false} />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 }

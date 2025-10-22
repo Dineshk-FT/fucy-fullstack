@@ -39,10 +39,11 @@ import AddThreatScenarios from '../Modal/AddThreatScenario';
 import SelectDamageScenes from '../Modal/SelectDamageScenes';
 import CreateDerivedThreatModal from '../Modal/CreateDerivedThreatModal';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import Joyride from 'react-joyride';
 import { TsSteps } from '../../utils/Steps';
 import FormPopper from '../Poppers/FormPopper';
 import { useSelector } from 'react-redux';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import CloseIcon from '@mui/icons-material/Close';
 
 const selector = (state) => ({
   model: state.model,
@@ -57,7 +58,12 @@ const selector = (state) => ({
   updateThreatScenario: state.updateThreatScenario,
   updateName: state.updateName$DescriptionforThreat,
   deleteThreatScenario: state.deleteThreatScenario,
-  selectedthreatIds: state.selectedthreatIds
+  selectedthreatIds: state.selectedthreatIds,
+  updateDerivedThreatScenario: state.updateDerivedThreatScenario,
+  derivedIds: state.derivedIds,
+  isEditDerived: state.isEditDerived,
+  derivationId: state.derivationId,
+  setIsEditDerived: state.setIsEditDerived
 });
 
 const notify = (message, status) => toast[status](message);
@@ -72,15 +78,59 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center'
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-    borderRight: '1px solid rgba(224, 224, 224, 1)',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
     padding: '10px 8px',
-    textAlign: 'center'
+    textAlign: 'center',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
   }
 }));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  // '&:last-child td, &:last-child th': { border: 0 }
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  }
 }));
 
 const Tstable = () => {
@@ -99,24 +149,37 @@ const Tstable = () => {
     UserDefinedId,
     deleteThreatScenario,
     getRiskTreatment,
-    addThreatScene,
-    selectedthreatIds
+    selectedthreatIds,
+    updateDerivedThreatScenario,
+    derivedIds,
+    isEditDerived,
+    derivationId,
+    setIsEditDerived
   } = useStore(selector, shallow);
   const visibleColumns = useStore((state) => state.threatScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
   const [runTour, setRunTour] = useState(false);
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
-
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  const TableContainerStyled = styled(TableContainer)(({ theme }) => ({
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: theme.shadows[1],
+    '&::-webkit-scrollbar': {
+      height: '8px',
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: theme.palette.grey[400],
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: theme.palette.grey[100],
+    },
+  }));
   const [openModal, setOpenModal] = useState({ threat: false, select: false, derived: false });
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedRow, setSelectedRow] = useState({});
@@ -129,6 +192,29 @@ const Tstable = () => {
   const Head = useMemo(() => {
     return TsTableHeader.filter((header) => visibleColumns.includes(header.name));
   }, [visibleColumns]);
+
+  //To render the selected rows for derived updation
+  useEffect(() => {
+    if (isEditDerived && derivedIds && rows) {
+      const matchedRows = derivedIds
+        .map((derivedItem) => {
+          const matched = rows?.find((item) => item.ID === derivedItem.propId);
+          return matched
+            ? {
+                ...matched,
+                propId: derivedItem.propId,
+                SNo: derivedItem.SNo || matched.SNo,
+                type: 'derived'
+              }
+            : null;
+        })
+        .filter(Boolean);
+
+      if (matchedRows.length > 0) {
+        setSelectedRows(matchedRows);
+      }
+    }
+  }, [isEditDerived, derivationId, derivedIds]); // Run when these dependencies change
 
   // Sorting function
   const stableSort = (array, comparator) => {
@@ -229,10 +315,43 @@ const Tstable = () => {
     setSelectedRow({});
   };
 
-  const handleOpenModalTs = () => setOpenModal((prev) => ({ ...prev, threat: true }));
-  const handleCloseTs = () => setOpenModal((prev) => ({ ...prev, threat: false }));
-
   const handleOpenDerived = () => setOpenModal((prev) => ({ ...prev, derived: true }));
+  const handleCloseTs = () => setOpenModal((prev) => ({ ...prev, threat: false }));
+  const handleCloseEditDerived = () => {
+    setIsEditDerived(false);
+    setSelectedRows([]);
+  };
+
+  const handleUpdateDerived = () => {
+    const ids = selectedRows?.map((row) => ({
+      propId: row?.propId,
+      nodeId: row?.nodeId,
+      rowId: row?.rowId
+    }));
+    const details = {
+      'model-id': model?._id,
+      threatIds: JSON.stringify(ids),
+      'scene-id': derivationId
+    };
+    updateDerivedThreatScenario(details)
+      .then((res) => {
+        // console.log('res page', res);
+        if (!res.error) {
+          notify(res?.message ?? 'Updated the derivation', 'success');
+          setTimeout(() => {
+            handleCloseEditDerived();
+            getThreatScenario(model?._id);
+          }, 500);
+        } else {
+          notify(res?.error ?? 'Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        // console.log('err', err);
+        notify('Something went wrong', 'error');
+      });
+  };
+
   const handleCloseDerived = () => {
     setOpenModal((prev) => ({ ...prev, derived: false }));
     setSelectedRows([]);
@@ -486,37 +605,19 @@ const Tstable = () => {
 
   return (
     <>
-      <Joyride
-        steps={TsSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={TsSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
-          overflow: 'auto',
-          height: '-webkit-fill-available',
-          minHeight: 'moz-available',
-          padding: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          borderRadius: 1,
+          boxShadow: 'none',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          overflow: 'hidden',
           '&::-webkit-scrollbar': {
-            width: '4px'
+            width: '8px',
+            height: '8px'
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -563,17 +664,34 @@ const Tstable = () => {
               <FilterAltIcon sx={{ fontSize: 20, mr: 1 }} />
               Filter Columns
             </Button>
-            <Button
-              id="derive-btn"
-              sx={{ fontSize: '0.85rem' }}
-              variant="contained"
-              color="primary"
-              startIcon={<CircleIcon />} // Or any appropriate icon
-              onClick={handleOpenDerived}
-              disabled={selectedRows.length === 0}
-            >
-              Derive
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                sx={{ fontSize: '0.85rem' }}
+                variant="contained"
+                color="primary"
+                startIcon={<CircleIcon />}
+                onClick={isEditDerived ? handleUpdateDerived : handleOpenDerived}
+                disabled={selectedRows.length === 0}
+              >
+                {isEditDerived ? 'Update' : 'Derive'}
+              </Button>
+
+              {isEditDerived && (
+                <IconButton
+                  size="small"
+                  onClick={handleCloseEditDerived}
+                  sx={{
+                    marginLeft: 1,
+                    color: 'error.main',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)' // light red on hover
+                    }
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
             <Button
               id="delete-btn"
               sx={{ fontSize: '0.85rem' }}
@@ -662,18 +780,40 @@ const Tstable = () => {
           </Table>
         </TableContainer>
         <TablePagination
-          sx={{
-            '& .MuiTablePagination-selectLabel ': { color: color?.sidebarContent },
-            '& .MuiSelect-select': { color: color?.sidebarContent },
-            '& .MuiTablePagination-displayedRows': { color: color?.sidebarContent }
-          }}
+          rowsPerPageOptions={[10, 25, 50, 100]}
           component="div"
           count={filteredRows.length}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 1,
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              margin: 0,
+              fontSize: '0.8125rem',
+            },
+            '& .MuiTablePagination-actions': {
+              marginLeft: '8px',
+            },
+            '& .MuiButtonBase-root': {
+              '&.Mui-disabled': {
+                opacity: 0.5,
+              },
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                }
+              }
+            }
+          }}
         />
         <AddThreatScenarios open={openModal?.threat} handleClose={handleCloseTs} id={model._id} />
         {openModal?.select && (
@@ -698,15 +838,6 @@ const Tstable = () => {
           />
         )}
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 };

@@ -1,25 +1,47 @@
 /* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Tooltip, Typography, IconButton, Collapse, Menu, MenuItem } from '@mui/material';
+import {
+  Box,
+  Tooltip,
+  Typography,
+  IconButton,
+  Collapse,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  FormControl,
+  InputLabel,
+  Select
+} from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
   Delete as DeleteIcon,
+  Backspace as BackspaceIcon,
   TableChart as TableIcon,
+  LibraryBooks as LibraryBooksIcon,
+  CreateNewFolderOutlined as CreateNewFolderOutlinedIcon,
   CreateNewFolder as NewFolderIcon,
   DriveFileRenameOutline as RenameIcon,
   PlaylistAdd as AddListIcon,
   AccountTree as TreeIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Help as HelpIcon
+  Help as HelpIcon,
+  Dashboard as DashboardIcon,
+  DirectionsCar as DirectionsCarIcon
 } from '@mui/icons-material';
-import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
+import AutoModeIcon from '@mui/icons-material/AutoMode';
 import TemplateList from '../../../../pages/Libraries';
 import Components from '../../../../pages/NodeList';
 import SelectProject from '../../../../components/Modal/SelectProject';
 import AddModel from '../../../../components/Modal/AddModal';
 import RenameProject from '../../../../components/Modal/RenameModal';
 import DeleteProject from '../../../../components/Modal/DeleteProjects';
+import LibraryModal from '../../../../components/Modal/LibraryModal';
 import useStore from '../../../../store/Zustand/store';
 import AttackTreeRibbonModal from '../../../../components/Modal/AttackTreeRibbonModal';
 import ColorTheme from '../../../../themes/ColorTheme';
@@ -31,8 +53,13 @@ import { setModelId, setTitle } from '../../../../store/slices/PageSectionSlice'
 import PromptModal from '../../../../components/Modal/PromptModal';
 import { shallow } from 'zustand/shallow';
 import { Export, Import } from 'iconsax-react';
+import VehicleTARADialog from '../../../../components/VehicleTARADialog';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import GenerateModel from '../../../../components/Modal/GenerateModel';
+import DashboardDialog from '../../../../components/Dashboard';
+import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
+import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
 
 const notify = (message, status) => toast[status](message);
 
@@ -40,6 +67,7 @@ const selector = (state) => ({
   Models: state.Models,
   model: state.model,
   getModels: state.getModels,
+  getModelById: state.getModelById,
   deleteModels: state.deleteModels,
   getSidebarNode: state.getSidebarNode,
   getTemplates: state.getTemplates,
@@ -52,16 +80,22 @@ const selector = (state) => ({
   importProject: state.importProject,
   isChanged: state.isChanged,
   isAttackChanged: state.isAttackChanged,
-  setOpenSave: state.setOpenSave
+  setOpenSave: state.setOpenSave,
+  assets: state.assets,
+  clearModel: state.clearModel,
+  autoGenerateRiskTreatement: state.autoGenerateRiskTreatement,
+  getRiskTreatment: state.getRiskTreatment
 });
 
 const LeftSection = () => {
   const { isDark } = useSelector((state) => state?.currentId);
   const color = ColorTheme();
+  const [taraDialogOpen, setTaraDialogOpen] = useState(false);
   const {
     Models,
     model,
     getModels,
+    getModelById,
     deleteModels,
     getSidebarNode,
     getTemplates,
@@ -74,19 +108,41 @@ const LeftSection = () => {
     importProject,
     isChanged,
     isAttackChanged,
-    setOpenSave
+    setOpenSave,
+    assets,
+    convertToLibrary,
+    clearModel,
+    autoGenerateRiskTreatement,
+    getRiskTreatment
   } = useStore(selector, shallow);
+
+  const categories = [
+    'Powertrain / Electric Drive Domain',
+    'Energy & Charging Systems',
+    'Chassis & Vehicle Dynamics',
+    'ADAS & Autonomous Driving',
+    'Infotainment & Connectivity',
+    'Body Control & Comfort',
+    'Cybersecurity',
+    'Uncategorized'
+  ];
 
   const [activeTab, setActiveTab] = useState('Project');
   const [openModal, setOpenModal] = useState({
     New: false,
+    NewAI: false,
     Rename: false,
     Open: false,
     Delete: false,
+    Library: false,
     AttackModal: false,
+    Clear: false,
     AIModal: false
   });
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Uncategorized');
   const [isLoading, setIsLoading] = useState(false);
   const [openTemplateDialog, setOpenTemplateDialog] = useState(false);
   const [openComponentsDialog, setOpenComponentsDialog] = useState(false);
@@ -96,19 +152,38 @@ const LeftSection = () => {
   const [subName, setSubName] = useState('');
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
   const [hoveredTab, setHoveredTab] = useState(null);
+  const [openDashboard, setOpenDashboard] = useState(false);
   const hoverTimeoutRef = useRef(null);
+  const [scenarioType, setScenarioType] = useState(null);
+  const [openScenarioModal, setOpenScenarioModal] = useState(false);
+
+  const handleOpenScenarioAI = (type, e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setScenarioType(type);
+    setOpenScenarioModal(true);
+  };
+
+  const handleCloseScenarioAI = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setOpenScenarioModal(false);
+    setScenarioType(null);
+  };
 
   const handleMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    // Only hide the hovered tab if no modal is open
-    if (!openModal.Open && !openModal.Delete) {
-      hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
-    }
-  }, [openModal.Open, openModal.Delete]);
+  const handleMouseLeave = useCallback(
+    (e) => {
+      if (e?.stopPropagation) e.stopPropagation();
+      // Only hide the hovered tab if no modal is open
+      if (!openModal.Open && !openModal.Delete && !openModal.Library) {
+        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+      }
+    },
+    [openModal.Open, openModal.Delete, openModal.Library]
+  );
 
   const handleTabWrapperMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -208,11 +283,6 @@ const LeftSection = () => {
     fileInput.click();
   };
 
-  const handleHelpClick = useCallback(() => {
-    const pdfUrl = pdfFile;
-    window.open(pdfUrl, '_blank');
-  }, []);
-
   const handleTabChange = useCallback(
     (e, tabName) => {
       e.stopPropagation();
@@ -228,8 +298,7 @@ const LeftSection = () => {
         'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
         'Attack Path': handleAttackTableClick,
         Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
-        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8'),
-        Help: handleHelpClick
+        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
       };
       actions[tabName]?.();
     },
@@ -243,7 +312,20 @@ const LeftSection = () => {
     },
     [setCollapsed]
   );
-
+  const handleClear = () => {
+    clearModel(model._id)
+      .then((res) => {
+        // console.log('res', res);
+        if (!res.error) {
+          notify(res.message ?? 'Cleared successfully', 'success');
+          getModelById(model._id);
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -306,22 +388,125 @@ const LeftSection = () => {
   }, []);
 
   const handleOpenModal = (modalKey, e) => {
+    // console.log('modalKey', modalKey);
     if (e?.stopPropagation) e.stopPropagation();
+    if (isChanged) {
+      setOpenSave(true);
+      handleMouseLeave(e);
+      return;
+    }
     setAnchorEl(e.currentTarget);
     setOpenModal((prev) => ({ ...prev, [modalKey]: true }));
   };
 
+  const handleLibraryAdded = useCallback(() => {
+    // Refresh the library list when a new library is added
+    getModels(); // Assuming this refreshes the library list
+  }, [getModels]);
+
+  const handleCategoryChange = useCallback((event) => {
+    setSelectedCategory(event.target.value);
+  }, []);
+
+  const handleCategoryDialogOpen = useCallback(() => {
+    setCategoryDialogOpen(true);
+  }, []);
+
+  const handleCategoryDialogClose = useCallback(() => {
+    setCategoryDialogOpen(false);
+  }, []);
+
+  const handleConvertToLibrary = useCallback(
+    async (e) => {
+      e?.stopPropagation?.();
+      handleCategoryDialogOpen();
+    },
+    [handleCategoryDialogOpen]
+  );
+
+  const handleGenerateRisk = (e) => {
+    e.stopPropagation();
+    autoGenerateRiskTreatement({ modelId: model._id })
+      .then((res) => {
+        // console.log('res', res);
+        if (res.status === 200) {
+          notify(res.message ?? 'Risk Treatement generated successfully', 'success');
+          getRiskTreatment({ modelId: model._id });
+        } else {
+          notify('Something went wrong', 'error');
+        }
+      })
+      .catch((err) => {
+        if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const confirmConvertToLibrary = useCallback(async () => {
+    if (!model?._id) {
+      console.error('No active model to convert');
+      notify('No active model to convert', 'error');
+      return;
+    }
+
+    try {
+      // Update the model with the selected category before converting to library
+      const updatedModel = { ...model, category: selectedCategory };
+      useStore.setState({ model: updatedModel });
+
+      const result = await useStore.getState().convertToLibrary(model._id);
+      if (result?.success) {
+        notify(`Successfully converted "${result.modelName}" to library in category "${selectedCategory}"`, 'success');
+        await getModels();
+      } else if (result?.error) {
+        notify(result.error, 'error');
+      }
+    } catch (error) {
+      console.error('Failed to convert model:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Error converting to library';
+      notify(errorMessage, 'error');
+    } finally {
+      handleCategoryDialogClose();
+    }
+  }, [model, selectedCategory, getModels]);
+
   const tabs = useMemo(
     () => [
+      {
+        name: 'Dashboard',
+        options: [
+          {
+            label: 'Open Dashboard',
+            icon: () => <DashboardIcon style={{ color: '#1e88e5', width: 24, height: 24 }} />,
+            action: () => setOpenDashboard(true)
+          }
+        ]
+      },
       {
         name: 'Project',
         options: [
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
           { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
+          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
-          { label: 'Import', icon: Import, action: handleImportClick }
+          { label: 'Import', icon: Import, action: handleImportClick },
+          {
+            label: 'Vehicle TARA',
+            icon: DirectionsCarIcon,
+            action: (e) => {
+              e?.stopPropagation();
+              setTaraDialogOpen(true);
+            }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenModal('NewAI', e) }
+        ]
+      },
+      {
+        name: 'Library',
+        options: [
+          { label: 'Open', icon: LibraryBooksIcon, action: (e) => handleOpenModal('Library', e) },
+          { label: 'Make Library', icon: CreateNewFolderOutlinedIcon, action: handleConvertToLibrary, disabled: !model?._id }
         ]
       },
       {
@@ -355,7 +540,8 @@ const LeftSection = () => {
               />
             ),
             action: handleGroupDrag
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('item', e) }
         ]
       },
       {
@@ -388,7 +574,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Damage Scenarios - Impact Ratings')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
         ]
       },
       {
@@ -421,7 +608,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Derived Threat Scenarios')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
         ]
       },
       {
@@ -431,8 +619,8 @@ const LeftSection = () => {
           { label: 'Add Attack', icon: AddListIcon, action: (e) => handleContext('Attack', e) },
           { label: 'Attack Trees', icon: TreeIcon, action: handleAttackTreeClick },
           { label: 'Add Attack Tree', icon: AddListIcon, action: (e) => handleContext('Attack Trees', e) },
-          { 
-            label: 'AI Assistant', 
+          {
+            label: 'AI Assistant',
             icon: () => (
               <img
                 src="https://img.icons8.com/ios-filled/24/1e88e5/artificial-intelligence.png"
@@ -441,10 +629,11 @@ const LeftSection = () => {
                   width: 24,
                   height: 24
                 }}
-              /> 
-            ), 
-            action: (e) => handleContext('AI Assistant', e) 
-          }
+              />
+            ),
+            action: (e) => handleContext('AI Assistant', e)
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) }
         ]
       },
       {
@@ -505,7 +694,8 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Cybersecurity Claims')
-          }
+          },
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
         ]
       },
       {
@@ -524,26 +714,30 @@ const LeftSection = () => {
               />
             ),
             action: () => handleClick('Threat Assessment & Risk Treatment')
-          }
-        ]
-      },
-      {
-        name: 'Help',
-        options: [
+          },
           {
-            label: 'Documentation',
-            icon: HelpIcon,
-            action: handleHelpClick
+            label: 'Auto Generate',
+            icon: () => (
+              <img
+                src="https://img.icons8.com/?size=100&id=48129&format=png&color=000000"
+                style={{
+                  width: 24,
+                  height: 24,
+                  filter: 'invert(47%) sepia(82%) hue-rotate(189deg) saturate(614%) brightness(92%)'
+                }}
+              />
+            ),
+            action: (e) => handleGenerateRisk(e)
           }
         ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleHelpClick]
+    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleOpenScenarioAI]
   );
 
-  const handleCloseModal = useCallback((e, modalName) => {
-    e.stopPropagation();
-    setOpenModal((prev) => ({ ...prev, [modalName]: false }));
+  const handleCloseModal = useCallback((e, modalKey) => {
+    if (e) e.stopPropagation();
+    setOpenModal((prev) => ({ ...prev, [modalKey]: false }));
   }, []);
 
   const currentTabOptions = useMemo(() => tabs.find((tab) => tab.name === activeTab)?.options || [], [tabs, activeTab]);
@@ -572,7 +766,7 @@ const LeftSection = () => {
   const tabStyles = useMemo(
     () => ({
       cursor: 'pointer',
-      fontSize: '13px',
+      fontSize: '12px',
       fontFamily: "'Poppins', sans-serif",
       fontWeight: 500,
       margin: '0 8px',
@@ -681,11 +875,10 @@ const LeftSection = () => {
           borderRadius: '10px',
           padding: '6px 8px',
           boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.15)',
-          marginBottom: '6px',
-          gap: '8px'
+          marginBottom: '6px'
         }}
       >
-        {tabs.map((tab) => (
+        {tabs?.map((tab) => (
           <Box
             key={tab.name}
             sx={{
@@ -805,23 +998,64 @@ const LeftSection = () => {
         <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
       </Menu>
 
+      {/* Category Selection Dialog */}
+      <Dialog open={categoryDialogOpen} onClose={handleCategoryDialogClose}>
+        <DialogTitle>Select Category</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2, minWidth: 300 }}>
+            <InputLabel id="category-select-label">Category</InputLabel>
+            <Select
+              labelId="category-select-label"
+              value={selectedCategory}
+              label="Category"
+              onChange={handleCategoryChange}
+              sx={{ mt: 1 }}
+            >
+              {categories?.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCategoryDialogClose}>Cancel</Button>
+          <Button onClick={confirmConvertToLibrary} variant="contained" color="primary">
+            Convert to Library
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <VehicleTARADialog open={taraDialogOpen} onClose={() => setTaraDialogOpen(false)} />
+
       {/* Project Modals */}
-      <AddModel 
-        getModels={getModels} 
-        open={openModal.New} 
-        handleClose={(e) => handleCloseModal(e, 'New')} 
+      <AddModel
+        getModels={getModels}
+        open={openModal.New}
+        handleClose={(e) => handleCloseModal(e, 'New')}
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
-      <RenameProject 
-        open={openModal.Rename} 
-        handleClose={(e) => handleCloseModal(e, 'Rename')} 
+      <GenerateModel open={openModal.NewAI} handleClose={(e) => handleCloseModal(e, 'NewAI')} />
+      <ScenarioAIModal
+        open={openScenarioModal}
+        handleClose={handleCloseScenarioAI}
+        scenarioType={scenarioType}
+        modelMeta={{
+          modelId: model?._id,
+          template: assets?.template,
+          systemName: model?.name
+        }}
+      />
+      <RenameProject
+        open={openModal.Rename}
+        handleClose={(e) => handleCloseModal(e, 'Rename')}
         Models={Models}
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
+
       <SelectProject
         open={openModal.Open}
         handleClose={(e) => handleCloseModal(e, 'Open')}
@@ -832,7 +1066,18 @@ const LeftSection = () => {
         disablePortal
         style={{ position: 'fixed' }}
       />
-      
+
+      <LibraryModal
+        open={openModal.Library}
+        handleClose={(e) => handleCloseModal(e, 'Library')}
+        Models={Models}
+        isLoading={isLoading}
+        anchorEl={anchorEl}
+        disablePortal
+        style={{ position: 'fixed' }}
+        onLibraryAdded={handleLibraryAdded}
+      />
+
       <DeleteProject
         open={openModal.Delete}
         model={model}
@@ -858,6 +1103,27 @@ const LeftSection = () => {
           anchorEl={anchorEl}
           attackScenarios={attackScenarios}
           getAttackScenario={getAttackScenario}
+        />
+      )}
+
+      <DashboardDialog
+        open={openDashboard}
+        onClose={() => setOpenDashboard(false)}
+        modelId={model?._id}
+        projectData={{
+          components: model?.components || [],
+          threats: model?.threats || [],
+          risks: model?.risks || [],
+          controls: model?.controls || []
+        }}
+      />
+      {openModal?.Clear && (
+        <ConfirmDeleteDialog
+          open={openModal?.Clear}
+          onClose={() => setOpenModal((prev) => ({ ...prev, Clear: false }))}
+          onConfirm={handleClear}
+          name={model?.name}
+          mode="clear"
         />
       )}
     </Box>

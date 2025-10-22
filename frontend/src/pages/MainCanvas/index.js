@@ -36,10 +36,11 @@ import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
 import { debounce } from 'lodash';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
-import Joyride from 'react-joyride';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { canvasSteps } from '../../utils/Steps';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
+import AutoGuidePopper from '../../components/Poppers/AutoGuidePopper';
+import generateDiagramSVG from '../../utils/generateDiagramSVG';
 
 // Define the selector function for Zustand
 const selector = (state) => ({
@@ -77,10 +78,16 @@ const selector = (state) => ({
   isChanged: state.isChanged,
   setIsChanged: state.setIsChanged,
   openSave: state.openSave,
-  setOpenSave: state.setOpenSave
+  setOpenSave: state.setOpenSave,
+  // Add the new helper functions:
+  clearUndoRedo: state.clearUndoRedo,
+  addToUndoStack: state.addToUndoStack,
+  resetChangedState: state.resetChangedState,
+  safeRestore: state.safeRestore, // Add this
+  flushPendingChanges: state.flushPendingChanges
 });
 
-// Edge line styling
+// Enhanced connection line styling for better visual feedback
 const connectionLineStyle = {
   stroke: '#64B5F6',
   strokeWidth: 2,
@@ -119,8 +126,8 @@ const edgeOptions = {
       padding: '2px 4px',
       fontFamily: "'Poppins', Arial, sans-serif",
       fontSize: '12px',
-      color: '#000000', // Higher contrast for clarity
-      fontWeight: '500' // Slightly bolder for better legibility
+      color: '#000000',
+      fontWeight: '500'
     }
   }
 };
@@ -173,7 +180,13 @@ export default function MainCanvas() {
     isChanged,
     setIsChanged,
     openSave,
-    setOpenSave
+    setOpenSave,
+    // Add the new helper functions:
+    clearUndoRedo,
+    addToUndoStack,
+    resetChangedState,
+    safeRestore,
+    flushPendingChanges
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -187,6 +200,7 @@ export default function MainCanvas() {
   const { propertiesTabOpen, addNodeTabOpen, addDataNodeTab, details, edgeDetails, anchorEl, isHeaderOpen, selectedBlock } = useSelector(
     (state) => state?.canvas
   );
+  const { getViewport } = useReactFlow();
   const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
   const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
   const [copiedNode, setCopiedNode] = useState([]);
@@ -197,143 +211,7 @@ export default function MainCanvas() {
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
-
   const notify = (message, status) => toast[status](message);
-
-  // Optimized: Debounced and dynamic canvas image capture
-  // useEffect(() => {
-  //   // Debounced function to capture canvas image
-  //   const debouncedCapture = debounce(async () => {
-  //     try {
-  //       if (!nodes.length || !reactFlowWrapper.current) return;
-  //       const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
-  //       if (!reactFlowViewport) return;
-
-  //       // Calculate bounding box to include nodes and edges
-  //       const nodesBounds = getRectOfNodes(nodes, { includeHiddenNodes: true });
-
-  //       // Adjust bounding box to include edges
-  //       let minX = nodesBounds.x;
-  //       let minY = nodesBounds.y;
-  //       let maxX = nodesBounds.x + nodesBounds.width;
-  //       let maxY = nodesBounds.y + nodesBounds.height;
-
-  //       edges.forEach((edge) => {
-  //         const sourceNode = nodes.find((n) => n.id === edge.source);
-  //         const targetNode = nodes.find((n) => n.id === edge.target);
-  //         if (sourceNode && targetNode) {
-  //           const sourceX = sourceNode.position.x;
-  //           const sourceY = sourceNode.position.y;
-  //           const targetX = targetNode.position.x;
-  //           const targetY = targetNode.position.y;
-  //           const sourceWidth = sourceNode.width || 100;
-  //           const sourceHeight = sourceNode.height || 100;
-  //           const targetWidth = targetNode.width || 100;
-  //           const targetHeight = targetNode.height || 100;
-
-  //           minX = Math.min(minX, sourceX, targetX);
-  //           minY = Math.min(minY, sourceY, targetY);
-  //           maxX = Math.max(maxX, sourceX + sourceWidth, targetX + targetWidth);
-  //           maxY = Math.max(maxY, sourceY + sourceHeight, targetY + targetHeight);
-  //         }
-  //       });
-
-  //       // Add extra padding to account for edge markers and labels
-  //       const padding = 100;
-  //       const baseWidth = maxX - minX + padding * 2;
-  //       const baseHeight = maxY - minY + padding * 2;
-
-  //       // Use ultra-high scale factor for maximum clarity
-  //       const SCALE = 5; // 5x resolution for ultra-sharp text
-  //       const maxDimension = 8192; // Cap to avoid browser memory limits
-  //       const imageWidth = Math.min(Math.round(baseWidth * SCALE), maxDimension);
-  //       const imageHeight = Math.min(Math.round(baseHeight * SCALE), maxDimension);
-
-  //       // Calculate transform to fit all content
-  //       const transform = getTransformForBounds(
-  //         { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
-  //         baseWidth,
-  //         baseHeight,
-  //         0.5,
-  //         2
-  //       );
-
-  //       // Temporarily scale up font sizes and optimize text rendering
-  //       const textElements = reactFlowViewport.querySelectorAll('text');
-  //       const originalTextStyles = Array.from(textElements).map((el) => {
-  //         const computedStyle = window.getComputedStyle(el);
-  //         const fontSize = computedStyle.fontSize;
-  //         const fontWeight = computedStyle.fontWeight;
-  //         const letterSpacing = computedStyle.letterSpacing;
-  //         el.style.fontSize = `${parseFloat(fontSize) * 2}px`; // 2x font size
-  //         el.style.fontWeight = '600'; // Bolder for clarity
-  //         el.style.letterSpacing = '0.02em'; // Slight spacing for legibility
-  //         return { element: el, fontSize, fontWeight, letterSpacing };
-  //       });
-
-  //       // Ensure all elements are rendered before capture
-  //       await new Promise((resolve) => setTimeout(resolve, 300)); // 300ms delay for rendering
-
-  //       // Temporarily adjust viewport to ensure all content is rendered
-  //       const originalTransform = reactFlowViewport.style.transform;
-  //       reactFlowViewport.style.transform = `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`;
-
-  //       const image = await toPng(reactFlowViewport, {
-  //         backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
-  //         width: imageWidth,
-  //         height: imageHeight,
-  //         pixelRatio: SCALE,
-  //         quality: 1.0, // Maximum PNG quality
-  //         style: {
-  //           width: `${baseWidth}px`,
-  //           height: `${baseHeight}px`,
-  //           transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
-  //           transformOrigin: 'top left',
-  //           fontSmooth: 'always',
-  //           WebkitFontSmoothing: 'antialiased',
-  //           MozOsxFontSmoothing: 'grayscale',
-  //           imageRendering: 'pixelated',
-  //           textRendering: 'geometricPrecision',
-  //           willChange: 'transform, contents',
-  //           shapeRendering: 'crispEdges' // Ensure sharp vector edges
-  //         },
-  //         filter: (node) => {
-  //           // Exclude controls, minimap, and panels
-  //           return (
-  //             !node.classList?.contains('react-flow__controls') &&
-  //             !node.classList?.contains('react-flow__minimap') &&
-  //             !node.classList?.contains('react-flow__panel')
-  //           );
-  //         }
-  //       });
-
-  //       // Restore original text styles
-  //       originalTextStyles.forEach(({ element, fontSize, fontWeight, letterSpacing }) => {
-  //         element.style.fontSize = fontSize;
-  //         element.style.fontWeight = fontWeight;
-  //         element.style.letterSpacing = letterSpacing;
-  //       });
-
-  //       // Restore original transform
-  //       reactFlowViewport.style.transform = originalTransform;
-
-  //       setCanvasImage(image);
-  //     } catch (error) {
-  //       notify('Failed to capture canvas image', 'error');
-  //     }
-  //   }, 500); // 500ms debounce
-
-  //   debouncedCapture();
-  //   return () => {
-  //     debouncedCapture.cancel();
-  //   };
-  // }, [nodes, edges, isDark, reactFlowWrapper, setCanvasImage]);
 
   const handleClear = () => {
     setNodes([]);
@@ -354,25 +232,38 @@ export default function MainCanvas() {
   const handleSaveToModel = async (e) => {
     e.stopPropagation();
     setSaveLoading(true);
-    reactFlowInstance.fitView({
-      padding: 0.2,
-      includeHiddenNodes: true,
-      minZoom: 0.2,
-      maxZoom: 2,
-      duration: 0
-    });
-    setZoomLevel(reactFlowInstance.getZoom());
+    flushPendingChanges();
+
+    const nodesBounds = getRectOfNodes(nodes);
+    const transform = getTransformForBounds(
+      nodesBounds,
+      imageWidth,
+      imageHeight,
+      0.5, // your padding or zoom factor
+      2 // max zoom
+    );
+
     const reactFlowViewport = reactFlowWrapper.current.querySelector('.react-flow__viewport');
+
     if (!reactFlowViewport) {
       notify('Viewport not found', 'error');
       return;
     }
 
     try {
-      const dataUrl = await toPng(reactFlowViewport, { skipFonts: true });
+      const dataUrl = await toPng(reactFlowViewport, {
+        backgroundColor: isDark ? '#1E1E1E' : '#F5F5F5',
+        width: imageWidth,
+        height: imageHeight,
+        style: {
+          width: imageWidth,
+          height: imageHeight,
+          transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
+        }
+      });
+
       const response = await fetch(dataUrl);
       const blob = await response.blob();
-
       // Build your JSON template object
       const template = {
         nodes,
@@ -400,6 +291,9 @@ export default function MainCanvas() {
             handleClose();
             RefreshAPI();
             debouncedFitView();
+            // Clear undo/redo stacks after successful save
+            clearUndoRedo();
+            resetChangedState();
           } else {
             notify(res.error ?? 'Something went wrong', 'error');
           }
@@ -414,28 +308,51 @@ export default function MainCanvas() {
     }
   };
 
-  useEffect(() => {
-    const newNodeTypes = pageNodeTypes['maincanvas'] || {};
-    setNodeTypes(newNodeTypes);
-    dispatch(setAttackScene({}));
-    if (!isChanged) {
-      setNodes([]);
-      setEdges([]);
-    }
-    setTimeout(() => setIsReady(true), 0);
-  }, []);
-  // console.log('nodes', nodes);
-
+  // Replace the problematic useEffect with this:
   useEffect(() => {
     const template = assets?.template;
     setSavedTemplate(template);
     onSaveInitial(template);
-    if (!isChanged) {
+
+    // Only restore if we're not in a changed state AND we have a template
+    if (!isChanged && template && template.nodes && template.nodes.length > 0) {
+      console.log('Initial restore from template');
+      setNodes(template.nodes || []);
+      setEdges(template.edges || []);
+      clearUndoRedo();
+      resetChangedState();
+
+      // Use setTimeout to ensure React Flow is ready
       setTimeout(() => {
-        onRestore(template);
-      }, 200);
+        if (reactFlowInstance) {
+          debouncedFitView();
+        }
+      }, 100);
     }
-  }, [assets, isChanged]);
+  }, [assets]); // Remove isChanged and copiedNode from dependencies
+
+  // Add a separate useEffect to handle initial load
+  useEffect(() => {
+    const newNodeTypes = pageNodeTypes['maincanvas'] || {};
+    setNodeTypes(newNodeTypes);
+    dispatch(setAttackScene({}));
+
+    // Only clear if we don't have changes and no assets template
+    if (!isChanged && (!assets?.template || !assets.template.nodes || assets.template.nodes.length === 0)) {
+      setNodes([]);
+      setEdges([]);
+    }
+
+    setTimeout(() => setIsReady(true), 0);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      // Flush any pending changes when component unmounts
+      flushPendingChanges();
+    };
+  }, [flushPendingChanges]);
+  // console.log('nodes', nodes);
 
   // Auto-fit canvas view on mount and when nodes/edges change
   // useEffect(() => {
@@ -462,18 +379,6 @@ export default function MainCanvas() {
   const onInit = (rf) => {
     setReactFlowInstance(rf);
   };
-
-  // useEffect(() => {
-  //   console.log('useEffect 4');
-  //   const handleKeyDown = (event) => {
-  //     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-  //       event.preventDefault();
-  //       handleSaveToModel();
-  //     }
-  //   };
-  //   window.addEventListener('keydown', handleKeyDown);
-  //   return () => window.removeEventListener('keydown', handleKeyDown);
-  // }, [nodes, edges]);
 
   const checkForNodes = () => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
@@ -533,35 +438,26 @@ export default function MainCanvas() {
   }, []);
 
   const onNodeDragStop = useCallback(() => {
-    latestNodesRef.current = [...nodes]; // Update ref after drag stops
+    latestNodesRef.current = [...nodes];
+    checkForNodes(); // ✅ re-evaluate group-child relationships
   }, [nodes]);
-
-  function downloadImage(dataUrl) {
-    const a = document.createElement('a');
-    a.setAttribute('download', 'canvas-diagram.png');
-    a.setAttribute('href', dataUrl);
-    a.click();
-  }
 
   const imageWidth = 1920;
   const imageHeight = 1080;
 
   const handleDownload = () => {
-    const nodesBounds = getRectOfNodes(nodes);
-    const transform = getTransformForBounds(nodesBounds, imageWidth, imageHeight, 0.5, 2);
+    const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 1920);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
 
-    toPng(document.querySelector('.react-flow__viewport'), {
-      backgroundColor: isDark == true ? '#1E1E1E' : '#F5F5F5',
-      width: imageWidth,
-      height: imageHeight,
-      style: {
-        width: imageWidth,
-        height: imageHeight,
-        transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`
-      }
-    }).then(downloadImage);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'final-diagram.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
-
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -574,6 +470,7 @@ export default function MainCanvas() {
     getDamageScenarios(model?._id).catch((err) => {
       notify('Failed to fetch damage scenarios: ' + err.message, 'error');
     });
+    setIsChanged(false);
   };
 
   const handleClose = () => {
@@ -588,19 +485,64 @@ export default function MainCanvas() {
     }
   }, []);
 
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          undo();
+        } else if ((event.key === 'z' && event.shiftKey) || event.key === 'y') {
+          event.preventDefault();
+          redo();
+        } else if (event.key === 's') {
+          event.preventDefault();
+          handleSaveToModel(event);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo, handleSaveToModel]);
+
+  // Update onRestore function to be more controlled
+  // Replace the problematic onRestore with this:
   const onRestore = useCallback(
     (temp) => {
-      if (temp) {
-        setNodes(temp.nodes);
-        setEdges(temp.edges);
-        debouncedFitView();
+      console.log('Restoring template');
+      if (temp && temp.nodes && temp.edges) {
+        // Use safeRestore which doesn't trigger undo stack
+        safeRestore(temp);
+        clearUndoRedo();
+        resetChangedState();
+
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            debouncedFitView();
+          }
+        }, 50);
       } else {
         handleClear();
+        clearUndoRedo();
+        resetChangedState();
       }
-      setIsChanged(false);
     },
-    [reactFlowInstance, assets, isChanged, debouncedFitView]
+    [reactFlowInstance, debouncedFitView, clearUndoRedo, resetChangedState, safeRestore]
   );
+
+  // Update the assets useEffect to be less aggressive
+  useEffect(() => {
+    const template = assets?.template;
+    setSavedTemplate(template);
+    onSaveInitial(template);
+
+    // Only restore on initial mount if we have a template and no changes
+    if (template && !isChanged && nodes.length === 0) {
+      console.log('Initial template load');
+      onRestore(template);
+    }
+  }, [assets]); // Remove other dependencies to prevent loops
 
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
@@ -626,7 +568,7 @@ export default function MainCanvas() {
   const handleCloseSave = () => {
     setOpenSave(false);
     onRestore(assets?.template);
-    setIsChanged(false);
+    resetChangedState();
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
@@ -697,6 +639,7 @@ export default function MainCanvas() {
       nodes: nodes,
       edges: edges
     };
+    console.log('nodes', nodes);
     const details = {
       assetId: assets?._id,
       'model-id': model?._id,
@@ -783,6 +726,8 @@ export default function MainCanvas() {
     }
 
     if (option === 'Paste') {
+      setIsChanged(true);
+      addToUndoStack();
       if (!Array.isArray(copiedNode) || copiedNode.length === 0) {
         notify('No valid copied node found', 'error');
         return;
@@ -969,29 +914,7 @@ export default function MainCanvas() {
 
   return (
     <>
-      <Joyride
-        steps={canvasSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={canvasSteps} runTour={runTour} setRunTour={setRunTour} />
       <div
         style={{
           width: '100%',

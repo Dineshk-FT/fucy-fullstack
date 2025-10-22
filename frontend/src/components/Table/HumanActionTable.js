@@ -26,21 +26,78 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1)',
-    fontSize: 13,
-    padding: '2px 8px',
+    borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+    padding: '12px 8px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
     textAlign: 'center',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    lineHeight: 1.4,
+    '&:first-of-type': {
+      borderTopLeftRadius: theme.shape.borderRadius,
+    },
+    '&:last-child': {
+      borderTopRightRadius: theme.shape.borderRadius,
+      borderRight: 'none'
+    }
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1)',
-    padding: '0px 8px',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+    padding: '10px 8px',
     textAlign: 'center',
+    verticalAlign: 'middle',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
   },
 }));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': { border: 0 },
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+  '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 const HumanActionTable = () => {

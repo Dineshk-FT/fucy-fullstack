@@ -1,13 +1,14 @@
 /*eslint-disable*/
-import React, { useRef, useState, useEffect, useCallback } from 'react'; // Ensure useCallback is imported
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../themes/constant';
 import { setAnchorEl, setSelectedBlock, setDetails } from '../../../store/slices/CanvasSlice';
 import { shallow } from 'zustand/shallow';
 import useStore from '../../../store/Zustand/store';
+import CloseIcon from '@mui/icons-material/Close';
 import DetailsIcon from '@mui/icons-material/Details';
 
 const selector = (state) => ({
@@ -26,31 +27,50 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
   const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
     useStore(selector, shallow);
-  const { selectedBlock } = useSelector((state) => state?.canvas);
+  const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
-  const labelRef = useRef(null);
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
+  const [tempLabelValue, setTempLabelValue] = useState(data?.label || '');
+  const textFieldRef = useRef(null);
+  const inputRef = useRef(null);
   const isMounted = useRef(true);
+
+  // Dynamic handles state - you can customize positions as needed
+  const [handles, setHandles] = useState(
+    data?.handles || [
+      { id: 'top', position: Position.Top },
+      { id: 'right', position: Position.Right },
+      { id: 'bottom', position: Position.Bottom },
+      { id: 'left', position: Position.Left },
+      { id: 'top-right', position: Position.Top, offset: 20 },
+      { id: 'top-left', position: Position.Top, offset: -20 },
+      { id: 'bottom-right', position: Position.Bottom, offset: 20 },
+      { id: 'bottom-left', position: Position.Bottom, offset: -20 },
+      { id: 'right-top', position: Position.Right, offset: -20 },
+      { id: 'right-bottom', position: Position.Right, offset: 20 },
+      { id: 'left-top', position: Position.Left, offset: -20 },
+      { id: 'left-bottom', position: Position.Left, offset: 20 }
+    ]
+  );
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isMounted.current = false; // Set to false when component unmounts
+      isMounted.current = false;
     };
   }, []);
 
-  const checkSelection = () => selectedBlock?.id === id;
-  const isSelected = checkSelection();
-
+  const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+
   useEffect(() => {
     setLabelValue(data?.label || '');
+    setTempLabelValue(data?.label || '');
   }, [data?.label]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
@@ -97,64 +117,56 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     );
   };
 
-  const handleLabelDoubleClick = () => {
+  const handleLabelDoubleClick = (e) => {
+    e.stopPropagation();
     setIsEditing(true);
+    setTempLabelValue(labelValue);
     dispatch(setSelectedBlock({ id, data }));
   };
 
   const handleLabelRightClick = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsEditing(true);
+    setTempLabelValue(labelValue);
   };
 
-  const handleLabelBlur = () => {
+  const handleLabelSave = () => {
     setIsEditing(false);
-    const newLabel = labelRef.current?.textContent || '';
+    const newLabel = tempLabelValue.trim() || 'Node';
     setLabelValue(newLabel);
     updateNodeLabel(newLabel);
+    dispatch(setDetails({ ...details, name: newLabel }));
+  };
+
+  const handleLabelCancel = () => {
+    setIsEditing(false);
+    setTempLabelValue(labelValue);
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleLabelBlur();
+      handleLabelSave();
     } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      if (labelRef.current) {
-        labelRef.current.textContent = labelValue;
-      }
+      handleLabelCancel();
     }
+  };
+
+  // Prevent node dragging when interacting with TextField
+  const handleTextFieldMouseDown = (e) => {
+    e.stopPropagation();
   };
 
   useEffect(() => {
-    if (isEditing && labelRef.current) {
-      labelRef.current.focus();
-      const range = document.createRange();
-      range.selectNodeContents(labelRef.current);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      // Remove this line: inputRef.current.select();
     }
   }, [isEditing]);
 
-  const handleInfoClick = (e) => {
-    setPropertiesOpen(false);
-    const selectedNode = nodes.find((node) => node.id === id);
-    const { isAsset, properties } = selectedNode;
-    dispatch(setSelectedBlock({ id, data }));
-    dispatch(setAnchorEl({ type: 'node', value: id }));
-    setSelectedElement(selectedNode);
-    dispatch(
-      setDetails({
-        name: data?.label ?? '',
-        properties: properties ?? [],
-        isAsset: isAsset ?? false
-      })
-    );
-  };
-
-  const handleDetailClick = () => {
-    setPropertiesOpen(true);
+  const handleInfoClick = (open) => {
+    setPropertiesOpen(open);
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
@@ -178,8 +190,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     if (!assets?._id || !model?._id) {
       console.error('Missing assetId or modelId');
       return;
-    } 
-    // Close dialogs immediately
+    }
     if (isMounted.current) {
       setIsUnsavedDialogVisible(false);
       setIsVisible(false);
@@ -187,9 +198,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     deleteNode({ assetId: assets._id, nodeId: id })
       .then(() => {
         if (isMounted.current) {
-          // Remove node from canvas immediately
           setNodes((nodes) => nodes.filter((node) => node.id !== id));
-          // Fetch updated assets (optional, depending on your app's needs)
           getAssets(model._id);
         }
       })
@@ -221,6 +230,33 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
+  // Function to calculate handle position with offset
+  const getHandleStyle = (handle) => {
+    const baseStyle = {
+      backgroundColor: bgColor,
+      width: 8,
+      height: 8,
+      border: `2px solid white`,
+      borderRadius: '50%'
+    };
+
+    if (handle.offset) {
+      switch (handle.position) {
+        case Position.Top:
+          return { ...baseStyle, left: `calc(50% + ${handle.offset}px)` };
+        case Position.Bottom:
+          return { ...baseStyle, left: `calc(50% + ${handle.offset}px)` };
+        case Position.Left:
+          return { ...baseStyle, top: `calc(50% + ${handle.offset}px)` };
+        case Position.Right:
+          return { ...baseStyle, top: `calc(50% + ${handle.offset}px)` };
+        default:
+          return baseStyle;
+      }
+    }
+    return baseStyle;
+  };
+
   return (
     <>
       <NodeResizer
@@ -235,7 +271,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
       <ClickAwayListener
         onClickAway={() => {
           setIsVisible(false);
-          if (isEditing) handleLabelBlur();
+          if (isEditing) handleLabelSave();
         }}
       >
         <div
@@ -261,52 +297,101 @@ export default React.memo(function DefaultNode({ id, data, type }) {
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
-          <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
-          <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
-          <Box
-            ref={labelRef}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onClick={handleLabelDoubleClick}
-            onContextMenu={handleLabelRightClick}
-            onBlur={handleLabelBlur}
-            onKeyDown={handleKeyDown}
-            style={{
-              maxWidth: width - 10,
-              textAlign: 'center',
-              outline: 'none',
-              cursor: 'text',
-              ...(isEditing && {
-                color: 'black',
+          {/* Dynamic Handles */}
+          {handles.map((handle) => (
+            <Handle
+              key={handle.id}
+              id={handle.id}
+              position={handle.position}
+              style={getHandleStyle(handle)}
+              className="handle"
+              isConnectable={true}
+            />
+          ))}
+
+          {isEditing ? (
+            <TextField
+              ref={textFieldRef}
+              inputRef={inputRef}
+              value={tempLabelValue}
+              onChange={(e) => setTempLabelValue(e.target.value)}
+              onBlur={handleLabelSave}
+              onKeyDown={handleKeyDown}
+              onMouseDown={handleTextFieldMouseDown}
+              onDragStart={(e) => e.stopPropagation()}
+              variant="standard"
+              size="small"
+              sx={{
+                '& .MuiInputBase-root': {
+                  fontSize: '12px',
+                  textAlign: 'center',
+                  padding: '0 4px',
+                  minWidth: '60px',
+                  maxWidth: `${width - 20}px`,
+                  pointerEvents: 'auto' // Ensure text field is interactive
+                },
+                '& .MuiInputBase-input': {
+                  textAlign: 'center',
+                  padding: '2px 4px',
+                  cursor: 'text'
+                },
+                // Add these styles to remove the border-bottom
+                '& .MuiInput-underline:before': {
+                  borderBottom: 'none'
+                },
+                '& .MuiInput-underline:after': {
+                  borderBottom: 'none'
+                },
+                // Optional: If you want to remove the hover effect underline as well
+                '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
+                  borderBottom: 'none'
+                }
+              }}
+              inputProps={{
+                style: {
+                  textAlign: 'center',
+                  padding: '2px 4px'
+                }
+              }}
+            />
+          ) : (
+            <Box
+              onClick={handleLabelDoubleClick}
+              onContextMenu={handleLabelRightClick}
+              onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking label
+              sx={{
+                maxWidth: width - 10,
+                textAlign: 'center',
+                cursor: 'text',
                 padding: '0 4px',
                 borderRadius: '4px',
-                minWidth: '60px',
-                cursor: 'text'
-              })
-            }}
-          >
-            {labelValue}
-          </Box>
-          <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
-          <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
+                '&:hover': {
+                  backgroundColor: isSelected ? 'rgba(120, 75, 232, 0.1)' : 'rgba(169, 169, 169, 0.1)'
+                }
+              }}
+            >
+              {labelValue}
+            </Box>
+          )}
+
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleInfoClick();
+              handleInfoClick(false);
             }}
-            style={{ ...iconStyle, left: '-12px', opacity: isHovered ? 1 : 0 }}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
           >
             <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
           </div>
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleDetailClick();
+              handleInfoClick(true);
             }}
-            style={{ ...iconStyle, left: '12px', opacity: isHovered ? 1 : 0 }}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}
           >
             <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
@@ -316,16 +401,16 @@ export default React.memo(function DefaultNode({ id, data, type }) {
               e.stopPropagation();
               setIsVisible(true);
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{
               ...iconStyle,
               right: '-12px',
               background: '#f83e3e',
               border: 'none',
-              fontSize: '0.8rem',
-              opacity: isHovered ? 1 : 0
+              display: isSelected ? 'flex' : 'none'
             }}
           >
-            x
+            <CloseIcon sx={{ fontSize: '1rem', mb: 0.1 }} />
           </div>
         </div>
       </ClickAwayListener>

@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
-import Joyride from 'react-joyride';
 import CircleIcon from '@mui/icons-material/Circle';
 import { tableCellClasses } from '@mui/material/TableCell';
 import {
@@ -48,6 +47,7 @@ import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { DsSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const selector = (state) => ({
   model: state.model,
@@ -71,29 +71,76 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    fontSize: 13,
-    padding: '2px 8px',
+    borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+    padding: '12px 8px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
     textAlign: 'center',
-    whiteSpace: 'normal', // ⬅ allow multiline
+    whiteSpace: 'normal',
     wordBreak: 'break-word',
-    lineHeight: 1.4 // ⬅ better vertical spacing
+    lineHeight: 1.4,
+    '&:first-of-type': {
+      borderTopLeftRadius: theme.shape.borderRadius,
+    },
+    '&:last-child': {
+      borderTopRightRadius: theme.shape.borderRadius,
+      borderRight: 'none'
+    }
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '2px 8px',
-    // textAlign: 'center',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+    padding: '10px 8px',
+    textAlign: 'center',
     verticalAlign: 'middle',
-    '& .MuiTableCell-root': {
-      transition: 'width 0.2s ease'
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
     }
   }
 }));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  '&:last-child td, &:last-child th': {
-    border: 0
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
+  },
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
   },
   height: '3.5em' // Fixed row height
 }));
@@ -265,12 +312,6 @@ export default function DsTable() {
     setOrderBy(property);
   };
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
   // console.log('details', details);
   const visibleColumns = useStore((state) => state.dmgScenTblClms);
   const toggleColumnVisibility = useStore((state) => state.toggleColumnVisibility);
@@ -415,6 +456,7 @@ export default function DsTable() {
         cyberLosses: ls?.cyberLosses ? ls.cyberLosses : [],
         'Asset is Evaluated': ls?.is_asset_evaluated === 'true' ? true : false,
         'Cybersecurity Properties are Evaluated': ls?.is_cybersecurity_evaluated === 'true' ? true : false,
+        'Impact Justification': ls?.impact_justification ?? '',
         impacts: ls?.impacts
           ? {
               'Financial Impact': ls?.impacts['Financial Impact'] ?? '',
@@ -589,7 +631,7 @@ export default function DsTable() {
           const details = {
             id: damageID,
             detailId: row?.id,
-            [editingField === 'Name' ? 'Name' : 'Description']: editValue
+            [editingField === 'Name' ? 'Name' : editingField === 'Impact Justification' ? 'justification' : 'Description']: editValue
           };
 
           updateName(details)
@@ -628,7 +670,8 @@ export default function DsTable() {
             }}
           >
             {Head?.map((item, index) => {
-              const isEditableField = item.name === 'Name' || item.name === 'Description/Scalability';
+              const isEditableField =
+                item.name === 'Name' || item.name === 'Description/Scalability' || item.name === 'Impact Justification';
               const currentWidth = columnWidths[item.id] || item.w; // Get the current width of the column
               const shouldTruncate = currentWidth < WIDTH_THRESHOLD; // Truncate if width is below threshold
 
@@ -859,29 +902,7 @@ export default function DsTable() {
 
   return (
     <>
-      <Joyride
-        steps={DsSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling={false}
-      />
+      <AutoGuidePopper steps={DsSteps} runTour={runTour} setRunTour={setRunTour} />
       <Box
         sx={{
           display: 'flex',
@@ -1083,7 +1104,7 @@ export default function DsTable() {
                           </IconButton>
                         </StyledTableCell>
                       );
-                    } else if (item.name === 'Name' || item.name === 'Description/Scalability') {
+                    } else if (item.name === 'Name' || item.name === 'Description/Scalability' || item.name === 'Impact Justification') {
                       return (
                         <StyledTableCell key={index}>
                           <TextField
@@ -1145,15 +1166,6 @@ export default function DsTable() {
         )}
         <Toaster position="top-right" reverseOrder={false} />
       </Box>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </>
   );
 }

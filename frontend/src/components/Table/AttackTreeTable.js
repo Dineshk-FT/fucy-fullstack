@@ -1,7 +1,6 @@
 /*eslint-disable*/
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Table from '@mui/material/Table';
-import Joyride from 'react-joyride';
 import TableBody from '@mui/material/TableBody';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -44,6 +43,7 @@ import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import toast from 'react-hot-toast';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { attackTableSteps } from '../../utils/Steps';
+import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 
 const notify = (message, status) => toast[status](message);
 const selector = (state) => ({
@@ -70,29 +70,77 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '5px',
-    fontSize: 13,
-    textAlign: 'center'
+    borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+    padding: '12px 8px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textAlign: 'center',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    lineHeight: 1.4,
+    '&:first-of-type': {
+      borderTopLeftRadius: theme.shape.borderRadius,
+    },
+    '&:last-child': {
+      borderTopRightRadius: theme.shape.borderRadius,
+      borderRight: 'none'
+    }
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: 13,
-    borderRight: '1px solid rgba(224, 224, 224, 1) !important',
-    padding: '2px 8px',
+    fontSize: '0.8125rem',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+    padding: '10px 8px',
     textAlign: 'center',
-    verticalAlign: 'middle'
+    verticalAlign: 'middle',
+    transition: 'all 0.2s ease-in-out',
+    maxWidth: '250px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    '&:last-child': {
+      borderRight: 'none',
+      paddingRight: '16px'
+    },
+    '&:first-of-type': {
+      paddingLeft: '16px'
+    }
   }
 }));
 
-const StyledTableRow = styled(TableRow)(() => ({
-  // '&:nth-of-type(odd)': {
-  //   backgroundColor: theme.palette.action.hover,
-  // },
-  // hide last border
-  '&:last-child td, &:last-child th': {
-    border: 0
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: theme.shadows[1],
+    '& td': {
+      color: theme.palette.text.primary,
+      position: 'relative',
+      zIndex: 1,
+      '&:first-of-type': {
+        borderTopLeftRadius: '4px',
+        borderBottomLeftRadius: '4px',
+      },
+      '&:last-child': {
+        borderTopRightRadius: '4px',
+        borderBottomRightRadius: '4px',
+      }
+    }
   },
-  // Set a fixed height for each row to accommodate two lines of text with extra space
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+    '&:hover': {
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+    },
+    '& td': {
+      color: theme.palette.primary.main,
+      fontWeight: 500
+    }
+  },
+  '&.MuiTableRow-hover': {
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
   height: '3.5em' // Fixed row height
 }));
 
@@ -199,12 +247,6 @@ export default function AttackTreeTable() {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNO');
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-    }
-  };
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
       const col = [...column];
@@ -533,29 +575,8 @@ export default function AttackTreeTable() {
 
   return (
     <>
-      <Joyride
-        steps={attackTableSteps}
-        run={runTour}
-        continuous
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 1300,
-            beacon: {
-              backgroundColor: '#1976d2',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              animation: 'pulse 1.5s infinite'
-            }
-          }
-        }}
-        disableOverlayClose
-        disableScrolling
-      />
+      <AutoGuidePopper steps={attackTableSteps} runTour={runTour} setRunTour={setRunTour} />
+
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} mx={1}>
         <Box display="flex" alignItems="center" gap={1}>
           {/* <KeyboardBackspaceRoundedIcon sx={{ cursor: 'pointer', ml: 1, color: color?.title }} onClick={handleBack} /> */}
@@ -626,21 +647,13 @@ export default function AttackTreeTable() {
 
       <TableContainer
         component={Paper}
+        elevation={2}
         sx={{
-          maxHeight: 440,
+          '&.MuiPaper-elevation2': {
+            overflow: 'auto !important'
+          },
           borderRadius: '0px',
           padding: 0.25,
-          overflow: 'auto',
-          '&::-webkit-scrollbar': {
-            width: '4px'
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '10px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0, 0, 0, 0.1)'
-          },
           maxHeight: tableHeight,
           scrollbarWidth: 'thin'
         }}
@@ -765,15 +778,6 @@ export default function AttackTreeTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <style>
-        {`
-       @keyframes pulse {
-         0% { transform: scale(1); opacity: 1; }
-         50% { transform: scale(1.3); opacity: 0.7; }
-         100% { transform: scale(1); opacity: 1; }
-       }
-     `}
-      </style>
     </>
   );
 }

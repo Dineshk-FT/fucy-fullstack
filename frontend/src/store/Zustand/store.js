@@ -4,7 +4,16 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { v4 as uid } from 'uuid';
 import axios from 'axios';
 import { configuration } from '../../services/baseApiService';
-import { ADD_CALL, DELETE_CALL, GET_CALL, GET_CALL_WITH_DETAILS, PATCH_CALL, UPDATE_CALL } from '../../services/api';
+import {
+  ADD_CALL,
+  ADD_CALL_MODEL,
+  DELETE_CALL,
+  GET_CALL,
+  GET_CALL_WITH_DETAILS,
+  PATCH_CALL,
+  POST_CALL,
+  UPDATE_CALL
+} from '../../services/api';
 import {
   DSTableHeader,
   DsDerivationHeader,
@@ -17,6 +26,7 @@ import {
   CybersecurityControlsHeader,
   TsDerivedTableHeader
 } from '../../components/Table/constraints';
+import { debounce } from 'lodash';
 
 export const createHeaders = () => {
   const userId = sessionStorage.getItem('user-id');
@@ -85,6 +95,13 @@ const useStore = createWithEqualityFn((set, get) => ({
   isAttackChanged: false,
   openSave: false,
   guides: [],
+  derivedIds: [],
+  isEditDerived: false,
+  derivationId: '',
+  systemInputs: [],
+  pendingUndoState: null,
+  isProcessing: false,
+  debouncedAddToUndoStack: null, // Remove the debounced version
 
   subSystems: {
     id: '6',
@@ -665,9 +682,18 @@ const useStore = createWithEqualityFn((set, get) => ({
       openSave: typeof value === 'function' ? value(state.openSave) : value
     })),
 
-  setOpenSave: (value) =>
+  // derived Edit part
+  setDerivedIds: (value) =>
     set((state) => ({
-      openSave: typeof value === 'function' ? value(state.openSave) : value
+      derivedIds: typeof value === 'function' ? value(state.derivedIds) : value
+    })),
+  setIsEditDerived: (value) =>
+    set((state) => ({
+      isEditDerived: typeof value === 'function' ? value(state.isEditDerived) : value
+    })),
+  setDerivationId: (value) =>
+    set((state) => ({
+      derivationId: typeof value === 'function' ? value(state.derivationId) : value
     })),
 
   // Update visible columns for a specific table
@@ -828,36 +854,76 @@ const useStore = createWithEqualityFn((set, get) => ({
       edges: newEdges
     })),
 
+  addToUndoStack: () => {
+    // Cancel any pending debounced saves
+    get().debouncedAddToUndoStack.cancel();
+
+    set((state) => ({
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
+      isChanged: true,
+      pendingUndoState: null
+    }));
+  },
+
   onNodesChange: (changes) => {
-    const currentNodes = get()?.nodes; // get current nodes
-    const updatedNodes = applyNodeChanges(changes, currentNodes); // apply changes
+    const currentNodes = get().nodes;
+    const updatedNodes = applyNodeChanges(changes, currentNodes);
 
     set((state) => ({
-      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      // redoStack: [],
-      nodes: updatedNodes // set the updated nodes
+      nodes: updatedNodes
     }));
+
+    // Only add to undo stack for meaningful changes (not selection changes)
+    const meaningfulChanges = changes.filter((change) => change.type !== 'select' && change.type !== 'dimensions');
+
+    if (meaningfulChanges.length > 0) {
+      set((state) => ({
+        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+        redoStack: [],
+        isChanged: true
+      }));
+    }
   },
 
+  // Replace onEdgesChange:
   onEdgesChange: (changes) => {
-    const currentEdges = get().edges; // get current edges
-    const updatedEdges = applyEdgeChanges(changes, currentEdges); // apply changes
+    const currentEdges = get().edges;
+    const updatedEdges = applyEdgeChanges(changes, currentEdges);
 
     set((state) => ({
-      // undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      // redoStack: [],
-      // isChanged: true,
-      edges: updatedEdges // set the updated edges
+      edges: updatedEdges
     }));
+
+    // Only add to undo stack for meaningful changes
+    const meaningfulChanges = changes.filter((change) => change.type !== 'select');
+
+    if (meaningfulChanges.length > 0) {
+      set((state) => ({
+        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+        redoStack: [],
+        isChanged: true
+      }));
+    }
   },
+
+  // Replace onConnect:
   onConnect: (connection) => {
-    // console.log('connection', connection);
-    const Connect = { ...connection };
-    Connect.data = { label: '' };
-    set({
-      edges: addEdge(Connect, get().edges),
+    const Connect = {
+      ...connection,
+      data: {
+        label: '',
+        sourceHandle: connection.sourceHandle,
+        targetHandle: connection.targetHandle
+      }
+    };
+
+    set((state) => ({
+      edges: addEdge(Connect, state.edges),
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+      redoStack: [],
       isChanged: true
-    });
+    }));
   },
 
   onConnectAttack: (connection) => {
@@ -924,10 +990,26 @@ const useStore = createWithEqualityFn((set, get) => ({
       selectedElement: typeof newNode === 'function' ? newNode(state.selectedElement) : newNode
     }));
   },
+  // Update setNodes to only add to undo stack when actually changing content
+  // Replace setNodes:
   setNodes: (newNodes) => {
-    set((state) => ({
-      nodes: typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes
-    }));
+    set((state) => {
+      const updatedNodes = typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes;
+
+      // Check if nodes actually changed
+      const nodesChanged = JSON.stringify(updatedNodes) !== JSON.stringify(state.nodes);
+
+      if (nodesChanged) {
+        return {
+          nodes: updatedNodes,
+          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+          redoStack: [],
+          isChanged: true
+        };
+      }
+
+      return { nodes: updatedNodes };
+    });
   },
 
   setInitialNodes: (newNodes) => {
@@ -948,10 +1030,25 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  // Replace setEdges with debounced version:
   setEdges: (newEdges) => {
-    set((state) => ({
-      edges: typeof newEdges === 'function' ? newEdges(state.edges) : newEdges
-    }));
+    set((state) => {
+      const updatedEdges = typeof newEdges === 'function' ? newEdges(state.edges) : newEdges;
+
+      // Check if edges actually changed
+      const edgesChanged = JSON.stringify(updatedEdges) !== JSON.stringify(state.edges);
+
+      if (edgesChanged) {
+        return {
+          edges: updatedEdges,
+          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+          redoStack: [],
+          isChanged: true
+        };
+      }
+
+      return { edges: updatedEdges };
+    });
   },
 
   setInitialEdges: (newEdges) => {
@@ -1153,11 +1250,31 @@ const useStore = createWithEqualityFn((set, get) => ({
     return [intersectingNodesMap, nodes];
   },
 
+  // Update dragAdd to support undo/redo:
   dragAdd: (newNode) => {
-    // console.log('newNode', newNode);
     set((state) => ({
       nodes: [...state.nodes, newNode]
     }));
+
+    // Debounce adding to undo stack
+    const currentState = get();
+    set({ pendingUndoState: { nodes: currentState.nodes, edges: currentState.edges } });
+    get().debouncedAddToUndoStack();
+  },
+
+  // Add a safe restore function that doesn't trigger undo stack
+  safeRestore: (template) => {
+    set((state) => {
+      if (template && template.nodes && template.edges) {
+        return {
+          nodes: [...template.nodes],
+          edges: [...template.edges]
+          // Don't touch undoStack, redoStack, or isChanged during restore
+          // This prevents the infinite loop
+        };
+      }
+      return state;
+    });
   },
 
   addNode: (newNode) => {
@@ -1173,37 +1290,70 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
-  addEdgeState: (params) =>
+  // Update addEdgeState to support undo/redo:
+  addEdgeState: (params) => {
     set((state) => ({
       undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
       redoStack: [],
+      isChanged: true,
       edges: addEdge(params, state.edges)
+    }));
+  },
+
+  // Add a function to flush pending changes immediately
+  flushPendingChanges: () => {
+    if (get().pendingUndoState) {
+      get().debouncedAddToUndoStack.flush();
+    }
+  },
+
+  // Replace undo function:
+  undo: () => {
+    set((state) => {
+      if (state.undoStack.length === 0) return state;
+
+      const prevState = state.undoStack[state.undoStack.length - 1];
+      const newUndoStack = state.undoStack.slice(0, -1);
+      const willBeChanged = newUndoStack.length > 0;
+
+      return {
+        nodes: [...prevState.nodes],
+        edges: [...prevState.edges],
+        redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }],
+        undoStack: newUndoStack,
+        isChanged: willBeChanged
+      };
+    });
+  },
+
+  // Replace redo function:
+  redo: () => {
+    set((state) => {
+      if (state.redoStack.length === 0) return state;
+
+      const nextState = state.redoStack[state.redoStack.length - 1];
+      const newRedoStack = state.redoStack.slice(0, -1);
+
+      return {
+        nodes: [...nextState.nodes],
+        edges: [...nextState.edges],
+        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+        redoStack: newRedoStack,
+        isChanged: true
+      };
+    });
+  },
+
+  // Update clearUndoRedo to not affect current nodes/edges
+  clearUndoRedo: () =>
+    set((state) => ({
+      undoStack: [],
+      redoStack: []
+      // Don't reset isChanged here - let the calling code decide
     })),
 
-  undo: () =>
-    set((state) => {
-      if (state.undoStack.length === 0) return state; // No undo available
-      const prevState = state.undoStack[state.undoStack.length - 1];
-      return {
-        nodes: prevState.nodes,
-        edges: prevState.edges,
-        redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }],
-        undoStack: state.undoStack.slice(0, -1)
-      };
-    }),
-
-  // Redo action
-  redo: () =>
-    set((state) => {
-      if (state.redoStack.length === 0) return state; // No redo available
-      const nextState = state.redoStack[state.redoStack.length - 1];
-      return {
-        nodes: nextState.nodes,
-        edges: nextState.edges,
-        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-        redoStack: state.redoStack.slice(0, -1)
-      };
-    }),
+  // Update resetChangedState to be separate
+  resetChangedState: () => set({ isChanged: false }),
 
   addAttackNode: (newNode) => {
     // console.log('newNode', newNode);
@@ -1225,12 +1375,17 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
+  // Update dragAddNode to support undo/redo:
   dragAddNode: (newNode, newEdge) => {
-    // console.log("store",newNode);
     set((state) => ({
       nodes: state.nodes.concat(newNode),
       edges: state.edges.concat(newEdge)
     }));
+
+    // Debounce adding to undo stack
+    const currentState = get();
+    set({ pendingUndoState: { nodes: currentState.nodes, edges: currentState.edges } });
+    get().debouncedAddToUndoStack();
   },
 
   dragAddAttackTemplate: (newNode, newEdge) => {
@@ -1275,6 +1430,42 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  getSystemInputs: async (system, propmt) => {
+    try {
+      const formData = new FormData();
+      formData.append('systemName', system);
+      formData.append('systemInputPrompt', propmt);
+
+      const options = {
+        method: 'POST',
+        url: `${configuration.apiBaseUrl}v1/generate/get_system_inputs`,
+        headers: {
+          ...createHeaders().headers,
+          'Content-Type': 'multipart/form-data'
+        },
+        data: formData
+      };
+
+      const res = await axios(options);
+      // console.log(res);
+      set({
+        systemInputs: res?.data?.inputs || []
+      });
+    } catch (error) {
+      console.error('Error fetching sidebar nodes:', error);
+    }
+  },
+
+  generateFullModel: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generate/full-model`;
+    try {
+      const res = await ADD_CALL(details, url);
+      return res; // this will be { task_id: "..." }
+    } catch (error) {
+      return error;
+    }
+  },
+
   // getTemplate: async (id) => {
   //   const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
   //   set({
@@ -1296,6 +1487,165 @@ const useStore = createWithEqualityFn((set, get) => ({
     set({
       Models: res.data
     });
+  },
+
+  // Library related functions
+  getLibraries: async () => {
+    try {
+      const res = await axios({
+        method: 'GET',
+        url: `${configuration.apiBaseUrl}v1/listLibraries`,
+        headers: {
+          ...createHeaders().headers
+        }
+      });
+
+      // Only return the required fields that are actually used in the UI
+      return Array.isArray(res.data)
+        ? res.data
+            .filter((lib) => lib?._id && lib?.name) // Only require _id and name
+            .map(({ _id, name, category }) => ({
+              _id,
+              name,
+              category: category || 'Uncategorized' // Default to 'Uncategorized' if category is missing
+            }))
+        : [];
+    } catch (error) {
+      console.error('Error fetching libraries:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+      }
+      return [];
+    }
+  },
+
+  openLibrary: async (libraryId, targetModelId) => {
+    try {
+      const userId = sessionStorage.getItem('user-id') || '';
+      if (!userId) throw new Error('User ID not found in session');
+      if (!libraryId) throw new Error('Library ID is required');
+      if (!targetModelId) throw new Error('Target Model ID is required');
+
+      const formData = new FormData();
+      formData.append('sourceModelId', libraryId);
+      formData.append('targetModelId', targetModelId);
+      formData.append('userId', userId);
+
+      await axios.post(`${configuration.apiBaseUrl}v1/cloneModelDataToExistingModel`, formData, {
+        headers: {
+          ...createHeaders().headers,
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data'
+        },
+        validateStatus: () => true // Ensure we handle all status codes
+      });
+
+      // Refresh the model data to reflect the changes
+      const refreshModel = async () => {
+        try {
+          // Get the current model data
+          const currentModel = useStore.getState().model;
+          if (currentModel?._id === targetModelId) {
+            // Refresh the entire model data
+            await useStore.getState().getModelById(targetModelId);
+
+            // Refresh related data
+            await Promise.all([
+              useStore.getState().getAssets(targetModelId),
+              useStore.getState().getDamageScenarios(targetModelId),
+              useStore.getState().getThreatScenario(targetModelId),
+              useStore.getState().getAttackScenario(targetModelId),
+              useStore.getState().getCyberSecurityScenario(targetModelId),
+              useStore.getState().getRiskTreatment({ modelId: targetModelId })
+            ]);
+
+            console.log('Model data refreshed successfully');
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing model data:', refreshError);
+          // Don't fail the main operation if refresh fails
+        }
+      };
+
+      // Run the refresh in the background
+      refreshModel();
+
+      return {
+        success: true,
+        message: 'Library data successfully applied to model',
+        modelId: targetModelId
+      };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error('Open library failed:', errorMessage, {
+        error,
+        requestData: { libraryId, userId: sessionStorage.getItem('user-id') }
+      });
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  },
+
+  convertToLibrary: async (modelId) => {
+    try {
+      const userId = sessionStorage.getItem('user-id') || '';
+
+      if (!userId) throw new Error('User ID not found in session');
+      if (!modelId) throw new Error('Model ID is required');
+
+      // Get current model data including category
+      const currentModel = useStore.getState().model;
+      if (!currentModel) throw new Error('No active model found');
+
+      // Check for duplicate library names first
+      const librariesResponse = await axios({
+        method: 'GET',
+        url: `${configuration.apiBaseUrl}v1/listLibraries`,
+        headers: createHeaders().headers
+      });
+
+      if (Array.isArray(librariesResponse.data)) {
+        const duplicateLibrary = librariesResponse.data.find((lib) => lib?.name?.toLowerCase() === currentModel.name?.toLowerCase());
+        if (duplicateLibrary) {
+          throw new Error(`A library with the name "${currentModel.name}" already exists.`);
+        }
+      }
+
+      const formData = new FormData();
+      formData.append('keyId', modelId);
+      formData.append('source', 'model');
+      formData.append('userId', userId);
+      // Add category to form data if it exists in the model
+      if (currentModel.category) {
+        formData.append('category', currentModel.category);
+      }
+
+      const res = await axios.post(`${configuration.apiBaseUrl}v1/cloneModelOrLibrary`, formData, {
+        headers: {
+          ...createHeaders().headers,
+          Accept: 'application/json'
+        },
+        validateStatus: () => true
+      });
+      // console.log('res', res);
+      // console.log('data', data);
+      const data = res?.data;
+
+      if (res?.status === 200) {
+        return { success: true, modelName: currentModel.name };
+      }
+
+      throw new Error(data?.message || 'Failed to convert model to library');
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error('Convert to library failed:', errorMessage, {
+        error,
+        requestData: { modelId, userId: sessionStorage.getItem('user-id') }
+      });
+      return { success: false, error: errorMessage };
+    }
   },
 
   getModelById: async (modelId) => {
@@ -1713,6 +2063,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     // Directly pass details to PATCH_CALL
     return await PATCH_CALL(details, url);
   },
+  updateDerivedThreatScenario: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/update/derved_threat_scene`;
+    const res = await PATCH_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
 
   updateAttackScenario: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/attacks`;
@@ -1720,6 +2076,7 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     return res;
   },
+
   updateSidebarNodes: async (newTemplate) => {
     const res = await axios.patch(`${configuration.apiBaseUrl}sidebarNode/${newTemplate.id}`, newTemplate);
     return res;
@@ -1852,6 +2209,12 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('res', res);
     return res;
   },
+  autoGenerateRiskTreatement: async (details) => {
+    const url = `${configuration.apiBaseUrl}v1/generate/generate-risk-treatments`;
+    const res = await POST_CALL(details, url);
+    // console.log('res', res);
+    return res;
+  },
 
   createComponent: async (newTemplate) => {
     const FormData = require('form-data');
@@ -1917,7 +2280,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
       return response.data;
     } catch (err) {
-      console.log('err', err);
+      // console.log('err', err);
       throw err; // Re-throwing the error to handle it in calling code if needed
     }
   },
@@ -1952,6 +2315,13 @@ const useStore = createWithEqualityFn((set, get) => ({
     // console.log('details', details);
     let url = `${configuration.apiBaseUrl}v1/delete/models`;
     const res = await DELETE_CALL(details, url);
+    return res;
+  },
+
+  clearModel: async (modelId) => {
+    // console.log('details', details);
+    let url = `${configuration.apiBaseUrl}v1/clear_model_data`;
+    const res = await ADD_CALL({ modelId: modelId }, url);
     return res;
   },
   deleteDamageScenario: async (details) => {

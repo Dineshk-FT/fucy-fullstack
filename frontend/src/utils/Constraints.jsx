@@ -14,6 +14,7 @@ import {
 import AttackNode from '../components/custom/nodes/AttackNode';
 import { ANDGate, AttackTreeNode, Event, ORGate, TransferGate, VotingGate } from '../components/CustomGates';
 import DataNode from '../components/custom/nodes/DataNode';
+import CarImageNode from '../components/custom/nodes/CarImageNode';
 
 export const updatedModelState = (mod, nodes, edges) => {
   // console.log('mod', mod);
@@ -77,7 +78,8 @@ export const pageNodeTypes = {
     mcu: MicroController,
     memory: Memory,
     group: CustomGroupNode,
-    multihandle: MultiHandleNode
+    multihandle: MultiHandleNode,
+    carImage: CarImageNode
   },
   attackcanvas: {
     input: InputNode,
@@ -98,6 +100,8 @@ export const pageNodeTypes = {
 };
 
 export const getNodeDetails = (type, name, count, newNode) => {
+  const width = type === 'data' ? 100 : 150;
+  const height = type === 'data' ? 30 : 50;
   const dataNode = {
     id: uid(),
     data: {
@@ -114,14 +118,14 @@ export const getNodeDetails = (type, name, count, newNode) => {
         borderColor: 'gray',
         borderWidth: '2px',
         borderStyle: 'solid',
-        width: 150,
-        height: 50
+        width: width,
+        height: height
       }
     },
     type: type,
     properties: newNode?.properties ?? ['Confidentiality'],
-    width: 150,
-    height: 50,
+    width: width,
+    height: height,
     isAsset: false
   };
   const updatePositionWithinRange = (position, range) => {

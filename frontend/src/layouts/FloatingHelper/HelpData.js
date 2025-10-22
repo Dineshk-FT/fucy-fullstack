@@ -59,12 +59,12 @@ export const helpData = {
         id: 'delete_derived_threat',
         label: 'How to delete a derived scene?',
         gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
+      },
+      {
+        id: 'update_derived_threat',
+        label: 'How to update a Derived Threat Scenerio',
+        gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
       }
-      //   {
-      //     id: 'update_derived_threat',
-      //     label: 'How to update the derived scene',
-      //     gif: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif'
-      //   }
     ]
   },
   'Attack Path Analysis': {
