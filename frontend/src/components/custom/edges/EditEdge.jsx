@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden'
   },
   tab: {
-    minHeight: '40px',
+    minHeight: '32px',
     fontSize: fontSize - 1,
     fontWeight: 500
   },
@@ -234,105 +234,115 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
       }}
       className={classes.popper}
     >
-      <ClickAwayListener onClickAway={handleClosePopper}>
-        <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1.5, position: 'relative' }}>
-          {/* Close icon */}
-          <IconButton
-            onClick={handleClosePopper}
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 10,
-              color: color?.sidebarContent,
-              p: 0.5,
-              '&:hover': { bgcolor: color?.hoverBg }
-            }}
-          >
-            <HighlightOffIcon color="error" fontSize="small" />
-          </IconButton>
+      {/* <ClickAwayListener onClickAway={handleClosePopper}> */}
+      <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1, position: 'relative' }}>
+        {/* Close icon */}
+        <IconButton
+          onClick={handleClosePopper}
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 10,
+            color: color?.sidebarContent,
+            p: 0.5,
+            '&:hover': { bgcolor: color?.hoverBg }
+          }}
+        >
+          <HighlightOffIcon color="error" fontSize="small" />
+        </IconButton>
 
-          <Tabs
-            value={tabValue}
-            onChange={(e, newValue) => setTabValue(newValue)}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-            sx={{ minHeight: '48px', mb: 1 }}
-          >
-            <Tab label="Details" className={classes.tab} />
-            <Tab label="Style" className={classes.tab} />
-          </Tabs>
+        <Tabs
+          value={tabValue}
+          onChange={(e, newValue) => setTabValue(newValue)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+          sx={{
+            minHeight: '36px',
+            mb: 0.5,
+            '& .MuiTabs-flexContainer': {
+              height: '36px'
+            }
+          }}
+        >
+          <Tab label="Details" className={classes.tab} />
+          <Tab label="Style" className={classes.tab} />
+        </Tabs>
 
-          {tabValue === 0 && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box className={classes.section}>
-                <InputLabel className={classes.inputlabel}>Edge Name</InputLabel>
-                <TextField
-                  variant="outlined"
-                  value={details?.name || ''}
-                  onChange={handleStyle}
-                  fullWidth
-                  size="small"
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: fontSize - 1,
-                      padding: '8px 12px'
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
-                  }}
-                />
-              </Box>
-
-              <Box className={classes.section}>
-                <EnhancedFontResizer fontSize={labelFontSize} changeFontSize={changeFontSize} handleFontSizeChange={handleFontSizeChange} />
-              </Box>
-
-              <Box className={classes.section}>
-                <InputLabel className={classes.inputlabel}>Properties</InputLabel>
-                <Autocomplete
-                  multiple
-                  options={Properties}
-                  getOptionLabel={(option) => option.name}
-                  value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
-                  onChange={handleChange}
-                  isOptionEqualToValue={(option, value) => option?.name === value?.name}
-                  size="small"
-                  renderOption={(props, option) => (
-                    <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1 }}>
-                      <Avatar src={option?.image} alt={option?.name} sx={{ width: 28, height: 28, bgcolor: 'action.hover' }} />
-                      <Typography variant="body2">{option?.name}</Typography>
-                    </Box>
-                  )}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        key={option?.name}
-                        avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />}
-                        variant="outlined"
-                        label={option?.name}
-                        size="small"
-                        {...getTagProps({ index })}
-                        sx={{
-                          '& .MuiChip-label': { fontSize: 11 },
-                          mb: 0.5
-                        }}
-                      />
-                    ))
+        {tabValue === 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <Box className={classes.section}>
+              <InputLabel className={classes.inputlabel}>Edge Name</InputLabel>
+              <TextField
+                variant="outlined"
+                value={details?.name || ''}
+                onChange={handleStyle}
+                fullWidth
+                size="small"
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontSize: fontSize - 1,
+                    padding: '8px 12px'
+                  },
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px'
                   }
-                  renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select properties..." size="small" />}
-                />
-              </Box>
+                }}
+              />
             </Box>
-          )}
 
-          {tabValue === 1 && (
-            <Grid container spacing={2} className={classes.section}>
-              <Grid item xs={12}>
-                <InputLabel className={classes.inputlabel}>Edge Thickness</InputLabel>
+            <Box className={classes.section}>
+              <EnhancedFontResizer fontSize={labelFontSize} changeFontSize={changeFontSize} handleFontSizeChange={handleFontSizeChange} />
+            </Box>
+
+            <Box className={classes.section}>
+              <InputLabel className={classes.inputlabel}>Properties</InputLabel>
+              <Autocomplete
+                multiple
+                options={Properties}
+                getOptionLabel={(option) => option.name}
+                value={details?.properties?.map((prop) => Properties.find((p) => p.name === prop) || { name: prop }) || []}
+                onChange={handleChange}
+                isOptionEqualToValue={(option, value) => option?.name === value?.name}
+                size="small"
+                renderOption={(props, option) => (
+                  <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1 }}>
+                    <Avatar src={option?.image} alt={option?.name} sx={{ width: 28, height: 28, bgcolor: 'action.hover' }} />
+                    <Typography variant="body2">{option?.name}</Typography>
+                  </Box>
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option?.name}
+                      avatar={<Avatar src={option?.image} alt={option?.name} sx={{ width: 20, height: 20 }} />}
+                      variant="outlined"
+                      label={option?.name}
+                      size="small"
+                      {...getTagProps({ index })}
+                      sx={{
+                        '& .MuiChip-label': { fontSize: 11 },
+                        mb: 0.5
+                      }}
+                    />
+                  ))
+                }
+                renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select properties..." size="small" />}
+              />
+            </Box>
+          </Box>
+        )}
+
+        {tabValue === 1 && (
+          <Grid container spacing={2} className={classes.section}>
+            <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Edge Thickness */}
+              <Box sx={{ flex: 1 }}>
+                <InputLabel className={classes.inputlabel} sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                  Thickness
+                </InputLabel>
                 <TextField
                   type="number"
                   variant="outlined"
@@ -342,101 +352,106 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   inputProps={{ min: 1, max: 10 }}
                   sx={{ width: '100%' }}
                 />
-              </Grid>
+              </Box>
 
-              <Grid item xs={12}>
-                <InputLabel className={classes.inputlabel}>Edge Color</InputLabel>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <TextField
-                    type="color"
-                    variant="outlined"
-                    value={details?.style?.stroke || '#000000'}
-                    onChange={(e) => onChange(e, 'stroke')}
-                    sx={{
-                      width: '60px',
-                      height: '40px',
-                      '& .MuiInputBase-input': {
-                        padding: '8px 12px',
-                        cursor: 'pointer'
-                      }
-                    }}
-                  />
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {details?.style?.stroke || '#000000'}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <InputLabel className={classes.inputlabel}>Start Point</InputLabel>
-                    <TextField
-                      type="color"
-                      variant="outlined"
-                      value={details?.startPoint || '#000000'}
-                      onChange={(e) => onChange(e, 'startPoint')}
-                      sx={{
-                        width: '100%',
-                        height: '40px',
-                        '& .MuiInputBase-input': {
-                          padding: '8px 12px'
-                        }
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <InputLabel className={classes.inputlabel}>End Point</InputLabel>
-                    <TextField
-                      type="color"
-                      variant="outlined"
-                      value={details?.endPoint || '#000000'}
-                      onChange={(e) => onChange(e, 'endPoint')}
-                      sx={{
-                        width: '100%',
-                        height: '40px',
-                        '& .MuiInputBase-input': {
-                          padding: '8px 12px'
-                        }
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12}>
-                <InputLabel className={classes.inputlabel}>Line Style</InputLabel>
-                <Autocomplete
-                  options={EdgeStyleoptions}
-                  value={EdgeStyleoptions.find((option) => option.value === details?.style?.strokeDasharray) || null}
-                  onChange={(event, newValue) => onChange(newValue, 'strokeDasharray')}
-                  getOptionLabel={(option) => option.label}
-                  size="small"
-                  renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select line style..." />}
-                  sx={{ width: '100%' }}
+              {/* Edge Color */}
+              <Box sx={{ flex: 1 }}>
+                <InputLabel className={classes.inputlabel} sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                  Color
+                </InputLabel>
+                <TextField
+                  type="color"
+                  variant="outlined"
+                  value={details?.style?.stroke || '#000000'}
+                  onChange={(e) => onChange(e, 'stroke')}
+                  sx={{
+                    width: '100%',
+                    height: '40px',
+                    '& .MuiInputBase-input': {
+                      padding: '8px 12px',
+                      cursor: 'pointer'
+                    }
+                  }}
                 />
-              </Grid>
-            </Grid>
-          )}
+              </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-            <Button
-              onClick={handleSaveEdit}
-              color="primary"
-              variant="contained"
-              size="small"
-              sx={{
-                borderRadius: '6px',
-                textTransform: 'none',
-                fontWeight: 500,
-                minWidth: '100px'
-              }}
-            >
-              Update
-            </Button>
-          </Box>
-        </Paper>
-      </ClickAwayListener>
+              {/* Start Point */}
+              <Box sx={{ flex: 1 }}>
+                <InputLabel className={classes.inputlabel} sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                  Start
+                </InputLabel>
+                <TextField
+                  type="color"
+                  variant="outlined"
+                  value={details?.startPoint || '#000000'}
+                  onChange={(e) => onChange(e, 'startPoint')}
+                  sx={{
+                    width: '100%',
+                    height: '40px',
+                    '& .MuiInputBase-input': {
+                      padding: '8px 12px'
+                    }
+                  }}
+                />
+              </Box>
+
+              {/* End Point */}
+              <Box sx={{ flex: 1 }}>
+                <InputLabel className={classes.inputlabel} sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                  End
+                </InputLabel>
+                <TextField
+                  type="color"
+                  variant="outlined"
+                  value={details?.endPoint || '#000000'}
+                  onChange={(e) => onChange(e, 'endPoint')}
+                  sx={{
+                    width: '100%',
+                    height: '40px',
+                    '& .MuiInputBase-input': {
+                      padding: '8px 12px'
+                    }
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            {/* Line Style - Full width on its own row */}
+            <Grid item xs={12}>
+              <InputLabel className={classes.inputlabel} sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                Line Style
+              </InputLabel>
+              <Autocomplete
+                options={EdgeStyleoptions}
+                value={EdgeStyleoptions.find((option) => option.value === details?.style?.strokeDasharray) || null}
+                onChange={(event, newValue) => onChange(newValue, 'strokeDasharray')}
+                getOptionLabel={(option) => option.label}
+                size="small"
+                renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select line style..." />}
+                sx={{ width: '100%' }}
+              />
+            </Grid>
+          </Grid>
+        )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 0.5 }}>
+          <Button
+            onClick={handleSaveEdit}
+            color="primary"
+            variant="contained"
+            size="small"
+            sx={{
+              borderRadius: '6px',
+              textTransform: 'none',
+              fontWeight: 500,
+              minWidth: '100px'
+            }}
+          >
+            Update
+          </Button>
+        </Box>
+      </Paper>
+      {/* </ClickAwayListener> */}
     </Popper>
   );
 };

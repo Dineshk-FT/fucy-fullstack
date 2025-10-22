@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position, useReactFlow, useEdges } from 'reactflow';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,6 +29,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     useStore(selector, shallow);
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
+  const edges = useEdges();
   const [isVisible, setIsVisible] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
@@ -40,25 +41,54 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
-  // Dynamic handles state - you can customize positions as needed
-  const [handles, setHandles] = useState(
-    data?.handles || [
-      { id: 'top', position: Position.Top },
-      { id: 'right', position: Position.Right },
-      { id: 'bottom', position: Position.Bottom },
-      { id: 'left', position: Position.Left },
-      { id: 'top-right', position: Position.Top, offset: 20 },
-      { id: 'top-left', position: Position.Top, offset: -20 },
-      { id: 'bottom-right', position: Position.Bottom, offset: 20 },
-      { id: 'bottom-left', position: Position.Bottom, offset: -20 },
-      { id: 'right-top', position: Position.Right, offset: -20 },
-      { id: 'right-bottom', position: Position.Right, offset: 20 },
-      { id: 'left-top', position: Position.Left, offset: -20 },
-      { id: 'left-bottom', position: Position.Left, offset: 20 }
-    ]
-  );
+  // Define handles
+  const centerHandles = [
+    { id: 'top', position: Position.Top },
+    { id: 'right', position: Position.Right },
+    { id: 'bottom', position: Position.Bottom },
+    { id: 'left', position: Position.Left }
+  ];
 
-  // Cleanup on unmount
+  const additionalHandles = [
+    { id: 'top-right', position: Position.Top, offset: 20 },
+    { id: 'top-left', position: Position.Top, offset: -20 },
+    { id: 'bottom-right', position: Position.Bottom, offset: 20 },
+    { id: 'bottom-left', position: Position.Bottom, offset: -20 },
+    { id: 'right-top', position: Position.Right, offset: -20 },
+    { id: 'right-bottom', position: Position.Right, offset: 20 },
+    { id: 'left-top', position: Position.Left, offset: -20 },
+    { id: 'left-bottom', position: Position.Left, offset: 20 }
+  ];
+
+  // ✅ Track which handles are connected
+  const getConnectedHandles = useCallback(() => {
+    const nodeEdges = edges.filter((edge) => edge.source === id || edge.target === id);
+    const connected = new Set();
+
+    nodeEdges.forEach((edge) => {
+      if (edge.source === id && edge.sourceHandle) connected.add(edge.sourceHandle);
+      if (edge.target === id && edge.targetHandle) connected.add(edge.targetHandle);
+    });
+
+    return connected;
+  }, [edges, id]);
+
+  const [connectedHandles, setConnectedHandles] = useState(new Set());
+
+  useEffect(() => {
+    setConnectedHandles(getConnectedHandles());
+  }, [edges, getConnectedHandles]);
+
+  const [handles, setHandles] = useState([]);
+
+  useEffect(() => {
+    const allCentersConnected = centerHandles.every((h) => connectedHandles.has(h.id));
+
+    const visibleExtraHandles = additionalHandles.filter((h) => allCentersConnected || connectedHandles.has(h.id));
+
+    setHandles([...centerHandles, ...visibleExtraHandles]);
+  }, [connectedHandles]);
+
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -153,15 +183,11 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     }
   };
 
-  // Prevent node dragging when interacting with TextField
-  const handleTextFieldMouseDown = (e) => {
-    e.stopPropagation();
-  };
+  const handleTextFieldMouseDown = (e) => e.stopPropagation();
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      // Remove this line: inputRef.current.select();
     }
   }, [isEditing]);
 
@@ -230,7 +256,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
-  // Function to calculate handle position with offset
   const getHandleStyle = (handle) => {
     const baseStyle = {
       backgroundColor: bgColor,
@@ -298,7 +323,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
             whiteSpace: 'pre-wrap'
           }}
         >
-          {/* Dynamic Handles */}
           {handles.map((handle) => (
             <Handle
               key={handle.id}
@@ -329,37 +353,26 @@ export default React.memo(function DefaultNode({ id, data, type }) {
                   padding: '0 4px',
                   minWidth: '60px',
                   maxWidth: `${width - 20}px`,
-                  pointerEvents: 'auto' // Ensure text field is interactive
+                  pointerEvents: 'auto'
                 },
                 '& .MuiInputBase-input': {
                   textAlign: 'center',
                   padding: '2px 4px',
                   cursor: 'text'
                 },
-                // Add these styles to remove the border-bottom
-                '& .MuiInput-underline:before': {
-                  borderBottom: 'none'
-                },
-                '& .MuiInput-underline:after': {
-                  borderBottom: 'none'
-                },
-                // Optional: If you want to remove the hover effect underline as well
-                '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
-                  borderBottom: 'none'
-                }
+                '& .MuiInput-underline:before': { borderBottom: 'none' },
+                '& .MuiInput-underline:after': { borderBottom: 'none' },
+                '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
               }}
               inputProps={{
-                style: {
-                  textAlign: 'center',
-                  padding: '2px 4px'
-                }
+                style: { textAlign: 'center', padding: '2px 4px' }
               }}
             />
           ) : (
             <Box
               onClick={handleLabelDoubleClick}
               onContextMenu={handleLabelRightClick}
-              onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking label
+              onMouseDown={(e) => e.stopPropagation()}
               sx={{
                 maxWidth: width - 10,
                 textAlign: 'center',

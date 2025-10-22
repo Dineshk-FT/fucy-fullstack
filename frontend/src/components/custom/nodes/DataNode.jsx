@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position, useReactFlow, useEdges } from 'reactflow';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,11 +29,12 @@ export default function DataNode({ id, data, isConnectable, type }) {
     useStore(selector, shallow);
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
+  const edges = useEdges();
   const [isVisible, setIsVisible] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
-  const labelRef = useRef(null);
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
+  const labelRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
   const [tempLabelValue, setTempLabelValue] = useState(data?.label || '');
@@ -41,15 +42,64 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
+  // Define handles
+  const centerHandles = [
+    { id: 'top', position: Position.Top },
+    { id: 'right', position: Position.Right },
+    { id: 'bottom', position: Position.Bottom },
+    { id: 'left', position: Position.Left }
+  ];
+
+  const additionalHandles = [
+    { id: 'top-right', position: Position.Top, offset: 20 },
+    { id: 'top-left', position: Position.Top, offset: -20 },
+    { id: 'bottom-right', position: Position.Bottom, offset: 20 },
+    { id: 'bottom-left', position: Position.Bottom, offset: -20 },
+    { id: 'right-top', position: Position.Right, offset: -20 },
+    { id: 'right-bottom', position: Position.Right, offset: 20 },
+    { id: 'left-top', position: Position.Left, offset: -20 },
+    { id: 'left-bottom', position: Position.Left, offset: 20 }
+  ];
+
+  // ✅ Track which handles are connected
+  const getConnectedHandles = useCallback(() => {
+    const nodeEdges = edges.filter((edge) => edge.source === id || edge.target === id);
+    const connected = new Set();
+
+    nodeEdges.forEach((edge) => {
+      if (edge.source === id && edge.sourceHandle) connected.add(edge.sourceHandle);
+      if (edge.target === id && edge.targetHandle) connected.add(edge.targetHandle);
+    });
+
+    return connected;
+  }, [edges, id]);
+
+  const [connectedHandles, setConnectedHandles] = useState(new Set());
+  const [handles, setHandles] = useState([]);
+
+  useEffect(() => {
+    setConnectedHandles(getConnectedHandles());
+  }, [edges, getConnectedHandles]);
+
+  useEffect(() => {
+    const allCentersConnected = centerHandles.every((h) => connectedHandles.has(h.id));
+    const visibleExtraHandles = additionalHandles.filter((h) => allCentersConnected || connectedHandles.has(h.id));
+    setHandles([...centerHandles, ...visibleExtraHandles]);
+  }, [connectedHandles]);
+
+  // Calculate capsule border radius (50% of height for perfect capsule shape)
+  const capsuleBorderRadius = Math.min(height / 2, width / 2);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isMounted.current = false; // Set to false when component unmounts
+      isMounted.current = false;
     };
   }, []);
 
   const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
+
   useEffect(() => {
     setLabelValue(data?.label || '');
     setTempLabelValue(data?.label || '');
@@ -158,7 +208,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      // Remove this line: inputRef.current.select();
     }
   }, [isEditing]);
 
@@ -204,7 +253,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
       console.error('Missing assetId or modelId');
       return;
     }
-    // Close dialogs immediately
     if (isMounted.current) {
       setIsUnsavedDialogVisible(false);
       setIsVisible(false);
@@ -212,9 +260,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
     deleteNode({ assetId: assets._id, nodeId: id })
       .then(() => {
         if (isMounted.current) {
-          // Remove node from canvas immediately
           setNodes((nodes) => nodes.filter((node) => node.id !== id));
-          // Fetch updated assets (optional, depending on your app's needs)
           getAssets(model._id);
         }
       })
@@ -246,6 +292,73 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const copiedNodes = nodes?.filter((node) => node.isCopied === true);
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
+  // Function to calculate handle position with offset for capsule shape
+  const getHandleStyle = (handle) => {
+    const baseStyle = {
+      backgroundColor: bgColor,
+      width: 8,
+      height: 8,
+      border: `2px solid white`,
+      borderRadius: '50%'
+    };
+
+    // For capsule shape, we need to adjust handle positions based on the curvature
+    const borderRadius = capsuleBorderRadius;
+
+    if (handle.offset) {
+      switch (handle.position) {
+        case Position.Top:
+          // For top handles, adjust based on capsule curvature
+          const topOffset =
+            handle.offset > 0
+              ? Math.min(handle.offset, width / 2 - borderRadius / 2)
+              : Math.max(handle.offset, -width / 2 + borderRadius / 2);
+          return { ...baseStyle, left: `calc(50% + ${topOffset}px)` };
+
+        case Position.Bottom:
+          // For bottom handles, adjust based on capsule curvature
+          const bottomOffset =
+            handle.offset > 0
+              ? Math.min(handle.offset, width / 2 - borderRadius / 2)
+              : Math.max(handle.offset, -width / 2 + borderRadius / 2);
+          return { ...baseStyle, left: `calc(50% + ${bottomOffset}px)` };
+
+        case Position.Left:
+          // For left handles, adjust based on capsule curvature
+          const leftOffset =
+            handle.offset > 0
+              ? Math.min(handle.offset, height / 2 - borderRadius / 2)
+              : Math.max(handle.offset, -height / 2 + borderRadius / 2);
+          return { ...baseStyle, top: `calc(50% + ${leftOffset}px)` };
+
+        case Position.Right:
+          // For right handles, adjust based on capsule curvature
+          const rightOffset =
+            handle.offset > 0
+              ? Math.min(handle.offset, height / 2 - borderRadius / 2)
+              : Math.max(handle.offset, -height / 2 + borderRadius / 2);
+          return { ...baseStyle, top: `calc(50% + ${rightOffset}px)` };
+
+        default:
+          return baseStyle;
+      }
+    }
+
+    // For center handles, ensure they're placed at the edge of the curved surface
+    switch (handle.position) {
+      case Position.Top:
+        return { ...baseStyle, left: '50%' };
+      case Position.Bottom:
+        return { ...baseStyle, left: '50%' };
+      case Position.Left:
+        return { ...baseStyle, top: '50%' };
+      case Position.Right:
+        return { ...baseStyle, top: '50%' };
+      default:
+        return baseStyle;
+    }
+  };
+
   return (
     <>
       <NodeResizer
@@ -270,6 +383,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
           style={{
             ...data?.style,
             background: `linear-gradient(180deg, #ddd, ${data?.style?.backgroundColor})`,
+            borderRadius: `${capsuleBorderRadius}px`, // Dynamic border radius for capsule shape
             position: 'relative',
             overflow: 'visible',
             boxShadow: selectedNodes.some((node) => node.id === id)
@@ -288,8 +402,18 @@ export default function DataNode({ id, data, isConnectable, type }) {
             whiteSpace: 'pre-wrap'
           }}
         >
-          <Handle style={{ backgroundColor: bgColor }} className="handle" id="top" position={Position.Top} isConnectable={true} />
-          <Handle style={{ backgroundColor: bgColor }} className="handle" id="left" position={Position.Left} isConnectable={true} />
+          {/* Dynamic Handles */}
+          {handles.map((handle) => (
+            <Handle
+              key={handle.id}
+              id={handle.id}
+              position={handle.position}
+              style={getHandleStyle(handle)}
+              className="handle"
+              isConnectable={isConnectable}
+            />
+          ))}
+
           {isEditing ? (
             <TextField
               ref={textFieldRef}
@@ -309,21 +433,19 @@ export default function DataNode({ id, data, isConnectable, type }) {
                   padding: '0 4px',
                   minWidth: '60px',
                   maxWidth: `${width - 20}px`,
-                  pointerEvents: 'auto' // Ensure text field is interactive
+                  pointerEvents: 'auto'
                 },
                 '& .MuiInputBase-input': {
                   textAlign: 'center',
                   padding: '2px 4px',
                   cursor: 'text'
                 },
-                // Add these styles to remove the border-bottom
                 '& .MuiInput-underline:before': {
                   borderBottom: 'none'
                 },
                 '& .MuiInput-underline:after': {
                   borderBottom: 'none'
                 },
-                // Optional: If you want to remove the hover effect underline as well
                 '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
                   borderBottom: 'none'
                 }
@@ -339,7 +461,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
             <Box
               onClick={handleLabelDoubleClick}
               onContextMenu={handleLabelRightClick}
-              onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking label
+              onMouseDown={(e) => e.stopPropagation()}
               sx={{
                 maxWidth: width - 10,
                 textAlign: 'center',
@@ -354,13 +476,13 @@ export default function DataNode({ id, data, isConnectable, type }) {
               {labelValue}
             </Box>
           )}
-          <Handle className="handle" style={{ backgroundColor: bgColor }} id="bottom" position={Position.Bottom} isConnectable={true} />
-          <Handle className="handle" style={{ backgroundColor: bgColor }} id="right" position={Position.Right} isConnectable={true} />
+
           <div
             onClick={(e) => {
               e.stopPropagation();
               handleInfoClick();
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
           >
             <EditIcon sx={{ fontSize: '0.9rem', mb: 0.1 }} />
@@ -370,6 +492,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               handleDetailClick();
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}
           >
             <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
@@ -380,6 +503,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               e.stopPropagation();
               setIsVisible(true);
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{
               ...iconStyle,
               right: '-12px',
