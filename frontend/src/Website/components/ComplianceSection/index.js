@@ -73,9 +73,9 @@ function CompliancePage() {
 
   const features = [
     {
-      title: 'TARA Automation',
+      title: 'TARA-Xpress',
       description:
-        'Our Threat Analysis and Risk Assessment (TARA) automation streamlines the identification and management of potential vulnerabilities, enabling your team to focus on strategic decision-making.',
+        'Our Threat Analysis and Risk Assessment (TARA-Xpress) streamlines the identification and management of potential vulnerabilities, enabling your team to focus on strategic decision-making.',
     },
     {
       title: 'Bill of Materials (BOM) Management',
