@@ -70,6 +70,9 @@ export default function CyberSecuritySection() {
               Revolutionizing Automotive Cybersecurity
             </Typography>
             <Typography variant="body1" paragraph className={classes.paragraph}>
+              As vehicles become increasingly connected and autonomous, the threat landscape for the automotive industry is expanding at an unprecedented rate. From critical safety systems to sensitive personal data, every component is a potential vulnerability. Are your current cybersecurity processes keeping pace?
+            </Typography>
+            <Typography variant="body1" paragraph className={classes.paragraph}>
               Fucy Tech is a cutting-edge, cloud-based Cybersecurity Management System (CSMS) tailored specifically for the automotive industry. Our platform accelerates and guides cybersecurity engineering processes, ensuring your organization remains compliant and proactive in the face of evolving threats.            </Typography>
             <Typography variant="h4" className={classes.subhead}>
               The Next Big Step in Cybersecurity Innovation

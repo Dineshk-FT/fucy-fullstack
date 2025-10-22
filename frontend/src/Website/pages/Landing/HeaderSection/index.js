@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import { products, cybersecurityServices, consulting, academy, contact } from './dropdown-options-data';
-import { AppBar, Toolbar, Box, Typography, MenuItem, Menu, IconButton, Drawer, List, ListItem, ListItemText } from '@mui/material';
+import { AppBar, Toolbar, Box, Typography, MenuItem, Menu, IconButton, Drawer, List, ListItem, ListItemText, useTheme } from '@mui/material';
 import { display } from '@mui/system';
 
 // const services = [
@@ -21,14 +21,24 @@ import { display } from '@mui/system';
 // ];
 
 const useStyles = makeStyles((theme) => ({
-  title: {
+  titleContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginRight: '60px',
+    [theme.breakpoints.down('sm')]: {
+      marginRight: '20px'
+    }
+  },
+  title: {
     fontSize: '30px',
     fontFamily: 'Inter',
     fontWeight: '900',
     color: 'white',
+    marginRight: '15px',
     [theme.breakpoints.down('sm')]: {
-      textAlign: 'center'
+      fontSize: '24px',
+      marginBottom: '4px'
     }
   },
   navbarLayout: {
@@ -219,13 +229,30 @@ export default function Header() {
     setAnchorElContact(event.currentTarget);
   };
 
+  const theme = useTheme();
+
   return (
     <>
       <AppBar position="fixed" style={{ background: 'rgba(0, 0, 0, 0.9)' }}>
         <Toolbar className={classes.navbarLayout}>
-          <Typography variant="h5" className={classes.title}>
-            FUCY TECH
-          </Typography>
+          <Box className={classes.titleContainer}>
+            <Typography variant="h5" className={classes.title}>
+              FUCY TECH
+            </Typography>
+            <Typography variant="subtitle2" style={{
+              color: 'white',
+              fontWeight: '400',
+              fontSize: '12px',
+              lineHeight: 1.2,
+              marginTop: '2px',
+              [theme.breakpoints.down('sm')]: {
+                fontSize: '10px',
+                marginTop: '1px'
+              }
+            }}>
+              Drive Secure. Innovate Faster.
+            </Typography>
+          </Box>
           <Box className={classes.links}>
             {links.map((link, index) =>
               !link.dropdown ? (
