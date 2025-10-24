@@ -824,6 +824,10 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleAddNode = (type) => (e) => {
     e.stopPropagation();
     setIsChanged(true);
+
+    // Take a snapshot for undo/redo before making changes
+    useStore.getState().updateUndoRedo();
+
     const nodeName = type === 'default' ? 'Node' : 'Data';
     const nodeType = type === 'data' ? 'data' : 'node';
 

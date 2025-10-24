@@ -56,7 +56,8 @@ export default React.memo(function EditNode({
   nodes,
   setNodes,
   setSelectedElement,
-  selectedElement
+  selectedElement,
+  updateUndoRedo
 }) {
   const color = ColorTheme();
   const classes = useStyles();

@@ -234,8 +234,8 @@ iframe#webpack-dev-server-client-overlay {
 
 /* Add to your CSS file */
 .react-flow__handle {
-  width: 8px;
-  height: 8px;
+  width: 7.5px !important;
+  height: 7px !important;
   border: 2px solid white;
   border-radius: 50%;
   transition: all 0.2s ease;

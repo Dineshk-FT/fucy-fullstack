@@ -20,13 +20,25 @@ const selector = (state) => ({
   originalNodes: state.originalNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
-  setPropertiesOpen: state.setPropertiesOpen
+  setPropertiesOpen: state.setPropertiesOpen,
+  updateUndoRedo: state.updateUndoRedo
 });
 
 export default React.memo(function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
-    useStore(selector, shallow);
+  const {
+    isNodePasted,
+    nodes,
+    model,
+    assets,
+    getAssets,
+    deleteNode,
+    originalNodes,
+    selectedNodes,
+    setSelectedElement,
+    setPropertiesOpen,
+    updateUndoRedo
+  } = useStore(selector, shallow);
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const edges = useEdges();
@@ -41,23 +53,23 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
-  // Define handles
-  const centerHandles = [
-    { id: 'top', position: Position.Top },
-    { id: 'right', position: Position.Right },
-    { id: 'bottom', position: Position.Bottom },
-    { id: 'left', position: Position.Left }
-  ];
+  // Define ALL handles from the beginning - always present
+  const allHandles = [
+    // Center handles - always visible and connectable
+    { id: 'top', position: Position.Top, offset: 0, type: 'center' },
+    { id: 'right', position: Position.Right, offset: 0, type: 'center' },
+    { id: 'bottom', position: Position.Bottom, offset: 0, type: 'center' },
+    { id: 'left', position: Position.Left, offset: 0, type: 'center' },
 
-  const additionalHandles = [
-    { id: 'top-right', position: Position.Top, offset: 20 },
-    { id: 'top-left', position: Position.Top, offset: -20 },
-    { id: 'bottom-right', position: Position.Bottom, offset: 20 },
-    { id: 'bottom-left', position: Position.Bottom, offset: -20 },
-    { id: 'right-top', position: Position.Right, offset: -20 },
-    { id: 'right-bottom', position: Position.Right, offset: 20 },
-    { id: 'left-top', position: Position.Left, offset: -20 },
-    { id: 'left-bottom', position: Position.Left, offset: 20 }
+    // Additional handles - always present but visibility controlled
+    { id: 'top-right', position: Position.Top, offset: 20, type: 'additional' },
+    { id: 'top-left', position: Position.Top, offset: -20, type: 'additional' },
+    { id: 'bottom-right', position: Position.Bottom, offset: 20, type: 'additional' },
+    { id: 'bottom-left', position: Position.Bottom, offset: -20, type: 'additional' },
+    { id: 'right-top', position: Position.Right, offset: -20, type: 'additional' },
+    { id: 'right-bottom', position: Position.Right, offset: 20, type: 'additional' },
+    { id: 'left-top', position: Position.Left, offset: -20, type: 'additional' },
+    { id: 'left-bottom', position: Position.Left, offset: 20, type: 'additional' }
   ];
 
   // ✅ Track which handles are connected
@@ -74,19 +86,16 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   }, [edges, id]);
 
   const [connectedHandles, setConnectedHandles] = useState(new Set());
+  const [shouldShowAdditionalHandles, setShouldShowAdditionalHandles] = useState(false);
 
   useEffect(() => {
     setConnectedHandles(getConnectedHandles());
   }, [edges, getConnectedHandles]);
 
-  const [handles, setHandles] = useState([]);
-
   useEffect(() => {
-    const allCentersConnected = centerHandles.every((h) => connectedHandles.has(h.id));
-
-    const visibleExtraHandles = additionalHandles.filter((h) => allCentersConnected || connectedHandles.has(h.id));
-
-    setHandles([...centerHandles, ...visibleExtraHandles]);
+    // Show additional handles when all center handles are connected
+    const allCentersConnected = ['top', 'right', 'bottom', 'left'].every((handleId) => connectedHandles.has(handleId));
+    setShouldShowAdditionalHandles(allCentersConnected);
   }, [connectedHandles]);
 
   useEffect(() => {
@@ -107,7 +116,6 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     requestAnimationFrame(() => {
       const updatedWidth = newWidth;
       const updatedHeight = newHeight;
-
       setWidth(updatedWidth);
       setHeight(updatedHeight);
 
@@ -132,6 +140,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   };
 
   const updateNodeLabel = (newLabel) => {
+    updateUndoRedo();
     setNodes((nodes) =>
       nodes.map((node) =>
         node.id === id
@@ -257,12 +266,22 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const isCopiedNode = copiedNodes.some((node) => node.id === id);
 
   const getHandleStyle = (handle) => {
+    const isCenterHandle = handle.type === 'center';
+    const isAdditionalHandle = handle.type === 'additional';
+    const isConnected = connectedHandles.has(handle.id);
+
+    // Always show center handles, only show additional handles when condition is met
+    const shouldShow = isCenterHandle || (isAdditionalHandle && (shouldShowAdditionalHandles || isConnected));
+
     const baseStyle = {
       backgroundColor: bgColor,
       width: 8,
       height: 8,
       border: `2px solid white`,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      opacity: shouldShow ? 1 : 0,
+      pointerEvents: shouldShow ? 'all' : 'none',
+      transition: 'opacity 0.2s ease'
     };
 
     if (handle.offset) {
@@ -323,7 +342,8 @@ export default React.memo(function DefaultNode({ id, data, type }) {
             whiteSpace: 'pre-wrap'
           }}
         >
-          {handles.map((handle) => (
+          {/* Render ALL handles but control visibility with opacity and pointer-events */}
+          {allHandles.map((handle) => (
             <Handle
               key={handle.id}
               id={handle.id}

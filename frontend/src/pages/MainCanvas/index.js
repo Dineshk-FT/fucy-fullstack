@@ -34,7 +34,7 @@ import { ZoomControls } from './CanvasControls';
 import { onDrop } from './OnDrop';
 import CanvasToolbar from './CanvasToolbar';
 import { shallow } from 'zustand/shallow';
-import { debounce } from 'lodash';
+import { debounce, update } from 'lodash';
 import AutoSavePopper from '../../components/Poppers/AutoSavePopper';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { canvasSteps } from '../../utils/Steps';
@@ -84,7 +84,8 @@ const selector = (state) => ({
   addToUndoStack: state.addToUndoStack,
   resetChangedState: state.resetChangedState,
   safeRestore: state.safeRestore, // Add this
-  flushPendingChanges: state.flushPendingChanges
+  flushPendingChanges: state.flushPendingChanges,
+  updateUndoRedo: state.updateUndoRedo
 });
 
 // Enhanced connection line styling for better visual feedback
@@ -186,7 +187,8 @@ export default function MainCanvas() {
     addToUndoStack,
     resetChangedState,
     safeRestore,
-    flushPendingChanges
+    flushPendingChanges,
+    updateUndoRedo
   } = useStore(selector, shallow);
 
   const dispatch = useDispatch();
@@ -877,6 +879,7 @@ export default function MainCanvas() {
           selectedElement={selectedElement}
           setSelectedElement={setSelectedElement}
           selectedBlock={selectedBlock}
+          updateUndoRedo={updateUndoRedo}
         />
       );
     }

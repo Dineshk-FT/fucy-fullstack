@@ -20,13 +20,25 @@ const selector = (state) => ({
   originalNodes: state.originalNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
-  setPropertiesOpen: state.setPropertiesOpen
+  setPropertiesOpen: state.setPropertiesOpen,
+  updateUndoRedo: state.updateUndoRedo
 });
 
 export default function DataNode({ id, data, isConnectable, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
-    useStore(selector, shallow);
+  const {
+    isNodePasted,
+    nodes,
+    model,
+    assets,
+    getAssets,
+    deleteNode,
+    originalNodes,
+    selectedNodes,
+    setSelectedElement,
+    setPropertiesOpen,
+    updateUndoRedo
+  } = useStore(selector, shallow);
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const { setNodes } = useReactFlow();
   const edges = useEdges();
@@ -42,23 +54,20 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
-  // Define handles
-  const centerHandles = [
-    { id: 'top', position: Position.Top },
-    { id: 'right', position: Position.Right },
-    { id: 'bottom', position: Position.Bottom },
-    { id: 'left', position: Position.Left }
-  ];
+  // Define ALL handles from the beginning - always present
+  const allHandles = [
+    // Center handles - always visible and connectable
+    { id: 'top', position: Position.Top, offset: 0, type: 'center' },
+    { id: 'right', position: Position.Right, offset: 0, type: 'center' },
+    { id: 'bottom', position: Position.Bottom, offset: 0, type: 'center' },
+    { id: 'left', position: Position.Left, offset: 0, type: 'center' },
 
-  const additionalHandles = [
-    { id: 'top-right', position: Position.Top, offset: 20 },
-    { id: 'top-left', position: Position.Top, offset: -20 },
-    { id: 'bottom-right', position: Position.Bottom, offset: 20 },
-    { id: 'bottom-left', position: Position.Bottom, offset: -20 },
-    { id: 'right-top', position: Position.Right, offset: -20 },
-    { id: 'right-bottom', position: Position.Right, offset: 20 },
-    { id: 'left-top', position: Position.Left, offset: -20 },
-    { id: 'left-bottom', position: Position.Left, offset: 20 }
+    // Additional handles - always present but visibility controlled
+    { id: 'top-right', position: Position.Top, offset: 20, type: 'additional' },
+    { id: 'top-left', position: Position.Top, offset: -20, type: 'additional' },
+    { id: 'bottom-right', position: Position.Bottom, offset: 20, type: 'additional' },
+    { id: 'bottom-left', position: Position.Bottom, offset: -20, type: 'additional' }
+    // Removed: right-top, right-bottom, left-top, left-bottom
   ];
 
   // ✅ Track which handles are connected
@@ -75,16 +84,16 @@ export default function DataNode({ id, data, isConnectable, type }) {
   }, [edges, id]);
 
   const [connectedHandles, setConnectedHandles] = useState(new Set());
-  const [handles, setHandles] = useState([]);
+  const [shouldShowAdditionalHandles, setShouldShowAdditionalHandles] = useState(false);
 
   useEffect(() => {
     setConnectedHandles(getConnectedHandles());
   }, [edges, getConnectedHandles]);
 
   useEffect(() => {
-    const allCentersConnected = centerHandles.every((h) => connectedHandles.has(h.id));
-    const visibleExtraHandles = additionalHandles.filter((h) => allCentersConnected || connectedHandles.has(h.id));
-    setHandles([...centerHandles, ...visibleExtraHandles]);
+    // Show additional handles when all center handles are connected
+    const allCentersConnected = ['top', 'right', 'bottom', 'left'].every((handleId) => connectedHandles.has(handleId));
+    setShouldShowAdditionalHandles(allCentersConnected);
   }, [connectedHandles]);
 
   // Calculate capsule border radius (50% of height for perfect capsule shape)
@@ -134,6 +143,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
   };
 
   const updateNodeLabel = (newLabel) => {
+    updateUndoRedo(); // Same as DefaultNode
     setNodes((nodes) =>
       nodes.map((node) =>
         node.id === id
@@ -163,9 +173,9 @@ export default function DataNode({ id, data, isConnectable, type }) {
     setTempLabelValue(labelValue);
   };
 
-  const handleLabelBlur = () => {
+  const handleLabelSave = () => {
     setIsEditing(false);
-    const newLabel = labelRef.current?.textContent || '';
+    const newLabel = tempLabelValue.trim() || 'Node'; // Same as DefaultNode
     setLabelValue(newLabel);
     updateNodeLabel(newLabel);
     dispatch(setDetails({ ...details, name: newLabel }));
@@ -179,12 +189,9 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleLabelBlur();
+      handleLabelSave();
     } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      if (labelRef.current) {
-        handleLabelCancel();
-      }
+      handleLabelCancel();
     }
   };
 
@@ -211,24 +218,8 @@ export default function DataNode({ id, data, isConnectable, type }) {
     }
   }, [isEditing]);
 
-  const handleInfoClick = () => {
-    setPropertiesOpen(false);
-    const selectedNode = nodes.find((node) => node.id === id);
-    const { isAsset, properties } = selectedNode;
-    dispatch(setSelectedBlock({ id, data }));
-    dispatch(setAnchorEl({ type: 'node', value: id }));
-    setSelectedElement(selectedNode);
-    dispatch(
-      setDetails({
-        name: data?.label ?? '',
-        properties: properties ?? [],
-        isAsset: isAsset ?? false
-      })
-    );
-  };
-
-  const handleDetailClick = () => {
-    setPropertiesOpen(true);
+  const handleInfoClick = (open) => {
+    setPropertiesOpen(open);
     const selectedNode = nodes.find((node) => node.id === id);
     const { isAsset, properties } = selectedNode;
     dispatch(setSelectedBlock({ id, data }));
@@ -294,12 +285,22 @@ export default function DataNode({ id, data, isConnectable, type }) {
 
   // Function to calculate handle position with offset for capsule shape
   const getHandleStyle = (handle) => {
+    const isCenterHandle = handle.type === 'center';
+    const isAdditionalHandle = handle.type === 'additional';
+    const isConnected = connectedHandles.has(handle.id);
+
+    // Always show center handles, only show additional handles when condition is met
+    const shouldShow = isCenterHandle || (isAdditionalHandle && (shouldShowAdditionalHandles || isConnected));
+
     const baseStyle = {
       backgroundColor: bgColor,
       width: 8,
       height: 8,
       border: `2px solid white`,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      opacity: shouldShow ? 1 : 0,
+      pointerEvents: shouldShow ? 'all' : 'none',
+      transition: 'opacity 0.2s ease'
     };
 
     // For capsule shape, we need to adjust handle positions based on the curvature
@@ -322,22 +323,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
               ? Math.min(handle.offset, width / 2 - borderRadius / 2)
               : Math.max(handle.offset, -width / 2 + borderRadius / 2);
           return { ...baseStyle, left: `calc(50% + ${bottomOffset}px)` };
-
-        case Position.Left:
-          // For left handles, adjust based on capsule curvature
-          const leftOffset =
-            handle.offset > 0
-              ? Math.min(handle.offset, height / 2 - borderRadius / 2)
-              : Math.max(handle.offset, -height / 2 + borderRadius / 2);
-          return { ...baseStyle, top: `calc(50% + ${leftOffset}px)` };
-
-        case Position.Right:
-          // For right handles, adjust based on capsule curvature
-          const rightOffset =
-            handle.offset > 0
-              ? Math.min(handle.offset, height / 2 - borderRadius / 2)
-              : Math.max(handle.offset, -height / 2 + borderRadius / 2);
-          return { ...baseStyle, top: `calc(50% + ${rightOffset}px)` };
 
         default:
           return baseStyle;
@@ -373,7 +358,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
       <ClickAwayListener
         onClickAway={() => {
           setIsVisible(false);
-          if (isEditing) handleLabelBlur();
+          if (isEditing) handleLabelSave(); // Changed from handleLabelBlur to handleLabelSave
         }}
       >
         <div
@@ -402,8 +387,8 @@ export default function DataNode({ id, data, isConnectable, type }) {
             whiteSpace: 'pre-wrap'
           }}
         >
-          {/* Dynamic Handles */}
-          {handles.map((handle) => (
+          {/* Render ALL handles but control visibility with opacity and pointer-events */}
+          {allHandles.map((handle) => (
             <Handle
               key={handle.id}
               id={handle.id}
@@ -420,7 +405,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
               inputRef={inputRef}
               value={tempLabelValue}
               onChange={(e) => setTempLabelValue(e.target.value)}
-              onBlur={handleLabelBlur}
+              onBlur={handleLabelSave} // Changed from handleLabelBlur to handleLabelSave
               onKeyDown={handleKeyDown}
               onMouseDown={handleTextFieldMouseDown}
               onDragStart={(e) => e.stopPropagation()}
@@ -480,7 +465,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleInfoClick();
+              handleInfoClick(false);
             }}
             onMouseDown={(e) => e.stopPropagation()}
             style={{ ...iconStyle, left: '-12px', display: isSelected ? 'flex' : 'none' }}
@@ -490,7 +475,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
           <div
             onClick={(e) => {
               e.stopPropagation();
-              handleDetailClick();
+              handleInfoClick(true);
             }}
             onMouseDown={(e) => e.stopPropagation()}
             style={{ ...iconStyle, left: '12px', display: isSelected ? 'flex' : 'none' }}

@@ -837,23 +837,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
 
-  //Normal Nodes
-
-  updateNodes: (newNodes) =>
-    set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
-      nodes: newNodes
-    })),
-
-  // Update edges (with undo/redo management)
-  updateEdges: (newEdges) =>
-    set((state) => ({
-      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-      redoStack: [],
-      edges: newEdges
-    })),
-
   addToUndoStack: () => {
     // Cancel any pending debounced saves
     get().debouncedAddToUndoStack.cancel();
@@ -874,15 +857,11 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes
     }));
 
-    // Only add to undo stack for meaningful changes (not selection changes)
+    // Only mark as changed for meaningful updates
     const meaningfulChanges = changes.filter((change) => change.type !== 'select' && change.type !== 'dimensions');
 
     if (meaningfulChanges.length > 0) {
-      set((state) => ({
-        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-        redoStack: [],
-        isChanged: true
-      }));
+      set({ isChanged: true });
     }
   },
 
@@ -996,14 +975,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => {
       const updatedNodes = typeof newNodes === 'function' ? newNodes(state.nodes) : newNodes;
 
-      // Check if nodes actually changed
       const nodesChanged = JSON.stringify(updatedNodes) !== JSON.stringify(state.nodes);
 
       if (nodesChanged) {
         return {
           nodes: updatedNodes,
-          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-          redoStack: [],
           isChanged: true
         };
       }
@@ -1035,14 +1011,11 @@ const useStore = createWithEqualityFn((set, get) => ({
     set((state) => {
       const updatedEdges = typeof newEdges === 'function' ? newEdges(state.edges) : newEdges;
 
-      // Check if edges actually changed
       const edgesChanged = JSON.stringify(updatedEdges) !== JSON.stringify(state.edges);
 
       if (edgesChanged) {
         return {
           edges: updatedEdges,
-          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-          redoStack: [],
           isChanged: true
         };
       }
@@ -1305,6 +1278,15 @@ const useStore = createWithEqualityFn((set, get) => ({
     if (get().pendingUndoState) {
       get().debouncedAddToUndoStack.flush();
     }
+  },
+
+  updateUndoRedo: () => {
+    console.log('updated');
+    const { nodes, edges, undoStack } = get();
+    set({
+      undoStack: [...undoStack, { nodes, edges }],
+      redoStack: []
+    });
   },
 
   // Replace undo function:
