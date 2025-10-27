@@ -28,7 +28,7 @@ export const storeTaraModel = async (modelId, nodes, edges, viewport) => {
 export const fetchTaraModel = async (modelId) => {
   const formData = new FormData();
   formData.append('modelId', modelId);
-  
+
   const URL = `${configuration.apiBaseUrl}v1/taraModel/fetch`;
   try {
     const response = await axios.post(URL, formData);
@@ -55,7 +55,6 @@ export const updateTaraModel = async (modelId, nodes, edges, viewport) => {
     throw error;
   }
 };
-
 
 export const verifyCard = async (paymentMethodId) => {
   try {
@@ -370,4 +369,43 @@ export const DELETE_CALL = async (details, url) => {
   }
   // const res = await axios(options);
   // return res.data;
+};
+
+export const forgotPassword = async (email, org) => {
+  const FormData = require('form-data');
+  let data = new FormData();
+  data.append('email', email);
+  data.append('org', org);
+
+  const URL = `${configuration.apiBaseUrl}forgot-password`;
+
+  try {
+    const res = await axios.post(URL, data);
+    return res.data;
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    return error.response?.data || { error: 'Unknown error occurred' };
+  }
+};
+
+export const resetPassword = async (identifier, org, oldPassword, newPassword) => {
+  const FormData = require('form-data');
+  let data = new FormData();
+  data.append('identifier', identifier);
+  data.append('org', org);
+  data.append('old_password', oldPassword);
+  data.append('new_password', newPassword);
+
+  const URL = `${configuration.apiBaseUrl}reset-password`;
+
+  try {
+    const res = await axios.post(URL, data);
+    return { success: true, data: res.data };
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Unknown error occurred'
+    };
+  }
 };

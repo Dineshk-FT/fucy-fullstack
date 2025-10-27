@@ -54,6 +54,8 @@ import ThreatScenarios from './Scenarios/ThreatScenarios';
 import ItemDefinition from './Scenarios/ItemDefinition';
 import PublishIcon from '@mui/icons-material/Publish';
 import CybersecurityExport from '../../../../components/Poppers/CybersecurityExport';
+import { CybersecurityControlsTreeItem } from './Scenarios/Cybersecurity';
+import { node } from 'prop-types';
 
 const imageComponents = {
   AttackIcon,
@@ -1084,11 +1086,28 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
                 null,
                 (sub) => {
                   return sub.scenes?.map((scene, i) => (
-                    <TreeItem
+                    <DraggableTreeItem
                       onClick={(e) => e.stopPropagation()}
                       key={scene.ID}
                       nodeId={scene.ID}
                       label={getLabel('TopicIcon', scene.Name, i + 1, scene.ID)}
+                      draggable={sub?.type === 'cybersecurity_controls'}
+                      onDragStart={(e) => {
+                        // Add your drag start logic here for cybersecurity controls
+                        if (sub?.type === 'cybersecurity_controls') {
+                          e.dataTransfer.setData(
+                            'application/control',
+                            JSON.stringify({
+                              type: 'Event',
+                              nodeType: 'cybersecurity_controls',
+                              nodeId: scene.ID,
+                              label: scene.Name,
+                              ...scene
+                              // Add other necessary properties
+                            })
+                          );
+                        }
+                      }}
                     />
                   ));
                 },
