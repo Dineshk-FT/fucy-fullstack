@@ -23,6 +23,7 @@ import { attackCanvasSteps } from '../../utils/Steps';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setAttackScene } from '../../store/slices/CurrentIdSlice';
 import AutoGuidePopper from '../../components/Poppers/AutoGuidePopper';
+import { update } from 'lodash';
 
 const elk = new ELK();
 
@@ -154,12 +155,14 @@ const selector = (state) => ({
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
+  updateEnable: state.updateName$DescriptionforCybersecurity,
   addAttackScene: state.addAttackScene,
   addcybersecurityScene: state.addcybersecurityScene,
   deleteCybersecurity: state.deleteCybersecurity,
   removeAttacks: state.removeAttacks,
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
+  controls: state.cybersecurity['subs'][2],
   setIsChanged: state.setIsAttackChanged,
   isChanged: state.isAttackChanged,
   openSave: state.openSave,
@@ -213,10 +216,12 @@ export default function AttackBlock({ attackScene, color }) {
     removeAttacks,
     attacks,
     requirements,
+    controls,
     isChanged,
     setIsChanged,
     openSave,
-    setOpenSave
+    setOpenSave,
+    updateEnable
   } = useStore(selector, shallow);
   const notify = (message, status) => toast[status](message);
   const dispatch = useDispatch();
@@ -229,13 +234,10 @@ export default function AttackBlock({ attackScene, color }) {
   const { isDark } = useSelector((state) => state?.currentId);
   const isAttack = useMemo(() => attacks['scenes']?.some(check), [attacks, selectedNode]);
   const isRequirement = useMemo(() => requirements['scenes']?.some(check), [requirements, selectedNode]);
+  const isControl = useMemo(() => controls['scenes']?.some(check), [controls, selectedNode]);
   const flowWrapper = useRef(null);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
-
-  // console.log('isChanged', isChanged);
-  // console.log('attackScene', attackScene);
-  // console.log('nodes', nodes);
 
   const getMatchingId = useCallback(() => {
     const matchingScene = attacks['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId);
@@ -244,6 +246,11 @@ export default function AttackBlock({ attackScene, color }) {
   function check(scene) {
     return scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId;
   }
+
+  const matchingcontrol = useMemo(
+    () => controls['scenes']?.find((scene) => scene?.ID === selectedNode?.id || scene?.ID === selectedNode?.data?.nodeId),
+    [controls, selectedNode]
+  );
 
   const handleSave = () => {
     // console.log(`✅ Changes detected! Saving scene ${sceneId}...`);
@@ -365,18 +372,124 @@ export default function AttackBlock({ attackScene, color }) {
       const nodeRect = nodeElement.getBoundingClientRect();
 
       const relativeX = nodeRect.left - flowWrapperRect.left + 100;
-      const relativeY = nodeRect.bottom - flowWrapperRect.top + 4; // Position just below
+      const relativeY = nodeRect.bottom - flowWrapperRect.top + 4; // Position below node
 
       setCopiedNode(node);
       setSelectedNode(node);
+      // 🟢 Special case for cybersecurity controls
+      const isCyberControl = node?.data?.nodeType === 'cybersecurity_controls' || node?.nodeType === 'cybersecurity_controls';
+
+      // console.log('isCyberControl', isCyberControl);
+      const options = isCyberControl
+        ? ['Copy', 'Paste', 'Enable']
+        : node.type === 'Event'
+        ? ['Copy', 'Paste', 'Attack', 'Requirement']
+        : ['Copy', 'Paste'];
+
       setContextMenu({
         visible: true,
         x: relativeX,
         y: relativeY,
-        options: node.type === 'Event' ? ['Copy', 'Paste', 'Attack', 'Requirement'] : ['Copy', 'Paste'],
+        options,
         node
       });
     }
+  };
+
+  // console.log('selectedNode', selectedNode);
+  // Handle Enable checkbox
+  const handleEnableChange = (e, isChecked) => {
+    e.stopPropagation();
+    const controlId = selectedNode?.ID;
+
+    const payload = {
+      id: controls?._id,
+      sceneId: controlId,
+      enabled: isChecked
+    };
+
+    updateEnable(payload)
+      .then((res) => {
+        if (!res.error) {
+          notify(`Control ${isChecked ? 'enabled' : 'disabled'} successfully`, 'success');
+          getCyberSecurityScenario(model?._id);
+
+          // ✅ Step 1: Immediately update control node's isEnabled state locally
+          setNodes((prevNodes) => {
+            return prevNodes.map((node) => {
+              if (node?.id === selectedNode?.id || node?.data?.nodeId === selectedNode?.id) {
+                return {
+                  ...node,
+                  isEnabled: isChecked
+                };
+              }
+              return node;
+            });
+          });
+
+          // ✅ Step 2: Wait one tick to ensure updated node state is used in rating recalculation
+          setTimeout(() => {
+            setNodes((prevNodes) => {
+              const { attackEdges: edges, attackScenarios: attacks } = useStore.getState();
+
+              const hasEnabledControlConnected = (startNodeId, visited = new Set()) => {
+                const queue = [startNodeId];
+                const allNodes = [...prevNodes];
+
+                while (queue.length > 0) {
+                  const currentId = queue.shift();
+                  if (visited.has(currentId)) continue;
+                  visited.add(currentId);
+
+                  const currentNode = allNodes.find((n) => n.id === currentId);
+                  if (!currentNode) continue;
+
+                  const outgoingEdges = edges.filter((edge) => edge.source === currentId);
+                  for (const edge of outgoingEdges) {
+                    const targetNode = allNodes.find((n) => n.id === edge.target);
+                    if (!targetNode || visited.has(targetNode.id)) continue;
+
+                    // ✅ Now correctly reflects isEnabled update
+                    if (targetNode.nodeType === 'cybersecurity_controls' && targetNode.isEnabled) {
+                      return true;
+                    }
+
+                    if (targetNode.type?.toLowerCase()?.includes('gate')) {
+                      queue.push(targetNode.id);
+                    }
+                  }
+                }
+                return false;
+              };
+
+              // ✅ Update attack event nodes
+              return prevNodes.map((node) => {
+                if (node.type !== 'Event' || node.nodeType) return node;
+
+                const attackScene = attacks?.subs?.[0]?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
+
+                const originalRating = attackScene?.['Attack Feasibilities Rating'] || 'High';
+                const hasEnabledControl = hasEnabledControlConnected(node.id);
+
+                const newRating = hasEnabledControl ? 'Low' : originalRating;
+
+                if (node?.data?.rating === newRating) return node;
+
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    rating: newRating
+                  }
+                };
+              });
+            });
+          }, 100); // short delay ensures updated control state is reflected
+        } else {
+          notify(res.error, 'error');
+        }
+      })
+      .catch(() => notify('Failed to update control status', 'error'));
   };
 
   const handleCanvasContextMenu = (event) => {
@@ -640,15 +753,28 @@ export default function AttackBlock({ attackScene, color }) {
       event.preventDefault();
       const cyber = event.dataTransfer.getData('application/cyber');
       const Library = event.dataTransfer.getData('application/Library');
+      const control = event.dataTransfer.getData('application/control');
+
       let parsedNode;
       let parsedTemplate;
-      if (cyber) {
-        try {
-          parsedNode = JSON.parse(cyber); // Ensure it's properly parsed
-        } catch (err) {
-          console.error('Failed to parse dropped data:', err);
+      if (cyber || control) {
+        if (cyber) {
+          try {
+            parsedNode = JSON.parse(cyber); // Ensure it's properly parsed
+          } catch (err) {
+            console.error('Failed to parse dropped data:', err);
+          }
+        } else {
+          // console.log('cyber', JSON.parse(control));
+          try {
+            parsedNode = JSON.parse(control); // Ensure it's properly parsed
+          } catch (err) {
+            console.error('Failed to parse dropped data:', err);
+          }
         }
       }
+
+      // console.log('parsedNode', parsedNode);
       if (Library) {
         try {
           parsedTemplate = JSON.parse(Library); // Ensure it's properly parsed
@@ -856,22 +982,31 @@ export default function AttackBlock({ attackScene, color }) {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between', // Space between text/icon and checkbox
+                  justifyContent: 'space-between',
                   borderBottom: contextMenu.options.length > 1 ? '1px solid #eee' : 'none',
-                  transition: 'background-color 0.2s ease' // Smooth transition for hover effect
+                  transition: 'background-color 0.2s ease'
                 }}
                 onClick={(e) => handleMenuOptionClick(e, option)}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')} // Hover effect
-                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')} // Revert on mouse leave
+                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f4f4f4')}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   {option === 'Copy' && <ContentCopyIcon />}
                   {option === 'Paste' && <ContentPasteIcon />}
-                  {option.includes('Attack') && <img src={AttackIcon} alt="attack" height="20px" width="20px" />}
-                  {option.includes('Requirement') && <img src={CybersecurityIcon} alt="requirement" height="20px" width="20px" />}
                   <span style={{ marginLeft: '8px' }}>{option}</span>
                 </span>
-                {/* Add MUI Checkbox for "Attack" and "Requirement" */}
+
+                {/* 🟢 Enable checkbox for cybersecurity controls */}
+                {option === 'Enable' && (
+                  <Checkbox
+                    checked={matchingcontrol?.isEnabled ?? false}
+                    onChange={(e) => handleEnableChange(e, e.target.checked)}
+                    color="primary"
+                    sx={{ marginLeft: 'auto', p: 0 }}
+                  />
+                )}
+
+                {/* Existing Attack/Requirement checkboxes remain untouched */}
                 {['Attack', 'Requirement'].includes(option) && (
                   <Checkbox
                     checked={option === 'Attack' ? isAttack : option === 'Requirement' ? isRequirement : false}

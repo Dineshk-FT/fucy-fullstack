@@ -5,27 +5,41 @@ import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Typography } from '@mui/material';
 import { RatingColor } from '../Table/constraints';
-import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
+import { AttackIcon, CybersecurityIcon, CyberControlsIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   update: state.updateAttackNode,
   getAttackScenario: state.getAttackScenario,
+  updateEnable: state.updateName$DescriptionforCybersecurity,
   model: state.model,
   attacks: state.attackScenarios['subs'][0],
   requirements: state.cybersecurity['subs'][1],
+  controls: state.cybersecurity['subs'][2],
   addAttackScene: state.addAttackScene,
-  setAttackNodes: state.setAttackNodes
+  setAttackNodes: state.setAttackNodes,
+  nodes: state.attackNodes,
+  edges: state.attackEdges
 });
 
 export default function Event(props) {
-  const { update, model, addAttackScene, getAttackScenario, attacks, requirements, setAttackNodes } = useStore(selector, shallow);
+  const { update, model, addAttackScene, getAttackScenario, attacks, requirements, controls, setAttackNodes, nodes, edges } = useStore(
+    selector,
+    shallow
+  );
   const inputValueFromProps = useMemo(() => {
     const matchingAttack = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
     // console.log('matchingAttack', matchingAttack);
     return matchingAttack?.Name || props.data.label;
   }, [attacks, props?.id, props?.data]);
 
-  // console.log('props', props);
+  const matchingControl = useMemo(() => {
+    return controls?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+  }, [controls, props?.id, props?.data]);
+
+  const isEnabled = useMemo(() => matchingControl?.isEnabled || false, [matchingControl]);
+  const isControl = useMemo(() => !!matchingControl, [matchingControl]);
+
+  // console.log('controls', controls);
   const [inputValue, setInputValue] = useState(inputValueFromProps);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -39,35 +53,35 @@ export default function Event(props) {
     setAttackNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
   // console.log('nodes', nodes);
-  const updateNodeRating = useCallback(() => {
-    setAttackNodes((nodes) =>
-      nodes.map((node) => {
-        const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
-        if (attack) {
-          // If the node is an attack, set its rating
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              rating: attack['Attack Feasibilities Rating']
-            }
-          };
-        } else {
-          // If not an attack, remove the rating
-          const { rating, ...restData } = node.data || {};
-          return {
-            ...node,
-            data: restData
-          };
-        }
-      })
-    );
-  }, [attacks, setAttackNodes]);
+  // const updateNodeRating = useCallback(() => {
+  //   setAttackNodes((nodes) =>
+  //     nodes.map((node) => {
+  //       const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
+  //       if (attack) {
+  //         // If the node is an attack, set its rating
+  //         return {
+  //           ...node,
+  //           data: {
+  //             ...node.data,
+  //             rating: attack['Attack Feasibilities Rating']
+  //           }
+  //         };
+  //       } else {
+  //         // If not an attack, remove the rating
+  //         const { rating, ...restData } = node.data || {};
+  //         return {
+  //           ...node,
+  //           data: restData
+  //         };
+  //       }
+  //     })
+  //   );
+  // }, [attacks, setAttackNodes]);
 
-  // Call this function after rendering or whenever attacks data changes
-  useEffect(() => {
-    updateNodeRating();
-  }, [updateNodeRating]);
+  // // Call this function after rendering or whenever attacks data changes
+  // useEffect(() => {
+  //   updateNodeRating();
+  // }, [updateNodeRating, edges]); // Added edges dependency
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -93,15 +107,33 @@ export default function Event(props) {
   function check(scene) {
     return scene.ID === props.id || scene.ID === props.data.nodeId;
   }
-
   const getBgColor = useCallback(() => {
-    const color = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
-    if (color) {
-      return RatingColor(color['Attack Feasibilities Rating']);
-    } else {
-      return 'grey';
+    // ✅ If it's a control and enabled → green
+    if (isControl && isEnabled) {
+      return 'green';
     }
-  }, [attacks, props?.id, props?.data?.nodeId]);
+
+    // ✅ Find the attack tree node from nodes array
+    const attackTreeNode = nodes.find((n) => !n?.data?.nodeType && (n.id === props?.id || n.id === props?.data?.nodeId));
+
+    // ✅ If it's an attack node (not control)
+    const attackNode = attacks?.scenes?.find((sub) => sub?.ID === props?.id || sub?.ID === props?.data?.nodeId);
+    // console.log('attackTreeNode', attackTreeNode);
+    if (attackNode) {
+      const rating = attackTreeNode?.data?.rating;
+
+      // 🔹 If rating is Low → show green (means mitigated / controlled)
+      if (rating?.toLowerCase() === 'low') {
+        return 'lightgreen';
+      }
+
+      // 🔹 Otherwise use standard rating color
+      return RatingColor(rating);
+    }
+
+    // Add a default return value
+    return 'transparent'; // Replace with your default color
+  }, [isControl, isEnabled, nodes, attacks?.scenes, props?.id, props?.data?.nodeId]);
 
   const bgColor = getBgColor();
 

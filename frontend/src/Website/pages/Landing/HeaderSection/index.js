@@ -9,7 +9,20 @@ import { useDispatch } from 'react-redux';
 import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import { products, cybersecurityServices, consulting, academy, contact } from './dropdown-options-data';
-import { AppBar, Toolbar, Box, Typography, MenuItem, Menu, IconButton, Drawer, List, ListItem, ListItemText, useTheme } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  MenuItem,
+  Menu,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  useTheme
+} from '@mui/material';
 import { display } from '@mui/system';
 
 // const services = [
@@ -178,7 +191,7 @@ export default function Header() {
       }
     }
     // Handle specific cases without a direct path
-    else if (name === 'TARA Tool') {
+    else if (name === 'TARA-Xpress') {
       dispatch(changeCanvasPage('canvas'));
       navigate('/Models', { replace: true });
     } else if (name === 'Business Enquiry') {
@@ -239,17 +252,20 @@ export default function Header() {
             <Typography variant="h5" className={classes.title}>
               FUCY TECH
             </Typography>
-            <Typography variant="subtitle2" style={{
-              color: 'white',
-              fontWeight: '400',
-              fontSize: '12px',
-              lineHeight: 1.2,
-              marginTop: '2px',
-              [theme.breakpoints.down('sm')]: {
-                fontSize: '10px',
-                marginTop: '1px'
-              }
-            }}>
+            <Typography
+              variant="subtitle2"
+              style={{
+                color: 'white',
+                fontWeight: '400',
+                fontSize: '12px',
+                lineHeight: 1.2,
+                marginTop: '2px',
+                [theme.breakpoints.down('sm')]: {
+                  fontSize: '10px',
+                  marginTop: '1px'
+                }
+              }}
+            >
               Drive Secure. Innovate Faster.
             </Typography>
           </Box>

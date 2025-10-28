@@ -1,6 +1,8 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Provider, useDispatch } from 'react-redux';
+import EditProperties from '../Poppers/EditProperties';
+import EditNode from '../Poppers/EditNode';
 import { store } from '../../store';
 import { setSelectedBlock } from '../../store/slices/CanvasSlice';
 import { toast } from 'react-hot-toast';
@@ -29,6 +31,8 @@ import {
   MenuItem,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
+import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -183,9 +187,22 @@ const pastelColors = [
 ];
 
 // Simple component for threat/vulnerability/model nodes
-const CustomNode = ({ id, data }) => {
+const CustomNode = React.memo(({ id, data }) => {
   const colors = ColorTheme();
   const reactFlowInstance = useReactFlow();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [editAnchorEl, setEditAnchorEl] = useState(null);
+  const dispatch = useDispatch();
+
+  const handleEditClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setEditAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseEdit = () => {
+    setEditAnchorEl(null);
+  };
 
   const onDelete = (event) => {
     event.preventDefault();
@@ -196,42 +213,94 @@ const CustomNode = ({ id, data }) => {
     );
   };
 
+  const handlePropertiesClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseProperties = () => {
+    setAnchorEl(null);
+  };
+
+  // Merge styles from data and style props
+  const nodeStyle = {  
+    position: 'relative',
+    padding: '8px 25px 8px 30px',
+    backgroundColor: data.bgColor || colors.paperBg,
+    color: data.textColor || colors.textPrimary,
+    borderRadius: '4px',
+    border: `1px solid ${data.borderColor || colors.borderColor}`,
+    fontSize: '12px',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    cursor: 'move',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '60px',
+    height: '30px',
+    userSelect: 'none',
+    transition: 'all 0.2s ease',
+    ...data.style, // Apply any styles from data.style
+    '&:hover': {
+      transform: 'scale(1.05)',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+    }
+  };
+
   return (
     <Tooltip title={data.label || data.name || ''} arrow>
-      <div style={{
-        position: 'relative',
-        padding: '8px 25px 8px 30px',
-        backgroundColor: data.bgColor || colors.paperBg,
-        color: data.textColor || colors.textPrimary,
-        borderRadius: '4px',
-        border: `1px solid ${data.borderColor || colors.borderColor}`,
-        fontSize: '12px',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        cursor: 'move',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: '60px',
-        height: '30px',
-        userSelect: 'none',
-        transition: 'all 0.2s ease',
-        '&:hover': {
-          transform: 'scale(1.05)',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-        }
-      }}>
+      <div style={nodeStyle}>
+        {/* Left handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Left}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
         <Handle
           type="target"
           position={Position.Left}
-          style={{ background: '#555' }}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
         />
+        
+        {/* Top handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Top}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Top}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        
         {data.shortName || data.label}
+        
+        {/* Right handle - both source and target */}
         <Handle
           type="source"
           position={Position.Right}
-          style={{ background: '#555' }}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Right}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
+        
+        {/* Bottom handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Bottom}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
         />
         <IconButton
           onClick={onDelete}
@@ -264,10 +333,125 @@ const CustomNode = ({ id, data }) => {
         >
           <DeleteOutlineIcon sx={{ fontSize: 12 }} />
         </IconButton>
+        <IconButton
+          onClick={handleEditClick}
+          size="small"
+          sx={{
+            position: 'absolute',
+            left: -8,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 18,
+            height: 18,
+            minHeight: 18,
+            color: 'info.main',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            opacity: 0,
+            visibility: 'hidden',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'info.main',
+              color: 'info.contrastText',
+              opacity: 1,
+              transform: 'translateY(-50%) scale(1.1)'
+            },
+            '.react-flow__node:hover &': {
+              opacity: 0.9,
+              visibility: 'visible'
+            }
+          }}
+        >
+          <EditIcon sx={{ fontSize: 12 }} />
+        </IconButton>
+        <IconButton
+          onClick={handlePropertiesClick}
+          size="small"
+          sx={{
+            position: 'absolute',
+            right: -8,
+            bottom: -8,
+            width: 18,
+            height: 18,
+            minHeight: 18,
+            color: 'primary.main',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            opacity: 0,
+            visibility: 'hidden',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText',
+              opacity: 1,
+              transform: 'scale(1.1)'
+            },
+            '.react-flow__node:hover &': {
+              opacity: 0.9,
+              visibility: 'visible'
+            }
+          }}
+        >
+          <SettingsIcon sx={{ fontSize: 12 }} />
+        </IconButton>
       </div>
+      {editAnchorEl && (  // Conditional render
+        <EditNode
+          anchorEl={editAnchorEl}
+          handleClosePopper={handleCloseEdit}
+          details={data}
+          setDetails={(newData) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+              )
+            );
+          }}
+          dispatch={dispatch}
+          handleSaveEdit={handleCloseEdit}
+          nodes={reactFlowInstance.getNodes()}
+          setNodes={reactFlowInstance.setNodes}
+          setEdges={reactFlowInstance.setEdges}
+          selectedElement={data}
+          setSelectedElement={(element) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { 
+                  ...node, 
+                  data: { 
+                    ...node.data,
+                    ...element,
+                    ...(element?.style ? { style: element.style } : {})
+                  }
+                } : node
+              )
+            );
+          }}
+        />
+      )}
+      {anchorEl && (  // Conditional render
+        <EditProperties
+          anchorEl={anchorEl}
+          handleClosePopper={handleCloseProperties}
+          details={data}
+          setDetails={(newData) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+              )
+            );
+          }}
+          dispatch={dispatch}
+          handleSaveEdit={() => {}}
+          setNodes={reactFlowInstance.setNodes}
+          setEdges={reactFlowInstance.setEdges}
+        />
+      )}
     </Tooltip>
   );
-};
+});
 
 // Define node types
 const nodeTypes = {

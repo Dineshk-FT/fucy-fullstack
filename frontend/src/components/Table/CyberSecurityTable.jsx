@@ -61,7 +61,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     wordBreak: 'break-word',
     lineHeight: 1.4,
     '&:first-of-type': {
-      borderTopLeftRadius: theme.shape.borderRadius,
+      borderTopLeftRadius: theme.shape.borderRadius
     },
     '&:last-child': {
       borderTopRightRadius: theme.shape.borderRadius,
@@ -88,7 +88,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     '&:first-of-type': {
       paddingLeft: '16px'
     }
-}}));
+  }
+}));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
@@ -100,18 +101,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -120,8 +121,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
+      backgroundColor: theme.palette.action.hover
+    }
   },
   '&:last-child td, &:last-child th': { border: 0 }
 }));
@@ -161,7 +162,6 @@ export default function CybersecurityTable() {
   const color = ColorTheme();
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columnWidths, setColumnWidths] = useState({});
@@ -170,6 +170,7 @@ export default function CybersecurityTable() {
   const [runTour, setRunTour] = useState(false);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
+  const [enabledRows, setEnabledRows] = useState({}); // Changed from mitigatedRows to enabledRows
 
   const visibleColumns1 = useStore((state) => state.CybersecurityGoalsTable);
   const visibleColumns2 = useStore((state) => state.CybersecurityRequirementsTable);
@@ -191,10 +192,11 @@ export default function CybersecurityTable() {
   }, [title]);
 
   const Head = useMemo(() => {
-    if (title == 'Cybersecurity Goals') return CommonHeader?.filter((header) => visibleColumns1.includes(header.name));
-    if (title == 'Cybersecurity Requirements') return CommonHeader?.filter((header) => visibleColumns2.includes(header.name));
-    if (title == 'Cybersecurity Controls') return CommonHeader?.filter((header) => visibleColumns3.includes(header.name));
-    if (title == 'Cybersecurity Claims') return CommonHeader?.filter((header) => visibleColumns4.includes(header.name));
+    if (title === 'Cybersecurity Goals') return CommonHeader?.filter((header) => visibleColumns1.includes(header.name));
+    if (title === 'Cybersecurity Requirements') return CommonHeader?.filter((header) => visibleColumns2.includes(header.name));
+    if (title === 'Cybersecurity Controls') return CommonHeader?.filter((header) => visibleColumns3.includes(header.name));
+    if (title === 'Cybersecurity Claims') return CommonHeader?.filter((header) => visibleColumns4.includes(header.name));
+    return [];
   }, [title, visibleColumns1, visibleColumns2, visibleColumns3, visibleColumns4, CommonHeader]);
 
   const getIdName = () => {
@@ -237,18 +239,18 @@ export default function CybersecurityTable() {
   };
 
   const filteredRows = useMemo(() => {
-    let filtered = rows;
+    let filteredData = rows;
 
     // Apply search filter
     if (searchTerm.trim()) {
-      filtered = filtered.filter(
+      filteredData = filteredData.filter(
         (row) =>
           row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) || row.Description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Apply sorting
-    return stableSort(filtered, getComparator(order, orderBy));
+    return stableSort(filteredData, getComparator(order, orderBy));
   }, [rows, searchTerm, order, orderBy]);
 
   const paginatedRows = useMemo(() => {
@@ -257,7 +259,7 @@ export default function CybersecurityTable() {
 
   useEffect(() => {
     const getId = getIdName();
-    if (cybersecurity['scenes']) {
+    if (cybersecurity && cybersecurity['scenes']) {
       const scene = cybersecurity?.scenes?.map((dt, i) => {
         return {
           SNo: `${getId}${(i + 1).toString().padStart(3, '0')}`,
@@ -265,12 +267,23 @@ export default function CybersecurityTable() {
           Name: dt?.Name,
           Description: dt?.Description ?? `description for ${dt?.Name}`,
           'Related Threat Scenario': dt?.threat_key ?? [],
-          'Related Attack Tree': dt?.attack_scene_name ?? ''
+          'Related Attack Tree': dt?.attack_scene_name ?? '',
+          Enabled: dt?.isEnabled ?? false // Added 'Enabled' field from dt.enabled
         };
       });
       setRows(scene);
+
+      // Initialize enabledRows based on the 'Enabled' property from fetched data
+      const initialEnabledState = {};
+      scene.forEach((row) => {
+        if (row.Enabled) {
+          initialEnabledState[row.ID] = true;
+        }
+      });
+      setEnabledRows(initialEnabledState);
     } else {
       setRows([]);
+      setEnabledRows({}); // Clear enabled state if no data
     }
   }, [cybersecurity, title]);
 
@@ -296,17 +309,14 @@ export default function CybersecurityTable() {
 
     addScene(details)
       .then((res) => {
-        // console.log('res', res);
         if (!res.error) {
-          // setTimeout(() => {
           getCyberSecurityScenario(model?._id);
           notify(res.message ?? 'Added successfully', 'success');
-          // handleClose();
           setNewRowData({
             Name: '',
             Description: ''
           });
-          // }, 500);
+          setIsAddingNewRow(false);
         } else {
           notify(res?.error ?? 'Something went wrong', 'error');
         }
@@ -338,6 +348,59 @@ export default function CybersecurityTable() {
       })
       .catch((err) => {
         if (err) notify('Something went wrong', 'error');
+      });
+  };
+
+  const handleEnabledToggle = (rowId, currentEnabledStatus) => {
+    // Optimistic update
+    setEnabledRows((prev) => {
+      const newState = { ...prev };
+      if (currentEnabledStatus) {
+        delete newState[rowId];
+      } else {
+        newState[rowId] = true;
+      }
+      return newState;
+    });
+
+    const details = {
+      id: cybersecurity?._id,
+      sceneId: rowId,
+      enabled: !currentEnabledStatus
+    };
+
+    updateName(details)
+      .then((res) => {
+        if (res.error) {
+          // Revert optimistic update if API call fails
+          setEnabledRows((prev) => {
+            const newState = { ...prev };
+            if (!currentEnabledStatus) {
+              // If it was optimistically set to true, set it back to false
+              delete newState[rowId];
+            } else {
+              // If it was optimistically set to false, set it back to true
+              newState[rowId] = true;
+            }
+            return newState;
+          });
+          notify(res.error ?? 'Something went wrong while updating enabled status', 'error');
+        } else {
+          notify(res.message ?? 'Enabled status updated successfully', 'success');
+        }
+      })
+      .catch((err) => {
+        // Revert optimistic update if API call fails
+        setEnabledRows((prev) => {
+          const newState = { ...prev };
+          if (!currentEnabledStatus) {
+            delete newState[rowId];
+          } else {
+            newState[rowId] = true;
+          }
+          return newState;
+        });
+        notify(err.message ?? 'Something went wrong while updating enabled status', 'error');
       });
   };
 
@@ -376,13 +439,14 @@ export default function CybersecurityTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const RenderTableRow = ({ row, rowKey, isChild = false }) => {
+  const RenderTableRow = ({ row, isChild = false }) => {
     const [hoveredField, setHoveredField] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [anchorEl, setAnchorEl] = useState(null);
     const [isPopperFocused, setIsPopperFocused] = useState(false);
     const isSelected = selectedRows.includes(row.ID);
+    const isEnabled = enabledRows[row.ID] || false; // Check if row.ID exists in enabledRows object
 
     const handleEditClick = (event, fieldName, currentValue) => {
       event.stopPropagation();
@@ -408,7 +472,7 @@ export default function CybersecurityTable() {
         updateName(details)
           .then((res) => {
             if (!res.error) {
-              notify(res.message ?? 'Deleted successfully', 'success');
+              notify(res.message ?? 'Updated successfully', 'success');
               getCyberSecurityScenario(model?._id);
               handleClosePopper();
             } else {
@@ -429,16 +493,23 @@ export default function CybersecurityTable() {
 
     return (
       <StyledTableRow
-        key={row.name}
+        key={row.ID}
         data={row}
         sx={{
-          backgroundColor: isSelected ? '#FF3800' : isChild ? '#F4F8FE' : color?.sidebarBG,
+          backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.08)' : isChild ? '#F4F8FE' : color?.sidebarBG,
           color: `${color?.sidebarContent} !important`,
           '& .MuiTableCell-root.MuiTableCell-body': {
             color: `${color?.sidebarContent} !important`
           }
         }}
       >
+        {/* Checkbox column for Cybersecurity Controls */}
+        {title === 'Cybersecurity Controls' && (
+          <StyledTableCell padding="checkbox" align="center">
+            <Checkbox checked={isEnabled} onChange={() => handleEnabledToggle(row.ID, isEnabled)} color="success" />
+          </StyledTableCell>
+        )}
+
         {Head?.map((item, index) => {
           const isEditableField = item.name === 'Name' || item.name === 'Description';
           let cellContent;
@@ -446,7 +517,7 @@ export default function CybersecurityTable() {
             case isEditableField:
               cellContent = (
                 <StyledTableCell
-                  id="edit-name"
+                  id={`edit-${item.name}-${row.ID}`}
                   key={index}
                   onMouseEnter={() => setHoveredField(item.name)}
                   onMouseLeave={() => {
@@ -662,6 +733,12 @@ export default function CybersecurityTable() {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
+                {/* Enabled checkbox column header for Cybersecurity Controls */}
+                {title === 'Cybersecurity Controls' && (
+                  <StyledTableCell padding="checkbox" align="center">
+                    Enable
+                  </StyledTableCell>
+                )}
                 {Head?.map((hd) => (
                   <StyledTableCell key={hd?.id} style={{ width: columnWidths[hd.id] || 'auto', position: 'relative' }}>
                     <TableSortLabel
@@ -691,9 +768,14 @@ export default function CybersecurityTable() {
             <TableBody>
               {isAddingNewRow && (
                 <StyledTableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                  {/* Empty enabled checkbox cell for new row in Cybersecurity Controls */}
+                  {title === 'Cybersecurity Controls' && (
+                    <StyledTableCell padding="checkbox" align="center">
+                      {/* Empty checkbox cell for new row */}
+                    </StyledTableCell>
+                  )}
                   {Head?.map((item, index) => {
-                    if (index === 0) {
-                      // Move action buttons to the first column
+                    if (item.name === 'SNo') {
                       return (
                         <StyledTableCell key={index}>
                           <IconButton
@@ -751,8 +833,8 @@ export default function CybersecurityTable() {
                 </StyledTableRow>
               )}
 
-              {paginatedRows?.map((row, rowkey) => (
-                <RenderTableRow row={row} key={rowkey} rowKey={rowkey} />
+              {paginatedRows?.map((row) => (
+                <RenderTableRow row={row} key={row.ID} />
               ))}
             </TableBody>
           </Table>
