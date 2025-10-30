@@ -4,7 +4,7 @@ import { Popper, Paper, Typography, Button, ClickAwayListener } from '@mui/mater
 const AutoSavePopper = ({ open, anchorRef, handleClose, handleSave }) => {
   const handleAutoSaveChoice = (e) => {
     handleSave(e);
-    handleClose();
+    handleClose(e);
   };
 
   return (

@@ -32,7 +32,6 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);
-  const labelRef = useRef(null);
   const [height, setHeight] = useState(() => data?.style?.height ?? 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
@@ -115,7 +114,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
 
   const handleLabelBlur = () => {
     setIsEditing(false);
-    const newLabel = labelRef.current?.textContent || '';
+    const newLabel = tempLabelValue.trim(); // Use tempLabelValue instead of labelRef
     setLabelValue(newLabel);
     updateNodeLabel(newLabel);
     dispatch(setDetails({ ...details, name: newLabel }));
@@ -123,7 +122,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
 
   const handleLabelCancel = () => {
     setIsEditing(false);
-    setTempLabelValue(labelValue);
+    setTempLabelValue(labelValue); // Reset to the original label value
   };
 
   const handleKeyDown = (e) => {
