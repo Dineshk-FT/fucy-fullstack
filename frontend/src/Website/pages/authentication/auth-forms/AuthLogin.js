@@ -19,7 +19,11 @@ import {
   Stack,
   Typography,
   useMediaQuery,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 
 // third party
@@ -36,7 +40,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Google from '../../../../assets/images/icons/social-google.svg';
 import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
-import { login, checkUserStatus, CheckUserStatus } from '../../../../services/api';
+import { login, checkUserStatus, CheckUserStatus, forgotPassword } from '../../../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { setModelId } from '../../../../store/slices/PageSectionSlice';
 import LicenseExpiryModal from '../../../../components/Modal/LicenseExpiryModal';
@@ -55,6 +59,12 @@ const FirebaseLogin = ({ ...others }) => {
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [orgInput, setOrgInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
+
+  // Forgot Password State
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordOrg, setForgotPasswordOrg] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
 
   const googleHandler = async () => {
     console.error('Login');
@@ -140,21 +150,23 @@ const FirebaseLogin = ({ ...others }) => {
   const handleLogin = (email, password, org) => {
     // First clear any existing license warning
     dispatch({ type: 'Canvas/clearLicenseWarning' });
-    
-    dispatch(login({ 
-      username: email, 
-      password, 
-      org 
-    }))
+
+    dispatch(
+      login({
+        username: email,
+        password,
+        org
+      })
+    )
       .then((res) => {
         if (res.payload.status === 200 || res.payload.status === 201) {
           notify('Login Successfully', 'success');
-          
+
           // Show license warning if needed (will be handled by the login thunk)
           if (res.payload.data?.license?.isExpiring) {
             // The warning is already dispatched by the login thunk
           }
-          
+
           setTimeout(() => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
@@ -171,6 +183,44 @@ const FirebaseLogin = ({ ...others }) => {
         console.error('Login error:', err);
         notify(err.message || 'Login failed', 'error');
       });
+  };
+
+  // Forgot Password Handlers
+  const handleForgotPasswordClick = () => {
+    // Pre-fill with current form values if available
+    setForgotPasswordEmail(emailInput);
+    setForgotPasswordOrg(orgInput);
+    setForgotPasswordOpen(true);
+  };
+
+  const handleForgotPasswordClose = () => {
+    setForgotPasswordOpen(false);
+    setForgotPasswordEmail('');
+    setForgotPasswordOrg('');
+  };
+
+  const handleSendResetLink = async () => {
+    if (!forgotPasswordEmail || !forgotPasswordOrg) {
+      notify('Please enter both email and organization', 'error');
+      return;
+    }
+
+    setSendingReset(true);
+    try {
+      const response = await forgotPassword(forgotPasswordEmail, forgotPasswordOrg);
+
+      if (response.message) {
+        notify(response.message, 'success');
+        handleForgotPasswordClose();
+      } else {
+        notify(response.error || 'Failed to send reset link', 'error');
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      notify('Failed to send reset link', 'error');
+    } finally {
+      setSendingReset(false);
+    }
   };
 
   return (
@@ -303,7 +353,12 @@ const FirebaseLogin = ({ ...others }) => {
                 }
                 label="Remember me"
               />
-              <Typography variant="subtitle1" color="secondary" sx={{ textDecoration: 'none', cursor: 'pointer' }}>
+              <Typography
+                variant="subtitle1"
+                color="secondary"
+                sx={{ textDecoration: 'none', cursor: 'pointer' }}
+                onClick={handleForgotPasswordClick}
+              >
                 Forgot Password?
               </Typography>
             </Stack>
@@ -329,6 +384,47 @@ const FirebaseLogin = ({ ...others }) => {
           </form>
         )}
       </Formik>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotPasswordOpen} onClose={handleForgotPasswordClose} maxWidth="sm" fullWidth>
+        <DialogTitle variant="h4" color="primary">
+          Reset Password
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: '#000' }}>
+            Enter your email and organization to receive a password reset link.
+          </Typography>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel htmlFor="forgot-password-email">Email Address</InputLabel>
+            <OutlinedInput
+              id="forgot-password-email"
+              type="text"
+              value={forgotPasswordEmail}
+              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+              label="Email Address"
+            />
+          </FormControl>
+          <FormControl fullWidth sx={{ mb: 0 }}>
+            <InputLabel htmlFor="forgot-password-org">Organization</InputLabel>
+            <OutlinedInput
+              id="forgot-password-org"
+              type="text"
+              value={forgotPasswordOrg}
+              onChange={(e) => setForgotPasswordOrg(e.target.value)}
+              label="Organization"
+            />
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleForgotPasswordClose} color="error" variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleSendResetLink} variant="contained" color="primary" loading={sendingReset} loadingText="Sending...">
+            Send Reset Link
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Toaster position="top-center" reverseOrder={false} />
       <LicenseExpiryModal />
     </>

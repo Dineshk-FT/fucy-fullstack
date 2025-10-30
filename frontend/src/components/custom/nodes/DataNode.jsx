@@ -175,7 +175,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
 
   const handleLabelSave = () => {
     setIsEditing(false);
-    const newLabel = tempLabelValue.trim() || 'Node'; // Same as DefaultNode
+    const newLabel = tempLabelValue.trim(); // Use tempLabelValue instead of labelRef
     setLabelValue(newLabel);
     updateNodeLabel(newLabel);
     dispatch(setDetails({ ...details, name: newLabel }));
@@ -183,7 +183,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
 
   const handleLabelCancel = () => {
     setIsEditing(false);
-    setTempLabelValue(labelValue);
+    setTempLabelValue(labelValue); // Reset to the original label value
   };
 
   const handleKeyDown = (e) => {

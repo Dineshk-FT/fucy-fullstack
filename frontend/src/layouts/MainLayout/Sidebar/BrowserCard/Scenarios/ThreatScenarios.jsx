@@ -29,6 +29,7 @@ const ThreatScenarios = ({ sub, detail, i, onDragStart, getLabel }) => {
     sub.name === 'Threat Scenarios'
       ? detail.Details.flatMap((nodeDetail) =>
           nodeDetail?.props?.map((prop) => {
+            // console.log('nodeDetail', nodeDetail);
             const label = `[TS${prop?.key.toString().padStart(3, '0')}] ${threatType(prop?.name)} of ${nodeDetail?.node} leads to ${
               detail?.damage_name
             } [${detail?.id}]`;
@@ -44,8 +45,6 @@ const ThreatScenarios = ({ sub, detail, i, onDragStart, getLabel }) => {
 
             const onClick = (e) => {
               e.stopPropagation();
-              const ids = extraProps?.threat_ids ? extraProps?.threat_ids?.map((threat) => threat?.propId) : [];
-              setSelectedThreatIds(ids);
             };
 
             return {

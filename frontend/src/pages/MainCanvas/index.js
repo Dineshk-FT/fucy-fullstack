@@ -230,6 +230,7 @@ export default function MainCanvas() {
     });
     setZoomLevel(reactFlowInstance.getZoom());
   });
+  // console.log('nodes', nodes);
 
   const handleSaveToModel = async (e) => {
     e.stopPropagation();
@@ -310,29 +311,6 @@ export default function MainCanvas() {
     }
   };
 
-  // Replace the problematic useEffect with this:
-  useEffect(() => {
-    const template = assets?.template;
-    setSavedTemplate(template);
-    onSaveInitial(template);
-
-    // Only restore if we're not in a changed state AND we have a template
-    if (!isChanged && template && template.nodes && template.nodes.length > 0) {
-      console.log('Initial restore from template');
-      setNodes(template.nodes || []);
-      setEdges(template.edges || []);
-      clearUndoRedo();
-      resetChangedState();
-
-      // Use setTimeout to ensure React Flow is ready
-      setTimeout(() => {
-        if (reactFlowInstance) {
-          debouncedFitView();
-        }
-      }, 100);
-    }
-  }, [assets]); // Remove isChanged and copiedNode from dependencies
-
   // Add a separate useEffect to handle initial load
   useEffect(() => {
     const newNodeTypes = pageNodeTypes['maincanvas'] || {};
@@ -357,27 +335,6 @@ export default function MainCanvas() {
   // console.log('nodes', nodes);
 
   // Auto-fit canvas view on mount and when nodes/edges change
-  // useEffect(() => {
-  //   if (reactFlowInstance && nodes.length > 0) {
-  //     const debouncedFitView = debounce(() => {
-  //       reactFlowInstance.fitView({
-  //         padding: 0.2,
-  //         includeHiddenNodes: true,
-  //         minZoom: 0.2,
-  //         maxZoom: 2,
-  //         duration: 500,
-  //       });
-  //       setZoomLevel(reactFlowInstance.getZoom());
-  //     }, 5000);
-
-  //     debouncedFitView();
-
-  //     return () => {
-  //       debouncedFitView.cancel();
-  //     };
-  //   }
-  // }, [reactFlowInstance, nodes, edges, setZoomLevel]);
-
   const onInit = (rf) => {
     setReactFlowInstance(rf);
   };
@@ -508,11 +465,9 @@ export default function MainCanvas() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo, handleSaveToModel]);
 
-  // Update onRestore function to be more controlled
-  // Replace the problematic onRestore with this:
   const onRestore = useCallback(
     (temp) => {
-      console.log('Restoring template');
+      // Check if we have a valid template with nodes and edges
       if (temp && temp.nodes && temp.edges) {
         // Use safeRestore which doesn't trigger undo stack
         safeRestore(temp);
@@ -525,9 +480,17 @@ export default function MainCanvas() {
           }
         }, 50);
       } else {
+        // Handle empty template or no template - clear everything
+        console.log('Clearing canvas - empty template or no template');
         handleClear();
         clearUndoRedo();
         resetChangedState();
+
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            debouncedFitView();
+          }
+        }, 50);
       }
     },
     [reactFlowInstance, debouncedFitView, clearUndoRedo, resetChangedState, safeRestore]
@@ -539,12 +502,17 @@ export default function MainCanvas() {
     setSavedTemplate(template);
     onSaveInitial(template);
 
-    // Only restore on initial mount if we have a template and no changes
-    if (template && !isChanged && nodes.length === 0) {
-      console.log('Initial template load');
+    // Always restore when assets change, regardless of isChanged state
+    // This ensures we show the correct template when switching models
+    if (template) {
+      console.log('Restoring from template (assets changed)');
       onRestore(template);
+    } else {
+      // If no template exists, clear the canvas
+      console.log('No template found - clearing canvas');
+      onRestore(null);
     }
-  }, [assets]); // Remove other dependencies to prevent loops
+  }, [assets]); // Remove isChanged dependency to ensure proper model switching
 
   const onLoad = (reactFlowInstance) => {
     setReactFlowInstance(reactFlowInstance);
@@ -567,10 +535,16 @@ export default function MainCanvas() {
       );
     }
   };
-  const handleCloseSave = () => {
-    setOpenSave(false);
-    onRestore(assets?.template);
+  const handleCloseSave = (e) => {
+    // Set isChanged to false BEFORE restoring to prevent the restore from triggering changes
+    e.stopPropagation();
     resetChangedState();
+
+    // Use setTimeout to ensure the state is updated before restore
+    setTimeout(() => {
+      onRestore(assets?.template);
+      setOpenSave(false);
+    }, 10);
   };
 
   const handleSelectNodeSingleClick = (e, node) => {
@@ -641,7 +615,7 @@ export default function MainCanvas() {
       nodes: nodes,
       edges: edges
     };
-    console.log('nodes', nodes);
+    // console.log('nodes', nodes);
     const details = {
       assetId: assets?._id,
       'model-id': model?._id,
@@ -716,9 +690,10 @@ export default function MainCanvas() {
         y: event.clientY,
         options: ['Copy', 'Paste']
       });
-    } else {
-      notify('No copied node available', 'error');
     }
+    // else {
+    //   notify('No copied node available', 'error');
+    // }
   };
 
   const handleMenuOptionClick = (option) => {

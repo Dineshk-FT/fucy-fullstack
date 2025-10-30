@@ -1,6 +1,8 @@
 /*eslint-disable*/
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Provider, useDispatch } from 'react-redux';
+import EditProperties from '../Poppers/EditProperties';
+import EditNode from '../Poppers/EditNode';
 import { store } from '../../store';
 import { setSelectedBlock } from '../../store/slices/CanvasSlice';
 import { toast } from 'react-hot-toast';
@@ -24,9 +26,13 @@ import {
   Divider,
   Collapse,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
+import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -51,31 +57,21 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Helper function to get contrasting text color (black or white)
 const getContrastColor = (hexColor) => {
-  // Convert hex to RGB
   const r = parseInt(hexColor.slice(1, 3), 16);
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
-  
-  // Calculate luminance (perceived brightness)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
-  // Return black for light colors, white for dark colors
   return luminance > 0.5 ? '#000000' : '#FFFFFF';
 };
 
 // Helper function to darken a color
 const darkenColor = (hexColor, percent) => {
-  // Convert hex to RGB
   let r = parseInt(hexColor.slice(1, 3), 16);
   let g = parseInt(hexColor.slice(3, 5), 16);
   let b = parseInt(hexColor.slice(5, 7), 16);
-  
-  // Darken each component
   r = Math.max(0, Math.floor(r * (100 - percent) / 100));
   g = Math.max(0, Math.floor(g * (100 - percent) / 100));
   b = Math.max(0, Math.floor(b * (100 - percent) / 100));
-  
-  // Convert back to hex
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
@@ -85,8 +81,7 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
   const colors = ColorTheme();
   const reactFlowInstance = useReactFlow();
   const hasFittedView = useRef(false);
-  
-  // Fit view only once when nodes are first loaded
+
   useEffect(() => {
     if (nodes.length > 0 && !hasFittedView.current) {
       const timer = setTimeout(() => {
@@ -97,11 +92,10 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
         });
         hasFittedView.current = true;
       }, 100);
-      
       return () => clearTimeout(timer);
     }
   }, [nodes, reactFlowInstance]);
-  
+
   const onNodeClick = useCallback((event, node) => {
     if (node) {
       dispatch(setSelectedBlock({ 
@@ -145,7 +139,6 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
         />
-        {/* <MiniMap /> */}
         <Background 
           variant="dots" 
           gap={12} 
@@ -163,78 +156,151 @@ const FlowWrapper = ({ onNodesChange, onEdgesChange, onConnect, nodes, edges, on
 // Import your custom node components
 import CarImageNode from '../custom/nodes/CarImageNode';
 
+// Memoized Edge Direction Select component
+const EdgeDirectionSelect = React.memo(({ value, onChange, colors }) => (
+  <Select
+    value={value}
+    onChange={onChange}
+    size="small"
+    sx={{
+      color: colors.textPrimary,
+      bgcolor: colors.paperBg,
+      '.MuiSelect-select': {
+        py: 0.5,
+      },
+      minWidth: '120px'
+    }}
+  >
+    <MenuItem value="bidirectional">Bidirectional</MenuItem>
+    <MenuItem value="leftToRight">Left to Right</MenuItem>
+    <MenuItem value="rightToLeft">Right to Left</MenuItem>
+  </Select>
+));
+
+EdgeDirectionSelect.displayName = 'EdgeDirectionSelect';
+
 // Pastel color palette
 const pastelColors = [
-  '#FFD1DC', // Pastel Pink
-  '#FFECB8', // Pastel Yellow
-  '#B5EAD7', // Pastel Green
-  '#C7CEEA', // Pastel Blue
-  '#E2F0CB', // Pastel Mint
-  '#FFDAC1', // Pastel Orange
-  '#D4A5A5', // Pastel Red
-  '#B5E8E0', // Pastel Teal
-  '#F8C8DC', // Pastel Pink 2
-  '#C5E1A5', // Pastel Green 2
-  '#B3E5FC', // Pastel Light Blue
-  '#D1C4E9', // Pastel Purple
+  '#FFD1DC', '#FFECB8', '#B5EAD7', '#C7CEEA', '#E2F0CB',
+  '#FFDAC1', '#D4A5A5', '#B5E8E0', '#F8C8DC', '#C5E1A5',
+  '#B3E5FC', '#D1C4E9',
 ];
 
-// Simple component for threat/vulnerability nodes
-const ThreatNode = ({ id, data }) => {
+// Simple component for threat/vulnerability/model nodes
+const CustomNode = React.memo(({ id, data }) => {
   const colors = ColorTheme();
   const reactFlowInstance = useReactFlow();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [editAnchorEl, setEditAnchorEl] = useState(null);
+  const dispatch = useDispatch();
 
-  const onDelete = (event) => {
-    // Prevent the click from reaching React Flow's node selection/dragging
+  const handleEditClick = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    
-    // Remove the node from the flow
+    setEditAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseEdit = () => {
+    setEditAnchorEl(null);
+  };
+
+  const onDelete = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     reactFlowInstance.setNodes((nodes) => nodes.filter((node) => node.id !== id));
-    
-    // Also remove any connected edges
     reactFlowInstance.setEdges((edges) => 
       edges.filter(edge => edge.source !== id && edge.target !== id)
     );
   };
 
+  const handlePropertiesClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseProperties = () => {
+    setAnchorEl(null);
+  };
+
+  // Merge styles from data and style props
+  const nodeStyle = {  
+    position: 'relative',
+    padding: '8px 25px 8px 30px',
+    backgroundColor: data.bgColor || colors.paperBg,
+    color: data.textColor || colors.textPrimary,
+    borderRadius: '4px',
+    border: `1px solid ${data.borderColor || colors.borderColor}`,
+    fontSize: '12px',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    cursor: 'move',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '60px',
+    height: '30px',
+    userSelect: 'none',
+    transition: 'all 0.2s ease',
+    ...data.style, // Apply any styles from data.style
+    '&:hover': {
+      transform: 'scale(1.05)',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+    }
+  };
+
   return (
     <Tooltip title={data.label || data.name || ''} arrow>
-      <div style={{
-        position: 'relative',
-        padding: '8px 25px 8px 30px',
-        backgroundColor: data.bgColor || colors.paperBg,
-        color: data.textColor || colors.textPrimary,
-        borderRadius: '4px',
-        border: `1px solid ${data.borderColor || colors.borderColor}`,
-        fontSize: '12px',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        cursor: 'move',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: '60px',
-        height: '30px',
-        userSelect: 'none',
-        transition: 'all 0.2s ease',
-        '&:hover': {
-          transform: 'scale(1.05)',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-        }
-      }}>
+      <div style={nodeStyle}>
+        {/* Left handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Left}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
         <Handle
           type="target"
           position={Position.Left}
-          style={{ background: '#555' }}
-          onConnect={(params) => console.log('handle onConnect', params)}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
         />
+        
+        {/* Top handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Top}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Top}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        
         {data.shortName || data.label}
+        
+        {/* Right handle - both source and target */}
         <Handle
           type="source"
           position={Position.Right}
-          style={{ background: '#555' }}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Right}
+          style={{ top: '50%', transform: 'translateY(-50%)', background: '#555' }}
+        />
+        
+        {/* Bottom handle - both source and target */}
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Bottom}
+          style={{ left: '50%', transform: 'translateX(-50%)', background: '#555' }}
         />
         <IconButton
           onClick={onDelete}
@@ -267,52 +333,149 @@ const ThreatNode = ({ id, data }) => {
         >
           <DeleteOutlineIcon sx={{ fontSize: 12 }} />
         </IconButton>
+        <IconButton
+          onClick={handleEditClick}
+          size="small"
+          sx={{
+            position: 'absolute',
+            left: -8,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 18,
+            height: 18,
+            minHeight: 18,
+            color: 'info.main',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            opacity: 0,
+            visibility: 'hidden',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'info.main',
+              color: 'info.contrastText',
+              opacity: 1,
+              transform: 'translateY(-50%) scale(1.1)'
+            },
+            '.react-flow__node:hover &': {
+              opacity: 0.9,
+              visibility: 'visible'
+            }
+          }}
+        >
+          <EditIcon sx={{ fontSize: 12 }} />
+        </IconButton>
+        <IconButton
+          onClick={handlePropertiesClick}
+          size="small"
+          sx={{
+            position: 'absolute',
+            right: -8,
+            bottom: -8,
+            width: 18,
+            height: 18,
+            minHeight: 18,
+            color: 'primary.main',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            opacity: 0,
+            visibility: 'hidden',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText',
+              opacity: 1,
+              transform: 'scale(1.1)'
+            },
+            '.react-flow__node:hover &': {
+              opacity: 0.9,
+              visibility: 'visible'
+            }
+          }}
+        >
+          <SettingsIcon sx={{ fontSize: 12 }} />
+        </IconButton>
       </div>
+      {editAnchorEl && (  // Conditional render
+        <EditNode
+          anchorEl={editAnchorEl}
+          handleClosePopper={handleCloseEdit}
+          details={data}
+          setDetails={(newData) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+              )
+            );
+          }}
+          dispatch={dispatch}
+          handleSaveEdit={handleCloseEdit}
+          nodes={reactFlowInstance.getNodes()}
+          setNodes={reactFlowInstance.setNodes}
+          setEdges={reactFlowInstance.setEdges}
+          selectedElement={data}
+          setSelectedElement={(element) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { 
+                  ...node, 
+                  data: { 
+                    ...node.data,
+                    ...element,
+                    ...(element?.style ? { style: element.style } : {})
+                  }
+                } : node
+              )
+            );
+          }}
+        />
+      )}
+      {anchorEl && (  // Conditional render
+        <EditProperties
+          anchorEl={anchorEl}
+          handleClosePopper={handleCloseProperties}
+          details={data}
+          setDetails={(newData) => {
+            reactFlowInstance.setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+              )
+            );
+          }}
+          dispatch={dispatch}
+          handleSaveEdit={() => {}}
+          setNodes={reactFlowInstance.setNodes}
+          setEdges={reactFlowInstance.setEdges}
+        />
+      )}
     </Tooltip>
   );
-};
+});
 
 // Define node types
 const nodeTypes = {
   carImage: CarImageNode,
-  threatNode: ThreatNode,
-};
-
-// Define edge types
-const edgeTypes = {
-  default: {
-    type: 'smoothstep',
-    animated: true,
-    style: {
-      stroke: '#555',
-      strokeWidth: 2,
-    },
-  },
+  threatNode: CustomNode,
+  modelNode: CustomNode,
 };
 
 // Format library data to match our component structure
 const formatLibraryData = (libraries) => {
   if (!Array.isArray(libraries)) return [];
-  
-  // Group libraries by category
   const categorized = libraries.reduce((acc, lib) => {
     if (!lib?.category || !lib?.name) return acc;
-    
     const category = lib.category || 'Uncategorized';
     if (!acc[category]) {
       acc[category] = [];
     }
-    
     acc[category].push({
       id: lib._id || lib.name.toLowerCase().replace(/\s+/g, '-'),
       name: lib.name,
       ...lib
     });
-    
     return acc;
   }, {});
-
-  // Convert to array format
   return Object.entries(categorized).map(([name, items]) => ({
     id: name.toLowerCase().replace(/\s+/g, '-'),
     name,
@@ -341,12 +504,16 @@ const VehicleTARADialog = ({ open, onClose }) => {
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const { getLibraries, getModels: fetchModels } = useStore();
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 0.7 });
-  const reactFlowInstance = useReactFlow();
+  const [edgeDirection, setEdgeDirection] = useState('bidirectional');
   
-  // Track the car node's previous position
+  // Memoized edge direction change handler
+  const handleEdgeDirectionChange = useCallback((e) => {
+    setEdgeDirection(e.target.value);
+  }, []);
+  const reactFlowInstance = useReactFlow();
   const carNodeRef = useRef(null);
+  const dragRef = useRef(null);
 
-  // Fetch models when component mounts
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -365,18 +532,15 @@ const VehicleTARADialog = ({ open, onClose }) => {
       loadModels();
     }
   }, [open, fetchModels]);
-  
-  // Handle viewport changes
+
   const onMove = useCallback((event, viewport) => {
     setViewport(viewport);
   }, []);
 
-  // Save viewport to state
   const saveViewport = useCallback((vp) => {
     setViewport(vp);
   }, []);
 
-  // Update car node reference when nodes change
   useEffect(() => {
     if (nodes.length > 0) {
       const carNode = nodes.find(node => node?.id?.startsWith('car-'));
@@ -385,17 +549,12 @@ const VehicleTARADialog = ({ open, onClose }) => {
       }
     }
   }, [nodes]);
-  
-  // Define handleAddCarImage first since it's used in the effect
+
   const handleAddCarImage = useCallback(() => {
-    // Compute large sizes (90% of 90% = 81% viewport)
     const dialogWidth = Math.floor(window.innerWidth * 0.81);
     const dialogHeight = Math.floor(window.innerHeight * 0.81);
-    
-    // Cap to prevent overflow on large screens
     const cappedWidth = Math.min(dialogWidth, 1200);
     const cappedHeight = Math.min(dialogHeight, 800);
-    
     const carNodeId = `car-${uuidv4()}`;
     const newNode = {
       id: carNodeId,
@@ -403,7 +562,7 @@ const VehicleTARADialog = ({ open, onClose }) => {
       position: { x: 50, y: 50 },
       data: { properties: [] },
       style: {
-        width: `${cappedWidth}px`,  // String px for CSS
+        width: `${cappedWidth}px`,
         height: `${cappedHeight}px`,
         maxWidth: '100%',
         maxHeight: '100%',
@@ -413,117 +572,87 @@ const VehicleTARADialog = ({ open, onClose }) => {
       selectable: true,
       isParent: true
     };
-        
     setNodes(nds => {
       const otherNodes = nds.filter(n => !n.id.startsWith('car-'));
       return [...otherNodes, newNode];
     });
-    
     return newNode;
   }, [setNodes]);
 
-  // Get model ID from store or URL
   const modelId = useStore(state => state.model?._id) || window.location.pathname.split('/').pop();
 
-  // Fetch saved TARA model data when dialog opens
   const fetchTaraModelData = useCallback(async () => {
     if (!open || !modelId) {
       console.error('No model ID available for fetching TARA model');
       return;
     }
-    
     setIsLoading(true);
     try {
       const data = await fetchTaraModel(modelId);
-      
       if (data.vehicleTaraNodes && data.vehicleTaraEdges) {
-      // Parse the nodes and edges from the response
-      const parsedNodes = Array.isArray(data.vehicleTaraNodes) 
-        ? data.vehicleTaraNodes 
-        : JSON.parse(data.vehicleTaraNodes);
-        
-      const parsedEdges = Array.isArray(data.vehicleTaraEdges)
-        ? data.vehicleTaraEdges
-        : JSON.parse(data.vehicleTaraEdges);
-      
-      // Process nodes to ensure they have the correct structure
-      const processedNodes = parsedNodes.map(node => ({
-        ...node,
-        position: node.position || { x: 0, y: 0 },
-        data: node.data || { properties: [] },
-        style: node.style || {},
-        draggable: node.draggable !== false,
-        selectable: node.selectable !== false,
-        // Ensure these are not persisted
-        width: undefined,
-        height: undefined,
-        selected: false,
-        dragging: false,
-        positionAbsolute: undefined
-      }));
-      
-      setNodes(processedNodes);
-      setEdges(parsedEdges);
-      
-      // Set viewport if available
-      if (data.vehicleTaraViewport) {
-        const viewport = typeof data.vehicleTaraViewport === 'string' 
-          ? JSON.parse(data.vehicleTaraViewport)
-          : data.vehicleTaraViewport;
-        reactFlowInstance.setViewport(viewport);
+        const parsedNodes = Array.isArray(data.vehicleTaraNodes) 
+          ? data.vehicleTaraNodes 
+          : JSON.parse(data.vehicleTaraNodes);
+        const parsedEdges = Array.isArray(data.vehicleTaraEdges)
+          ? data.vehicleTaraEdges
+          : JSON.parse(data.vehicleTaraEdges);
+        const processedNodes = parsedNodes.map(node => ({
+          ...node,
+          position: node.position || { x: 0, y: 0 },
+          data: node.data || { properties: [] },
+          style: node.style || {},
+          draggable: node.draggable !== false,
+          selectable: node.selectable !== false,
+          width: undefined,
+          height: undefined,
+          selected: false,
+          dragging: false,
+          positionAbsolute: undefined
+        }));
+        setNodes(processedNodes);
+        setEdges(parsedEdges);
+        if (data.vehicleTaraViewport) {
+          const viewport = typeof data.vehicleTaraViewport === 'string' 
+            ? JSON.parse(data.vehicleTaraViewport)
+            : data.vehicleTaraViewport;
+          reactFlowInstance.setViewport(viewport);
+        }
+      } else {
+        handleAddCarImage();
       }
-    } else {
-      // If no saved data, start with a fresh car image
+    } catch (error) {
+      console.error('Error fetching TARA model:', error);
       handleAddCarImage();
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching TARA model:', error);
-    // On error, start with a fresh car image
-    handleAddCarImage();
-  } finally {
-    setIsLoading(false);
-  }
-}, [open, reactFlowInstance, handleAddCarImage]);
+  }, [open, reactFlowInstance, handleAddCarImage]);
 
-  // Initialize with saved data or default car image when dialog opens or modelId changes
   useEffect(() => {
     if (!open) {
-      // Reset nodes and edges when dialog is closed
       setNodes([]);
       setEdges([]);
       return;
     }
-    
-    // Reset state when dialog is opened or modelId changes
     setNodes([]);
     setEdges([]);
-    
-    // Fetch saved TARA model when dialog opens or modelId changes
     fetchTaraModelData();
-    
-    // Cleanup function
     return () => {
       setNodes([]);
       setEdges([]);
     };
   }, [open, modelId, setNodes, setEdges, fetchTaraModelData]);
 
-  // Fetch libraries when component mounts or opens
   useEffect(() => {
     const fetchLibraries = async () => {
       if (!open) return;
-      
       setIsLoading(true);
       setError(null);
-      
       try {
         const librariesData = await getLibraries();
-        
         if (Array.isArray(librariesData)) {
           const formattedCategories = formatLibraryData(librariesData);
           setCategories(formattedCategories);
-          
-          // Auto-expand first category if available
           if (formattedCategories.length > 0) {
             setExpandedCategories(prev => ({
               ...prev,
@@ -539,11 +668,9 @@ const VehicleTARADialog = ({ open, onClose }) => {
         setIsLoading(false);
       }
     };
-    
     fetchLibraries();
   }, [open, getLibraries]);
 
-  // Update TARA model in the database
   const handleUpdateTaraModel = useCallback(async (nodesToUpdate, edgesToUpdate, viewport) => {
     if (!modelId) {
       console.error('No model ID available for updating TARA model');
@@ -557,47 +684,37 @@ const VehicleTARADialog = ({ open, onClose }) => {
     }
   }, [modelId]);
 
-  // Track if we have existing model data
   const hasExistingData = useRef(false);
 
-  // Update hasExistingData when nodes/edges are loaded
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
       hasExistingData.current = true;
     }
   }, [nodes, edges]);
 
-  // Save nodes, edges, and viewport to the API
   const handleSave = useCallback(async () => {
     if (!modelId) {
       toast.error('No model ID available. Please ensure you have an active model.');
       return;
     }
-
     setIsSaving(true);
     try {
       const nodesToSave = nodes.map(node => ({
         ...node,
-        // Preserve position
         position: { ...node.position },
-        // Clear transient properties
         selected: false,
         dragging: false,
         width: undefined,
         height: undefined,
         positionAbsolute: undefined
       }));
-
-      // Get the current viewport
       const viewport = reactFlowInstance.getViewport();
-      
-      // Use updateTaraModel if we have existing data, otherwise use storeTaraModel
       if (hasExistingData.current) {
         await updateTaraModel(modelId, nodesToSave, edges, viewport);
         toast.success('TARA model updated successfully');
       } else {
         await storeTaraModel(modelId, nodesToSave, edges, viewport);
-        hasExistingData.current = true; // Update the ref for future saves
+        hasExistingData.current = true;
         toast.success('TARA model saved successfully');
       }
     } catch (error) {
@@ -608,56 +725,69 @@ const VehicleTARADialog = ({ open, onClose }) => {
     }
   }, [nodes, edges, reactFlowInstance, modelId]);
 
-  // Clear all nodes and edges, then reset to default car
   const handleClear = useCallback(async () => {
     if (!window.confirm('Are you sure you want to clear all nodes and edges? This action cannot be undone.')) {
       return;
     }
-
     try {
-      // Clear the canvas
       setNodes([]);
       setEdges([]);
-      
-      // Reset the viewport to default
       if (reactFlowInstance) {
         reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
       }
-      
-      // Reset the existing data flag since we're clearing everything
       hasExistingData.current = false;
-      
-      // Add a small delay to ensure nodes are cleared before adding new car
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Add the default car image
       await handleAddCarImage();
-      
       toast.success('Canvas cleared and reset to default');
     } catch (error) {
       console.error('Error clearing canvas:', error);
       toast.error('Failed to clear canvas');
     }
   }, [setNodes, setEdges, handleAddCarImage, reactFlowInstance]);
-  
+
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
   };
-  
-  const handleDragStart = (e, item) => {
+
+  const handleDragStart = (e, item, type) => {
+    // Create a custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.innerText = item.name;
+    dragImage.style.padding = '8px';
+    dragImage.style.background = colors.paperBg;
+    dragImage.style.border = `1px solid ${colors.borderColor}`;
+    dragImage.style.borderRadius = '4px';
+    dragImage.style.opacity = '0.8';
+    dragImage.style.fontSize = '12px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Store item data
     e.dataTransfer.setData('application/reactflow', JSON.stringify({
-      type: 'taraItem',
+      type,
       data: item
     }));
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Clean up drag image after drag ends
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+    
+    // Add visual feedback
+    e.currentTarget.style.opacity = '0.6';
   };
 
-  // Handle node drag stop to update relative positions
+  const handleDragEnd = (e) => {
+    // Reset opacity after drag ends
+    e.currentTarget.style.opacity = '1';
+  };
+
   const onNodeDragStop = useCallback((event, node) => {
-    if (node.id.startsWith('threat-')) {
+    if (node.id.startsWith('threat-') || node.id.startsWith('model-')) {
       const carNode = nodes.find(n => n.id.startsWith('car-'));
       if (carNode) {
         setNodes((nds) =>
@@ -667,7 +797,6 @@ const VehicleTARADialog = ({ open, onClose }) => {
                 ...n,
                 data: {
                   ...n.data,
-                  // Update relative position to car node
                   relativePosition: {
                     x: node.position.x - carNode.position.x,
                     y: node.position.y - carNode.position.y
@@ -682,28 +811,20 @@ const VehicleTARADialog = ({ open, onClose }) => {
     }
   }, [nodes, setNodes]);
 
-  // Handle node changes (including drag)
   const handleNodesChange = useCallback(
     (changes) => {
       setNodes((nds) => {
-        // First apply the changes
         const nextNodes = applyNodeChanges(changes, nds);
-        
-        // Check if the car node is being dragged
         const carNodeChange = changes.find(change => 
           change.type === 'position' && change.id.startsWith('car-')
         );
-        
         if (carNodeChange && carNodeRef.current) {
           const carNode = nextNodes.find(n => n.id === carNodeChange.id);
           if (carNode) {
-            // Calculate the movement delta
             const dx = carNode.position.x - carNodeRef.current.position.x;
             const dy = carNode.position.y - carNodeRef.current.position.y;
-            
-            // Update all threat nodes' positions
             return nextNodes.map(node => {
-              if (node.id.startsWith('threat-')) {
+              if (node.id.startsWith('threat-') || node.id.startsWith('model-')) {
                 return {
                   ...node,
                   position: {
@@ -716,77 +837,65 @@ const VehicleTARADialog = ({ open, onClose }) => {
             });
           }
         }
-        
-        // Update the car node reference if it was moved
         const movedCarNode = nextNodes.find(n => n.id.startsWith('car-'));
         if (movedCarNode) {
           carNodeRef.current = { ...movedCarNode };
         }
-        
         return nextNodes;
       });
     },
     [setNodes]
   );
-  
-  // Handle edge changes
+
   const handleEdgesChange = useCallback(
     (changes) => onEdgesChange(changes),
     [onEdgesChange]
   );
-  
-  // Handle new connections
+
   const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(
-      { 
-        ...connection, 
-        type: 'smoothstep',
-        animated: true,
-        style: { stroke: '#555', strokeWidth: 2 },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: '#555',
-          width: 20,
-          height: 20,
+    (connection) => {
+      setEdges((eds) => {
+        let newEdge = {
+          ...connection,
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#555', strokeWidth: 2 },
+        };
+
+        if (edgeDirection === 'bidirectional') {
+          newEdge.markerStart = { type: MarkerType.ArrowClosed, color: '#555', width: 20, height: 20 };
+          newEdge.markerEnd = { type: MarkerType.ArrowClosed, color: '#555', width: 20, height: 20 };
+        } else if (edgeDirection === 'leftToRight') {
+          newEdge.markerEnd = { type: MarkerType.ArrowClosed, color: '#555', width: 20, height: 20 };
+        } else if (edgeDirection === 'rightToLeft') {
+          newEdge.markerStart = { type: MarkerType.ArrowClosed, color: '#555', width: 20, height: 20 };
         }
-      }, 
-      eds
-    )),
-    [setEdges]
+
+        return addEdge(newEdge, eds);
+      });
+    },
+    [setEdges, edgeDirection]
   );
 
-  // Handle dropping items onto the canvas
   const onDrop = useCallback((event) => {
     event.preventDefault();
-    
-    // Get the dropped item data
     const reactFlowBounds = event.currentTarget.getBoundingClientRect();
     const item = JSON.parse(event.dataTransfer.getData('application/reactflow'));
-    
-    // Only handle our custom drop type
-    if (item.type !== 'taraItem') return;
-    
-    // Get the drop position relative to the React Flow container
+    if (item.type !== 'taraItem' && item.type !== 'modelItem') return;
     const position = {
       x: event.clientX - reactFlowBounds.left,
       y: event.clientY - reactFlowBounds.top
     };
-    
-    // Generate a short name (first letter of each word, up to 3 letters)
     const shortName = item.data.name
       .split(' ')
       .map(word => word[0]?.toUpperCase() || '')
       .join('')
       .substring(0, 3);
-    
-    // Generate random pastel color
     const bgColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
-    
-    // Create a new node
     const carNode = nodes.find(n => n.id.startsWith('car-'));
     const newNode = {
-      id: `threat-${uuidv4()}`,
-      type: 'threatNode',
+      id: `${item.type === 'taraItem' ? 'threat' : 'model'}-${uuidv4()}`,
+      type: item.type === 'taraItem' ? 'threatNode' : 'modelNode',
       position: carNode ? {
         x: position.x - carNode.position.x,
         y: position.y - carNode.position.y
@@ -798,7 +907,6 @@ const VehicleTARADialog = ({ open, onClose }) => {
         textColor: getContrastColor(bgColor),
         borderColor: darkenColor(bgColor, 20),
         ...item.data,
-        // Store relative position to car node
         relativePosition: carNode ? {
           x: position.x - carNode.position.x,
           y: position.y - carNode.position.y
@@ -807,7 +915,6 @@ const VehicleTARADialog = ({ open, onClose }) => {
       draggable: true,
       selectable: true
     };
-    
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes]);
 
@@ -818,10 +925,8 @@ const VehicleTARADialog = ({ open, onClose }) => {
 
   React.useEffect(() => {
     if (open) {
-      // Clear previous nodes/edges when dialog opens
       setNodes([]);
       setEdges([]);
-      // Small timeout to ensure the dialog is fully rendered
       const timer = setTimeout(() => {
         handleAddCarImage();
       }, 100);
@@ -860,7 +965,14 @@ const VehicleTARADialog = ({ open, onClose }) => {
       }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" sx={{ color: colors.textPrimary }}>Vehicle TARA Analysis</Typography>
-          <Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Tooltip title="Select edge direction">
+              <EdgeDirectionSelect 
+                value={edgeDirection} 
+                onChange={handleEdgeDirectionChange}
+                colors={colors}
+              />
+            </Tooltip>
             <Tooltip title="Save progress">
               <IconButton 
                 onClick={handleSave} 
@@ -900,7 +1012,7 @@ const VehicleTARADialog = ({ open, onClose }) => {
           sx={{ 
             width: isLeftPanelOpen ? '250px' : 0,
             height: '100%',
-            overflow: 'hidden',
+            overflowY: 'auto',
             backgroundColor: colors.paperBg,
             color: colors.textPrimary,
             borderRight: `1px solid ${colors.borderColor}`,
@@ -913,7 +1025,10 @@ const VehicleTARADialog = ({ open, onClose }) => {
             p: 2, 
             borderBottom: `1px solid ${colors.borderColor}`, 
             whiteSpace: 'nowrap',
-            backgroundColor: colors.sidebarBG
+            backgroundColor: colors.sidebarBG,
+            position: 'sticky',
+            top: 0,
+            zIndex: 1
           }}>
             <Typography 
               variant="h6" 
@@ -928,7 +1043,7 @@ const VehicleTARADialog = ({ open, onClose }) => {
               noWrap
               sx={{ color: colors.textSecondary }}
             >
-              Select a model to start
+              Drag items to the canvas
             </Typography>
           </Box>
           
@@ -945,6 +1060,9 @@ const VehicleTARADialog = ({ open, onClose }) => {
               {models.map((model) => (
                 <ListItemButton
                   key={model.id || model._id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, model, 'modelItem')}
+                  onDragEnd={handleDragEnd}
                   sx={{
                     py: 1,
                     px: 2,
@@ -954,6 +1072,7 @@ const VehicleTARADialog = ({ open, onClose }) => {
                     '&.Mui-selected': {
                       backgroundColor: 'action.selected',
                     },
+                    transition: 'opacity 0.2s ease',
                   }}
                 >
                   <ListItemText
@@ -1050,7 +1169,7 @@ const VehicleTARADialog = ({ open, onClose }) => {
           </ReactFlowProvider>
         </Box>
         
-        {/* Panel Toggle Button */}
+        {/* Right Panel Toggle Button */}
         <Box 
           sx={{ 
             position: 'absolute',
@@ -1164,13 +1283,15 @@ const VehicleTARADialog = ({ open, onClose }) => {
                       <ListItemButton
                         key={item.id}
                         draggable
-                        onDragStart={(e) => handleDragStart(e, item)}
+                        onDragStart={(e) => handleDragStart(e, item, 'taraItem')}
+                        onDragEnd={handleDragEnd}
                         sx={{
                           pl: 4,
                           py: 0.5,
                           '&:hover': {
                             backgroundColor: 'action.hover',
                           },
+                          transition: 'opacity 0.2s ease',
                         }}
                       >
                         <ListItemText

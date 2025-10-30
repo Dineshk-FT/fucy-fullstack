@@ -176,7 +176,7 @@ const LeftSection = () => {
 
   const handleMouseLeave = useCallback(
     (e) => {
-      if (e?.stopPropagation) e.stopPropagation();
+      e.stopPropagation();
       // Only hide the hovered tab if no modal is open
       if (!openModal.Open && !openModal.Delete && !openModal.Library) {
         hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
@@ -185,12 +185,15 @@ const LeftSection = () => {
     [openModal.Open, openModal.Delete, openModal.Library]
   );
 
-  const handleTabWrapperMouseEnter = useCallback((tabName) => {
+  const handleTabWrapperMouseEnter = useCallback((e, tabName) => {
+    console.log('enter');
+    e.stopPropagation();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
 
-  const handleDropdownMouseEnter = useCallback((tabName) => {
+  const handleDropdownMouseEnter = useCallback((e, tabName) => {
+    e.stopPropagation();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
@@ -294,11 +297,11 @@ const LeftSection = () => {
       setActiveTab(tabName);
       const actions = {
         'Item Definition': handleModelDefinationClick,
-        'Damage Scenarios': () => handleClick('Damage Scenarios (DS) Derivations', '2'),
-        'Threat Scenarios': () => handleClick('Threat Scenarios', '3'),
+        'Damage Scenarios': (e) => handleClick(e, 'Damage Scenarios (DS) Derivations', '2'),
+        'Threat Scenarios': (e) => handleClick(e, 'Threat Scenarios', '3'),
         'Attack Path': handleAttackTableClick,
-        Cybersecurity: () => handleClick('Cybersecurity Goals', '5'),
-        'Risk Determination & Treatment': () => handleClick('Threat Assessment & Risk Treatment', '8')
+        Cybersecurity: (e) => handleClick(e, 'Cybersecurity Goals', '5'),
+        'Risk Determination & Treatment': (e) => handleClick(e, 'Threat Assessment & Risk Treatment', '8')
       };
       actions[tabName]?.();
     },
@@ -341,7 +344,8 @@ const LeftSection = () => {
   }, []);
 
   const handleClick = useCallback(
-    (name, number) => {
+    (e, name, number) => {
+      e.stopPropagation();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -559,7 +563,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Damage Scenarios (DS) Derivations')
+            action: (e) => handleClick(e, 'Damage Scenarios (DS) Derivations')
           },
           {
             label: 'Impact Rating Table',
@@ -573,7 +577,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Damage Scenarios - Impact Ratings')
+            action: (e) => handleClick(e, 'Damage Scenarios - Impact Ratings')
           },
           { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
         ]
@@ -593,7 +597,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Threat Scenarios')
+            action: (e) => handleClick(e, 'Threat Scenarios')
           },
           {
             label: 'Derived Table',
@@ -607,7 +611,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Derived Threat Scenarios')
+            action: (e) => handleClick(e, 'Derived Threat Scenarios')
           },
           { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
         ]
@@ -651,7 +655,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Cybersecurity Goals')
+            action: (e) => handleClick(e, 'Cybersecurity Goals')
           },
           {
             label: 'Requirements',
@@ -665,7 +669,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Cybersecurity Requirements')
+            action: (e) => handleClick(e, 'Cybersecurity Requirements')
           },
           {
             label: 'Controls',
@@ -679,7 +683,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Cybersecurity Controls')
+            action: (e) => handleClick(e, 'Cybersecurity Controls')
           },
           {
             label: 'Claims',
@@ -693,7 +697,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Cybersecurity Claims')
+            action: (e) => handleClick(e, 'Cybersecurity Claims')
           },
           { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
         ]
@@ -713,7 +717,7 @@ const LeftSection = () => {
                 }}
               />
             ),
-            action: () => handleClick('Threat Assessment & Risk Treatment')
+            action: (e) => handleClick(e, 'Threat Assessment & Risk Treatment')
           },
           {
             label: 'Auto Generate',
@@ -887,7 +891,7 @@ const LeftSection = () => {
               flexDirection: 'column',
               alignItems: 'center'
             }}
-            onMouseEnter={() => handleTabWrapperMouseEnter(tab.name)}
+            onMouseEnter={(e) => handleTabWrapperMouseEnter(e, tab.name)}
             onMouseLeave={handleMouseLeave}
           >
             <Box
@@ -906,7 +910,7 @@ const LeftSection = () => {
             </Box>
             {isCollapsed && hoveredTab === tab.name && tab.options?.length > 0 && (
               <Box
-                onMouseEnter={() => handleDropdownMouseEnter(tab.name)}
+                onMouseEnter={(e) => handleDropdownMouseEnter(e, tab.name)}
                 onMouseLeave={handleMouseLeave}
                 sx={{
                   position: 'absolute',
