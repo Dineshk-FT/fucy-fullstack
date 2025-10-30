@@ -225,7 +225,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
     <Popper
       open={Boolean(anchorEl)}
       anchorEl={anchorEl}
-      placement="top-start"
+      placement="auto"
       modifiers={[{ options: { offset: [0, 20] }, name: 'flip', enabled: false }]}
       sx={{
         minWidth: 280,
@@ -235,7 +235,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
       className={classes.popper}
     >
       <ClickAwayListener onClickAway={handleClosePopper}>
-        <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 1.5, position: 'relative' }}>
+        <Paper sx={{ padding: 2, display: 'flex', flexDirection: 'column', position: 'relative' }}>
           {/* Close icon */}
           <IconButton
             onClick={handleClosePopper}
@@ -259,14 +259,14 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
             indicatorColor="primary"
             textColor="primary"
             variant="fullWidth"
-            sx={{ minHeight: '48px', mb: 1 }}
+            sx={{ minHeight: '48px' }}
           >
             <Tab label="Details" className={classes.tab} />
             <Tab label="Style" className={classes.tab} />
           </Tabs>
 
           {tabValue === 0 && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               <Box className={classes.section}>
                 <InputLabel className={classes.inputlabel}>Edge Name</InputLabel>
                 <TextField
@@ -330,7 +330,7 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
           )}
 
           {tabValue === 1 && (
-            <Grid container spacing={2} className={classes.section}>
+            <Grid container spacing={1} className={classes.section}>
               <Grid item xs={12}>
                 <InputLabel className={classes.inputlabel}>Edge Thickness</InputLabel>
                 <TextField
