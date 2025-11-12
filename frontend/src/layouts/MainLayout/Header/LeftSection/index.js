@@ -186,7 +186,6 @@ const LeftSection = () => {
   );
 
   const handleTabWrapperMouseEnter = useCallback((e, tabName) => {
-    console.log('enter');
     e.stopPropagation();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);

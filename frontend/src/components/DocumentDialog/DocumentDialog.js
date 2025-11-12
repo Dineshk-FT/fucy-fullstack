@@ -91,6 +91,36 @@ const DocumentDialog = ({ open, onClose }) => {
     setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }, []);
 
+  // nodes: your React Flow nodes array
+  // edges: your React Flow edges array
+
+  function calculateDiagramSize(nodes) {
+    if (!nodes || nodes.length === 0) {
+      return { width: 1000, height: 1000 }; // fallback
+    }
+
+    // Get min/max positions from all nodes
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    nodes.forEach((node) => {
+      const { position, width = 0, height = 0 } = node;
+      minX = Math.min(minX, position.x);
+      minY = Math.min(minY, position.y);
+      maxX = Math.max(maxX, position.x + width);
+      maxY = Math.max(maxY, position.y + height);
+    });
+
+    // Add a margin (e.g., 100 px extra)
+    const extra = 100;
+    const width = maxX - minX + extra;
+    const height = maxY - minY + extra;
+
+    return { width, height };
+  }
+
   // Handle document download
 
   const handleDownload = async (e) => {
@@ -100,7 +130,8 @@ const DocumentDialog = ({ open, onClose }) => {
     try {
       // ✅ Step 1: Generate SVG dynamically for DOCX
       // Use smaller width so the drawing fits in the page frame
-      const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 2500, 600);
+      const { width, height } = calculateDiagramSize(nodes);
+      const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, width, height);
 
       const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
 
