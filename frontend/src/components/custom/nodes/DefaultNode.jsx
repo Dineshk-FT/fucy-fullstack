@@ -175,6 +175,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })

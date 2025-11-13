@@ -230,6 +230,7 @@ export default React.memo(function StepEdge({
       dispatch(
         setEdgeDetails({
           name: data?.label ?? '',
+          description: data?.description ?? '',
           properties: currentEdge?.properties ?? [],
           isAsset: currentEdge?.isAsset ?? false,
           style: style ?? {},

@@ -171,6 +171,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })
@@ -187,6 +188,7 @@ export default function DataNode({ id, data, isConnectable, type }) {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })

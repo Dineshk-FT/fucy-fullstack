@@ -22,15 +22,15 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   const dispatch = useDispatch();
   const { nodes, setSelectedElement, setPropertiesOpen } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
-  const updateNodeInternals = useUpdateNodeInternals();  // For forcing re-measure
+  const updateNodeInternals = useUpdateNodeInternals(); // For forcing re-measure
   const { selectedBlock } = useSelector((state) => state?.canvas);
-  
+
   const [isHovered, setIsHovered] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
   const [value, setValue] = useState(data?.label || '');
-  const imgRef = useRef(null);  // Ref for image
+  const imgRef = useRef(null); // Ref for image
 
   const [dimensions, setDimensions] = useState({
     width: data?.style?.width || 1000,
@@ -40,37 +40,37 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   // Update dimensions when data changes
   useEffect(() => {
     if (data?.style?.width && data.style.width !== dimensions.width) {
-      setDimensions(prev => ({ ...prev, width: data.style.width }));
+      setDimensions((prev) => ({ ...prev, width: data.style.width }));
     }
     if (data?.style?.height && data.style.height !== dimensions.height) {
-      setDimensions(prev => ({ ...prev, height: data.style.height }));
+      setDimensions((prev) => ({ ...prev, height: data.style.height }));
     }
   }, [data?.style?.width, data?.style?.height]);
 
   const throttledResize = useThrottle((newWidth, newHeight) => {
     // Update local dimensions
     setDimensions({ width: newWidth, height: newHeight });
-    
+
     // Update node data
     setNodes((nodes) =>
       nodes.map((node) =>
-        node.id === id 
-          ? { 
-              ...node, 
-              data: { 
-                ...node.data, 
-                style: { 
-                  ...node.data.style, 
-                  width: newWidth, 
-                  height: newHeight 
-                } 
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                style: {
+                  ...node.data.style,
+                  width: newWidth,
+                  height: newHeight
+                }
               },
               style: {
                 ...node.style,
                 width: newWidth,
                 height: newHeight
               }
-            } 
+            }
           : node
       )
     );
@@ -80,7 +80,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
     (_, { width: newWidth, height: newHeight }) => {
       requestAnimationFrame(() => {
         throttledResize(newWidth, newHeight);
-        updateNodeInternals(id);  // Force RF re-measure after resize
+        updateNodeInternals(id); // Force RF re-measure after resize
       });
     },
     [throttledResize, updateNodeInternals]
@@ -95,7 +95,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
     const img = imgRef.current;
     if (img) {
       const handleLoad = () => {
-        updateNodeInternals(id);  // Force RF to re-measure node
+        updateNodeInternals(id); // Force RF to re-measure node
       };
       img.addEventListener('load', handleLoad);
       return () => img.removeEventListener('load', handleLoad);
@@ -112,6 +112,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })
@@ -131,18 +132,20 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   };
 
   const handleConfirm = () => {
-    dispatch(setSelectedBlock({ 
-      id, 
-      type: 'carImage', 
-      data: { 
-        ...data, 
-        style: { 
-          ...data.style, 
-          width: dimensions.width, 
-          height: dimensions.height 
-        } 
-      } 
-    }));
+    dispatch(
+      setSelectedBlock({
+        id,
+        type: 'carImage',
+        data: {
+          ...data,
+          style: {
+            ...data.style,
+            width: dimensions.width,
+            height: dimensions.height
+          }
+        }
+      })
+    );
     handleInfoClick(true);
     setOpenDialog(false);
   };
@@ -151,13 +154,13 @@ const CarImageNode = ({ id, data, isConnectable }) => {
   const carImage = require('../../../assets/images/others/CarBluePrint.png');
 
   return (
-    <div 
-      className="car-image-node" 
+    <div
+      className="car-image-node"
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        width: '100%',  // Fill RF wrapper
+        width: '100%', // Fill RF wrapper
         height: '100%',
         border: `2px solid ${isSelected ? '#784be8' : 'transparent'}`,
         borderRadius: '5px',
@@ -175,12 +178,12 @@ const CarImageNode = ({ id, data, isConnectable }) => {
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && handleClick(e)}
     >
-      <NodeResizer 
+      <NodeResizer
         minWidth={200}
         minHeight={150}
         isVisible={isSelected}
         onResize={handleResize}
-        onResizeEnd={() => updateNodeInternals(id)}  // Re-measure on end
+        onResizeEnd={() => updateNodeInternals(id)} // Re-measure on end
         color="#ff0071"
         handleStyle={{
           width: '10px',
@@ -195,10 +198,10 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           border: '1px dashed #ff0071'
         }}
       />
-      
-      <div 
-        style={{ 
-          width: '100%', 
+
+      <div
+        style={{
+          width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
@@ -214,7 +217,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           backgroundColor: 'transparent'
         }}
       >
-        <img 
+        <img
           ref={imgRef}
           src={carImage}
           alt="Car Blueprint"
@@ -227,28 +230,30 @@ const CarImageNode = ({ id, data, isConnectable }) => {
           onError={() => console.error('Car image load failed')}
         />
         {value && (
-          <div style={{
-            position: 'absolute',
-            bottom: '5px',
-            left: 0,
-            right: 0,
-            textAlign: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            padding: '2px 0',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            color: '#333'
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '5px',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              padding: '2px 0',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: '#333'
+            }}
+          >
             {value}
           </div>
         )}
       </div>
-      
+
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        style={{ 
+        style={{
           background: bgColor,
           width: '10px',
           height: '10px',
@@ -261,7 +266,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         type="source"
         position={Position.Bottom}
         id="bottom"
-        style={{ 
+        style={{
           background: bgColor,
           width: '10px',
           height: '10px',
@@ -274,7 +279,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         type="target"
         position={Position.Left}
         id="left"
-        style={{ 
+        style={{
           background: bgColor,
           width: '10px',
           height: '10px',
@@ -287,7 +292,7 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         type="source"
         position={Position.Right}
         id="right"
-        style={{ 
+        style={{
           background: bgColor,
           width: '10px',
           height: '10px',
@@ -303,25 +308,30 @@ const CarImageNode = ({ id, data, isConnectable }) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          Open Subset Model
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">Open Subset Model</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Do you want to open the subset model for node: <strong>{value || 'Untitled Node'}</strong>?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={(e) => {
-            e.stopPropagation();
-            handleDialogClose();
-          }} color="primary">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDialogClose();
+            }}
+            color="primary"
+          >
             Cancel
           </Button>
-          <Button onClick={(e) => {
-            e.stopPropagation();
-            handleConfirm();
-          }} color="primary" autoFocus>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConfirm();
+            }}
+            color="primary"
+            autoFocus
+          >
             Open
           </Button>
         </DialogActions>

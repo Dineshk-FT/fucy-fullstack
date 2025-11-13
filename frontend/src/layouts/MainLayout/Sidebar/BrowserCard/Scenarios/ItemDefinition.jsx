@@ -127,6 +127,7 @@ const ItemDefinition = ({
         dispatch(
           setEdgeDetails({
             name: target?.data?.label || '',
+            description: target?.data?.description || '',
             properties: target?.properties || [],
             isAsset: target?.isAsset || false,
             style: target?.style || {},
@@ -138,6 +139,7 @@ const ItemDefinition = ({
         dispatch(
           setDetails({
             name: target?.data?.label || '',
+            description: target?.data?.description || '',
             properties: target?.properties || [],
             isAsset: target?.isAsset || false
           })

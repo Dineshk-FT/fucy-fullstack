@@ -527,6 +527,7 @@ export default function MainCanvas() {
         setDetails({
           ...details,
           name: node?.data?.label ?? '',
+          descripion: node?.data?.description ?? '',
           properties: node?.properties ?? [],
           isAsset: node.isAsset ?? false
         })
@@ -570,6 +571,7 @@ export default function MainCanvas() {
       setEdgeDetails({
         ...details,
         name: edge?.data?.label ?? '',
+        descripion: edge?.data?.description ?? '',
         properties: edge?.properties ?? [],
         isAsset: edge.isAsset ?? false,
         style: edge.data.style ?? {},
@@ -597,6 +599,7 @@ export default function MainCanvas() {
       setEdgeDetails({
         ...details,
         name: edge?.data?.label ?? '',
+        descripion: edge?.data?.description ?? '',
         properties: edge?.properties ?? [],
         isAsset: edge.isAsset ?? false,
         style: edge.data.style ?? {},

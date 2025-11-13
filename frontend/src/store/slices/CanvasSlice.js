@@ -17,12 +17,14 @@ const initialState = {
   isHeaderOpen: false,
   details: {
     name: '',
+    description: '',
     properties: [],
     isAsset: false
   },
   edgeDetails: {
     name: '',
     properties: [],
+    description: '',
     isAsset: false,
     style: {}
   }

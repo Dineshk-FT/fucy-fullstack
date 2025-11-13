@@ -101,6 +101,7 @@ const RenderedTreeItems = ({
       dispatch(
         setDetails({
           name: data?.label ?? '',
+          description: data?.description ?? '',
           properties: properties ?? [],
           isAsset: isAsset ?? false
         })
@@ -347,6 +348,7 @@ const RenderedTreeItems = ({
                       ? setEdgeDetails({
                           name: selected?.data?.label ?? '',
                           properties: selected?.properties ?? [],
+                          description: selected?.data?.description || '',
                           isAsset: selected?.isAsset ?? false,
                           style: selected?.style ?? {},
                           startPoint: selected?.markerStart?.color ?? '#000000',
@@ -354,6 +356,7 @@ const RenderedTreeItems = ({
                         })
                       : setDetails({
                           name: selected?.data?.label ?? '',
+                          description: selected?.data?.description || '',
                           properties: selected?.properties ?? [],
                           isAsset: selected?.isAsset ?? false
                         })

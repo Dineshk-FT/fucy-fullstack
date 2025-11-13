@@ -326,6 +326,40 @@ const EditEdge = ({ anchorEl, handleClosePopper, details, setDetails, handleSave
                   renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select properties..." size="small" />}
                 />
               </Box>
+              <Box className={classes.section}>
+                <InputLabel className={classes.inputlabel}>Description</InputLabel>
+                <TextField
+                  multiline
+                  minRows={3}
+                  value={details?.description || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    dispatch(setDetails({ ...details, description: value }));
+                    setEdges((prevEdges) =>
+                      prevEdges.map((edge) =>
+                        edge.id === selectedBlock?.id ? { ...edge, data: { ...edge.data, description: value } } : edge
+                      )
+                    );
+                  }}
+                  placeholder="Enter edge description..."
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      backgroundColor: color.inputBg,
+                      '& fieldset': { borderColor: color.border },
+                      '&:hover fieldset': { borderColor: color.primary },
+                      '&.Mui-focused fieldset': { borderColor: color.primary }
+                    },
+                    '& .MuiInputBase-input': {
+                      fontSize: '14px',
+                      lineHeight: 1.5
+                    }
+                  }}
+                />
+              </Box>
             </Box>
           )}
 

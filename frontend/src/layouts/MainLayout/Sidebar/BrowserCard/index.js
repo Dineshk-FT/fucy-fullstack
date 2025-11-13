@@ -817,6 +817,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })
