@@ -152,6 +152,7 @@ const DocumentDialog = ({ open, onClose }) => {
 
       if (selectedItems.includes(1)) {
         formData.append('svg', svgBlob, 'itemModelImage.svg');
+        formData.append('assetIdentificationTable', 1);
       }
 
       // ✅ Step 3: Send request to generate .docx
