@@ -20,6 +20,9 @@ import { shallow } from 'zustand/shallow';
 import { base64ToBlob } from './Base64Convert';
 import generateDiagramSVG from '../../utils/generateDiagramSVG';
 import { getRectOfNodes, getTransformForBounds } from 'reactflow';
+import generateDiagramAttackTree from '../../utils/generateDiagramAttackTrees';
+import { updateIconsWithPNG } from '../../utils/generateDiagramAttackTrees';
+import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 
 const selector = (state) => ({
   template: state.assets.template,
@@ -27,7 +30,10 @@ const selector = (state) => ({
   generateDocument: state.generateDocument,
   nodes: state.nodes,
   edges: state.edges,
-  canvasImage: state.canvasImage
+  canvasImage: state.canvasImage,
+  attacktrees: state.attackScenarios['subs'][1]['scenes'],
+  attacks: state.attackScenarios['subs'][0]['scenes'],
+  requirements: state.cybersecurity['subs'][1]['scenes']
 });
 
 const items = [
@@ -48,7 +54,10 @@ const items = [
     id: 4,
     name: 'Attack Path Analysis and Attack Feasibility Rating',
     icon: 'AttackIcon',
-    subs: [{ id: 41, name: 'Attack' }]
+    subs: [
+      { id: 41, name: 'Attack' },
+      { id: 42, name: 'Attack Trees' }
+    ]
   },
   {
     id: '5',
@@ -70,7 +79,7 @@ const items = [
 ];
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, canvasImage, image, edges } = useStore(selector, shallow);
+  const { template, generateDocument, nodes, canvasImage, image, edges, attacktrees, attacks, requirements } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -96,29 +105,31 @@ const DocumentDialog = ({ open, onClose }) => {
 
   function calculateDiagramSize(nodes) {
     if (!nodes || nodes.length === 0) {
-      return { width: 1000, height: 1000 }; // fallback
+      return { width: 1000, height: 800 };
     }
 
-    // Get min/max positions from all nodes
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
 
     nodes.forEach((node) => {
-      const { position, width = 0, height = 0 } = node;
-      minX = Math.min(minX, position.x);
-      minY = Math.min(minY, position.y);
-      maxX = Math.max(maxX, position.x + width);
-      maxY = Math.max(maxY, position.y + height);
+      const x = node.positionAbsolute?.x || node.position?.x || 0;
+      const y = node.positionAbsolute?.y || node.position?.y || 0;
+      const width = node.width || 120;
+      const height = node.height || 60;
+
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + width);
+      maxY = Math.max(maxY, y + height);
     });
 
-    // Add a margin (e.g., 100 px extra)
-    const extra = 100;
-    const width = maxX - minX + extra;
-    const height = maxY - minY + extra;
-
-    return { width, height };
+    const padding = 100;
+    return {
+      width: Math.max(maxX - minX + padding * 2, 100),
+      height: Math.max(maxY - minY + padding * 2, 100)
+    };
   }
 
   // Handle document download
@@ -126,6 +137,11 @@ const DocumentDialog = ({ open, onClose }) => {
   const handleDownload = async (e) => {
     e.stopPropagation();
     setIsGenerating(true);
+    // ✅ Ensure icons are ready BEFORE any SVG export
+    await updateIconsWithPNG({
+      attackIcon: AttackIcon,
+      cybersecurityIcon: CybersecurityIcon
+    });
 
     try {
       // ✅ Step 1: Generate SVG dynamically for DOCX
@@ -153,6 +169,39 @@ const DocumentDialog = ({ open, onClose }) => {
       if (selectedItems.includes(1)) {
         formData.append('svg', svgBlob, 'itemModelImage.svg');
         formData.append('assetIdentificationTable', 1);
+      }
+      // ============================================
+      //  ATTACK TREES → Generate SVG for each tree
+      // ============================================
+      if (selectedItems.includes(42) && Array.isArray(attacktrees)) {
+        attacktrees.forEach((tree, index) => {
+          try {
+            const treeNodes = tree?.templates?.nodes || [];
+            const treeEdges = tree?.templates?.edges || [];
+            const overallRating = tree?.overall_rating;
+
+            // Make sure width and height are positive numbers
+            const { width, height } = calculateDiagramSize(treeNodes);
+            const safeWidth = Math.max(width || 1000, 100);
+            const safeHeight = Math.max(height || 800, 100);
+            // console.log('treeNodes', treeNodes);
+
+            const svgStringTree = generateDiagramAttackTree(
+              treeNodes,
+              treeEdges,
+              safeWidth,
+              safeHeight,
+              overallRating,
+              attacks,
+              requirements
+            );
+            const svgBlobTree = new Blob([svgStringTree], { type: 'image/svg+xml' });
+
+            formData.append(`attackTrees`, svgBlobTree, `attackTree_${index}.svg`);
+          } catch (error) {
+            console.error(`Error generating SVG for attack tree ${index}:`, error);
+          }
+        });
       }
 
       // ✅ Step 3: Send request to generate .docx

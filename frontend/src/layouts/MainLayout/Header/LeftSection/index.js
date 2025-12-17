@@ -488,7 +488,7 @@ const LeftSection = () => {
         name: 'Project',
         options: [
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
-          { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
+          { label: 'Edit Info', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
           { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
