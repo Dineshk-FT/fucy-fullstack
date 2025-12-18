@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React from 'react';
 import MainCanvas from '../MainCanvas';
 import TSTable from '../../components/Table/TSTable';
@@ -16,11 +17,19 @@ import SoftwareIntegrityTable from '../../components/Table/SoftwareIntegrityTabl
 import PotentialVulnerabilityTable from '../../components/Table/PotentialVulnerabilityTable';
 import VulnerabilityTable from '../../components/Table/VulnerabilityTable';
 import MitigationsTable from '../../components/Table/MitigationsTable';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import TsDerivedTable from '../../components/Table/TsDerivedTable';
+import InfoEditPage from '../InfoEditPage';
+import { setIsEditPage } from '../../store/slices/CanvasSlice';
 
 export default function MainPage() {
   const { tableOpen } = useSelector((state) => state?.currentId);
+  const dispatch = useDispatch();
+  const { isEditPage } = useSelector((state) => state?.canvas);
+
+  const onClose = () => {
+    dispatch(setIsEditPage(false));
+  };
   const commonTables = ['Cybersecurity Requirements', 'Cybersecurity Controls', 'Cybersecurity Goals', 'Cybersecurity Claims'];
   const componentMap = {
     'Damage Scenarios (DS) Derivations': <DsDerivationTable />,
@@ -41,5 +50,6 @@ export default function MainPage() {
     Mitigations: <MitigationsTable />,
     ...commonTables.reduce((acc, key) => ({ ...acc, [key]: <CyberSecurityTable /> }), {})
   };
-  return componentMap[tableOpen] || <MainCanvas />;
+  // return componentMap[tableOpen] || <MainCanvas />;
+  return componentMap[tableOpen] || !isEditPage ? <MainCanvas /> : <InfoEditPage onClose={onClose} />;
 }

@@ -39,6 +39,7 @@ const Main = styled('main', {
 
   return {
     ...theme.typography.mainContent,
+    borderRadius: '0px',
     background: color?.canvaSurroundsBG,
     marginTop: getNavbarHeight(isclose),
     paddingLeft: drawerOpen ? 'auto' : '2rem',

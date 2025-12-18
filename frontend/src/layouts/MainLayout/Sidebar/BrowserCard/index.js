@@ -10,6 +10,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import CollapsibleSection from '../CollapsibleSection';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+
 import {
   ItemIcon,
   AttackIcon,
@@ -37,7 +39,14 @@ import SecurityIcon from '@mui/icons-material/Security';
 import DraggableTreeItem from './DraggableItem';
 import { closeAll, setAttackScene, setPreviousTab, setTableOpen } from '../../../../store/slices/CurrentIdSlice';
 import { setTitle } from '../../../../store/slices/PageSectionSlice';
-import { clearAnchorEl, setAnchorEl, setDetails, setEdgeDetails, setSelectedBlock } from '../../../../store/slices/CanvasSlice';
+import {
+  clearAnchorEl,
+  setAnchorEl,
+  setDetails,
+  setEdgeDetails,
+  setIsEditPage,
+  setSelectedBlock
+} from '../../../../store/slices/CanvasSlice';
 import toast from 'react-hot-toast';
 import ColorTheme from '../../../../themes/ColorTheme';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
@@ -657,8 +666,13 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  const EditInfo = () => {
+    dispatch(setIsEditPage(true));
+  };
+
   const getTitleLabel = (icon, name, id) => {
     const Image = imageComponents[icon];
+
     return (
       <Tooltip title={name} disableHoverListener={drawerwidthChange >= drawerWidth}>
         <Box
@@ -671,37 +685,68 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
             maxWidth: 'fit-content',
             display: 'flex',
             alignItems: 'center',
+            position: 'relative',
+
             background:
               clickedItem === id
                 ? theme.palette.mode === 'dark'
                   ? 'linear-gradient(90deg, rgba(100,181,246,0.25) 0%, rgba(100,181,246,0.08) 100%)'
                   : 'linear-gradient(90deg, rgba(33,150,243,0.15) 0%, rgba(33,150,243,0.03) 100%)'
                 : 'transparent',
+
             boxShadow:
-              clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none'
+              clickedItem === id ? (theme.palette.mode === 'dark' ? '0 3px 8px rgba(0,0,0,0.5)' : '0 3px 8px rgba(0,0,0,0.1)') : 'none',
+
+            /* 🔥 show edit icon on hover */
+            '&:hover .edit-icon': {
+              opacity: 1
+            }
           }}
-          tabIndex={0} // Added for keyboard navigation
+          tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleTitleClick(e)}
         >
           {Image && (
             <img
               src={Image}
               alt={name}
-              style={{ height: '20px', width: '20px', filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none' }}
+              style={{
+                height: '20px',
+                width: '20px',
+                filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none'
+              }}
             />
           )}
+
           <Typography
             variant="body2"
             ml={1.25}
             className={classes.labelTypo}
             color="inherit"
-            fontSize={'18px !important'} // Slightly larger for emphasis
+            fontSize={'18px !important'}
             fontWeight={600}
             noWrap
             sx={{ letterSpacing: '0.5px' }}
           >
             {name}
           </Typography>
+
+          {/* ✏️ Edit icon (hover only, not in edit mode) */}
+          {!isEditing && (
+            <EditOutlinedIcon
+              className="edit-icon"
+              fontSize="small"
+              sx={{
+                ml: 1,
+                cursor: 'pointer',
+                opacity: 0,
+                transition: 'opacity 0.2s ease-in-out'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                EditInfo(id);
+              }}
+            />
+          )}
         </Box>
       </Tooltip>
     );
