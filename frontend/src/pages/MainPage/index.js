@@ -51,5 +51,5 @@ export default function MainPage() {
     ...commonTables.reduce((acc, key) => ({ ...acc, [key]: <CyberSecurityTable /> }), {})
   };
   // return componentMap[tableOpen] || <MainCanvas />;
-  return componentMap[tableOpen] || !isEditPage ? <MainCanvas /> : <InfoEditPage onClose={onClose} />;
+  return componentMap[tableOpen] || (isEditPage ? <InfoEditPage onClose={onClose} /> : <MainCanvas />);
 }

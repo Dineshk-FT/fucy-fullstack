@@ -1256,7 +1256,15 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
 
   return (
     <>
-      {openDocumentDialog && <DocumentDialog open={openDocumentDialog} onClose={() => setOpenDocumentDialog(false)} />}
+      {openDocumentDialog && (
+        <DocumentDialog
+          open={openDocumentDialog}
+          onClose={(e) => {
+            e.stopPropagation();
+            setOpenDocumentDialog(false);
+          }}
+        />
+      )}
 
       <CardStyle
         $iscollapsed={isCollapsed}
