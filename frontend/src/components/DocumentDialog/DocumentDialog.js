@@ -25,8 +25,11 @@ import { updateIconsWithPNG } from '../../utils/generateDiagramAttackTrees';
 import { AttackIcon, CybersecurityIcon } from '../../assets/icons';
 
 const selector = (state) => ({
+  model_id: state.model?._id,
   template: state.assets.template,
   image: state?.assets?.image,
+  getAssets: state.getAssets,
+  getAttackScenario: state.getAttackScenario,
   generateDocument: state.generateDocument,
   nodes: state.nodes,
   edges: state.edges,
@@ -79,18 +82,45 @@ const items = [
 ];
 
 const DocumentDialog = ({ open, onClose }) => {
-  const { template, generateDocument, nodes, canvasImage, image, edges, attacktrees, attacks, requirements } = useStore(selector, shallow);
+  const {
+    template,
+    generateDocument,
+    nodes,
+    canvasImage,
+    image,
+    edges,
+    attacktrees,
+    attacks,
+    requirements,
+    getAssets,
+    getAttackScenario,
+    model_id
+  } = useStore(selector, shallow);
   const { modelId } = useSelector((state) => state?.pageName);
   const { isDark } = useSelector((state) => state.currentId);
   const [selectedItems, setSelectedItems] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Reset selected items when dialog opens
+  // Reset selected items and fetch data when dialog opens
   useEffect(() => {
-    if (open) {
-      setSelectedItems([]);
-    }
-  }, [open]);
+    const fetchData = async () => {
+      if (open) {
+        setSelectedItems([]);
+        setIsLoading(true);
+        try {
+          // Call both functions to cache the states
+          await Promise.all([getAssets(modelId), getAttackScenario(modelId)]);
+        } catch (error) {
+          console.error('Error fetching data for document dialog:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [open, modelId, getAssets, getAttackScenario]);
 
   // console.log('canvasImage', canvasImage);
   // console.log('image', image);
@@ -255,6 +285,15 @@ const DocumentDialog = ({ open, onClose }) => {
         }}
       >
         Document Report
+        {isLoading && (
+          <CircularProgress
+            size={16}
+            sx={{
+              color: isDark ? '#64B5F6' : '#2196F3',
+              marginLeft: '10px'
+            }}
+          />
+        )}
       </DialogTitle>
       <DialogContent
         sx={{
@@ -264,76 +303,64 @@ const DocumentDialog = ({ open, onClose }) => {
           overflowY: 'auto'
         }}
       >
-        <Typography
-          variant="subtitle1"
-          gutterBottom
-          sx={{
-            fontSize: '0.95rem',
-            fontWeight: 500,
-            color: isDark ? '#B0BEC5' : '#616161',
-            marginBottom: '12px',
-            fontFamily: "'Poppins', sans-serif"
-          }}
-        >
-          Select items to add in the report and click on download:
-        </Typography>
-        <Divider sx={{ my: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {items.map((item) => (
-            <Box key={item.id}>
-              {item.subs ? (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    color: isDark ? '#E0E0E0' : '#333333',
-                    mb: 0.5,
-                    fontFamily: "'Poppins', sans-serif"
-                  }}
-                >
-                  {item.name}
-                </Typography>
-              ) : (
-                <Tooltip title={item.name} arrow>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={selectedItems.includes(item.id)}
-                        onChange={(e) => handleCheckboxChange(e, item.id)}
-                        disabled={item.id === 1 && isGenerating}
-                        sx={{
-                          color: isDark ? '#64B5F6' : '#2196F3',
-                          '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
-                          padding: '4px'
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography
-                        sx={{
-                          fontSize: '0.9rem',
-                          color: isDark ? '#E0E0E0' : '#333333',
-                          fontFamily: "'Poppins', sans-serif"
-                        }}
-                      >
-                        {item.name}
-                      </Typography>
-                    }
-                    sx={{ marginLeft: '-4px' }}
-                  />
-                </Tooltip>
-              )}
-              {item.subs && (
-                <Box sx={{ pl: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {item.subs.map((sub) => (
-                    <Tooltip key={sub.id} title={sub.name} arrow>
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+            <CircularProgress
+              size={24}
+              sx={{
+                color: isDark ? '#64B5F6' : '#2196F3'
+              }}
+            />
+            <Typography
+              sx={{
+                ml: 2,
+                color: isDark ? '#E0E0E0' : '#333333',
+                fontFamily: "'Poppins', sans-serif"
+              }}
+            >
+              Loading data...
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                color: isDark ? '#B0BEC5' : '#616161',
+                marginBottom: '12px',
+                fontFamily: "'Poppins', sans-serif"
+              }}
+            >
+              Select items to add in the report and click on download:
+            </Typography>
+            <Divider sx={{ my: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {items.map((item) => (
+                <Box key={item.id}>
+                  {item.subs ? (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1rem',
+                        color: isDark ? '#E0E0E0' : '#333333',
+                        mb: 0.5,
+                        fontFamily: "'Poppins', sans-serif"
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
+                  ) : (
+                    <Tooltip title={item.name} arrow>
                       <FormControlLabel
                         control={
                           <Checkbox
-                            checked={selectedItems.includes(sub.id)}
-                            onChange={(e) => handleCheckboxChange(e, sub.id)}
-                            disabled={isGenerating}
+                            checked={selectedItems.includes(item.id)}
+                            onChange={(e) => handleCheckboxChange(e, item.id)}
+                            disabled={item.id === 1 && isGenerating}
                             sx={{
                               color: isDark ? '#64B5F6' : '#2196F3',
                               '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
@@ -344,24 +371,58 @@ const DocumentDialog = ({ open, onClose }) => {
                         label={
                           <Typography
                             sx={{
-                              fontSize: '0.85rem',
+                              fontSize: '0.9rem',
                               color: isDark ? '#E0E0E0' : '#333333',
                               fontFamily: "'Poppins', sans-serif"
                             }}
                           >
-                            {sub.name}
+                            {item.name}
                           </Typography>
                         }
                         sx={{ marginLeft: '-4px' }}
                       />
                     </Tooltip>
-                  ))}
+                  )}
+                  {item.subs && (
+                    <Box sx={{ pl: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {item.subs.map((sub) => (
+                        <Tooltip key={sub.id} title={sub.name} arrow>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={selectedItems.includes(sub.id)}
+                                onChange={(e) => handleCheckboxChange(e, sub.id)}
+                                disabled={isGenerating}
+                                sx={{
+                                  color: isDark ? '#64B5F6' : '#2196F3',
+                                  '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
+                                  padding: '4px'
+                                }}
+                              />
+                            }
+                            label={
+                              <Typography
+                                sx={{
+                                  fontSize: '0.85rem',
+                                  color: isDark ? '#E0E0E0' : '#333333',
+                                  fontFamily: "'Poppins', sans-serif"
+                                }}
+                              >
+                                {sub.name}
+                              </Typography>
+                            }
+                            sx={{ marginLeft: '-4px' }}
+                          />
+                        </Tooltip>
+                      ))}
+                    </Box>
+                  )}
+                  <Divider sx={{ my: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
                 </Box>
-              )}
-              <Divider sx={{ my: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+              ))}
             </Box>
-          ))}
-        </Box>
+          </>
+        )}
       </DialogContent>
       <DialogActions
         sx={{
@@ -373,7 +434,7 @@ const DocumentDialog = ({ open, onClose }) => {
       >
         <Button
           onClick={onClose}
-          disabled={isGenerating}
+          disabled={isGenerating || isLoading}
           sx={{
             padding: '6px 12px',
             fontSize: '0.85rem',
@@ -398,7 +459,7 @@ const DocumentDialog = ({ open, onClose }) => {
         </Button>
         <Button
           onClick={handleDownload}
-          disabled={isGenerating || selectedItems.length === 0}
+          disabled={isGenerating || selectedItems.length === 0 || isLoading}
           sx={{
             padding: '6px 12px',
             fontSize: '0.85rem',

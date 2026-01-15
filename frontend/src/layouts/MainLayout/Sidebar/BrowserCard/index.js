@@ -571,6 +571,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
   const handleClick = async (event, ModelId, name, id) => {
     event.stopPropagation();
     setClickedItem(id);
+    dispatch(setIsEditPage(false));
 
     if (name === 'assets') {
       dispatch(setPreviousTab(name));

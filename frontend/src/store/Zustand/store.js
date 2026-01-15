@@ -874,8 +874,20 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes
     }));
 
-    // Only add to undo stack for meaningful changes (not selection changes)
-    const meaningfulChanges = changes.filter((change) => change.type !== 'select' && change.type !== 'dimensions');
+    // Filter out UI-only changes more strictly
+    const meaningfulChanges = changes.filter((change) => {
+      // Ignore selection, dimensions, and position changes from UI interactions
+      if (change.type === 'select' || change.type === 'dimensions') {
+        return false;
+      }
+
+      // For position changes, check if it's actually meaningful
+      if (change.type === 'position' && change.dragging === false) {
+        return false; // Ignore position changes from UI clicks
+      }
+
+      return true;
+    });
 
     if (meaningfulChanges.length > 0) {
       set((state) => ({
@@ -886,7 +898,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  // Replace onEdgesChange:
   onEdgesChange: (changes) => {
     const currentEdges = get().edges;
     const updatedEdges = applyEdgeChanges(changes, currentEdges);

@@ -948,7 +948,12 @@ export default function MainCanvas() {
             defaultZoom={1}
             defaultZoomPosition={{ x: 0, y: 0 }}
           >
-            <Panel id="control-panel" position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel
+              id="control-panel"
+              position="top-left"
+              style={{ display: 'flex', gap: 4, padding: '4px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <span ref={anchorRef}>
                 <CanvasToolbar
                   isDark={isDark}
@@ -969,12 +974,17 @@ export default function MainCanvas() {
                 />
               </span>
             </Panel>
-            <Panel position="top-right">
+            <Panel position="top-right" onClick={(e) => e.stopPropagation()}>
               <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
                 <HelpOutlineIcon fontSize="small" />
               </IconButton>
             </Panel>
-            <Panel id="controls" position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel
+              id="controls"
+              position="bottom-left"
+              style={{ display: 'flex', gap: 4, padding: '4px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
             </Panel>
             <MiniMap

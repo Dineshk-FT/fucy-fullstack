@@ -45,22 +45,27 @@ function RightSection() {
   const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
 
   const handleMenuClick = (event) => {
+    event.stopPropagation();
     setMenuAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
+  const handleMenuClose = (e) => {
+    e?.stopPropagation();
     setMenuAnchorEl(null);
   };
 
   const handleHelpClick = (event) => {
+    event.stopPropagation();
     setHelpAnchorEl((prev) => (prev ? null : event.currentTarget));
   };
 
-  const handleHelpClose = () => {
+  const handleHelpClose = (e) => {
+    e?.stopPropagation();
     setHelpAnchorEl(null);
   };
 
-  const handleDocumentationClick = useCallback(() => {
+  const handleDocumentationClick = useCallback((e) => {
+    e?.stopPropagation();
     window.open(pdfFile, '_blank', 'noopener,noreferrer');
   }, []);
 
@@ -75,12 +80,14 @@ function RightSection() {
     [dispatch]
   );
 
-  const handleResetPasswordClick = () => {
+  const handleResetPasswordClick = (e) => {
+    e.stopPropagation();
     handleMenuClose();
     setOpenResetPasswordDialog(true);
   };
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = (e) => {
+    e.stopPropagation();
     handleMenuClose();
     setOpenLogoutDialog(true);
   };
@@ -91,7 +98,8 @@ function RightSection() {
     navigate('/login');
   }, [dispatch, navigate]);
 
-  const handleResetPasswordClose = () => {
+  const handleResetPasswordClose = (e) => {
+    e.stopPropagation();
     setOpenResetPasswordDialog(false);
   };
 
@@ -211,7 +219,14 @@ function RightSection() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenLogoutDialog(false)} variant="outlined" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenLogoutDialog(false);
+            }}
+            variant="outlined"
+            sx={{ fontFamily: "'Poppins', sans-serif" }}
+          >
             Cancel
           </Button>
           <Button onClick={handleConfirmLogout} color="error" variant="contained" autoFocus sx={{ fontFamily: "'Poppins', sans-serif" }}>
