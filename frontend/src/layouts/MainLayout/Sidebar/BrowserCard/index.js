@@ -881,7 +881,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     setCount((prev) => ({ ...prev, [nodeType]: prev[nodeType] + 1 }));
   };
 
-  const handleClosePopper = () => {
+  const handleClosePopper = (e) => {
+    e?.stopPropagation();
     dispatch(clearAnchorEl());
   };
   const handleSave = () => {
