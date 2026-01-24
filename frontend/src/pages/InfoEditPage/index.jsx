@@ -1,11 +1,10 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Button, Box, TextField, CircularProgress, FormLabel, IconButton } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { shallow } from 'zustand/shallow';
 import toast, { Toaster } from 'react-hot-toast';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import JoditEditor from 'jodit-react';
 
 import useStore from '../../store/Zustand/store';
 import ColorTheme from '../../themes/ColorTheme';
@@ -16,16 +15,6 @@ const selector = (state) => ({
   getModelById: state.getModelById
 });
 
-const quillModules = {
-  toolbar: [
-    ['bold', 'italic', 'underline'],
-    [{ color: [] }, { background: [] }], // 👈 text color + highlight
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['link'],
-    ['clean']
-  ]
-};
-
 export default React.memo(function InfoEditPage({ onClose }) {
   const color = ColorTheme();
   const { updateModelName, model, getModelById } = useStore(selector, shallow);
@@ -35,6 +24,13 @@ export default React.memo(function InfoEditPage({ onClose }) {
   const [intro, setIntro] = useState('');
   const [scope, setScope] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Refs for Jodit editors
+  const editorRefs = useRef({
+    purpose: null,
+    intro: null,
+    scope: null
+  });
 
   useEffect(() => {
     setNewName(model?.name || '');
@@ -49,6 +45,7 @@ export default React.memo(function InfoEditPage({ onClose }) {
       return;
     }
 
+    // Get current values from state (Jodit updates state directly)
     if (
       newName.trim() === model?.name &&
       purpose === model?.report_info?.purpose &&
@@ -80,7 +77,151 @@ export default React.memo(function InfoEditPage({ onClose }) {
       .finally(() => setLoading(false));
   }, [newName, purpose, intro, scope, model, updateModelName, getModelById]);
 
-  const renderEditor = (label, value, onChange) => (
+  // Jodit configuration - optimized for table support
+  const joditConfig = {
+    height: 200,
+    width: '100%',
+    toolbar: true,
+    toolbarAdaptive: false,
+    spellcheck: true,
+    enter: 'div',
+    defaultMode: '1',
+    toolbarButtonSize: 'middle',
+    showCharsCounter: false,
+    showWordsCounter: false,
+    showXPathInStatusbar: false,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    disablePlugins: ['paste', 'stat'],
+    buttons: [
+      'source',
+      '|',
+      'bold',
+      'italic',
+      'underline',
+      'strikethrough',
+      '|',
+      'superscript',
+      'subscript',
+      '|',
+      'ul',
+      'ol',
+      'outdent',
+      'indent',
+      '|',
+      'font',
+      'fontsize',
+      'brush',
+      'paragraph',
+      '|',
+      'image',
+      'table',
+      'link',
+      '|',
+      'align',
+      'undo',
+      'redo',
+      '|',
+      'hr',
+      'eraser',
+      'copyformat',
+      '|',
+      'fullsize',
+      'print',
+      'about'
+    ],
+    buttonsMD: [
+      'source',
+      '|',
+      'bold',
+      'italic',
+      'underline',
+      '|',
+      'ul',
+      'ol',
+      '|',
+      'font',
+      'fontsize',
+      'brush',
+      'paragraph',
+      '|',
+      'table',
+      'link',
+      '|',
+      'align',
+      'undo',
+      'redo',
+      '|',
+      'fullsize'
+    ],
+    buttonsXS: ['bold', 'italic', 'underline', '|', 'ul', 'ol', '|', 'table', 'link', '|', 'undo', 'redo'],
+    table: {
+      enable: true,
+      insert: true,
+      delete: true,
+      edit: true,
+      merge: true,
+      split: true,
+      autofocus: true,
+      allowCellSelection: true,
+      allowRowSelection: true,
+      allowColumnSelection: true,
+      selectionCellStyle: 'border: 2px dashed #3498db; background-color: #f0f8ff;',
+      tableProperties: {
+        border: '1',
+        borderStyle: 'solid',
+        borderColor: '#ddd',
+        cellpadding: '4',
+        cellspacing: '0'
+      },
+      tableCellProperties: {
+        border: '1',
+        borderStyle: 'solid',
+        borderColor: '#ddd',
+        padding: '4px'
+      }
+    },
+    events: {
+      beforeCommand: (command) => {
+        if (command === 'table') {
+          // Custom table insertion logic if needed
+        }
+      },
+      afterInit: (editor) => {
+        // Custom initialization
+      }
+    },
+    style: {
+      table: {
+        'border-collapse': 'collapse',
+        width: '100%',
+        margin: '10px 0'
+      },
+      'table th': {
+        border: '2px solid #2c3e50',
+        padding: '8px',
+        'background-color': '#ecf0f1',
+        'font-weight': 'bold',
+        'text-align': 'center'
+      },
+      'table td': {
+        border: '1px solid #bdc3c7',
+        padding: '6px',
+        'text-align': 'left'
+      },
+      'table tr:hover': {
+        'background-color': '#f5f5f5'
+      }
+    },
+    placeholder: 'Start typing here...',
+    uploader: {
+      insertImageAsBase64URI: true
+    },
+    language: 'en',
+    direction: 'ltr'
+  };
+
+  const renderEditor = (fieldName, label, value, onChange) => (
     <Box>
       <FormLabel sx={{ fontWeight: 600 }}>{label}</FormLabel>
       <Box
@@ -88,20 +229,59 @@ export default React.memo(function InfoEditPage({ onClose }) {
           mt: 0.5,
           border: '1px solid #ccc',
           borderRadius: 1,
-          '& .ql-toolbar': {
-            borderTopLeftRadius: 4,
-            borderTopRightRadius: 4
+          overflow: 'hidden',
+          '& .jodit-container': {
+            border: 'none !important',
+            borderRadius: '4px !important'
           },
-          '& .ql-container': {
-            borderBottomLeftRadius: 4,
-            borderBottomRightRadius: 4,
-            minHeight: 120,
-            resize: 'vertical', // 👈 enables manual resize
-            overflow: 'auto' // 👈 required for resize to work
+          '& .jodit-workplace': {
+            minHeight: '120px',
+            border: 'none !important'
+          },
+          '& .jodit-wysiwyg': {
+            minHeight: '120px',
+            padding: '8px !important'
+          },
+          '& table': {
+            borderCollapse: 'collapse !important',
+            width: '100% !important',
+            margin: '10px 0 !important',
+            '& th': {
+              border: '2px solid #2c3e50 !important',
+              padding: '8px !important',
+              backgroundColor: '#ecf0f1 !important',
+              fontWeight: 'bold !important',
+              textAlign: 'center !important'
+            },
+            '& td': {
+              border: '1px solid #bdc3c7 !important',
+              padding: '6px !important',
+              textAlign: 'left !important'
+            },
+            '& tr:hover': {
+              backgroundColor: '#f5f5f5 !important'
+            }
           }
         }}
       >
-        <ReactQuill theme="snow" value={value} onChange={onChange} modules={quillModules} />
+        <JoditEditor
+          ref={(el) => {
+            if (el) {
+              editorRefs.current[fieldName] = el;
+            }
+          }}
+          value={value}
+          config={joditConfig}
+          tabIndex={1}
+          onBlur={(newContent) => {
+            // Update state when editor loses focus
+            onChange(newContent);
+          }}
+          onChange={(newContent) => {
+            // Optional: update on every change (can be performance heavy)
+            // onChange(newContent);
+          }}
+        />
       </Box>
     </Box>
   );
@@ -132,10 +312,10 @@ export default React.memo(function InfoEditPage({ onClose }) {
         <TextField value={newName} onChange={(e) => setNewName(e.target.value)} fullWidth size="small" placeholder="Enter project name" />
       </Box>
 
-      {/* Rich Text Fields */}
-      {renderEditor('Purpose', purpose, setPurpose)}
-      {renderEditor('Introduction', intro, setIntro)}
-      {renderEditor('Scope', scope, setScope)}
+      {/* Rich Text Fields with Jodit Editor */}
+      {renderEditor('purpose', 'Purpose', purpose, setPurpose)}
+      {renderEditor('intro', 'Introduction', intro, setIntro)}
+      {renderEditor('scope', 'Scope', scope, setScope)}
 
       {/* Actions */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
