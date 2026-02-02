@@ -158,16 +158,51 @@ const LeftSection = () => {
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
 
   const handleOpenScenarioAI = (type, e) => {
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     setScenarioType(type);
     setOpenScenarioModal(true);
   };
 
   const handleCloseScenarioAI = (e) => {
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     setOpenScenarioModal(false);
     setScenarioType(null);
   };
+
+  const handleModalInteraction = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
+  };
+
+  // In LeftSection component, add this useEffect
+  // useEffect(() => {
+  //   const stopAllEvents = (e) => {
+  //     e.stopPropagation();
+  //     e.preventDefault();
+  //     e.nativeEvent?.stopImmediatePropagation?.();
+  //   };
+
+  //   // Stop events on component mount
+  //   const handleMouseDown = (e) => stopAllEvents(e);
+  //   const handleClick = (e) => stopAllEvents(e);
+  //   const handleFocus = (e) => stopAllEvents(e);
+  //   const handleContextMenu = (e) => stopAllEvents(e);
+
+  //   // Add event listeners to prevent React Flow from detecting interactions
+  //   document.addEventListener('mousedown', handleMouseDown, true);
+  //   document.addEventListener('click', handleClick, true);
+  //   document.addEventListener('focus', handleFocus, true);
+  //   document.addEventListener('contextmenu', handleContextMenu, true);
+
+  //   return () => {
+  //     // Clean up event listeners
+  //     document.removeEventListener('mousedown', handleMouseDown, true);
+  //     document.removeEventListener('click', handleClick, true);
+  //     document.removeEventListener('focus', handleFocus, true);
+  //     document.removeEventListener('contextmenu', handleContextMenu, true);
+  //   };
+  // }, []);
 
   const handleMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -176,7 +211,7 @@ const LeftSection = () => {
 
   const handleMouseLeave = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       // Only hide the hovered tab if no modal is open
       if (!openModal.Open && !openModal.Delete && !openModal.Library) {
         hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
@@ -186,13 +221,13 @@ const LeftSection = () => {
   );
 
   const handleTabWrapperMouseEnter = useCallback((e, tabName) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
 
   const handleDropdownMouseEnter = useCallback((e, tabName) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
@@ -209,7 +244,7 @@ const LeftSection = () => {
 
   const handleAddNewNode = useCallback(
     (e, name) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       name == 'node' ? dispatch(openAddNodeTab()) : dispatch(openAddDataNodeTab());
     },
     [dispatch]
@@ -223,7 +258,7 @@ const LeftSection = () => {
   };
 
   const handleExportClose = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     setExportAnchorEl(null);
   };
 
@@ -287,7 +322,7 @@ const LeftSection = () => {
 
   const handleTabChange = useCallback(
     (e, tabName) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -309,7 +344,7 @@ const LeftSection = () => {
 
   const handleToggleCollapse = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       setCollapsed((prev) => !prev);
     },
     [setCollapsed]
@@ -344,7 +379,7 @@ const LeftSection = () => {
 
   const handleClick = useCallback(
     (e, name, number) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -392,7 +427,7 @@ const LeftSection = () => {
 
   const handleOpenModal = (modalKey, e) => {
     // console.log('modalKey', modalKey);
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     if (isChanged) {
       setOpenSave(true);
       handleMouseLeave(e);
@@ -428,7 +463,7 @@ const LeftSection = () => {
   );
 
   const handleGenerateRisk = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     autoGenerateRiskTreatement({ modelId: model._id })
       .then((res) => {
         // console.log('res', res);
@@ -739,7 +774,7 @@ const LeftSection = () => {
   );
 
   const handleCloseModal = useCallback((e, modalKey) => {
-    if (e) e.stopPropagation();
+    if (e) e?.stopPropagation?.();
     setOpenModal((prev) => ({ ...prev, [modalKey]: false }));
   }, []);
 
@@ -862,11 +897,16 @@ const LeftSection = () => {
 
   return (
     <Box
+      onClick={handleModalInteraction}
+      onMouseDown={handleModalInteraction}
+      onFocus={handleModalInteraction}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 1001, // Ensure it's above React Flow
+        pointerEvents: 'auto' // Ensure it captures events
       }}
     >
       <Box
@@ -892,6 +932,7 @@ const LeftSection = () => {
             }}
             onMouseEnter={(e) => handleTabWrapperMouseEnter(e, tab.name)}
             onMouseLeave={handleMouseLeave}
+            onClick={handleModalInteraction}
           >
             <Box
               onClick={(e) => handleTabChange(e, tab.name)}
@@ -1093,7 +1134,13 @@ const LeftSection = () => {
         style={{ position: 'fixed' }}
       />
       {openModal.AIModal && (
-        <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((prev) => ({ ...prev, AIModal: false }))} />
+        <PromptModal
+          open={openModal?.AIModal}
+          handleClose={(e) => {
+            e?.stopPropagation?.();
+            setOpenModal((prev) => ({ ...prev, AIModal: false }));
+          }}
+        />
       )}
       {openTemplateDialog && <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />}
       {openComponentsDialog && <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />}

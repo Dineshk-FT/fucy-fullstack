@@ -656,7 +656,8 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     }
   };
 
-  const handleAttackTreeClose = () => {
+  const handleAttackTreeClose = (e) => {
+    e.stopPropagation();
     setOpenModal((state) => ({ ...state, attack: false }));
   };
 

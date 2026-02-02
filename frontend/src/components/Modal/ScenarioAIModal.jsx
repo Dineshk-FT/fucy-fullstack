@@ -87,12 +87,14 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   }, [scenarioType]);
 
   // field management (like GenerateModel)
-  const handleAddManualField = () => {
+  const handleAddManualField = (e) => {
+    e.stopPropagation();
     setFieldsVisible(true);
     setManualFields((prev) => [...prev, { id: nanoid(), label: '', value: '' }]);
   };
 
-  const handleManualChange = (id, field, value) => {
+  const handleManualChange = (id, field, value, e) => {
+    e.stopPropagation();
     setManualFields((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: value } : f)));
   };
 
@@ -112,10 +114,12 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   };
 
   const handleChange = (field) => (event) => {
+    event.stopPropagation();
     setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const handleSystemInputs = async () => {
+  const handleSystemInputs = async (e) => {
+    e.stopPropagation();
     setLoading(true);
     await getSystemInputs(formValues.systemName, systemInputPrompt);
     setLoading(false);
@@ -152,10 +156,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     const manualInputFields = manualFields.map(({ id, label, value }) => (
       <React.Fragment key={`manual-${id}`}>
         <Grid item xs={4}>
-          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value)} />
+          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value, e)} />
         </Grid>
         <Grid item xs={7}>
-          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value)} />
+          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value, e)} />
         </Grid>
         <Grid item xs={1}>
           <IconButton onClick={() => handleRemoveField(id, true)} color="error">
@@ -302,7 +306,8 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     }
   };
 
-  const onClose = () => {
+  const onClose = (e) => {
+    e.stopPropagation();
     setPromptValue('');
     setResult(null);
     setStep(0);
@@ -338,7 +343,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                     <TextField
                       fullWidth
                       value={formValues.systemName}
-                      onChange={(e) => setFormValues({ ...formValues, systemName: e.target.value })}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setFormValues({ ...formValues, systemName: e.target.value });
+                      }}
                     />
                   </Grid>
 
@@ -349,7 +357,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                       minRows={2}
                       label="System Input Prompt"
                       value={systemInputPrompt}
-                      onChange={(e) => setSystemInputPrompt(e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSystemInputPrompt(e.target.value);
+                      }}
                     />
                   </Grid>
 
@@ -372,7 +383,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                 minRows={4}
                 label={label}
                 value={promptValue}
-                onChange={(e) => setPromptValue(e.target.value)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setPromptValue(e.target.value);
+                }}
               />
             )
           ) : (
@@ -383,7 +397,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                 minRows={4}
                 label={label}
                 value={promptValue}
-                onChange={(e) => setPromptValue(e.target.value)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setPromptValue(e.target.value);
+                }}
               />
               {result && (
                 <Box

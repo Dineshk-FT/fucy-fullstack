@@ -50,37 +50,47 @@ export default React.memo(function CommonModal({ open, handleClose, name }) {
     setTemplateDetails((prev) => ({ ...prev, name: e.target.value }));
   }, []);
 
-  const handleCreate = useCallback(() => {
-    if (!templateDetails.name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
+  // In CommonModal.jsx
+  const handleModalInteraction = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
+  };
 
-    setLoading(true);
-    const newScene = {
-      modelId: model?._id,
-      type: name === 'Attack' ? 'attack' : 'attack_trees',
-      name: templateDetails.name.trim()
-    };
+  const handleCreate = useCallback(
+    (e) => {
+      if (!templateDetails.name.trim()) {
+        toast.error('Name is required');
+        return;
+      }
 
-    addAttackScene(newScene)
-      .then((res) => {
-        if (!res.error) {
-          toast.success('Added successfully');
-          getAttackScenario(model?._id);
-          setTemplateDetails({ name: '' });
-          handleClose();
-        } else {
-          toast.error(res?.error ?? 'Something went wrong');
-        }
-      })
-      .catch(() => {
-        toast.error('Something went wrong');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [addAttackScene, getAttackScenario, model?._id, name, templateDetails, handleClose]);
+      setLoading(true);
+      const newScene = {
+        modelId: model?._id,
+        type: name === 'Attack' ? 'attack' : 'attack_trees',
+        name: templateDetails.name.trim()
+      };
+
+      addAttackScene(newScene)
+        .then((res) => {
+          if (!res.error) {
+            toast.success('Added successfully');
+            getAttackScenario(model?._id);
+            setTemplateDetails({ name: '' });
+            handleClose(e);
+          } else {
+            toast.error(res?.error ?? 'Something went wrong');
+          }
+        })
+        .catch(() => {
+          toast.error('Something went wrong');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    },
+    [addAttackScene, getAttackScenario, model?._id, name, templateDetails, handleClose]
+  );
 
   return (
     <>
@@ -88,6 +98,9 @@ export default React.memo(function CommonModal({ open, handleClose, name }) {
         open={open}
         TransitionComponent={Transition}
         keepMounted
+        onMouseDown={handleModalInteraction}
+        onClick={handleModalInteraction}
+        onFocus={handleModalInteraction}
         PaperComponent={PaperComponent}
         onClose={handleClose}
         aria-labelledby="common-modal-dialog-title"
@@ -112,6 +125,7 @@ export default React.memo(function CommonModal({ open, handleClose, name }) {
                   name="name"
                   value={templateDetails.name}
                   onChange={handleChange}
+                  onMouseDown={(e) => e.stopPropagation()}
                   variant="outlined"
                   placeholder={`Enter ${name.toLowerCase()} name`}
                   size="small"

@@ -318,7 +318,7 @@ export default React.memo(function InfoEditPage({ onClose }) {
       {renderEditor('scope', 'Scope', scope, setScope)}
 
       {/* Actions */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 1, mt: 1 }}>
         <Button variant="contained" onClick={handleSave} disabled={loading} startIcon={loading && <CircularProgress size={16} />}>
           Save
         </Button>

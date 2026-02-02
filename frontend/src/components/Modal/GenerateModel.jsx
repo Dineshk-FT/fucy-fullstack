@@ -86,7 +86,8 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     setPromptValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const onClose = () => {
+  const onClose = (e) => {
+    e.stopPropagation();
     setStep(0);
     setStepResult(null);
     setFormValues({ systemName: '' });
@@ -139,7 +140,8 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     ...promptValues
   });
 
-  const handleGenerateStep = async () => {
+  const handleGenerateStep = async (e) => {
+    e.stopPropagation();
     setGenerating(true);
     try {
       if (step === 1) {

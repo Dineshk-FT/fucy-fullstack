@@ -57,63 +57,63 @@ const ThreatScenarios = ({ sub, detail, i, onDragStart, getLabel }) => {
           })
         )
       : sub.name === 'Derived Threat Scenarios'
-      ? [
-          {
-            label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
-            nodeId: detail?.id,
-            extraProps: {
-              ...detail,
-              nodeType: 'derived',
-              width: 150,
-              height: 60
-            },
-            index: i + 1,
-            onClick: (e) => {
-              e.stopPropagation();
-              setSelectedThreatIds([]);
-            },
-            labelComponent: (labelText) => {
-              const labelOnClick = (e) => {
+        ? [
+            {
+              label: `[TSD${(i + 1).toString().padStart(3, '0')}] ${detail?.name}`,
+              nodeId: detail?.id,
+              extraProps: {
+                ...detail,
+                nodeType: 'derived',
+                width: 150,
+                height: 60
+              },
+              index: i + 1,
+              onClick: (e) => {
                 e.stopPropagation();
-                const ids = detail?.threat_ids?.map((threat) => threat?.propId) || [];
-                setSelectedThreatIds(ids);
-              };
+                setSelectedThreatIds([]);
+              },
+              labelComponent: (labelText) => {
+                const labelOnClick = (e) => {
+                  e.stopPropagation();
+                  const ids = detail?.threat_ids?.map((threat) => threat?.propId) || [];
+                  setSelectedThreatIds(ids);
+                };
 
-              const hasThreatIds = detail?.threat_ids?.length > 0;
-              const isHovered = hovered.id === detail?.id;
+                const hasThreatIds = detail?.threat_ids?.length > 0;
+                const isHovered = hovered.id === detail?.id;
 
-              return (
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  onMouseEnter={() => setHovered({ id: detail?.id })}
-                  onMouseLeave={() => setHovered({ id: '' })}
-                >
-                  {getLabel('TopicIcon', labelText, i + 1, detail?.id, detail?.threat_ids, labelOnClick)}
-                  {hasThreatIds && isHovered && (
-                    <Tooltip title="Open Threat Scenarios table to update" arrow>
-                      <EditIcon
-                        color="action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditDerived(detail?.id, detail?.threat_ids);
-                        }}
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': { color: 'primary.main' },
-                          ml: 1.5,
-                          fontSize: 18
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-                </Box>
-              );
+                return (
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    onMouseEnter={() => setHovered({ id: detail?.id })}
+                    onMouseLeave={() => setHovered({ id: '' })}
+                  >
+                    {getLabel('TopicIcon', labelText, i + 1, detail?.id, detail?.threat_ids, labelOnClick)}
+                    {hasThreatIds && isHovered && (
+                      <Tooltip title="Open Threat Scenarios table to update" arrow>
+                        <EditIcon
+                          color="action"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditDerived(detail?.id, detail?.threat_ids);
+                          }}
+                          sx={{
+                            cursor: 'pointer',
+                            '&:hover': { color: 'primary.main' },
+                            ml: 1.5,
+                            fontSize: 18
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                  </Box>
+                );
+              }
             }
-          }
-        ]
-      : [];
+          ]
+        : [];
 
   return (
     <>
