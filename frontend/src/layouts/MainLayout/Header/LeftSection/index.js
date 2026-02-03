@@ -175,35 +175,6 @@ const LeftSection = () => {
     e.nativeEvent.stopImmediatePropagation();
   };
 
-  // In LeftSection component, add this useEffect
-  // useEffect(() => {
-  //   const stopAllEvents = (e) => {
-  //     e.stopPropagation();
-  //     e.preventDefault();
-  //     e.nativeEvent?.stopImmediatePropagation?.();
-  //   };
-
-  //   // Stop events on component mount
-  //   const handleMouseDown = (e) => stopAllEvents(e);
-  //   const handleClick = (e) => stopAllEvents(e);
-  //   const handleFocus = (e) => stopAllEvents(e);
-  //   const handleContextMenu = (e) => stopAllEvents(e);
-
-  //   // Add event listeners to prevent React Flow from detecting interactions
-  //   document.addEventListener('mousedown', handleMouseDown, true);
-  //   document.addEventListener('click', handleClick, true);
-  //   document.addEventListener('focus', handleFocus, true);
-  //   document.addEventListener('contextmenu', handleContextMenu, true);
-
-  //   return () => {
-  //     // Clean up event listeners
-  //     document.removeEventListener('mousedown', handleMouseDown, true);
-  //     document.removeEventListener('click', handleClick, true);
-  //     document.removeEventListener('focus', handleFocus, true);
-  //     document.removeEventListener('contextmenu', handleContextMenu, true);
-  //   };
-  // }, []);
-
   const handleMouseEnter = useCallback((tabName) => {
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
@@ -291,7 +262,7 @@ const LeftSection = () => {
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        console.log('File selected:', file.name);
+        // console.log('File selected:', file.name);
 
         try {
           const response = await importProject({ userId: userId, file: file });

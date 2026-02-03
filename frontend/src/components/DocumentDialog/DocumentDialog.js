@@ -81,6 +81,18 @@ const items = [
   }
 ];
 
+// Flatten all item IDs for "Select All" functionality
+const getAllItemIds = () => {
+  const ids = [];
+  items.forEach((item) => {
+    ids.push(item.id);
+    if (item.subs) {
+      item.subs.forEach((sub) => ids.push(sub.id));
+    }
+  });
+  return ids;
+};
+
 const DocumentDialog = ({ open, onClose }) => {
   const {
     template,
@@ -102,6 +114,33 @@ const DocumentDialog = ({ open, onClose }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Calculate if all items are selected
+  const allItemIds = getAllItemIds();
+  const isAllSelected = allItemIds.length > 0 && allItemIds.every((id) => selectedItems.includes(id));
+
+  // Handle checkbox changes
+  const handleCheckboxChange = useCallback((e, id) => {
+    // Don't prevent default - let the checkbox work normally
+    // But stop propagation to prevent parent handlers
+    e.stopPropagation();
+
+    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  }, []);
+
+  // Handle "Select All" checkbox
+  const handleSelectAll = useCallback(
+    (e) => {
+      e.stopPropagation();
+
+      if (isAllSelected) {
+        setSelectedItems([]);
+      } else {
+        setSelectedItems([...allItemIds]);
+      }
+    },
+    [isAllSelected, allItemIds]
+  );
+
   // Reset selected items and fetch data when dialog opens
   useEffect(() => {
     const fetchData = async () => {
@@ -122,16 +161,25 @@ const DocumentDialog = ({ open, onClose }) => {
     fetchData();
   }, [open, modelId, getAssets, getAttackScenario]);
 
-  // console.log('canvasImage', canvasImage);
-  // console.log('image', image);
-  // Handle checkbox changes
-  const handleCheckboxChange = useCallback((e, id) => {
-    e.stopPropagation();
-    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
-  }, []);
+  const getNodeSize = (node) => {
+    if (['AND Gate', 'OR Gate', 'Voting Gate', 'Transfer Gate'].includes(node.type)) {
+      return { width: 100, height: 100 };
+    }
 
-  // nodes: your React Flow nodes array
-  // edges: your React Flow edges array
+    const styleWidth = node.data?.style?.width ? parseInt(node.data.style.width, 10) : null;
+    const styleHeight = node.data?.style?.height ? parseInt(node.data.style.height, 10) : null;
+
+    let w = styleWidth || node.width || 150;
+    let h = styleHeight || node.height || 60;
+
+    // Account for Event/default nodes which might be larger
+    if (node.type === 'default' || node.type === 'Event') {
+      w += 30;
+      h += 30;
+    }
+
+    return { width: w, height: h };
+  };
 
   function calculateDiagramSize(nodes) {
     if (!nodes || nodes.length === 0) {
@@ -146,8 +194,7 @@ const DocumentDialog = ({ open, onClose }) => {
     nodes.forEach((node) => {
       const x = node.positionAbsolute?.x || node.position?.x || 0;
       const y = node.positionAbsolute?.y || node.position?.y || 0;
-      const width = node.width || 120;
-      const height = node.height || 60;
+      const { width, height } = getNodeSize(node); // Use your getNodeSize function
 
       minX = Math.min(minX, x);
       minY = Math.min(minY, y);
@@ -155,18 +202,24 @@ const DocumentDialog = ({ open, onClose }) => {
       maxY = Math.max(maxY, y + height);
     });
 
-    const padding = 100;
+    // Calculate ACTUAL content bounds, not padding-based
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+
+    // Add reasonable padding (not too much)
+    const padding = 80;
+
     return {
-      width: Math.max(maxX - minX + padding * 2, 100),
-      height: Math.max(maxY - minY + padding * 2, 100)
+      width: Math.max(contentWidth + padding * 2, 800), // Min 800, based on content
+      height: Math.max(contentHeight + padding * 2, 600) // Min 600, based on content
     };
   }
 
   // Handle document download
-
   const handleDownload = async (e) => {
     e.stopPropagation();
     setIsGenerating(true);
+
     // ✅ Ensure icons are ready BEFORE any SVG export
     await updateIconsWithPNG({
       attackIcon: AttackIcon,
@@ -175,7 +228,6 @@ const DocumentDialog = ({ open, onClose }) => {
 
     try {
       // ✅ Step 1: Generate SVG dynamically for DOCX
-      // Use smaller width so the drawing fits in the page frame
       const { width, height } = calculateDiagramSize(nodes);
       const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, width, height);
 
@@ -200,9 +252,11 @@ const DocumentDialog = ({ open, onClose }) => {
         formData.append('svg', svgBlob, 'itemModelImage.svg');
         formData.append('assetIdentificationTable', 1);
       }
+
       // ============================================
       //  ATTACK TREES → Generate SVG for each tree
       // ============================================
+      // In DocumentDialog.js handleDownload function:
       if (selectedItems.includes(42) && Array.isArray(attacktrees)) {
         attacktrees.forEach((tree, index) => {
           try {
@@ -210,23 +264,48 @@ const DocumentDialog = ({ open, onClose }) => {
             const treeEdges = tree?.templates?.edges || [];
             const overallRating = tree?.overall_rating;
 
-            // Make sure width and height are positive numbers
-            const { width, height } = calculateDiagramSize(treeNodes);
-            const safeWidth = Math.max(width || 1000, 100);
-            const safeHeight = Math.max(height || 800, 100);
-            // console.log('treeNodes', treeNodes);
+            if (!treeNodes || treeNodes.length === 0) {
+              console.warn(`Tree ${index} has no nodes, skipping`);
+              return;
+            }
 
-            const svgStringTree = generateDiagramAttackTree(
+            // Calculate content-based dimensions
+            const { width: contentWidth, height: contentHeight } = calculateDiagramSize(treeNodes);
+
+            // Cap dimensions for PDF
+            const MAX_PDF_WIDTH = 1200;
+            const MAX_PDF_HEIGHT = 800;
+
+            let finalWidth = contentWidth;
+            let finalHeight = contentHeight;
+
+            // Scale down if too large
+            if (contentWidth > MAX_PDF_WIDTH || contentHeight > MAX_PDF_HEIGHT) {
+              const widthRatio = MAX_PDF_WIDTH / contentWidth;
+              const heightRatio = MAX_PDF_HEIGHT / contentHeight;
+              const scale = Math.min(widthRatio, heightRatio) * 0.9; // 90% for padding
+
+              finalWidth = Math.floor(contentWidth * scale);
+              finalHeight = Math.floor(contentHeight * scale);
+            }
+
+            const svgString = generateDiagramAttackTree(
               treeNodes,
               treeEdges,
-              safeWidth,
-              safeHeight,
+              finalWidth,
+              finalHeight,
               overallRating,
               attacks,
               requirements
             );
-            const svgBlobTree = new Blob([svgStringTree], { type: 'image/svg+xml' });
 
+            // Validate SVG
+            if (!svgString || !svgString.includes('<svg')) {
+              console.error(`Invalid SVG generated for tree ${index}`);
+              return;
+            }
+
+            const svgBlobTree = new Blob([svgString], { type: 'image/svg+xml' });
             formData.append(`attackTrees`, svgBlobTree, `attackTree_${index}.svg`);
           } catch (error) {
             console.error(`Error generating SVG for attack tree ${index}:`, error);
@@ -336,6 +415,37 @@ const DocumentDialog = ({ open, onClose }) => {
             >
               Select items to add in the report and click on download:
             </Typography>
+
+            {/* Select All Checkbox */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  disabled={isGenerating}
+                  indeterminate={!isAllSelected && selectedItems.length > 0}
+                  sx={{
+                    color: isDark ? '#64B5F6' : '#2196F3',
+                    '&.Mui-checked': { color: isDark ? '#64B5F6' : '#2196F3' },
+                    padding: '4px'
+                  }}
+                />
+              }
+              label={
+                <Typography
+                  sx={{
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    color: isDark ? '#E0E0E0' : '#333333',
+                    fontFamily: "'Poppins', sans-serif"
+                  }}
+                >
+                  Select All
+                </Typography>
+              }
+              sx={{ marginLeft: '-4px', mb: 1 }}
+            />
+
             <Divider sx={{ my: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {items.map((item) => (
@@ -373,13 +483,28 @@ const DocumentDialog = ({ open, onClose }) => {
                             sx={{
                               fontSize: '0.9rem',
                               color: isDark ? '#E0E0E0' : '#333333',
-                              fontFamily: "'Poppins', sans-serif"
+                              fontFamily: "'Poppins', sans-serif",
+                              // Change to pointer cursor to indicate it's clickable
+                              cursor: 'pointer',
+                              // Prevent text selection
+                              userSelect: 'none'
+                            }}
+                            // Add onClick handler to the Typography itself
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCheckboxChange(e, item.id);
                             }}
                           >
                             {item.name}
                           </Typography>
                         }
-                        sx={{ marginLeft: '-4px' }}
+                        sx={{
+                          marginLeft: '-4px',
+                          // Make the entire FormControlLabel clickable
+                          '& .MuiFormControlLabel-label': {
+                            flex: 1
+                          }
+                        }}
                       />
                     </Tooltip>
                   )}
@@ -405,13 +530,28 @@ const DocumentDialog = ({ open, onClose }) => {
                                 sx={{
                                   fontSize: '0.85rem',
                                   color: isDark ? '#E0E0E0' : '#333333',
-                                  fontFamily: "'Poppins', sans-serif"
+                                  fontFamily: "'Poppins', sans-serif",
+                                  // Change to pointer cursor to indicate it's clickable
+                                  cursor: 'pointer',
+                                  // Prevent text selection
+                                  userSelect: 'none'
+                                }}
+                                // Add onClick handler to the Typography itself
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCheckboxChange(e, sub.id);
                                 }}
                               >
                                 {sub.name}
                               </Typography>
                             }
-                            sx={{ marginLeft: '-4px' }}
+                            sx={{
+                              marginLeft: '-4px',
+                              // Make the entire FormControlLabel clickable
+                              '& .MuiFormControlLabel-label': {
+                                flex: 1
+                              }
+                            }}
                           />
                         </Tooltip>
                       ))}

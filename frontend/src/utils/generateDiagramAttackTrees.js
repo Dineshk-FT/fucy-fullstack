@@ -170,6 +170,7 @@ export const RatingColor = (value) => {
  * @param {string} overallRating
  * @param {Array} attacksList - Pass `attacks.scenes` here
  * @param {Array} requirementsList - Pass `requirements.scenes` here
+ * @param {Object} options - Additional options like scale, offsetX, offsetY
  */
 export default function generateDiagramAttackTree(
   nodes,
@@ -178,18 +179,28 @@ export default function generateDiagramAttackTree(
   imageHeight = 900,
   overallRating,
   attacksList = [],
-  requirementsList = []
+  requirementsList = [],
+  options = {}
 ) {
   /* =========================
      HELPERS
      ========================= */
+
+  const { scale = 1, offsetX = 0, offsetY = 0 } = options;
 
   const escapeXML = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const handleMap = { a: 'top', b: 'left', c: 'bottom', d: 'right' };
   const resolveHandle = (h) => handleMap[h] || h || 'bottom';
 
-  const getPos = (n) => n.positionAbsolute || n.position || { x: 0, y: 0 };
+  // Apply scaling to positions
+  const getPos = (n) => {
+    const pos = n.positionAbsolute || n.position || { x: 0, y: 0 };
+    return {
+      x: (pos.x - offsetX) * scale,
+      y: (pos.y - offsetY) * scale
+    };
+  };
 
   const parsePx = (val) => {
     if (typeof val === 'number') return val;
@@ -205,18 +216,18 @@ export default function generateDiagramAttackTree(
   // --- NODE SIZE LOGIC (With +20px for Event/Default) ---
   const getNodeSize = (n) => {
     if (['AND Gate', 'OR Gate', 'Voting Gate', 'Transfer Gate'].includes(n.type)) {
-      return { width: 100, height: 100 };
+      return { width: 100 * scale, height: 100 * scale };
     }
 
     const styleWidth = n.data?.style?.width ? parsePx(n.data.style.width) : null;
     const styleHeight = n.data?.style?.height ? parsePx(n.data.style.height) : null;
 
-    let w = styleWidth || n.width || 150;
-    let h = styleHeight || n.height || 60;
+    let w = (styleWidth || n.width || 150) * scale;
+    let h = (styleHeight || n.height || 60) * scale;
 
     if (n.type === 'default' || n.type === 'Event') {
-      w += 30;
-      h += 30;
+      w += 30 * scale;
+      h += 30 * scale;
     }
 
     return { width: w, height: h };
@@ -274,7 +285,7 @@ export default function generateDiagramAttackTree(
   const getStepPath = ({ sx, sy, tx, ty, sPos, tPos }) => {
     const dx = Math.abs(tx - sx);
     const dy = Math.abs(ty - sy);
-    const offset = Math.min(40, Math.max(dx, dy) / 2);
+    const offset = Math.min(35 * scale, Math.max(dx, dy) / 2);
 
     let p1x = sx,
       p1y = sy;
@@ -304,14 +315,70 @@ export default function generateDiagramAttackTree(
   };
 
   /* =========================
+     CALCULATE CONTENT BOUNDS FOR VIEWBOX
+     ========================= */
+
+  // Calculate actual content bounds
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  nodes.forEach((n) => {
+    const { x, y } = getPos(n);
+    const { width, height } = getNodeSize(n);
+
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + width);
+    maxY = Math.max(maxY, y + height);
+  });
+
+  // If no valid bounds, use defaults
+  if (!isFinite(minX) || !isFinite(minY)) {
+    minX = minY = 0;
+    maxX = imageWidth;
+    maxY = imageHeight;
+  }
+
+  const contentWidth = maxX - minX;
+  const contentHeight = maxY - minY;
+
+  // Add padding for viewBox
+  const padding = 50 * scale;
+  const viewBoxX = minX - padding;
+  const viewBoxY = minY - padding;
+  const viewBoxWidth = contentWidth + padding * 2;
+  const viewBoxHeight = contentHeight + padding * 2;
+
+  // Ensure SVG dimensions are reasonable for PDF
+  const MAX_SVG_WIDTH = 1600;
+  const MAX_SVG_HEIGHT = 1200;
+
+  let svgWidth = Math.min(imageWidth, MAX_SVG_WIDTH);
+  let svgHeight = Math.min(imageHeight, MAX_SVG_HEIGHT);
+
+  // Maintain aspect ratio if scaling is needed
+  if (svgWidth === MAX_SVG_WIDTH && imageHeight > MAX_SVG_HEIGHT) {
+    const aspectRatio = imageWidth / imageHeight;
+    svgHeight = MAX_SVG_HEIGHT;
+    svgWidth = Math.min(svgHeight * aspectRatio, MAX_SVG_WIDTH);
+  } else if (svgHeight === MAX_SVG_HEIGHT && imageWidth > MAX_SVG_WIDTH) {
+    const aspectRatio = imageHeight / imageWidth;
+    svgWidth = MAX_SVG_WIDTH;
+    svgHeight = Math.min(svgWidth * aspectRatio, MAX_SVG_HEIGHT);
+  }
+
+  /* =========================
      SVG GENERATION
      ========================= */
   const svg = [];
   svg.push(`
     <svg xmlns="http://www.w3.org/2000/svg"
          xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="${imageWidth}"
-         height="${imageHeight}"
+         width="${svgWidth}"
+         height="${svgHeight}"
+         viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}"
          style="background-color: #f5f5f5; font-family: 'Inter', sans-serif;">
   `);
 
@@ -339,7 +406,7 @@ export default function generateDiagramAttackTree(
     const [tx, ty] = getHandlePoint(target, tPos);
 
     const stroke = e.style?.stroke || 'black';
-    const strokeWidth = e.style?.strokeWidth || 2;
+    const strokeWidth = (e.style?.strokeWidth || 2) * scale;
     const markerStart = e.markerStart ? `marker-start="url(#marker-arrow-start)"` : '';
     const markerEnd = e.markerEnd ? `marker-end="url(#marker-arrow-end)"` : '';
 
@@ -380,10 +447,10 @@ export default function generateDiagramAttackTree(
     }
 
     const bgColor = s.backgroundColor || 'white';
-    const borderWidth = parsePx(s.borderWidth) || 2;
+    const borderWidth = (parsePx(s.borderWidth) || 2) * scale;
     const borderDash = getStrokeDashArray(s.borderStyle);
     const textColor = 'black';
-    const fontSize = parsePx(s.fontSize) || 16;
+    const fontSize = (parsePx(s.fontSize) || 16) * scale;
     const fontFamily = s.fontFamily || 'Inter, sans-serif';
     const fontWeight = s.fontWeight || 500;
     const fontStyle = s.fontStyle || 'normal';
@@ -391,12 +458,13 @@ export default function generateDiagramAttackTree(
     // --- 2. Check for Icons (Attack / Requirement) ---
     const isAttack = attacksList?.some((scene) => scene.ID === n.id || scene.ID === n.data?.nodeId);
     const isRequirement = requirementsList?.some((scene) => scene.ID === n.id || scene.ID === n.data?.nodeId);
+
     // -- GATE RENDERERS --
     if (['AND Gate', 'OR Gate', 'Voting Gate', 'Transfer Gate'].includes(n.type)) {
-      const gateX = x + (width - 100) / 2;
-      const gateY = y + (height - 100) / 2;
+      const gateX = x + (width - 100 * scale) / 2;
+      const gateY = y + (height - 100 * scale) / 2;
       const gateFill = bgColor === 'transparent' ? 'white' : bgColor;
-      const commonGateAttrs = `fill="${gateFill}" stroke="${borderColor}" stroke-width="6" transform="rotate(-90 256 256)"`;
+      const commonGateAttrs = `fill="${gateFill}" stroke="${borderColor}" stroke-width="${6 * scale}" transform="rotate(-90 256 256)"`;
 
       let pathD = '';
       let extraSvg = '';
@@ -408,12 +476,12 @@ export default function generateDiagramAttackTree(
           'M116.6 407c40-45.9 60.4-98.4 60.4-151 0-52.6-20.4-105.1-60.4-151H192c34.1 0 81.9 34 119.3 71.4 18.7 18.6 35.1 37.9 46.6 53.3 5.8 7.6 10.4 14.4 13.4 19.4 1.4 2.5 2.5 4.7 3.2 6.1 0 .3-.1.5-.2.9-.6 1.4-1.7 3.5-3.2 6-3 5.1-7.5 11.8-13.2 19.5-11.3 15.4-27.5 34.6-46.1 53.2C274.8 373 227.1 407 192 407z';
       } else if (n.type === 'Voting Gate') {
         pathD = 'M105 105v302h151c148 0 148-302 0-302H105z';
-        extraSvg = `<path fill="none" stroke="${borderColor}" stroke-width="6" d="M105 407 L350 165"/>`;
+        extraSvg = `<path fill="none" stroke="${borderColor}" stroke-width="${6 * scale}" d="M105 407 L350 165"/>`;
       } else if (n.type === 'Transfer Gate') {
         pathD = 'M105 111.3V400.7L365.5 256Z';
         const label = escapeXML(n.data?.label || '');
         svg.push(`
-          <text x="${x + width / 2}" y="${y - 10}"
+          <text x="${x + width / 2}" y="${y - 10 * scale}"
             font-size="${fontSize}" font-family="${fontFamily}"
             text-anchor="middle" fill="${textColor}">
             ${label}
@@ -422,7 +490,7 @@ export default function generateDiagramAttackTree(
       }
 
       svg.push(`
-        <g transform="translate(${gateX} ${gateY}) scale(0.195)">
+        <g transform="translate(${gateX} ${gateY}) scale(${0.195 * scale})">
           <path d="${pathD}" ${commonGateAttrs} />
           ${extraSvg}
         </g>
@@ -433,7 +501,7 @@ export default function generateDiagramAttackTree(
     // -- RECTANGLE NODES (Event, Default, Others) --
     if (n.type === 'Event' || n.type === 'default' || !n.type) {
       const labelText = n.data?.label || '';
-      const lines = wrapText(labelText, width - 16, fontSize);
+      const lines = wrapText(labelText, width - 16 * scale, fontSize);
       const lineHeight = fontSize * 1.2;
       const totalTextHeight = lines.length * lineHeight;
       const textStartY = y + height / 2 - totalTextHeight / 2 + fontSize * 0.8;
@@ -442,12 +510,17 @@ export default function generateDiagramAttackTree(
 
       // Build icons based on conditions - same logic as Event.jsx
       // Show S for attack, R for requirement, or both if both are true
+      const iconSize = 16 * scale;
+      const iconXOffset = 10 * scale;
+      const iconYOffset = 18 * scale;
+      const iconSpacing = 15 * scale;
+
       const attackText = isAttack
         ? `
     <text
-      x="${x + 10}"
-      y="${y + 18}"
-      font-size="16"
+      x="${x + iconXOffset}"
+      y="${y + iconYOffset}"
+      font-size="${iconSize}"
       font-weight="700"
       fill="red"
       text-anchor="middle"
@@ -461,9 +534,9 @@ export default function generateDiagramAttackTree(
       const requirementText = isRequirement
         ? `
     <text
-      x="${x + (isAttack ? 25 : 10)}"
-      y="${y + 18}"
-      font-size="16"
+      x="${x + (isAttack ? iconXOffset + iconSpacing : iconXOffset)}"
+      y="${y + iconYOffset}"
+      font-size="${iconSize}"
       font-weight="700"
       fill="#1976d2"
       text-anchor="middle"
@@ -482,7 +555,7 @@ export default function generateDiagramAttackTree(
       <rect 
         x="${x}" y="${y}" 
         width="${width}" height="${height}"
-        rx="6" ry="6"
+        rx="${6 * scale}" ry="${6 * scale}"
         fill="${bgColor}"
         stroke="${borderColor}"
         stroke-width="${borderWidth}"
@@ -514,7 +587,19 @@ export default function generateDiagramAttackTree(
   });
 
   svg.push(`</g></svg>`);
-  return svg.join('');
+
+  const finalSvg = svg.join('');
+
+  // Debug logging
+  // console.log(`Generated SVG: ${svgWidth}x${svgHeight}, ViewBox: ${viewBoxX},${viewBoxY},${viewBoxWidth},${viewBoxHeight}`);
+  // console.log(`SVG length: ${finalSvg.length} chars`);
+
+  if (!finalSvg.includes('<svg')) {
+    console.error('Invalid SVG generated!');
+    return '<svg xmlns="http://www.w3.org/2000/svg"><text>Error generating diagram</text></svg>';
+  }
+
+  return finalSvg;
 }
 
 // Export conversion function for external use

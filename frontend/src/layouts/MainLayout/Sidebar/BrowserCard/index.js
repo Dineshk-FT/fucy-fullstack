@@ -1263,7 +1263,7 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
         <DocumentDialog
           open={openDocumentDialog}
           onClose={(e) => {
-            e.stopPropagation();
+            e?.stopPropagation?.();
             setOpenDocumentDialog(false);
           }}
         />
