@@ -414,6 +414,7 @@ const LeftSection = () => {
   }, [getModels]);
 
   const handleCategoryChange = useCallback((event) => {
+    event.stopPropagation();
     setSelectedCategory(event.target.value);
   }, []);
 
@@ -421,7 +422,8 @@ const LeftSection = () => {
     setCategoryDialogOpen(true);
   }, []);
 
-  const handleCategoryDialogClose = useCallback(() => {
+  const handleCategoryDialogClose = useCallback((e) => {
+    e?.stopPropagation?.();
     setCategoryDialogOpen(false);
   }, []);
 
@@ -1014,8 +1016,14 @@ const LeftSection = () => {
       </Menu>
 
       {/* Category Selection Dialog */}
-      <Dialog open={categoryDialogOpen} onClose={handleCategoryDialogClose}>
-        <DialogTitle>Select Category</DialogTitle>
+      <Dialog
+        open={categoryDialogOpen}
+        onClose={handleCategoryDialogClose}
+        disablePortal // Add this
+      >
+        <DialogTitle variant="h4" color="primary">
+          Select Category
+        </DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2, minWidth: 300 }}>
             <InputLabel id="category-select-label">Category</InputLabel>
@@ -1023,11 +1031,49 @@ const LeftSection = () => {
               labelId="category-select-label"
               value={selectedCategory}
               label="Category"
-              onChange={handleCategoryChange}
+              onChange={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleCategoryChange(e);
+              }}
+              onOpen={(e) => {
+                if (e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
+              onClose={(e) => {
+                if (e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
               sx={{ mt: 1 }}
+              MenuProps={{
+                disablePortal: true,
+                disableScrollLock: true,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  e.nativeEvent.stopImmediatePropagation();
+                },
+                onMouseDown: (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  e.nativeEvent.stopImmediatePropagation();
+                }
+              }}
             >
               {categories?.map((category) => (
-                <MenuItem key={category} value={category}>
+                <MenuItem
+                  key={category}
+                  value={category}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                >
                   {category}
                 </MenuItem>
               ))}
@@ -1035,8 +1081,24 @@ const LeftSection = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCategoryDialogClose}>Cancel</Button>
-          <Button onClick={confirmConvertToLibrary} variant="contained" color="primary">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleCategoryDialogClose();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              confirmConvertToLibrary();
+            }}
+            variant="contained"
+            color="primary"
+          >
             Convert to Library
           </Button>
         </DialogActions>

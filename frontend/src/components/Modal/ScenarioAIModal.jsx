@@ -176,7 +176,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const scenarioConfig = {
     item: {
       label: 'Item Definition Prompt',
-      api: `${configuration.apiBaseUrl}v1/generate/item-definition`,
+      api: `${configuration.apiBaseUrl}v1/generate/model`,
       payload: () => ({
         modelId: modelMeta?.modelId,
         itemDefinitionPrompt: promptValue,
@@ -273,8 +273,35 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
 
     try {
       setGenerating(true);
-      const res = await ADD_CALL(config.payload(), config.api);
-      setResult(res?.message);
+
+      // Use fetch directly to get better error handling
+      const response = await fetch(config.api, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+          // Add any authentication headers here
+        },
+        body: JSON.stringify(config.payload())
+      });
+
+      // Check if the response is OK (status in the range 200-299)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || `Server error: ${response.status} ${response.statusText}`);
+      }
+
+      const res = await response.json();
+
+      // Check if the response contains an error message even with 200 OK
+      if (res.error) {
+        throw new Error(res.error);
+      }
+
+      if (res.message?.toLowerCase().includes('error')) {
+        throw new Error(res.message);
+      }
+
+      setResult(res?.message || res?.data || 'Generation completed successfully');
       toast.success(config.successMsg);
 
       // ✅ After successful generation, update store data
@@ -300,7 +327,9 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
         }
       }
     } catch (err) {
+      console.error('Generation error:', err);
       toast.error(err.message || 'Generation failed');
+      setResult(`Error: ${err.message}`);
     } finally {
       setGenerating(false);
     }
