@@ -171,7 +171,7 @@ const LeftSection = () => {
 
   const handleModalInteraction = (e) => {
     e.stopPropagation();
-    e.preventDefault();
+    // e.preventDefault();
     e.nativeEvent.stopImmediatePropagation();
   };
 

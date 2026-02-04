@@ -53,7 +53,7 @@ export default React.memo(function CommonModal({ open, handleClose, name }) {
   // In CommonModal.jsx
   const handleModalInteraction = (e) => {
     e.stopPropagation();
-    e.preventDefault();
+    // e.preventDefault();
     e.nativeEvent.stopImmediatePropagation();
   };
 
