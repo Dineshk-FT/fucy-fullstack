@@ -29,7 +29,7 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
 
   const getHighestRating = (nodes) => {
     const priorityOrder = {
-      'Very Low': 1,
+      'Very low': 1,
       Low: 2,
       Medium: 3,
       High: 4
@@ -42,7 +42,7 @@ const AttackNode = ({ data, isConnectable, type, id, ...rst }) => {
 
     const highestRating = ratings.reduce((highest, current) => {
       return priorityOrder[current] > priorityOrder[highest] ? current : highest;
-    }, 'Very Low'); // Default to 'Very Low' if no ratings exist
+    }, 'Very low'); // Default to 'Very Low' if no ratings exist
     // handleupdate(highestRating);
     return highestRating;
   };
