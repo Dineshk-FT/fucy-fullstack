@@ -24,13 +24,18 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
-  TableSortLabel
+  TableSortLabel,
+  FormControl,
+  MenuItem,
+  Select,
+  Tooltip,
+  Chip // Add this import
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import AddThreatScenarios from '../Modal/AddThreatScenario';
 import { Box } from '@mui/system';
 import ColorTheme from '../../themes/ColorTheme';
-import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType } from './constraints';
+import { colorPicker, colorPickerTab, OverallImpact, RatingColor, threatType, RiskTreatmentOptions } from './constraints';
 import CircleIcon from '@mui/icons-material/Circle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AttackIcon, DamageIcon, CyberGoalIcon, CyberRequireIcon, CatalogIcon, CyberClaimsIcon } from '../../assets/icons';
@@ -43,6 +48,7 @@ import SelectCatalog from '../Modal/SelectCatalog';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { riskSteps } from '../../utils/Steps';
 import AutoGuidePopper from '../Poppers/AutoGuidePopper';
+import { tooltipClasses } from '@mui/material/Tooltip';
 
 const selector = (state) => ({
   model: state.model,
@@ -57,6 +63,16 @@ const selector = (state) => ({
   getCyberSecurityScenario: state.getCyberSecurityScenario,
   deleteRiskTreatment: state.deleteRiskTreatment
 });
+
+const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(12),
+    border: '1px solid #dadde9'
+  }
+}));
 
 const column = RiskTreatmentHeaderTable;
 
@@ -73,7 +89,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     wordBreak: 'break-word',
     lineHeight: 1.4,
     '&:first-of-type': {
-      borderTopLeftRadius: theme.shape.borderRadius,
+      borderTopLeftRadius: theme.shape.borderRadius
     },
     '&:last-child': {
       borderTopRightRadius: theme.shape.borderRadius,
@@ -100,7 +116,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     '&:first-of-type': {
       paddingLeft: '16px'
     }
-}}));
+  }
+}));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
@@ -112,18 +129,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -132,8 +149,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
+      backgroundColor: theme.palette.action.hover
+    }
   },
   '&:last-child td, &:last-child th': { border: 0 }
 }));
@@ -176,6 +193,276 @@ export default function RiskTreatmentTable() {
   const [runTour, setRunTour] = useState(false);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
+
+  // Open/Close the filter modal
+  const handleOpenFilter = () => setOpenFilter(true);
+  const handleCloseFilter = () => setOpenFilter(false);
+  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(RiskTreatmentHeaderTable?.map((col) => [col.id, col.w])));
+
+  const MultiSelectCell = ({ item, row, handleChange, name }) => {
+    const [open, setOpen] = useState(false);
+    const [selectedValues, setSelectedValues] = useState(row[item.name] || []);
+    const [tempSelectedValues, setTempSelectedValues] = useState(row[item.name] || []);
+    const [isDirty, setIsDirty] = useState(false);
+
+    useEffect(() => {
+      setSelectedValues(row[item.name] || []);
+      setTempSelectedValues(row[item.name] || []);
+      setIsDirty(false);
+    }, [row[item.name]]);
+
+    const handleChangeLocal = (event) => {
+      const {
+        target: { value }
+      } = event;
+
+      // Handle both array and string value (for compatibility)
+      const newValue = typeof value === 'string' ? value.split(',') : value;
+
+      // Sort alphabetically for consistency
+      const sortedValues = [...newValue].sort();
+
+      setTempSelectedValues(sortedValues);
+      setIsDirty(true);
+    };
+
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(true);
+    };
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      setOpen(true);
+    };
+
+    const handleUpdate = () => {
+      // Update the parent state and trigger API call
+      handleChange(
+        {
+          target: {
+            name: item.name,
+            value: tempSelectedValues
+          }
+        },
+        row
+      );
+
+      setSelectedValues(tempSelectedValues);
+      setIsDirty(false);
+      setOpen(false);
+    };
+
+    const handleCancel = (e) => {
+      if (e) {
+        e.stopPropagation(); // Prevent event from reaching Select
+      }
+      setTempSelectedValues(selectedValues);
+      setIsDirty(false);
+      setOpen(false);
+    };
+    return (
+      <StyledTableCell
+        id="select-risk-treatment"
+        component="th"
+        scope="row"
+        onClick={handleClick}
+        onContextMenu={handleContextMenu}
+        sx={{
+          width: `${columnWidths[item.id] || 'auto'}`,
+          position: 'relative',
+          padding: '4px !important' // Reduce padding to fit buttons
+        }}
+      >
+        <FormControl
+          sx={{
+            width: '100%',
+            background: 'transparent',
+            '& .MuiInputBase-root': {
+              backgroundColor: 'transparent',
+              color: 'inherit',
+              minHeight: '24px',
+              padding: '2px 24px 2px 8px'
+            },
+            '& .MuiSelect-select': {
+              backgroundColor: 'transparent',
+              fontSize: '13px',
+              lineHeight: '1.5em',
+              minHeight: '1.5em',
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '4px'
+            },
+            '& .MuiChip-root': {
+              height: '20px',
+              fontSize: '11px',
+              margin: '1px'
+            },
+            '& .MuiSvgIcon-root': { display: 'none' },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+          }}
+        >
+          <Select
+            multiple
+            value={tempSelectedValues}
+            onChange={handleChangeLocal}
+            open={open}
+            onClose={() => setOpen(false)}
+            onOpen={() => setOpen(true)}
+            renderValue={(selected) => {
+              // Show placeholder text when nothing is selected
+              if (selected.length === 0) {
+                return (
+                  <Typography
+                    sx={{
+                      color: '#999',
+                      fontSize: '13px',
+                      fontStyle: 'italic',
+                      padding: '2px'
+                    }}
+                  >
+                    No selection
+                  </Typography>
+                );
+              }
+
+              return (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip
+                      key={value}
+                      label={value}
+                      size="small"
+                      sx={{
+                        height: '20px',
+                        fontSize: '11px',
+                        backgroundColor: isDirty ? 'rgba(255, 193, 7, 0.2)' : 'rgba(25, 118, 210, 0.1)',
+                        border: isDirty ? '1px dashed #ff9800' : 'none'
+                      }}
+                    />
+                  ))}
+                </Box>
+              );
+            }}
+            MenuProps={{
+              PaperProps: {
+                style: {
+                  maxHeight: 300,
+                  width: 250
+                }
+              },
+              MenuListProps: {
+                style: {
+                  paddingBottom: '60px' // Always reserve space for buttons
+                }
+              }
+            }}
+          >
+            {RiskTreatmentOptions?.map((option) => (
+              <MenuItem key={option?.value} value={option?.value}>
+                <Checkbox checked={tempSelectedValues.indexOf(option.value) > -1} />
+                <HtmlTooltip
+                  placement="left"
+                  title={
+                    <Typography
+                      sx={{
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        padding: '8px',
+                        borderRadius: '4px',
+                        color: 'inherit'
+                      }}
+                    >
+                      {option?.description}
+                    </Typography>
+                  }
+                >
+                  <Typography sx={{ color: 'inherit', ml: 1 }} variant="body2">
+                    {option?.label}
+                  </Typography>
+                </HtmlTooltip>
+              </MenuItem>
+            ))}
+
+            {/* Always visible Update and Cancel buttons */}
+            <Box
+              sx={{
+                position: 'sticky',
+                bottom: 0,
+                backgroundColor: 'white',
+                padding: '8px',
+                borderTop: '1px solid #e0e0e0',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '8px',
+                zIndex: 10,
+                marginTop: '8px'
+              }}
+            >
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // Additional safety
+                  handleCancel(e);
+                }}
+                onMouseDown={(e) => e.stopPropagation()} // Prevent focus/blur events
+                color="error"
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '12px',
+                  padding: '2px 8px'
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleUpdate}
+                disabled={!isDirty}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '12px',
+                  padding: '2px 12px',
+                  backgroundColor: '#1976d2',
+                  opacity: isDirty ? 1 : 0.5,
+                  '&:hover': {
+                    backgroundColor: isDirty ? '#1565c0' : '#1976d2'
+                  }
+                }}
+              >
+                Update
+              </Button>
+            </Box>
+          </Select>
+        </FormControl>
+
+        {/* Inline indicator when dropdown is closed */}
+        {isDirty && !open && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 2,
+              right: 2,
+              display: 'flex',
+              gap: 0.5,
+              backgroundColor: 'rgba(255, 193, 7, 0.1)',
+              padding: '1px 4px',
+              borderRadius: '3px',
+              fontSize: '10px',
+              color: '#ff9800'
+            }}
+          >
+            <CircleIcon sx={{ fontSize: 8 }} />
+            <span>Unsaved</span>
+          </Box>
+        )}
+      </StyledTableCell>
+    );
+  };
 
   const Head = useMemo(() => {
     if (title.includes('Derived')) {
@@ -236,11 +523,6 @@ export default function RiskTreatmentTable() {
     return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   }, [filteredRows, page, rowsPerPage]);
 
-  // Open/Close the filter modal
-  const handleOpenFilter = () => setOpenFilter(true);
-  const handleCloseFilter = () => setOpenFilter(false);
-  const [columnWidths, setColumnWidths] = useState(Object.fromEntries(RiskTreatmentHeaderTable?.map((col) => [col.id, col.w])));
-
   const handleResizeStart = (e, columnId) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -297,14 +579,12 @@ export default function RiskTreatmentTable() {
 
   useEffect(() => {
     const data = riskTreatment?.Details?.map((item, i) => {
-      // console.log('item', item);
       return {
         SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
         ID: item?.threat_id,
         'Threat Scenario': item?.label,
         detailId: item?.id,
         Assets: item?.threat_scene ? item?.threat_scene[0]?.detail?.node : '',
-        // 'Damage Scenarios': item?.damage_scenarios,
         'Damage Scenarios': item?.threat_scene
           ? `[DS${
               item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
@@ -319,6 +599,7 @@ export default function RiskTreatmentTable() {
         'Contributing Requirements': item?.cybersecurity?.cybersecurity_requirements ?? [],
         'Cybersecurity Goals': item?.cybersecurity?.cybersecurity_goals ?? [],
         'Cybersecurity Claims': item?.cybersecurity?.cybersecurity_claims ?? [],
+        'Risk Treatment Options': item?.risk_treatment_options ?? '', // Add this line
         threat_key: item?.threat_key,
         'Related UNECE Threats or Vulns': item?.catalogs
       };
@@ -334,6 +615,44 @@ export default function RiskTreatmentTable() {
       setDetails(cyber_Claims['scenes']);
     }
   }, [openSelect?.cyberType, cyber_Goals, cyber_Claims]);
+
+  const handleRiskTreatmentChange = (e, row) => {
+    const { name, value } = e.target;
+
+    // Update local state immediately for better UX
+    const updatedRows = rows.map((r) => {
+      if (r.ID === row.ID) {
+        return { ...r, [name]: value };
+      }
+      return r;
+    });
+    setRows(updatedRows);
+
+    // Prepare form data
+    const formData = {
+      'model-id': model?._id,
+      detailId: row.detailId,
+      risk_treatment_options: value
+    };
+
+    // Return the promise so MultiSelectCell can handle loading states if needed
+    return updateRiskTable(formData)
+      .then((res) => {
+        if (res && !res.error) {
+          getRiskTreatment(model?._id);
+          notify('Risk treatment options updated successfully', 'success');
+          return res;
+        } else {
+          notify(res?.error || 'Failed to update risk treatment options', 'error');
+          throw new Error(res?.error || 'Update failed');
+        }
+      })
+      .catch((err) => {
+        console.error('Update error:', err);
+        notify('Failed to update risk treatment options', 'error');
+        throw err;
+      });
+  };
 
   const handleCloseTs = () => {
     setOpenTs(false);
@@ -490,6 +809,9 @@ export default function RiskTreatmentTable() {
                   )}
                 </StyledTableCell>
               );
+              break;
+            case item.name === 'Risk Treatment Options':
+              cellContent = <MultiSelectCell item={item} row={row} handleChange={handleRiskTreatmentChange} name={item.name} />;
               break;
             case item.name.includes('Cybersecurity'):
               cellContent = (
