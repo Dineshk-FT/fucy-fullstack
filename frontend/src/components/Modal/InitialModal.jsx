@@ -36,7 +36,8 @@ export default React.memo(function InitialModal() {
     [dispatch]
   );
 
-  const handleClick = useCallback((name) => {
+  const handleClick = useCallback((e, name) => {
+    e?.stopPropagation?.();
     setOpen((prev) => ({ ...prev, [name]: true }));
   }, []);
 
@@ -63,7 +64,7 @@ export default React.memo(function InitialModal() {
         <DialogContent sx={{ p: 2 }}>
           <DialogContentText>
             <MenuItem
-              onClick={() => handleClick('Open')}
+              onClick={(e) => handleClick(e, 'Open')}
               sx={{
                 fontSize: 15,
                 fontWeight: 600,
@@ -77,7 +78,7 @@ export default React.memo(function InitialModal() {
               Open Existing Project
             </MenuItem>
             <MenuItem
-              onClick={() => handleClick('New')}
+              onClick={(e) => handleClick(e, 'New')}
               sx={{
                 fontSize: 15,
                 fontWeight: 600,

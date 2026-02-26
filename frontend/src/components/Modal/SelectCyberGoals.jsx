@@ -29,6 +29,7 @@ export default React.memo(function SelectCyberGoals({
 }) {
   const color = ColorTheme();
   const [loading, setLoading] = React.useState(false);
+  // console.log('selectedRow', selectedRow);
 
   useEffect(() => {
     const getCybersecurity = () => {

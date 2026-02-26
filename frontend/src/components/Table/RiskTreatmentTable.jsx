@@ -199,69 +199,23 @@ export default function RiskTreatmentTable() {
   const handleCloseFilter = () => setOpenFilter(false);
   const [columnWidths, setColumnWidths] = useState(Object.fromEntries(RiskTreatmentHeaderTable?.map((col) => [col.id, col.w])));
 
-  const MultiSelectCell = ({ item, row, handleChange, name }) => {
+  const SelectableCell = ({ item, row, handleChange, name }) => {
     const [open, setOpen] = useState(false);
-    const [selectedValues, setSelectedValues] = useState(row[item.name] || []);
-    const [tempSelectedValues, setTempSelectedValues] = useState(row[item.name] || []);
-    const [isDirty, setIsDirty] = useState(false);
-
-    useEffect(() => {
-      setSelectedValues(row[item.name] || []);
-      setTempSelectedValues(row[item.name] || []);
-      setIsDirty(false);
-    }, [row[item.name]]);
-
-    const handleChangeLocal = (event) => {
-      const {
-        target: { value }
-      } = event;
-
-      // Handle both array and string value (for compatibility)
-      const newValue = typeof value === 'string' ? value.split(',') : value;
-
-      // Sort alphabetically for consistency
-      const sortedValues = [...newValue].sort();
-
-      setTempSelectedValues(sortedValues);
-      setIsDirty(true);
-    };
-
-    const handleClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setOpen(true);
-    };
+    const selectRef = useRef(null);
 
     const handleContextMenu = (e) => {
       e.preventDefault();
       setOpen(true);
     };
 
-    const handleUpdate = () => {
-      // Update the parent state and trigger API call
-      handleChange(
-        {
-          target: {
-            name: item.name,
-            value: tempSelectedValues
-          }
-        },
-        row
-      );
-
-      setSelectedValues(tempSelectedValues);
-      setIsDirty(false);
-      setOpen(false);
-    };
-
-    const handleCancel = (e) => {
-      if (e) {
-        e.stopPropagation(); // Prevent event from reaching Select
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!open) {
+        setOpen(true);
       }
-      setTempSelectedValues(selectedValues);
-      setIsDirty(false);
-      setOpen(false);
     };
+
     return (
       <StyledTableCell
         id="select-risk-treatment"
@@ -269,100 +223,51 @@ export default function RiskTreatmentTable() {
         scope="row"
         onClick={handleClick}
         onContextMenu={handleContextMenu}
-        sx={{
-          width: `${columnWidths[item.id] || 'auto'}`,
-          position: 'relative',
-          padding: '4px !important' // Reduce padding to fit buttons
-        }}
+        sx={{ width: `${columnWidths[item.id] || 'auto'}` }}
       >
         <FormControl
           sx={{
-            width: '100%',
+            width: 150,
             background: 'transparent',
-            '& .MuiInputBase-root': {
-              backgroundColor: 'transparent',
-              color: 'inherit',
-              minHeight: '24px',
-              padding: '2px 24px 2px 8px'
-            },
+            '& .MuiInputBase-root': { backgroundColor: 'transparent', color: 'inherit' },
             '& .MuiSelect-select': {
               backgroundColor: 'transparent',
+              padding: '0 24px 0 8px',
               fontSize: '13px',
               lineHeight: '1.5em',
-              minHeight: '1.5em',
+              height: '1.5em',
               display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '4px'
-            },
-            '& .MuiChip-root': {
-              height: '20px',
-              fontSize: '11px',
-              margin: '1px'
+              alignItems: 'center'
             },
             '& .MuiSvgIcon-root': { display: 'none' },
-            '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+            position: 'relative' // Add this for proper label positioning
           }}
         >
           <Select
-            multiple
-            value={tempSelectedValues}
-            onChange={handleChangeLocal}
+            ref={selectRef}
+            labelId="risk-treatment-label"
+            id="risk-treatment-select"
+            value={row[item.name] || ''}
+            onChange={(e) => handleChange(e, row)}
+            sx={{ '& .MuiSelect-select': { color: 'inherit' } }}
+            name={name}
             open={open}
             onClose={() => setOpen(false)}
-            onOpen={() => setOpen(true)}
+            displayEmpty // Add this to show placeholder when empty
             renderValue={(selected) => {
-              // Show placeholder text when nothing is selected
-              if (selected.length === 0) {
-                return (
-                  <Typography
-                    sx={{
-                      color: '#999',
-                      fontSize: '13px',
-                      fontStyle: 'italic',
-                      padding: '2px'
-                    }}
-                  >
-                    No selection
-                  </Typography>
-                );
+              if (!selected) {
+                return <em style={{ color: '#999', fontStyle: 'normal' }}>Select Option</em>;
               }
-
-              return (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip
-                      key={value}
-                      label={value}
-                      size="small"
-                      sx={{
-                        height: '20px',
-                        fontSize: '11px',
-                        backgroundColor: isDirty ? 'rgba(255, 193, 7, 0.2)' : 'rgba(25, 118, 210, 0.1)',
-                        border: isDirty ? '1px dashed #ff9800' : 'none'
-                      }}
-                    />
-                  ))}
-                </Box>
-              );
-            }}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 300,
-                  width: 250
-                }
-              },
-              MenuListProps: {
-                style: {
-                  paddingBottom: '60px' // Always reserve space for buttons
-                }
-              }
+              const option = RiskTreatmentOptions?.find((opt) => opt.value === selected);
+              return option?.label || selected;
             }}
           >
+            <MenuItem disabled value="">
+              <em>Select Option</em>
+            </MenuItem>
             {RiskTreatmentOptions?.map((option) => (
               <MenuItem key={option?.value} value={option?.value}>
-                <Checkbox checked={tempSelectedValues.indexOf(option.value) > -1} />
                 <HtmlTooltip
                   placement="left"
                   title={
@@ -379,87 +284,14 @@ export default function RiskTreatmentTable() {
                     </Typography>
                   }
                 >
-                  <Typography sx={{ color: 'inherit', ml: 1 }} variant="body2">
+                  <Typography sx={{ color: 'inherit' }} variant="h5">
                     {option?.label}
                   </Typography>
                 </HtmlTooltip>
               </MenuItem>
             ))}
-
-            {/* Always visible Update and Cancel buttons */}
-            <Box
-              sx={{
-                position: 'sticky',
-                bottom: 0,
-                backgroundColor: 'white',
-                padding: '8px',
-                borderTop: '1px solid #e0e0e0',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '8px',
-                zIndex: 10,
-                marginTop: '8px'
-              }}
-            >
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation(); // Additional safety
-                  handleCancel(e);
-                }}
-                onMouseDown={(e) => e.stopPropagation()} // Prevent focus/blur events
-                color="error"
-                sx={{
-                  textTransform: 'none',
-                  fontSize: '12px',
-                  padding: '2px 8px'
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleUpdate}
-                disabled={!isDirty}
-                sx={{
-                  textTransform: 'none',
-                  fontSize: '12px',
-                  padding: '2px 12px',
-                  backgroundColor: '#1976d2',
-                  opacity: isDirty ? 1 : 0.5,
-                  '&:hover': {
-                    backgroundColor: isDirty ? '#1565c0' : '#1976d2'
-                  }
-                }}
-              >
-                Update
-              </Button>
-            </Box>
           </Select>
         </FormControl>
-
-        {/* Inline indicator when dropdown is closed */}
-        {isDirty && !open && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 2,
-              right: 2,
-              display: 'flex',
-              gap: 0.5,
-              backgroundColor: 'rgba(255, 193, 7, 0.1)',
-              padding: '1px 4px',
-              borderRadius: '3px',
-              fontSize: '10px',
-              color: '#ff9800'
-            }}
-          >
-            <CircleIcon sx={{ fontSize: 8 }} />
-            <span>Unsaved</span>
-          </Box>
-        )}
       </StyledTableCell>
     );
   };
@@ -579,34 +411,107 @@ export default function RiskTreatmentTable() {
 
   useEffect(() => {
     const data = riskTreatment?.Details?.map((item, i) => {
-      return {
-        SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
-        ID: item?.threat_id,
-        'Threat Scenario': item?.label,
-        detailId: item?.id,
-        Assets: item?.threat_scene ? item?.threat_scene[0]?.detail?.node : '',
-        'Damage Scenarios': item?.threat_scene
-          ? `[DS${
-              item?.threat_scene[0]?.damage_key ? item?.threat_scene[0]?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`
-            }] ${item?.threat_scene[0]?.damage_name}`
-          : '-',
-        'Safety Impact': item?.impacts['Safety Impact'] ?? '',
-        'Financial Impact': item?.impacts['Financial Impact'] ?? '',
-        'Operational Impact': item?.impacts['Operational Impact'] ?? '',
-        'Privacy Impact': item?.impacts['Privacy Impact'] ?? '',
-        'Attack Tree or Attack Path(s)': item?.attack_scene,
-        'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? '',
-        'Contributing Requirements': item?.cybersecurity?.cybersecurity_requirements ?? [],
-        'Cybersecurity Goals': item?.cybersecurity?.cybersecurity_goals ?? [],
-        'Cybersecurity Claims': item?.cybersecurity?.cybersecurity_claims ?? [],
-        'Risk Treatment Options': item?.risk_treatment_options ?? '', // Add this line
-        threat_key: item?.threat_key,
-        'Related UNECE Threats or Vulns': item?.catalogs
-      };
+      // Handle derived threats
+      if (item?.isDerived) {
+        // For Threat Scenario (handled by default case - string)
+
+        // For Damage Scenarios - combine multiple
+        const damageScenarios = item?.derived_threats
+          ?.map((dt) => {
+            const damageName = dt?.threat_scene?.damage_name;
+            const damageKey = dt?.threat_scene?.damage_key;
+            return damageName ? `[DS${damageKey?.toString().padStart(3, '0') || '000'}] ${damageName}` : null;
+          })
+          .filter(Boolean);
+
+        const combinedDamageScenarios = damageScenarios?.length > 0 ? damageScenarios.join('; ') : '-';
+
+        // For Attack Tree or Attack Path(s) - combine multiple
+        const attackPaths = item?.derived_threats?.map((dt) => dt?.attack_scene?.Name).filter(Boolean);
+        const combinedAttackPaths = attackPaths?.length > 0 ? { Name: attackPaths.join('; ') } : null;
+
+        // For Attack Feasibility Rating - use the first one or calculate average
+        const ratings = item?.derived_threats?.map((dt) => dt?.attack_scene?.overall_rating).filter(Boolean);
+        const combinedRating = ratings?.length > 0 ? ratings[0] : '';
+
+        // For Assets - combine unique assets
+        const assets = item?.derived_threats?.map((dt) => dt?.threat_scene?.detail?.node).filter(Boolean);
+        const combinedAssets = [...new Set(assets)]?.join(', ') || '';
+
+        // ⚠️ UPDATED: Get cybersecurity goals and claims from parent level
+        const parentGoals = item?.cybersecurity?.cybersecurity_goals || [];
+        const parentClaims = item?.cybersecurity?.cybersecurity_claims || [];
+
+        // ⚠️ NEW: Get combined requirements from all derived threats
+        // You can choose to either:
+        // 1. Show combined requirements from all threats
+        // 2. Keep requirements per threat (needs UI changes to show nested)
+
+        // Option 1: Combined requirements (simpler UI)
+        const allRequirements = item?.derived_threats?.flatMap((dt) => dt?.cybersecurity?.cybersecurity_requirements || []) || [];
+
+        // Remove duplicates based on ID
+        const uniqueRequirements = allRequirements.filter((req, index, self) => index === self.findIndex((r) => r.ID === req.ID));
+
+        // Option 2: If you want to show requirements per threat, you'll need to modify the table
+        // to handle nested data. For now, I'll use Option 1.
+
+        return {
+          SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
+          ID: item?.threat_id,
+          'Threat Scenario': item?.label,
+          detailId: item?.id,
+          Assets: combinedAssets,
+          'Damage Scenarios': combinedDamageScenarios,
+          'Safety Impact': item?.impacts?.['Safety Impact'] ?? '',
+          'Financial Impact': item?.impacts?.['Financial Impact'] ?? '',
+          'Operational Impact': item?.impacts?.['Operational Impact'] ?? '',
+          'Privacy Impact': item?.impacts?.['Privacy Impact'] ?? '',
+          'Attack Tree or Attack Path(s)': combinedAttackPaths,
+          'Attack Feasibility Rating': combinedRating,
+          // ⚠️ UPDATED: Use combined unique requirements
+          'Contributing Requirements': uniqueRequirements,
+          'Cybersecurity Goals': parentGoals,
+          'Cybersecurity Claims': parentClaims,
+          'Risk Treatment Options': item?.risk_treatment_options ?? '',
+          threat_key: item?.threat_key,
+          // Store derived threats data for potential expansion/collapse feature
+          derivedThreatsData: item?.derived_threats,
+          'Related UNECE Threats or Vulns': item?.catalogs,
+          isDerived: true,
+          derivedCount: item?.derived_threats?.length || 0
+        };
+      }
+      // Handle single threats (original logic - unchanged)
+      else {
+        return {
+          SNo: `RT${(i + 1).toString().padStart(3, '0')}`,
+          ID: item?.threat_id,
+          'Threat Scenario': item?.label,
+          detailId: item?.id,
+          Assets: item?.threat_scene ? item?.threat_scene?.detail?.node : '',
+          'Damage Scenarios': item?.threat_scene
+            ? `[DS${item?.threat_scene?.damage_key ? item?.threat_scene?.damage_key?.toString().padStart(3, '0') : `${'0'.padStart(3, '0')}`}] ${item?.threat_scene?.damage_name}`
+            : '-',
+          'Safety Impact': item?.impacts?.['Safety Impact'] ?? '',
+          'Financial Impact': item?.impacts?.['Financial Impact'] ?? '',
+          'Operational Impact': item?.impacts?.['Operational Impact'] ?? '',
+          'Privacy Impact': item?.impacts?.['Privacy Impact'] ?? '',
+          'Attack Tree or Attack Path(s)': item?.attack_scene,
+          'Attack Feasibility Rating': item?.attack_scene?.overall_rating ?? '',
+          'Contributing Requirements': item?.cybersecurity?.cybersecurity_requirements ?? [],
+          'Cybersecurity Goals': item?.cybersecurity?.cybersecurity_goals ?? [],
+          'Cybersecurity Claims': item?.cybersecurity?.cybersecurity_claims ?? [],
+          'Risk Treatment Options': item?.risk_treatment_options ?? '',
+          threat_key: item?.threat_key,
+          'Related UNECE Threats or Vulns': item?.catalogs,
+          isDerived: false
+        };
+      }
     });
     setRows(data);
     setCatalogDetails(catalog);
-  }, [riskTreatment?.Details.length, riskTreatment.Details]);
+  }, [riskTreatment?.Details?.length, riskTreatment?.Details, catalog]);
 
   useEffect(() => {
     if (openSelect.cyberType && openSelect.cyberType.includes('Goals')) {
@@ -617,9 +522,10 @@ export default function RiskTreatmentTable() {
   }, [openSelect?.cyberType, cyber_Goals, cyber_Claims]);
 
   const handleRiskTreatmentChange = (e, row) => {
+    e.stopPropagation();
     const { name, value } = e.target;
 
-    // Update local state immediately for better UX
+    // Update local state
     const updatedRows = rows.map((r) => {
       if (r.ID === row.ID) {
         return { ...r, [name]: value };
@@ -628,29 +534,22 @@ export default function RiskTreatmentTable() {
     });
     setRows(updatedRows);
 
-    // Prepare form data
-    const formData = {
+    // Call API to update
+    const details = {
       'model-id': model?._id,
-      detailId: row.detailId,
+      detailId: row?.detailId,
       risk_treatment_options: value
     };
 
-    // Return the promise so MultiSelectCell can handle loading states if needed
-    return updateRiskTable(formData)
+    updateRiskTable(details)
       .then((res) => {
-        if (res && !res.error) {
+        if (res) {
           getRiskTreatment(model?._id);
-          notify('Risk treatment options updated successfully', 'success');
-          return res;
-        } else {
-          notify(res?.error || 'Failed to update risk treatment options', 'error');
-          throw new Error(res?.error || 'Update failed');
+          notify('Risk treatment option updated successfully', 'success');
         }
       })
       .catch((err) => {
-        console.error('Update error:', err);
-        notify('Failed to update risk treatment options', 'error');
-        throw err;
+        notify('Failed to update risk treatment option', 'error');
       });
   };
 
@@ -676,6 +575,10 @@ export default function RiskTreatmentTable() {
       damageId: parsedData?.damageId,
       key: parsedData?.key
     };
+    if (parsedData?.nodeType === 'derived') {
+      details.isDerived = true;
+      details.threatId = parsedData?.id;
+    }
     // console.log('details', details);
     addRiskTreatment(details)
       .then((res) => {
@@ -794,24 +697,34 @@ export default function RiskTreatmentTable() {
 
             case item.name === 'Attack Tree or Attack Path(s)':
               cellContent = (
-                // onClick={() => handleOpenSelect(row)} sx={{ cursor: 'pointer' }}
                 <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
                   {row[item.name] !== null ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <img src={AttackIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
-                        {row[item.name]?.Name}
+                    // Check if it has multiple paths (contains semicolon in Name)
+                    row[item.name]?.Name?.includes(';') ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {row[item.name].Name.split(';').map((path, idx) => (
+                          <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <img src={AttackIcon} alt="attack" height="10px" width="10px" />
+                            <span style={{ textAlign: 'start' }}>{path.trim()}</span>
+                          </span>
+                        ))}
+                      </Box>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <img src={AttackIcon} alt="attack" height="10px" width="10px" />
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: 'max-content' }}>
+                          {row[item.name]?.Name}
+                        </span>
                       </span>
-                    </span>
+                    )
                   ) : (
-                    // <InputLabel>Select attack path</InputLabel>
                     <InputLabel> - </InputLabel>
                   )}
                 </StyledTableCell>
               );
               break;
             case item.name === 'Risk Treatment Options':
-              cellContent = <MultiSelectCell item={item} row={row} handleChange={handleRiskTreatmentChange} name={item.name} />;
+              cellContent = <SelectableCell item={item} row={row} handleChange={handleRiskTreatmentChange} name={item.name} />;
               break;
             case item.name.includes('Cybersecurity'):
               cellContent = (
@@ -896,18 +809,26 @@ export default function RiskTreatmentTable() {
             case item.name === 'Damage Scenarios':
               cellContent = (
                 <StyledTableCell component="th" scope="row" sx={{ width: `${columnWidths[item.id] || 'auto'}` }}>
-                  {
-                    // row[item.name] && row[item.name].length ? (
-                    // row[item.name].map((damage, i) => (
-                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-                      <img src={DamageIcon} alt="damage" height="10px" width="10px" />
-                      <span style={{ textAlign: 'start', width: 'max-content' }}>{row[item?.name]}</span>
-                    </span>
-                    // ))
-                    // ) : (
-                    //   <InputLabel>N/A</InputLabel>
-                    //   )
-                  }
+                  {row[item.name] && row[item.name] !== '-' ? (
+                    // Check if it contains multiple scenarios (has semicolon)
+                    row[item.name].includes(';') ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {row[item.name].split(';').map((damage, idx) => (
+                          <span key={idx} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                            <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                            <span style={{ textAlign: 'start' }}>{damage.trim()}</span>
+                          </span>
+                        ))}
+                      </Box>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+                        <img src={DamageIcon} alt="damage" height="10px" width="10px" />
+                        <span style={{ textAlign: 'start', width: 'max-content' }}>{row[item?.name]}</span>
+                      </span>
+                    )
+                  ) : (
+                    <InputLabel>-</InputLabel>
+                  )}
                 </StyledTableCell>
               );
               break;

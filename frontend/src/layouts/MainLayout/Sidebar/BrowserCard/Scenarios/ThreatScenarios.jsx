@@ -63,6 +63,7 @@ const ThreatScenarios = ({ sub, detail, i, onDragStart, getLabel }) => {
               nodeId: detail?.id,
               extraProps: {
                 ...detail,
+                key: `TSD${(i + 1).toString().padStart(3, '0')}`,
                 nodeType: 'derived',
                 width: 150,
                 height: 60

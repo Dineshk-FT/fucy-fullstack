@@ -281,13 +281,17 @@ export default React.memo(function DefaultNode({ id, data, type }) {
           className={`my-custom-node ${type}`}
           style={{
             ...data?.style,
+            backgroundColor: data?.style?.backgroundColor ?? '#d3cfcf',
+            borderStyle: data?.style?.borderStyle ?? 'solid',
+            borderColor: data?.style?.borderColor ?? '#323131',
+            borderWidth: data?.style?.borderWidth ?? 1,
             position: 'relative',
             overflow: 'visible',
             boxShadow: selectedNodes.some((node) => node.id === id)
               ? '0px 0px 7px 3px #32ed0f'
               : isSelected
-              ? '0px 0px 7px 3px violet'
-              : 'none',
+                ? '0px 0px 7px 3px violet'
+                : 'none',
             width: width,
             height: height,
             display: 'flex',
@@ -367,6 +371,7 @@ export default React.memo(function DefaultNode({ id, data, type }) {
                 cursor: 'text',
                 padding: '0 4px',
                 borderRadius: '4px',
+                color: data?.style?.color ?? '#000000',
                 '&:hover': {
                   backgroundColor: isSelected ? 'rgba(120, 75, 232, 0.1)' : 'rgba(169, 169, 169, 0.1)'
                 }
