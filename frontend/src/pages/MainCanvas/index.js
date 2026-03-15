@@ -402,7 +402,8 @@ export default function MainCanvas() {
   const imageWidth = 1920;
   const imageHeight = 1080;
 
-  const handleDownload = () => {
+  const handleDownload = (e) => {
+    e.stopPropagation();
     const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 1920);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);

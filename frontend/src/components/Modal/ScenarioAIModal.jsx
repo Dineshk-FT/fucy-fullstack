@@ -22,6 +22,7 @@ import { configuration } from '../../services/baseApiService';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { nanoid } from 'nanoid';
 import useStore from '../../store/Zustand/store';
+import { useSelector } from 'react-redux';
 
 const basePrompts = {
   itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
@@ -57,7 +58,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const [promptValue, setPromptValue] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState(null);
-
+  const { userDetails } = useSelector((state) => state?.userDetails);
   // for item definition extra step
   const [fieldsVisible, setFieldsVisible] = useState(false);
   const [manualFields, setManualFields] = useState([]);
@@ -177,10 +178,14 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     item: {
       label: 'Item Definition Prompt',
       api: `${configuration.apiBaseUrl}v1/generate/model`,
+      headers: {
+        'user-id': sessionStorage.getItem('user-id') // or however you access the user ID
+      },
       payload: () => ({
         modelId: modelMeta?.modelId,
         itemDefinitionPrompt: promptValue,
         systemName: formValues.systemName,
+        createdBy: userDetails?.username, // or get the actual username from your auth system
         ...manualFields.reduce((acc, { label, value }) => {
           if (label.trim()) acc[label] = value;
           return acc;
@@ -278,7 +283,8 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       const response = await fetch(config.api, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...config.headers // This will include the user-id header
           // Add any authentication headers here
         },
         body: JSON.stringify(config.payload())
@@ -393,14 +399,14 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} display="flex" justifyContent="space-between">
+                  {/* <Grid item xs={12} display="flex" justifyContent="space-between">
                     <Button variant="outlined" onClick={handleAddManualField}>
                       Add Field
                     </Button>
                     <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
                       {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
                     </Button>
-                  </Grid>
+                  </Grid> */}
 
                   {fieldsVisible && renderDynamicFields()}
                 </Grid>
