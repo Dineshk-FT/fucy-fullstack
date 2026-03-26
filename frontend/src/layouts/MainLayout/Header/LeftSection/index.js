@@ -60,6 +60,7 @@ import GenerateModel from '../../../../components/Modal/GenerateModel';
 import DashboardDialog from '../../../../components/Dashboard';
 import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
+import TestAssetsDialog from '../../../../components/Modal/TestAssetsDialog';
 
 const notify = (message, status) => toast[status](message);
 
@@ -156,6 +157,17 @@ const LeftSection = () => {
   const hoverTimeoutRef = useRef(null);
   const [scenarioType, setScenarioType] = useState(null);
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
+  const [openTestAssets, setOpenTestAssets] = useState(false);
+
+  const handleOpenTestAssets = useCallback((e) => {
+    if (e?.stopPropagation) e?.stopPropagation?.();
+    setOpenTestAssets(true);
+  }, []);
+
+  const handleCloseTestAssets = useCallback((e) => {
+    if (e?.stopPropagation) e?.stopPropagation?.();
+    setOpenTestAssets(false);
+  }, []);
 
   const handleOpenScenarioAI = (type, e) => {
     if (e?.stopPropagation) e?.stopPropagation?.();
@@ -552,7 +564,21 @@ const LeftSection = () => {
             ),
             action: handleGroupDrag
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('item', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('item', e) },
+          {
+            label: 'Test Assets',
+            icon: () => (
+              <img
+                src="https://img.icons8.com/ios-filled/24/1e88e5/test-passed.png"
+                alt="test assets"
+                style={{
+                  width: 24,
+                  height: 24
+                }}
+              />
+            ),
+            action: handleOpenTestAssets
+          }
         ]
       },
       {
@@ -1105,7 +1131,14 @@ const LeftSection = () => {
       </Dialog>
 
       <VehicleTARADialog open={taraDialogOpen} onClose={() => setTaraDialogOpen(false)} />
-
+      <TestAssetsDialog
+        open={openTestAssets}
+        handleClose={handleCloseTestAssets}
+        modelMeta={{
+          modelId: model?._id,
+          systemName: model?.name
+        }}
+      />
       {/* Project Modals */}
       <AddModel
         getModels={getModels}
