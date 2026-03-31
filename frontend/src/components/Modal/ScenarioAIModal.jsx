@@ -137,6 +137,8 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     }
   }, [systemInputs]);
 
+  // console.log('modelMeta', modelMeta);
+
   const renderDynamicFields = () => {
     const fetchedFields = systemInputs?.map(({ label }) => (
       <React.Fragment key={label}>

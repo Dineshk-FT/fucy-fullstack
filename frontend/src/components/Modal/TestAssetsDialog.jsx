@@ -247,7 +247,7 @@ const TestAssetsDialog = ({ open, handleClose, modelMeta }) => {
   };
 
   // Generate Damage Scenarios
-  const handleGenerateDamageScenarios = async () => {
+  const handleGenerateDamageScenarios = async (e) => {
     try {
       // Check if assets exist first
       if (!assets?.Details?.length && !assets?.template?.nodes?.length) {
@@ -292,6 +292,7 @@ const TestAssetsDialog = ({ open, handleClose, modelMeta }) => {
       }
 
       setDamageResult(res?.scenarios || res);
+      onClose(e);
       toast.success(res.message || '✅ Damage Scenarios generated successfully');
 
       // Refresh damage scenarios data
