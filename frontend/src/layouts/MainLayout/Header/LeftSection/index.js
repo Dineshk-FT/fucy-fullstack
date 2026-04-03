@@ -85,7 +85,16 @@ const selector = (state) => ({
   assets: state.assets,
   clearModel: state.clearModel,
   autoGenerateRiskTreatement: state.autoGenerateRiskTreatement,
-  getRiskTreatment: state.getRiskTreatment
+  getRiskTreatment: state.getRiskTreatment,
+  getDamageScenarios: state.getDamageScenarios,
+  getThreatScenarios: state.getThreatScenario,
+  getAttackScenarios: state.getAttackScenario,
+  getCybersecurity: state.getCyberSecurityScenario,
+  clearDamageScenario: state.clearDamageScenario,
+  clearThreatScenario: state.clearThreatScenario,
+  clearAttackScenario: state.clearAttackScenario,
+  clearCybersecurity: state.clearCybersecurity,
+  clearRiskTreatment: state.clearRiskTreatment
 });
 
 const LeftSection = () => {
@@ -114,7 +123,16 @@ const LeftSection = () => {
     convertToLibrary,
     clearModel,
     autoGenerateRiskTreatement,
-    getRiskTreatment
+    getRiskTreatment,
+    getDamageScenarios,
+    getThreatScenarios,
+    getAttackScenarios,
+    getCybersecurity,
+    clearRiskTreatment,
+    clearThreatScenario,
+    clearAttackScenario,
+    clearDamageScenario,
+    clearCybersecurity
   } = useStore(selector, shallow);
 
   const categories = [
@@ -137,8 +155,13 @@ const LeftSection = () => {
     Delete: false,
     Library: false,
     AttackModal: false,
-    Clear: false,
     AIModal: false
+  });
+
+  const [clearConfig, setClearConfig] = useState({
+    open: false,
+    name: '',
+    onConfirm: null
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -159,6 +182,110 @@ const LeftSection = () => {
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
   const [openTestAssets, setOpenTestAssets] = useState(false);
 
+  // Define clearable items configuration
+  const clearableItems = {
+    model: {
+      name: () => `"${model?.name || 'the current model'}"`,
+      handler: () => clearModel(model?._id),
+      refresh: () => getModelById(model?._id),
+      successMessage: (res) => res?.message ?? 'Model cleared successfully'
+    },
+    'damage-scenarios': {
+      name: 'all damage scenarios',
+      handler: () => clearDamageScenario(model?._id),
+      refresh: () => getDamageScenarios(model?._id),
+      successMessage: (res) => res?.message ?? 'Damage scenarios cleared successfully'
+    },
+    'threat-scenarios': {
+      name: 'all threat scenarios',
+      handler: () => clearThreatScenario(model?._id),
+      refresh: () => getThreatScenarios(model?._id),
+      successMessage: (res) => res?.message ?? 'Threat scenarios cleared successfully'
+    },
+    'attack-scenarios': {
+      name: 'all attack scenarios',
+      handler: () => clearAttackScenario(model?._id),
+      refresh: () => getAttackScenarios(model?._id),
+      successMessage: (res) => res?.message ?? 'Attack scenarios cleared successfully'
+    },
+    cybersecurity: {
+      name: 'all cybersecurity data',
+      handler: () => clearCybersecurity(model?._id),
+      refresh: () => getCybersecurity(model?._id),
+      successMessage: (res) => res?.message ?? 'Cybersecurity data cleared successfully'
+    },
+    'risk-treatment': {
+      name: 'all risk treatment data',
+      handler: () => clearRiskTreatment(model?._id),
+      refresh: () => getRiskTreatment({ modelId: model?._id }),
+      successMessage: (res) => res?.message ?? 'Risk treatment data cleared successfully'
+    }
+  };
+
+  // Generic clear handler factory
+  const createClearHandler = useCallback(
+    (itemKey) => {
+      const item = clearableItems[itemKey];
+      if (!item) return null;
+
+      return async () => {
+        try {
+          const res = await item.handler();
+          if (!res?.error) {
+            notify(item.successMessage(res), 'success');
+            if (item.refresh) await item.refresh();
+          } else {
+            notify(res?.error ?? `Failed to clear ${item.name}`, 'error');
+          }
+        } catch (err) {
+          console.error(`Error clearing ${itemKey}:`, err);
+          notify('Something went wrong', 'error');
+        }
+      };
+    },
+    [
+      model?._id,
+      clearModel,
+      clearDamageScenario,
+      clearThreatScenario,
+      clearAttackScenario,
+      clearCybersecurity,
+      clearRiskTreatment,
+      getModelById,
+      getDamageScenarios,
+      getThreatScenarios,
+      getAttackScenarios,
+      getCybersecurity,
+      getRiskTreatment
+    ]
+  );
+
+  // Unified function to open clear dialog
+  const openClearDialog = useCallback(
+    (itemKey, event) => {
+      if (event?.stopPropagation) event?.stopPropagation?.();
+      const item = clearableItems[itemKey];
+      if (!item) return;
+
+      const itemName = typeof item.name === 'function' ? item.name() : item.name;
+      const handler = createClearHandler(itemKey);
+
+      setClearConfig({
+        open: true,
+        name: itemName,
+        onConfirm: () => {
+          handler();
+          setClearConfig((prev) => ({ ...prev, open: false }));
+        }
+      });
+    },
+    [createClearHandler]
+  );
+
+  const closeClearDialog = useCallback(() => {
+    setClearConfig((prev) => ({ ...prev, open: false }));
+  }, []);
+
   const handleOpenTestAssets = useCallback((e) => {
     if (e?.stopPropagation) e?.stopPropagation?.();
     setOpenTestAssets(true);
@@ -173,6 +300,21 @@ const LeftSection = () => {
     if (e?.stopPropagation) e?.stopPropagation?.();
     setScenarioType(type);
     setOpenScenarioModal(true);
+  };
+
+  const handleClearDamageScenario = (e) => {
+    if (e?.stopPropagation) e?.stopPropagation?.();
+    clearDamageScenario(model?._id)
+      .then((res) => {
+        // console.log('res', res);
+        if (!res.error) {
+          notify(res?.message ?? 'Cleared successfully', 'success');
+          getDamageScenarios(model._id);
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+      });
   };
 
   const handleCloseScenarioAI = (e) => {
@@ -332,10 +474,10 @@ const LeftSection = () => {
     },
     [setCollapsed]
   );
-  const handleClear = () => {
+  // Replace handleClear and handleClearDamageClick with this unified approach
+  const handleClearModel = useCallback(() => {
     clearModel(model._id)
       .then((res) => {
-        // console.log('res', res);
         if (!res.error) {
           notify(res.message ?? 'Cleared successfully', 'success');
           getModelById(model._id);
@@ -345,7 +487,23 @@ const LeftSection = () => {
         console.log('err', err);
         if (err) notify('Something went wrong', 'error');
       });
-  };
+  }, [clearModel, model?._id, getModelById]);
+
+  const handleClearDamage = useCallback(async () => {
+    try {
+      const res = await clearDamageScenario(model?._id);
+      if (!res.error) {
+        notify(res?.message ?? 'Cleared successfully', 'success');
+        getDamageScenarios(model._id);
+      } else {
+        notify(res?.error ?? 'Failed to clear damage scenarios', 'error');
+      }
+    } catch (err) {
+      console.log('err', err);
+      notify('Something went wrong', 'error');
+    }
+  }, [clearDamageScenario, model?._id, getDamageScenarios]);
+
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -510,7 +668,7 @@ const LeftSection = () => {
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
           { label: 'Edit Info', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
-          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
+          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => openClearDialog('model', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
@@ -612,7 +770,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Damage Scenarios - Impact Ratings')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) },
+          { label: 'Clear Damage Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('damage-scenarios', e) }
         ]
       },
       {
@@ -646,7 +805,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Derived Threat Scenarios')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) },
+          { label: 'Clear Threat Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('threat-scenarios', e) }
         ]
       },
       {
@@ -670,7 +830,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleContext('AI Assistant', e)
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) },
+          { label: 'Clear Attack Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('attack-scenarios', e) }
         ]
       },
       {
@@ -732,7 +893,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Cybersecurity Claims')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) },
+          { label: 'Clear Cybersecurity', icon: DeleteIcon, action: (e) => openClearDialog('cybersecurity', e) }
         ]
       },
       {
@@ -765,11 +927,21 @@ const LeftSection = () => {
               />
             ),
             action: (e) => handleGenerateRisk(e)
-          }
+          },
+          { label: 'Clear Risk Treatment', icon: DeleteIcon, action: (e) => openClearDialog('risk-treatment', e) }
         ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleOpenScenarioAI]
+    [
+      handleAddNewNode,
+      handleGroupDrag,
+      handleClick,
+      handleAttackTableClick,
+      handleContext,
+      handleAttackTreeClick,
+      handleOpenScenarioAI,
+      openClearDialog
+    ]
   );
 
   const handleCloseModal = useCallback((e, modalKey) => {
@@ -1233,12 +1405,13 @@ const LeftSection = () => {
           controls: model?.controls || []
         }}
       />
-      {openModal?.Clear && (
+      {/* Single ConfirmDeleteDialog for all clear operations */}
+      {clearConfig?.open && (
         <ConfirmDeleteDialog
-          open={openModal?.Clear}
-          onClose={() => setOpenModal((prev) => ({ ...prev, Clear: false }))}
-          onConfirm={handleClear}
-          name={model?.name}
+          open={clearConfig.open}
+          onClose={closeClearDialog}
+          onConfirm={clearConfig.onConfirm}
+          name={clearConfig.name}
           mode="clear"
         />
       )}

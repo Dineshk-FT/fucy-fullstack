@@ -645,7 +645,13 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // Object to store filtered data for multiple tables
   filteredTableData: {},
+  isNodePasted: true,
 
+  // Function to toggle or set `isNodePasted`
+  setIsNodePasted: (value) =>
+    set(() => {
+      return { isNodePasted: value };
+    }),
   // Setter for canvasRef and canvasImage
   setCanvasRef: (ref) => set({ canvasRef: ref }),
   setCanvasImage: (image) => set({ canvasImage: image }),
@@ -2314,6 +2320,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   //     throw err; // Re-throwing the error to handle it in calling code if needed
   //   }
   // },
+
   //Delete Section
 
   deleteNode: async (details) => {
@@ -2361,11 +2368,51 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
-  deleteAttacks: async (details) => {
-    let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
-    const res = await ADD_CALL(details, url);
-    return res;
+  // In your store.js or wherever your store is defined
+  deleteAttackScenes: async (payload) => {
+    try {
+      const formData = new FormData();
+      formData.append('model-id', payload['model-id']);
+      formData.append('type', payload.type);
+
+      // Handle both single id and multiple ids dynamically
+      if (payload.ids && Array.isArray(payload.ids) && payload.ids.length > 0) {
+        // Multiple delete - send ids as JSON string or individual fields
+        if (payload.ids.length === 1) {
+          // Single ID in array - treat as single delete
+          formData.append('id', payload.ids[0]);
+        } else {
+          // Multiple IDs - you have two options:
+
+          // Option 1: Send as JSON string (recommended if your backend can parse it)
+          formData.append('ids', JSON.stringify(payload.ids));
+
+          // Option 2: Send multiple id fields (if your backend supports multiple id parameters)
+          // payload.ids.forEach(id => formData.append('id', id));
+        }
+      } else if (payload.id) {
+        // Single delete
+        formData.append('id', payload.id);
+      }
+
+      const response = await fetch(`${configuration.apiBaseUrl}/v1/delete/attacks`, {
+        method: 'POST',
+        body: formData // Using FormData for compatibility with your existing endpoint
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error deleting attack scenes:', error);
+      return { error: error.message };
+    }
   },
+
   deleteGlobalAttackTrees: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/globalAttackTree`;
     const res = await DELETE_CALL(details, url);
@@ -2402,13 +2449,31 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  isNodePasted: true,
-
-  // Function to toggle or set `isNodePasted`
-  setIsNodePasted: (value) =>
-    set(() => {
-      return { isNodePasted: value };
-    })
+  clearDamageScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/damage_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  clearThreatScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/threat_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  clearAttackScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/attack_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  clearCybersecurity: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/cybersecurity`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  clearRiskTreatment: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/risk_treatment`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  }
 }));
 
 export default useStore;

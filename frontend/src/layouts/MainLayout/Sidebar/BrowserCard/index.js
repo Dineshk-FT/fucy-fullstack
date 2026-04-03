@@ -368,7 +368,7 @@ const selector = (state) => ({
   setEdges: state.setEdges,
   getCatalog: state.getCatalog,
   getGlobalAttackTrees: state.getGlobalAttackTrees,
-  deleteAttacks: state.deleteAttacks,
+  deleteAttacks: state.deleteAttackScenes,
   setIsNodePasted: state.setIsNodePasted,
   isChanged: state.isChanged,
   setIsChanged: state.setIsChanged,
