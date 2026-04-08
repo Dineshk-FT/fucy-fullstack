@@ -94,7 +94,8 @@ const selector = (state) => ({
   clearThreatScenario: state.clearThreatScenario,
   clearAttackScenario: state.clearAttackScenario,
   clearCybersecurity: state.clearCybersecurity,
-  clearRiskTreatment: state.clearRiskTreatment
+  clearRiskTreatment: state.clearRiskTreatment,
+  setTableLoader: state.setTableLoader
 });
 
 const LeftSection = () => {
@@ -132,7 +133,8 @@ const LeftSection = () => {
     clearThreatScenario,
     clearAttackScenario,
     clearDamageScenario,
-    clearCybersecurity
+    clearCybersecurity,
+    setTableLoader
   } = useStore(selector, shallow);
 
   const categories = [
@@ -474,35 +476,6 @@ const LeftSection = () => {
     },
     [setCollapsed]
   );
-  // Replace handleClear and handleClearDamageClick with this unified approach
-  const handleClearModel = useCallback(() => {
-    clearModel(model._id)
-      .then((res) => {
-        if (!res.error) {
-          notify(res.message ?? 'Cleared successfully', 'success');
-          getModelById(model._id);
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        if (err) notify('Something went wrong', 'error');
-      });
-  }, [clearModel, model?._id, getModelById]);
-
-  const handleClearDamage = useCallback(async () => {
-    try {
-      const res = await clearDamageScenario(model?._id);
-      if (!res.error) {
-        notify(res?.message ?? 'Cleared successfully', 'success');
-        getDamageScenarios(model._id);
-      } else {
-        notify(res?.error ?? 'Failed to clear damage scenarios', 'error');
-      }
-    } catch (err) {
-      console.log('err', err);
-      notify('Something went wrong', 'error');
-    }
-  }, [clearDamageScenario, model?._id, getDamageScenarios]);
 
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
@@ -605,21 +578,23 @@ const LeftSection = () => {
     [handleCategoryDialogOpen]
   );
 
-  const handleGenerateRisk = (e) => {
+  const handleGenerateRisk = async (e) => {
     e?.stopPropagation?.();
-    autoGenerateRiskTreatement({ modelId: model._id })
-      .then((res) => {
-        // console.log('res', res);
-        if (res.status === 200) {
-          notify(res.message ?? 'Risk Treatement generated successfully', 'success');
-          getRiskTreatment({ modelId: model._id });
-        } else {
-          notify('Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
-      });
+    setTableLoader(true);
+    try {
+      const res = await autoGenerateRiskTreatement({ modelId: model._id });
+      if (res.status === 200) {
+        notify(res.message ?? 'Risk Treatment generated successfully', 'success');
+        await getRiskTreatment(model?._id);
+      } else {
+        notify('Something went wrong', 'error');
+      }
+    } catch (err) {
+      console.error('Error generating risk treatment:', err);
+      notify(err?.message || 'Something went wrong', 'error');
+    } finally {
+      setTableLoader(false);
+    }
   };
 
   const confirmConvertToLibrary = useCallback(async () => {

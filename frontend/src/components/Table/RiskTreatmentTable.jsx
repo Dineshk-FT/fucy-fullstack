@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { tableCellClasses } from '@mui/material/TableCell';
@@ -49,6 +49,8 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { riskSteps } from '../../utils/Steps';
 import AutoGuidePopper from '../Poppers/AutoGuidePopper';
 import { tooltipClasses } from '@mui/material/Tooltip';
+import useTableLoading from '../../hooks/useTableLoading';
+import LoadableTable from './LoadableTable';
 
 const selector = (state) => ({
   model: state.model,
@@ -61,7 +63,8 @@ const selector = (state) => ({
   cyber_Claims: state.cybersecurity['subs'][3],
   updateRiskTable: state.updateRiskTable,
   getCyberSecurityScenario: state.getCyberSecurityScenario,
-  deleteRiskTreatment: state.deleteRiskTreatment
+  deleteRiskTreatment: state.deleteRiskTreatment,
+  tableLoader: state.tableLoader
 });
 
 const HtmlTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(({ theme }) => ({
@@ -179,7 +182,8 @@ export default function RiskTreatmentTable() {
     updateRiskTable,
     getCyberSecurityScenario,
     catalog,
-    deleteRiskTreatment
+    deleteRiskTreatment,
+    tableLoader
   } = useStore(selector, shallow);
   const [rows, setRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,6 +197,7 @@ export default function RiskTreatmentTable() {
   const [runTour, setRunTour] = useState(false);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('SNo');
+  const { loading: tableLoading, withLoading } = useTableLoading(tableLoader);
 
   // Open/Close the filter modal
   const handleOpenFilter = () => setOpenFilter(true);
@@ -400,14 +405,26 @@ export default function RiskTreatmentTable() {
   };
   // console.log('riskTreatment', riskTreatment);
 
+  // Update useEffect that fetches data
   useEffect(() => {
-    getCyberSecurityScenario(model?._id);
+    const fetchData = async () => {
+      await withLoading(async () => {
+        await getCyberSecurityScenario(model?._id);
+        await getRiskTreatment(model?._id);
+      });
+    };
+    fetchData();
   }, [model]);
 
-  const refreshAPI = () => {
-    getCyberSecurityScenario(model?._id);
-    getRiskTreatment(model?._id);
-  };
+  // In RiskTreatmentTable.jsx
+  const refreshAPI = useCallback(async () => {
+    await withLoading(
+      async () => {
+        await Promise.all([getCyberSecurityScenario(model?._id), getRiskTreatment(model?._id)]);
+      },
+      { variant: 'skeleton', rowsCount: rowsPerPage }
+    );
+  }, [model?._id, getCyberSecurityScenario, getRiskTreatment, withLoading, rowsPerPage]);
 
   useEffect(() => {
     const data = riskTreatment?.Details?.map((item, i) => {
@@ -993,7 +1010,8 @@ export default function RiskTreatmentTable() {
           component={Paper}
           sx={{
             '&.MuiPaper-elevation2': {
-              overflow: 'auto !important'
+              overflow: 'auto !important',
+              position: 'relative'
             },
             borderRadius: '0px',
             padding: 0.25,
@@ -1041,17 +1059,31 @@ export default function RiskTreatmentTable() {
                 ))}
               </TableRow>
             </TableHead>
-            <TableBody>
-              {paginatedRows?.map((row, rowKey) => (
-                <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
-              ))}
-            </TableBody>
+            <LoadableTable
+              loading={tableLoader || tableLoading}
+              loadingConfig={{
+                variant: 'skeleton',
+                rowsCount: rowsPerPage,
+                shimmerWidth: '80px',
+                shimmerHeight: '20px'
+              }}
+              data={paginatedRows}
+              columns={Head}
+              columnWidths={columnWidths}
+              emptyMessage="No data available. Drag and drop threats to get started."
+              emptyIcon={
+                <Typography variant="h4" color="textSecondary">
+                  📊
+                </Typography>
+              }
+            >
+              <TableBody>
+                {paginatedRows?.map((row, rowKey) => (
+                  <RenderTableRow key={rowKey} row={row} Head={Head} color={color} />
+                ))}
+              </TableBody>
+            </LoadableTable>
           </Table>
-          {!rows?.length && (
-            <Box display="flex">
-              <Typography variant="h5">Note </Typography>: drag the threat & drop in the header
-            </Box>
-          )}
         </TableContainer>
 
         <TablePagination

@@ -102,7 +102,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   pendingUndoState: null,
   isProcessing: false,
   debouncedAddToUndoStack: null, // Remove the debounced version
-
+  tableLoader: false,
   subSystems: {
     id: '6',
     name: 'Sub Systems',
@@ -647,6 +647,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   filteredTableData: {},
   isNodePasted: true,
 
+  // In your store file
+  setTableLoader: (isLoading) => set({ tableLoader: isLoading }),
   // Function to toggle or set `isNodePasted`
   setIsNodePasted: (value) =>
     set(() => {

@@ -453,6 +453,23 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
     name: ''
   });
 
+  // State for expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    models: true,
+    assets: true,
+    threats: true,
+    damages: true,
+    cybersecurity: true,
+    documents: true
+  });
+
+  const handleSectionToggle = (section) => (isOpen) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: isOpen
+    }));
+  };
+
   const handleopenCybersecurityExport = (e) => {
     e.stopPropagation();
     setExportAnchor(e.currentTarget);
@@ -1238,23 +1255,6 @@ const BrowserCard = ({ isCollapsed, isNavbarClose }) => {
           )
         );
     }
-  };
-
-  // State for expanded sections
-  const [expandedSections, setExpandedSections] = useState({
-    models: true,
-    assets: true,
-    threats: true,
-    damages: true,
-    cybersecurity: true,
-    documents: true
-  });
-
-  const handleSectionToggle = (section) => (isOpen) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: isOpen
-    }));
   };
 
   return (
