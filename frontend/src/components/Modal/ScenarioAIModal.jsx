@@ -22,7 +22,10 @@ import { configuration } from '../../services/baseApiService';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { nanoid } from 'nanoid';
 import useStore from '../../store/Zustand/store';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setModelId } from '../../store/slices/PageSectionSlice';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useNavigate } from 'react-router';
 
 const basePrompts = {
   itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
@@ -65,7 +68,8 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const [formValues, setFormValues] = useState({ systemName: '' });
   const [systemInputPrompt, setSystemInputPrompt] = useState(systemInputPromptDefault);
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity } = useStore(selector);
 
   // default prompt setup
@@ -197,7 +201,13 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
           return acc;
         }, {})
       }),
-      successMsg: '✅ Item definition generated successfully'
+      successMsg: '✅ Item definition generated successfully',
+      refresh: async (res) => {
+        // console.log('refresh', res);
+        navigate(`/Models/${res?.model_id}`);
+        dispatch(setModelId(res?.model_id));
+        dispatch(closeAll());
+      }
     },
     damage: {
       label: 'Damage Scenario Prompt',
@@ -317,6 +327,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
         switch (scenarioType) {
           case 'item':
             await useStore.getState().getAssets(modelMeta.modelId);
+            await scenarioConfig?.item?.refresh(modelMeta);
             break;
           case 'damage':
             await useStore.getState().getDamageScenarios(modelMeta.modelId);

@@ -1485,6 +1485,16 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  generateItemDamage: async (details) => {
+    // console.log('details', details);
+    const url = `${configuration.apiBaseUrl}v1/generate/item-and-damage`;
+    try {
+      const res = await ADD_CALL(details, url);
+      return res; // this will be { task_id: "..." }
+    } catch (error) {
+      return error;
+    }
+  },
   // getTemplate: async (id) => {
   //   const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
   //   set({
