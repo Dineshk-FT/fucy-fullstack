@@ -327,7 +327,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
         switch (scenarioType) {
           case 'item':
             await useStore.getState().getAssets(modelMeta.modelId);
-            await scenarioConfig?.item?.refresh(modelMeta);
+            await scenarioConfig?.item?.refresh(res);
             break;
           case 'damage':
             await useStore.getState().getDamageScenarios(modelMeta.modelId);
