@@ -148,18 +148,51 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
         const itemDef_res = await ADD_CALL(mergedFormValues(), `${configuration.apiBaseUrl}v1/generate/model`);
 
         setStepResult(itemDef_res?.message);
-        navigate(`/Models/${itemDef_res?.model_id}`);
-        dispatch(setModelId(itemDef_res?.model_id));
-        dispatch(closeAll());
 
-        // ✅ Update state object with values
-        setModelMeta({
-          modelId: itemDef_res?.model_id,
-          template: itemDef_res?.template,
-          systemName: itemDef_res?.system_name
-        });
+        // 🆕 Save the template immediately before navigation
+        if (itemDef_res?.template && itemDef_res?.asset_id) {
+          try {
+            // Create FormData for the save API
+            const formData = new FormData();
+            formData.append('model-id', itemDef_res?.model_id);
+            formData.append('template', JSON.stringify(itemDef_res.template));
+            formData.append('assetId', itemDef_res.asset_id);
 
-        toast.success('✅ Item Definition generated successfully');
+            // Call the update API to save
+            const saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'user-id': userDetails?.username || 'system'
+              }
+            });
+
+            if (!saveResponse?.error) {
+              toast.success('✅ Template saved with details');
+            } else {
+              console.warn('Auto-save completed with warning');
+            }
+          } catch (saveError) {
+            console.error('Auto-save failed:', saveError);
+            toast.error('Auto-save failed, but model was created');
+          }
+        }
+        if (!saveResponse?.error) {
+          // Now navigate and update state
+          navigate(`/Models/${itemDef_res?.model_id}`);
+          dispatch(setModelId(itemDef_res?.model_id));
+          dispatch(closeAll());
+
+          // Update state object with values
+          setModelMeta({
+            modelId: itemDef_res?.model_id,
+            template: itemDef_res?.template,
+            systemName: itemDef_res?.system_name,
+            assetId: itemDef_res?.asset_id // Store asset_id
+          });
+
+          toast.success('✅ Item Definition generated successfully');
+        }
       } else if (step === 2) {
         const res = await ADD_CALL(
           {
@@ -290,16 +323,16 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
                   />
                 </Grid>
 
-                <Grid item xs={12} display="flex" justifyContent="space-between">
+                {/* <Grid item xs={12} display="flex" justifyContent="space-between">
                   <Button variant="outlined" onClick={handleAddManualField}>
                     Add Field
                   </Button>
                   <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
                     {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
                   </Button>
-                </Grid>
+                </Grid> */}
 
-                {fieldsVisible && renderDynamicFields()}
+                {/* {fieldsVisible && renderDynamicFields()} */}
               </Grid>
             </Box>
           )}
@@ -394,7 +427,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
             Cancel
           </Button>
           {step === 0 ? (
-            <Button variant="contained" disabled={!fieldsVisible} onClick={() => setStep(1)}>
+            <Button variant="contained" disabled={!formValues?.systemName} onClick={() => setStep(1)}>
               Next
             </Button>
           ) : (

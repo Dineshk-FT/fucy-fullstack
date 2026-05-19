@@ -254,7 +254,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     const config = scenarioConfig[scenarioType];
     if (!config) return;
 
-    // 🔹 Dependency Validation
+    // 🔹 Dependency Validation (Remains consistent with your current logic)
     switch (scenarioType) {
       case 'damage':
         if (!assets?.Details?.length) {
@@ -262,28 +262,24 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
           return;
         }
         break;
-
       case 'threat':
         if (!damageScenarios.subs[0]?.Details?.length) {
           toast.error('Please generate Damage Scenarios first before creating Threat Scenarios.');
           return;
         }
         break;
-
       case 'attack':
         if (!threatScenarios?.subs[0]?.Details?.length) {
           toast.error('Please generate Threat Scenarios first before creating Attack Scenarios.');
           return;
         }
         break;
-
       case 'cybersecurity':
         if (!attackScenarios?.subs[0]?.scenes?.length) {
           toast.error('Please generate Attack Scenarios first before creating Cybersecurity Artifacts.');
           return;
         }
         break;
-
       default:
         break;
     }
@@ -291,55 +287,78 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     try {
       setGenerating(true);
 
-      // Use fetch directly to get better error handling
       const response = await fetch(config.api, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...config.headers // This will include the user-id header
-          // Add any authentication headers here
+          ...config.headers
         },
         body: JSON.stringify(config.payload())
       });
 
-      // Check if the response is OK (status in the range 200-299)
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Server error: ${response.status} ${response.statusText}`);
+        throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
       }
 
       const res = await response.json();
 
-      // Check if the response contains an error message even with 200 OK
-      if (res.error) {
-        throw new Error(res.error);
+      if (res.error || res.message?.toLowerCase().includes('error')) {
+        throw new Error(res.error || res.message);
       }
 
-      if (res.message?.toLowerCase().includes('error')) {
-        throw new Error(res.message);
+      // 🆕 NEW: Asset Update Logic for Item Definition
+      if (scenarioType === 'item' && res.template && res.asset_id) {
+        try {
+          const formData = new FormData();
+          formData.append('model-id', res.model_id);
+          formData.append('template', JSON.stringify(res.template));
+          formData.append('assetId', res.asset_id);
+
+          const saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              // Note: Do NOT set Content-Type header when sending FormData.
+              // The browser handles boundaries automatically.
+              'user-id': userDetails?.username || 'system'
+            }
+          });
+
+          const saveResult = await saveResponse.json();
+          if (!saveResponse.ok || saveResult.error) {
+            console.warn('Auto-save failed but model was created', saveResult.error);
+          } else {
+            toast.success('✅ Template saved with details');
+          }
+        } catch (saveError) {
+          console.error('Auto-save network error:', saveError);
+          toast.error('Template auto-save failed');
+        }
       }
 
       setResult(res?.message || res?.data || 'Generation completed successfully');
       toast.success(config.successMsg);
 
-      // ✅ After successful generation, update store data
-      if (modelMeta?.modelId) {
+      // ✅ Update store and handle navigation
+      if (res?.model_id || modelMeta?.modelId) {
+        const currentModelId = res?.model_id || modelMeta?.modelId;
         switch (scenarioType) {
           case 'item':
-            await useStore.getState().getAssets(modelMeta.modelId);
+            await useStore.getState().getAssets(currentModelId);
             await scenarioConfig?.item?.refresh(res);
             break;
           case 'damage':
-            await useStore.getState().getDamageScenarios(modelMeta.modelId);
+            await useStore.getState().getDamageScenarios(currentModelId);
             break;
           case 'threat':
-            await useStore.getState().getThreatScenario(modelMeta.modelId);
+            await useStore.getState().getThreatScenario(currentModelId);
             break;
           case 'attack':
-            await useStore.getState().getAttackScenario(modelMeta.modelId);
+            await useStore.getState().getAttackScenario(currentModelId);
             break;
           case 'cybersecurity':
-            await useStore.getState().getCyberSecurityScenario(modelMeta.modelId);
+            await useStore.getState().getCyberSecurityScenario(currentModelId);
             break;
           default:
             break;

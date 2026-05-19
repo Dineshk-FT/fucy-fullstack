@@ -1806,12 +1806,16 @@ const useStore = createWithEqualityFn((set, get) => ({
             ...state.damageScenarios,
             subs: [
               {
-                ...state.damageScenarios.subs[0],
-                ...derivedScenario // Update Derived
+                id: '21',
+                name: 'Damage Scenarios (DS) Derivations',
+                Derivations: [], // Force clear old state
+                ...derivedScenario
               },
               {
-                ...state.damageScenarios.subs[1],
-                ...userDefinedScenario // Update User-defined
+                id: '22',
+                name: 'Damage Scenarios - Impact Ratings',
+                Details: [], // Force clear old state
+                ...userDefinedScenario
               }
             ]
           }
@@ -1823,14 +1827,8 @@ const useStore = createWithEqualityFn((set, get) => ({
         damageScenarios: {
           ...state.damageScenarios,
           subs: [
-            {
-              id: '21',
-              name: 'Damage Scenarios (DS) Derivations'
-            },
-            {
-              id: '22',
-              name: 'Damage Scenarios - Impact Ratings'
-            }
+            { id: '21', name: 'Damage Scenarios (DS) Derivations', Derivations: [] },
+            { id: '22', name: 'Damage Scenarios - Impact Ratings', Details: [] }
           ]
         }
       };
@@ -2464,16 +2462,46 @@ const useStore = createWithEqualityFn((set, get) => ({
   clearDamageScenario: async (modelId) => {
     let url = `${configuration.apiBaseUrl}v1/clear/damage_scenario`;
     const res = await DELETE_CALL({ 'model-id': modelId }, url);
+
+    // Clear cached frontend state immediately
+    set((state) => ({
+      damageScenarios: {
+        ...state.damageScenarios,
+        subs: [
+          { id: '21', name: 'Damage Scenarios (DS) Derivations', Derivations: [] },
+          { id: '22', name: 'Damage Scenarios - Impact Ratings', Details: [] }
+        ]
+      }
+    }));
+
     return res;
   },
+
   clearThreatScenario: async (modelId) => {
     let url = `${configuration.apiBaseUrl}v1/clear/threat_scenario`;
     const res = await DELETE_CALL({ 'model-id': modelId }, url);
     return res;
   },
+  // In store.js, locate the `clearAttackScenario` function (around line 1475)
+  // and replace it with the following:
+
   clearAttackScenario: async (modelId) => {
     let url = `${configuration.apiBaseUrl}v1/clear/attack_scenario`;
     const res = await DELETE_CALL({ 'model-id': modelId }, url);
+
+    // Clear cached frontend state immediately
+    set((state) => ({
+      attackNodes: [],
+      attackEdges: [],
+      attackScenarios: {
+        ...state.attackScenarios,
+        subs: [
+          { id: '41', name: 'Attack' },
+          { id: '42', name: 'Attack Trees' }
+        ]
+      }
+    }));
+
     return res;
   },
   clearCybersecurity: async (modelId) => {

@@ -57,16 +57,18 @@ export default React.memo(function StepEdge({
   const currentEdge = edges.find((edge) => edge.id === id);
 
   // Real path calculation
+  // In StepEdge.jsx, modify the getSmoothStepPath call:
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
-    sourcePosition,
+    sourcePosition: sourcePosition || Position.Bottom, // Add fallback
     targetX,
     targetY,
-    targetPosition
+    targetPosition: targetPosition || Position.Right // Add fallback
   });
-
   // Update local position state when data changes
+  // console.log('sourcePosition', sourcePosition);
+  // console.log('targetPosition', targetPosition);
   useEffect(() => {
     setCurrentPosition({
       t: data?.t !== undefined ? data.t : 0.5,

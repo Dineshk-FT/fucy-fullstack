@@ -80,7 +80,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     wordBreak: 'break-word',
     lineHeight: 1.4,
     '&:first-of-type': {
-      borderTopLeftRadius: theme.shape.borderRadius,
+      borderTopLeftRadius: theme.shape.borderRadius
     },
     '&:last-child': {
       borderTopRightRadius: theme.shape.borderRadius,
@@ -119,18 +119,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -139,8 +139,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
+      backgroundColor: theme.palette.action.hover
+    }
   },
   height: '3.5em' // Fixed row height
 }));
@@ -447,8 +447,8 @@ export default function DsTable() {
   };
 
   useEffect(() => {
-    if (damageScenarios['Details']) {
-      const scene = damageScenarios['Details']?.map((ls, i) => ({
+    if (damageScenarios?.Details && damageScenarios.Details.length > 0) {
+      const scene = damageScenarios.Details.map((ls, i) => ({
         id: ls._id,
         ID: `DS${ls?.key?.toString().padStart(3, '0') ?? (i + 1).toString().padStart(3, '0')}`,
         Name: ls?.Name,
@@ -469,8 +469,13 @@ export default function DsTable() {
       setRows(scene);
       const details = Details?.filter((detail) => detail?.props?.length) ?? [];
       setDetails(details);
+    } else {
+      // Clear the table and any active selections when data is empty/cleared
+      setRows([]);
+      setDetails([]);
+      setSelectedRows([]);
     }
-  }, [damageScenarios]);
+  }, [damageScenarios, Details]);
 
   const refreshAPI = () => {
     getDamageScenarios(model?._id);
@@ -525,14 +530,14 @@ export default function DsTable() {
       return value === 1
         ? 'Negligible'
         : value === 2
-        ? 'Minor'
-        : value === 3
-        ? 'Moderate'
-        : value === 4
-        ? 'Major'
-        : value === 5
-        ? 'Severe'
-        : '';
+          ? 'Minor'
+          : value === 3
+            ? 'Moderate'
+            : value === 4
+              ? 'Major'
+              : value === 5
+                ? 'Severe'
+                : '';
     };
 
     const val = Object.values(impact)?.map((it) => pattern(it));
@@ -1072,7 +1077,7 @@ export default function DsTable() {
                     if (index === 0) {
                       // Move action buttons to the first column
                       return (
-                        <StyledTableCell key={index}>
+                        <StyledTableCell key={index} sx={{ paddingLeft: '6px' }}>
                           <IconButton
                             size="small"
                             onClick={handleSaveNewRow}

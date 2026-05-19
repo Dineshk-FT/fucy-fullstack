@@ -148,7 +148,7 @@ export const stakeHeader = [
 ];
 
 export const DSTableHeader = [
-  { id: 1, name: 'ID', w: 70, minW: 60 },
+  { id: 1, name: 'ID', w: 90, minW: 70 },
   { id: 2, name: 'Name', w: 100, minW: 90 },
   { id: 4, name: 'Description/Scalability', w: 120, minW: 100 },
   { id: 5, name: 'Losses of Cybersecurity Properties', w: 250, minW: 200 },

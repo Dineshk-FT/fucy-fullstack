@@ -108,18 +108,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -128,8 +128,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
+      backgroundColor: theme.palette.action.hover
+    }
   }
 }));
 
@@ -164,21 +164,21 @@ const Tstable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   const TableContainerStyled = styled(TableContainer)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[1],
     '&::-webkit-scrollbar': {
       height: '8px',
-      width: '8px',
+      width: '8px'
     },
     '&::-webkit-scrollbar-thumb': {
       backgroundColor: theme.palette.grey[400],
-      borderRadius: '4px',
+      borderRadius: '4px'
     },
     '&::-webkit-scrollbar-track': {
-      backgroundColor: theme.palette.grey[100],
-    },
+      backgroundColor: theme.palette.grey[100]
+    }
   }));
   const [openModal, setOpenModal] = useState({ threat: false, select: false, derived: false });
   const [openFilter, setOpenFilter] = useState(false);
@@ -273,6 +273,14 @@ const Tstable = () => {
     }
   }, [model?._id, getDamageScenarios, getThreatScenario]);
 
+  // Also add this effect to clear local state when model changes or data is cleared
+  useEffect(() => {
+    if (!model?._id) {
+      setRows([]);
+      setDetails({});
+    }
+  }, [model?._id]);
+
   useEffect(() => {
     if (derived?.Details) {
       let id = 0;
@@ -299,8 +307,13 @@ const Tstable = () => {
 
       setRows(mod1);
       setDetails(damageScenarios);
+    } else if (derived && !derived.Details) {
+      // Handle case when derived exists but has no Details (cleared state)
+      setRows([]);
+      setDetails({});
     }
   }, [derived?.Details, damageScenarios]);
+  // console.log('derived?.Details', derived);
 
   const handleOpenFilter = () => setOpenFilter(true);
   const handleCloseFilter = () => setOpenFilter(false);
@@ -794,22 +807,22 @@ const Tstable = () => {
             zIndex: 1,
             '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
               margin: 0,
-              fontSize: '0.8125rem',
+              fontSize: '0.8125rem'
             },
             '& .MuiTablePagination-actions': {
-              marginLeft: '8px',
+              marginLeft: '8px'
             },
             '& .MuiButtonBase-root': {
               '&.Mui-disabled': {
-                opacity: 0.5,
+                opacity: 0.5
               },
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
               },
               '&.Mui-selected': {
                 backgroundColor: 'rgba(25, 118, 210, 0.08)',
                 '&:hover': {
-                  backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  backgroundColor: 'rgba(25, 118, 210, 0.12)'
                 }
               }
             }

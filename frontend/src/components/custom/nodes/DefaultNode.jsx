@@ -40,13 +40,24 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
-  // Dynamic handles state - you can customize positions as needed
   const [handles, setHandles] = useState(
     data?.handles || [
+      // Named positions
       { id: 'top', position: Position.Top },
       { id: 'right', position: Position.Right },
       { id: 'bottom', position: Position.Bottom },
       { id: 'left', position: Position.Left },
+
+      // Single-letter aliases (for edge compatibility)
+      { id: 'a', position: Position.Top },
+      { id: 'b', position: Position.Bottom },
+      { id: 'c', position: Position.Left },
+      { id: 'd', position: Position.Right },
+      { id: 't', position: Position.Top },
+      { id: 'r', position: Position.Right },
+      { id: 'l', position: Position.Left },
+
+      // Offset variants
       { id: 'top-right', position: Position.Top, offset: 20 },
       { id: 'top-left', position: Position.Top, offset: -20 },
       { id: 'bottom-right', position: Position.Bottom, offset: 20 },
@@ -233,11 +244,12 @@ export default React.memo(function DefaultNode({ id, data, type }) {
 
   // Function to calculate handle position with offset
   const getHandleStyle = (handle) => {
+    const isAlias = ['a', 'b', 'c', 'd', 't', 'r', 'l'].includes(handle.id);
     const baseStyle = {
-      backgroundColor: bgColor,
-      width: 8,
-      height: 8,
-      border: `2px solid white`,
+      backgroundColor: isAlias ? 'transparent' : bgColor,
+      width: isAlias ? 6 : 8,
+      height: isAlias ? 6 : 8,
+      border: isAlias ? '1px solid transparent' : `2px solid white`,
       borderRadius: '50%'
     };
 

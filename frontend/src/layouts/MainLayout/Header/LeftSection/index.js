@@ -188,47 +188,83 @@ const LeftSection = () => {
   const [scenarioType, setScenarioType] = useState(null);
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
 
-  // Define clearable items configuration
-  const clearableItems = {
-    model: {
-      name: () => `"${model?.name || 'the current model'}"`,
-      handler: () => clearModel(model?._id),
-      refresh: () => getModelById(model?._id),
-      successMessage: (res) => res?.message ?? 'Model cleared successfully'
-    },
-    'damage-scenarios': {
-      name: 'all damage scenarios',
-      handler: () => clearDamageScenario(model?._id),
-      refresh: () => getDamageScenarios(model?._id),
-      successMessage: (res) => res?.message ?? 'Damage scenarios cleared successfully'
-    },
-    'threat-scenarios': {
-      name: 'all threat scenarios',
-      handler: () => clearThreatScenario(model?._id),
-      refresh: () => getThreatScenarios(model?._id),
-      successMessage: (res) => res?.message ?? 'Threat scenarios cleared successfully'
-    },
-    'attack-scenarios': {
-      name: 'all attack scenarios',
-      handler: () => clearAttackScenario(model?._id),
-      refresh: () => getAttackScenarios(model?._id),
-      successMessage: (res) => res?.message ?? 'Attack scenarios cleared successfully'
-    },
-    cybersecurity: {
-      name: 'all cybersecurity data',
-      handler: () => clearCybersecurity(model?._id),
-      refresh: () => getCybersecurity(model?._id),
-      successMessage: (res) => res?.message ?? 'Cybersecurity data cleared successfully'
-    },
-    'risk-treatment': {
-      name: 'all risk treatment data',
-      handler: () => clearRiskTreatment(model?._id),
-      refresh: () => getRiskTreatment({ modelId: model?._id }),
-      successMessage: (res) => res?.message ?? 'Risk treatment data cleared successfully'
+  const handleAttackTableClick = useCallback(() => {
+    dispatch(setPreviousTab('Attack'));
+    if (model?._id) {
+      setClickedItem('4');
+      dispatch(setTitle('Attack'));
+      dispatch(setTableOpen('Attack'));
     }
-  };
+  }, [dispatch, model?._id, setClickedItem]);
+  // Define clearable items configuration
+  const clearableItems = useMemo(
+    () => ({
+      model: {
+        name: () => `"${model?.name || 'the current model'}"`,
+        handler: () => clearModel(model?._id),
+        refresh: () => getModelById(model?._id),
+        successMessage: (res) => res?.message ?? 'Model cleared successfully'
+      },
+      'damage-scenarios': {
+        name: 'all damage scenarios',
+        handler: () => clearDamageScenario(model?._id),
+        refresh: () => getDamageScenarios(model?._id),
+        successMessage: (res) => res?.message ?? 'Damage scenarios cleared successfully'
+      },
+      'threat-scenarios': {
+        name: 'all threat scenarios',
+        handler: () => clearThreatScenario(model?._id),
+        refresh: () => {
+          return Promise.all([getThreatScenarios(model?._id), getDamageScenarios(model?._id)]);
+        },
+        successMessage: (res) => res?.message ?? 'Threat scenarios cleared successfully'
+      },
+      'attack-scenarios': {
+        name: 'all attack scenarios',
+        handler: () => clearAttackScenario(model?._id),
+        refresh: () => getAttackScenarios(model?._id),
+        successMessage: (res) => res?.message ?? 'Attack scenarios cleared successfully',
+        onSuccess: () => {
+          // Only trigger navigation if the user is currently in the Attack Path section
+          if (activeTab === 'Attack Path') {
+            handleAttackTableClick();
+          }
+        }
+      },
+      cybersecurity: {
+        name: 'all cybersecurity data',
+        handler: () => clearCybersecurity(model?._id),
+        refresh: () => getCybersecurity(model?._id),
+        successMessage: (res) => res?.message ?? 'Cybersecurity data cleared successfully'
+      },
+      'risk-treatment': {
+        name: 'all risk treatment data',
+        handler: () => clearRiskTreatment(model?._id),
+        refresh: () => getRiskTreatment({ modelId: model?._id }),
+        successMessage: (res) => res?.message ?? 'Risk treatment data cleared successfully'
+      }
+    }),
+    [
+      model,
+      clearModel,
+      getModelById,
+      clearDamageScenario,
+      getDamageScenarios,
+      clearThreatScenario,
+      getThreatScenarios,
+      clearAttackScenario,
+      getAttackScenarios,
+      clearCybersecurity,
+      getCybersecurity,
+      clearRiskTreatment,
+      getRiskTreatment,
+      handleAttackTableClick,
+      activeTab
+    ]
+  );
 
   // Generic clear handler factory
+  // Update createClearHandler function:
   const createClearHandler = useCallback(
     (itemKey) => {
       const item = clearableItems[itemKey];
@@ -239,7 +275,19 @@ const LeftSection = () => {
           const res = await item.handler();
           if (!res?.error) {
             notify(item.successMessage(res), 'success');
-            if (item.refresh) await item.refresh();
+            if (item.refresh) {
+              await item.refresh();
+              // Force a small delay to ensure state updates propagate
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            // Invoke success callback routing
+            if (item.onSuccess) {
+              item.onSuccess();
+            }
+
+            // Refresh all tables that might be affected
+            await getModels();
           } else {
             notify(res?.error ?? `Failed to clear ${item.name}`, 'error');
           }
@@ -249,23 +297,8 @@ const LeftSection = () => {
         }
       };
     },
-    [
-      model?._id,
-      clearModel,
-      clearDamageScenario,
-      clearThreatScenario,
-      clearAttackScenario,
-      clearCybersecurity,
-      clearRiskTreatment,
-      getModelById,
-      getDamageScenarios,
-      getThreatScenarios,
-      getAttackScenarios,
-      getCybersecurity,
-      getRiskTreatment
-    ]
+    [clearableItems, getModels]
   );
-
   // Unified function to open clear dialog
   const openClearDialog = useCallback(
     (itemKey, event) => {
@@ -285,7 +318,7 @@ const LeftSection = () => {
         }
       });
     },
-    [createClearHandler]
+    [clearableItems, createClearHandler]
   );
 
   const closeClearDialog = useCallback(() => {
@@ -520,15 +553,6 @@ const LeftSection = () => {
     },
     [model?._id, getAttackScenario]
   );
-
-  const handleAttackTableClick = useCallback(() => {
-    dispatch(setPreviousTab('Attack'));
-    if (model?._id) {
-      setClickedItem('4');
-      dispatch(setTitle('Attack'));
-      dispatch(setTableOpen('Attack'));
-    }
-  }, [dispatch, model?._id, setClickedItem]);
 
   const handleGroupDrag = useCallback((event) => {
     const parseFile = JSON.stringify('');

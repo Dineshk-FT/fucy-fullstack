@@ -635,8 +635,8 @@ export default function AttackTreeTable() {
   );
 
   useEffect(() => {
-    if (attacks['scenes']) {
-      const mod1 = attacks['scenes']?.map((dt, i) => ({
+    if (attacks?.scenes && attacks.scenes.length > 0) {
+      const mod1 = attacks.scenes.map((dt, i) => ({
         SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
         ID: dt.id || dt?.ID,
         Name: dt.name || dt?.Name,
@@ -649,6 +649,10 @@ export default function AttackTreeTable() {
         'Attack Feasibilities Rating': dt['Attack Feasibilities Rating']?.length ? dt['Attack Feasibilities Rating'] : ''
       }));
       setRows(mod1);
+    } else {
+      // Clear the table and any active selections when data is empty/cleared
+      setRows([]);
+      setSelectedRows([]);
     }
   }, [attacks]);
 
