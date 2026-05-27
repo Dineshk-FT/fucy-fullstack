@@ -665,11 +665,11 @@ const LeftSection = () => {
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
-          {
-            label: 'Create Full Model',
-            icon: AutoAwesomeIcon,
-            action: (e) => handleOpenCreateFullModel(e)
-          },
+          // {
+          //   label: 'Create Full Model',
+          //   icon: AutoAwesomeIcon,
+          //   action: (e) => handleOpenCreateFullModel(e)
+          // },
           {
             label: 'Vehicle TARA',
             icon: DirectionsCarIcon,

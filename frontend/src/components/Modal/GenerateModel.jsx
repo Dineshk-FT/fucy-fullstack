@@ -149,17 +149,19 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
         setStepResult(itemDef_res?.message);
 
+        // 1. Declare saveResponse outside the block so it's accessible later
+        let saveResponse;
+
         // 🆕 Save the template immediately before navigation
         if (itemDef_res?.template && itemDef_res?.asset_id) {
           try {
-            // Create FormData for the save API
             const formData = new FormData();
             formData.append('model-id', itemDef_res?.model_id);
             formData.append('template', JSON.stringify(itemDef_res.template));
             formData.append('assetId', itemDef_res.asset_id);
 
-            // Call the update API to save
-            const saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
+            // 2. Assign to the outer variable (remove 'const')
+            saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
               method: 'POST',
               body: formData,
               headers: {
@@ -177,6 +179,10 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
             toast.error('Auto-save failed, but model was created');
           }
         }
+
+        // 3. This will now safely evaluate!
+        // (If it didn't enter the try block, saveResponse is undefined,
+        // !undefined?.error is true, so it safely navigates).
         if (!saveResponse?.error) {
           // Now navigate and update state
           navigate(`/Models/${itemDef_res?.model_id}`);
@@ -188,7 +194,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
             modelId: itemDef_res?.model_id,
             template: itemDef_res?.template,
             systemName: itemDef_res?.system_name,
-            assetId: itemDef_res?.asset_id // Store asset_id
+            assetId: itemDef_res?.asset_id
           });
 
           toast.success('✅ Item Definition generated successfully');
@@ -241,6 +247,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
       setStep((prev) => prev + 1);
     } catch (err) {
+      console.error('Error in step generation:', err);
       toast.error(err.message || 'Step failed');
     } finally {
       setGenerating(false);
