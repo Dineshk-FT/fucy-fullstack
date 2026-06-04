@@ -361,7 +361,7 @@ const LeftSection = () => {
     (e) => {
       e?.stopPropagation?.();
       if (!openModal.Open && !openModal.Delete && !openModal.Library) {
-        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 200);
       }
     },
     [openModal.Open, openModal.Delete, openModal.Library]

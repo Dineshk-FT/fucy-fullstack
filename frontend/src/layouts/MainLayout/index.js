@@ -133,6 +133,10 @@ const MainLayout = ({ children }) => {
                 overflow: 'visible',
                 zIndex: 1300
               }}
+              onClick={(e) => {
+                // Prevent click events from propagating to the Sidebar
+                e.stopPropagation();
+              }}
             >
               <Header />
             </Toolbar>
