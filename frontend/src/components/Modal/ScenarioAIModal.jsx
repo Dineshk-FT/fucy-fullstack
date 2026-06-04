@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,8 @@ import {
   Backdrop,
   Grid,
   InputLabel,
-  IconButton
+  IconButton,
+  Autocomplete // <-- Added Autocomplete
 } from '@mui/material';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
@@ -46,6 +47,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
 const systemInputPromptDefault = `You are an automotive cybersecurity architect. Based on the given system name, generate a JSON list of the most important system inputs required to perform a Threat Analysis and Risk Assessment (TARA) according to ISO/SAE 21434. Provide 5–6 key inputs with short, realistic example values that reflect the technical elements, operational context, and dependencies of the system and its ecosystem.`;
 
+// Updated selector to get ECU list state
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
   systemInputs: state.systemInputs,
@@ -53,7 +55,9 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios,
   threatScenarios: state.threatScenarios,
   attackScenarios: state.attackScenarios,
-  cybersecurity: state.cybersecurity
+  cybersecurity: state.cybersecurity,
+  getECUList: state.getECUList,
+  ecu_list: state.ecu_list
 });
 
 const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
@@ -70,7 +74,21 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity } = useStore(selector);
+  const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity, getECUList, ecu_list } =
+    useStore(selector);
+
+  // Fetch ECU List when modal opens
+  useEffect(() => {
+    if (open) {
+      getECUList();
+    }
+  }, [open, getECUList]);
+
+  // Extract ECU names for the Autocomplete
+  const ecuOptions = useMemo(() => {
+    if (!ecu_list || !Array.isArray(ecu_list)) return [];
+    return ecu_list.map((ecu) => ecu.name || ecu.id);
+  }, [ecu_list]);
 
   // default prompt setup
   useEffect(() => {
@@ -407,13 +425,20 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                     <InputLabel>System Name</InputLabel>
                   </Grid>
                   <Grid item xs={8}>
-                    <TextField
-                      fullWidth
+                    {/* Replaced standard TextField with Autocomplete */}
+                    <Autocomplete
+                      freeSolo
+                      options={ecuOptions}
                       value={formValues.systemName}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setFormValues({ ...formValues, systemName: e.target.value });
+                      onChange={(event, newValue) => {
+                        if (event) event.stopPropagation();
+                        setFormValues((prev) => ({ ...prev, systemName: newValue || '' }));
                       }}
+                      onInputChange={(event, newInputValue) => {
+                        if (event) event.stopPropagation();
+                        setFormValues((prev) => ({ ...prev, systemName: newInputValue || '' }));
+                      }}
+                      renderInput={(params) => <TextField {...params} fullWidth variant="outlined" />}
                     />
                   </Grid>
 
@@ -430,15 +455,6 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                       }}
                     />
                   </Grid>
-
-                  {/* <Grid item xs={12} display="flex" justifyContent="space-between">
-                    <Button variant="outlined" onClick={handleAddManualField}>
-                      Add Field
-                    </Button>
-                    <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
-                      {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
-                    </Button>
-                  </Grid> */}
 
                   {fieldsVisible && renderDynamicFields()}
                 </Grid>

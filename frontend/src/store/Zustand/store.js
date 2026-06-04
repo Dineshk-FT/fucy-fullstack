@@ -101,8 +101,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   systemInputs: [],
   pendingUndoState: null,
   isProcessing: false,
-  debouncedAddToUndoStack: null, // Remove the debounced version
   tableLoader: false,
+  ecu_list: [],
   subSystems: {
     id: '6',
     name: 'Sub Systems',
@@ -864,7 +864,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   addToUndoStack: () => {
     // Cancel any pending debounced saves
-    get().debouncedAddToUndoStack.cancel();
+    get().debouncedAddToUndoStack?.cancel();
 
     set((state) => ({
       undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
@@ -1322,7 +1322,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Add a function to flush pending changes immediately
   flushPendingChanges: () => {
     if (get().pendingUndoState) {
-      get().debouncedAddToUndoStack.flush();
+      get().debouncedAddToUndoStack?.flush();
     }
   },
 
@@ -1417,6 +1417,18 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // API section
   //fetch or GET section
+
+  getECUList: async () => {
+    try {
+      const res = await axios.get(`${configuration?.apiBaseUrl}v1/guides/rag`);
+      // console.log('ECU List Response:', res);
+      set({
+        ecu_list: res?.data?.ecus || []
+      });
+    } catch (error) {
+      console.error('Error fetching ECUs:', error);
+    }
+  },
   getTemplates: async () => {
     try {
       const options = {
@@ -1680,10 +1692,14 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
-    // console.log('res api page', res);
-    set({
+    // Preserve the current assets Details/template during the model switch so
+    // that BrowserCard and the tree don't flash empty while getAssets loads.
+    // getAssets will overwrite assets with the correct data for the new model.
+    set((state) => ({
       model: res,
       assets: {
+        // keep existing shape so BrowserCard doesn't render []
+        ...state.assets,
         id: '1',
         name: 'Item Definition',
         icon: 'ItemIcon'
@@ -1772,23 +1788,24 @@ const useStore = createWithEqualityFn((set, get) => ({
           }
         ]
       }
-    });
+    }));
   },
 
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
-    // console.log('res', res);
-    set({
-      originalNodes: res.Details
-    });
+    // Single atomic set — prevents a render between the two updates where
+    // assets.Details would be empty (which caused BrowserCard to go blank)
     if (!res.error) {
       set((state) => ({
+        originalNodes: res.Details,
         assets: {
           ...state.assets,
           ...(res || { template: { nodes: [], edges: [] }, Details: [] })
         }
       }));
+    } else {
+      set({ originalNodes: [] });
     }
   },
 
@@ -2515,5 +2532,22 @@ const useStore = createWithEqualityFn((set, get) => ({
     return res;
   }
 }));
+
+// Initialise the debounced undo helper now that the store exists.
+// It was stored as null in the initial state which caused .cancel() / .flush()
+// to crash on first use.
+const debouncedUndoFn = debounce(() => {
+  const state = useStore.getState();
+  if (state.pendingUndoState) {
+    useStore.setState((s) => ({
+      undoStack: [...s.undoStack, state.pendingUndoState],
+      redoStack: [],
+      isChanged: true,
+      pendingUndoState: null
+    }));
+  }
+}, 300);
+
+useStore.setState({ debouncedAddToUndoStack: debouncedUndoFn });
 
 export default useStore;

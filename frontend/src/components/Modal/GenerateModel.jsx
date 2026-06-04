@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,8 @@ import {
   InputLabel,
   CircularProgress,
   Backdrop,
-  IconButton
+  IconButton,
+  Autocomplete // <-- Added Autocomplete
 } from '@mui/material';
 import { createPortal } from 'react-dom';
 import useStore from '../../store/Zustand/store';
@@ -27,13 +28,16 @@ import { nanoid } from 'nanoid';
 import { ADD_CALL } from '../../services/api';
 import { configuration } from '../../services/baseApiService';
 
+// Updated selector to get ECU list state
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
-  systemInputs: state.systemInputs
+  systemInputs: state.systemInputs,
+  getECUList: state.getECUList,
+  ecu_list: state.ecu_list
 });
 
 const GenerateModel = ({ open, handleClose }) => {
-  const { systemInputs, getSystemInputs } = useStore(selector);
+  const { systemInputs, getSystemInputs, getECUList, ecu_list } = useStore(selector);
   const { userDetails } = useSelector((state) => state?.userDetails);
 
   const navigate = useNavigate();
@@ -48,7 +52,18 @@ const GenerateModel = ({ open, handleClose }) => {
     systemName: null
   });
 
-  // console.log('modelMeta', modelMeta);
+  // Fetch ECU List when modal opens
+  useEffect(() => {
+    if (open) {
+      getECUList();
+    }
+  }, [open, getECUList]);
+
+  // Extract ECU names for the Autocomplete
+  const ecuOptions = useMemo(() => {
+    if (!ecu_list || !Array.isArray(ecu_list)) return [];
+    return ecu_list.map((ecu) => ecu.name || ecu.id);
+  }, [ecu_list]);
 
   // 🔑 Base prompts (default values)
   const basePrompts = {
@@ -181,8 +196,6 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
         }
 
         // 3. This will now safely evaluate!
-        // (If it didn't enter the try block, saveResponse is undefined,
-        // !undefined?.error is true, so it safely navigates).
         if (!saveResponse?.error) {
           // Now navigate and update state
           navigate(`/Models/${itemDef_res?.model_id}`);
@@ -304,7 +317,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
       <Dialog open={open} onClose={onClose} sx={{ '& .MuiPaper-root': { maxWidth: 700, minWidth: 500 } }}>
         <DialogTitle>
           <Typography variant="h4" color="primary">
-            Create With AI
+            Create With AI 12
           </Typography>
         </DialogTitle>
 
@@ -316,7 +329,19 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
                   <InputLabel>System Name</InputLabel>
                 </Grid>
                 <Grid item xs={8}>
-                  <TextField fullWidth value={formValues.systemName} onChange={handleChange('systemName')} />
+                  {/* Replaced standard TextField with Autocomplete */}
+                  <Autocomplete
+                    freeSolo
+                    options={ecuOptions}
+                    value={formValues.systemName}
+                    onChange={(event, newValue) => {
+                      setFormValues((prev) => ({ ...prev, systemName: newValue || '' }));
+                    }}
+                    onInputChange={(event, newInputValue) => {
+                      setFormValues((prev) => ({ ...prev, systemName: newInputValue || '' }));
+                    }}
+                    renderInput={(params) => <TextField {...params} fullWidth variant="outlined" />}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -329,17 +354,6 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
                     onChange={(e) => setSystemInputPrompt(e.target.value)}
                   />
                 </Grid>
-
-                {/* <Grid item xs={12} display="flex" justifyContent="space-between">
-                  <Button variant="outlined" onClick={handleAddManualField}>
-                    Add Field
-                  </Button>
-                  <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
-                    {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
-                  </Button>
-                </Grid> */}
-
-                {/* {fieldsVisible && renderDynamicFields()} */}
               </Grid>
             </Box>
           )}

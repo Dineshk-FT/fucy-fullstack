@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { lazy, Suspense, useCallback, useMemo } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { styled, useTheme } from '@mui/material/styles';
@@ -24,6 +24,7 @@ import HeaderSection from '../../Website/pages/Landing/HeaderSection';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import FloatingHelper from '../FloatingHelper';
+import { changeCanvasPage } from '../../store/slices/CanvasSlice';
 
 const selector = (state) => ({
   isCollapsed: state.isCollapsed
@@ -72,9 +73,21 @@ const MainLayout = ({ children }) => {
   const { isNavbarClose, isDark } = useSelector((state) => state.currentId);
   const { isCanvasPage, initialDialogOpen } = useSelector((state) => state.canvas);
 
+  // console.log('isCanvasPage in MainLayout', isCanvasPage);
   const handleLeftDrawerToggle = useCallback(() => {
     dispatch({ type: SET_MENU, opened: !leftDrawerOpened });
   }, [dispatch, leftDrawerOpened]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      dispatch(changeCanvasPage('home'));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleNavbarSlide = () => dispatch(navbarSlide());
 
