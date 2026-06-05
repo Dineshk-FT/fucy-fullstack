@@ -43,8 +43,9 @@ const ItemDefinition = ({
 
   const { edgesDetail, nodesDetail, dataDetail } = useMemo(() => {
     const details = data?.Details || [];
+    // console.log('details', details);
     return {
-      edgesDetail: details?.filter((d) => d.nodeId?.includes('reactflow__edge') && d.name) ?? [],
+      edgesDetail: details?.filter((d) => (d.nodeId?.includes('reactflow__edge') && d.name) || d.type === 'smoothstep') ?? [],
       nodesDetail: details?.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data') ?? [],
       dataDetail: details?.filter((d) => d.type === 'data') ?? []
     };
@@ -127,6 +128,7 @@ const ItemDefinition = ({
         dispatch(
           setEdgeDetails({
             name: target?.data?.label || '',
+            description: target?.data?.description || '',
             properties: target?.properties || [],
             isAsset: target?.isAsset || false,
             style: target?.style || {},
@@ -138,6 +140,7 @@ const ItemDefinition = ({
         dispatch(
           setDetails({
             name: target?.data?.label || '',
+            description: target?.data?.description || '',
             properties: target?.properties || [],
             isAsset: target?.isAsset || false
           })

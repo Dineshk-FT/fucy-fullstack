@@ -129,8 +129,8 @@ const FloatingHelper = () => {
           size="small"
           sx={{
             position: 'fixed',
-            bottom: '18mm',
-            right: 10,
+            bottom: '5mm',
+            right: 60,
             zIndex: 1200,
             zIndex: 1300
           }}

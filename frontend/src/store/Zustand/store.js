@@ -101,8 +101,8 @@ const useStore = createWithEqualityFn((set, get) => ({
   systemInputs: [],
   pendingUndoState: null,
   isProcessing: false,
-  debouncedAddToUndoStack: null, // Remove the debounced version
-
+  tableLoader: false,
+  ecu_list: [],
   subSystems: {
     id: '6',
     name: 'Sub Systems',
@@ -645,7 +645,15 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // Object to store filtered data for multiple tables
   filteredTableData: {},
+  isNodePasted: true,
 
+  // In your store file
+  setTableLoader: (isLoading) => set({ tableLoader: isLoading }),
+  // Function to toggle or set `isNodePasted`
+  setIsNodePasted: (value) =>
+    set(() => {
+      return { isNodePasted: value };
+    }),
   // Setter for canvasRef and canvasImage
   setCanvasRef: (ref) => set({ canvasRef: ref }),
   setCanvasImage: (image) => set({ canvasImage: image }),
@@ -856,7 +864,7 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   addToUndoStack: () => {
     // Cancel any pending debounced saves
-    get().debouncedAddToUndoStack.cancel();
+    get().debouncedAddToUndoStack?.cancel();
 
     set((state) => ({
       undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
@@ -874,8 +882,20 @@ const useStore = createWithEqualityFn((set, get) => ({
       nodes: updatedNodes
     }));
 
-    // Only add to undo stack for meaningful changes (not selection changes)
-    const meaningfulChanges = changes.filter((change) => change.type !== 'select' && change.type !== 'dimensions');
+    // Filter out UI-only changes more strictly
+    const meaningfulChanges = changes.filter((change) => {
+      // Ignore selection, dimensions, and position changes from UI interactions
+      if (change.type === 'select' || change.type === 'dimensions') {
+        return false;
+      }
+
+      // For position changes, check if it's actually meaningful
+      if (change.type === 'position' && change.dragging === false) {
+        return false; // Ignore position changes from UI clicks
+      }
+
+      return true;
+    });
 
     if (meaningfulChanges.length > 0) {
       set((state) => ({
@@ -886,7 +906,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  // Replace onEdgesChange:
   onEdgesChange: (changes) => {
     const currentEdges = get().edges;
     const updatedEdges = applyEdgeChanges(changes, currentEdges);
@@ -1303,7 +1322,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   // Add a function to flush pending changes immediately
   flushPendingChanges: () => {
     if (get().pendingUndoState) {
-      get().debouncedAddToUndoStack.flush();
+      get().debouncedAddToUndoStack?.flush();
     }
   },
 
@@ -1398,6 +1417,18 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   // API section
   //fetch or GET section
+
+  getECUList: async () => {
+    try {
+      const res = await axios.get(`${configuration?.apiBaseUrl}v1/guides/rag`);
+      // console.log('ECU List Response:', res);
+      set({
+        ecu_list: res?.data?.ecus || []
+      });
+    } catch (error) {
+      console.error('Error fetching ECUs:', error);
+    }
+  },
   getTemplates: async () => {
     try {
       const options = {
@@ -1466,6 +1497,16 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  generateItemDamage: async (details) => {
+    // console.log('details', details);
+    const url = `${configuration.apiBaseUrl}v1/generate/item-and-damage`;
+    try {
+      const res = await ADD_CALL(details, url);
+      return res; // this will be { task_id: "..." }
+    } catch (error) {
+      return error;
+    }
+  },
   // getTemplate: async (id) => {
   //   const res = await axios.get(`${configuration.apiBaseUrl}template?id=${id}`);
   //   set({
@@ -1651,10 +1692,14 @@ const useStore = createWithEqualityFn((set, get) => ({
   getModelById: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/model`;
     const res = await GET_CALL(modelId, url);
-    // console.log('res api page', res);
-    set({
+    // Preserve the current assets Details/template during the model switch so
+    // that BrowserCard and the tree don't flash empty while getAssets loads.
+    // getAssets will overwrite assets with the correct data for the new model.
+    set((state) => ({
       model: res,
       assets: {
+        // keep existing shape so BrowserCard doesn't render []
+        ...state.assets,
         id: '1',
         name: 'Item Definition',
         icon: 'ItemIcon'
@@ -1743,23 +1788,24 @@ const useStore = createWithEqualityFn((set, get) => ({
           }
         ]
       }
-    });
+    }));
   },
 
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
-    // console.log('res', res);
-    set({
-      originalNodes: res.Details
-    });
+    // Single atomic set — prevents a render between the two updates where
+    // assets.Details would be empty (which caused BrowserCard to go blank)
     if (!res.error) {
       set((state) => ({
+        originalNodes: res.Details,
         assets: {
           ...state.assets,
           ...(res || { template: { nodes: [], edges: [] }, Details: [] })
         }
       }));
+    } else {
+      set({ originalNodes: [] });
     }
   },
 
@@ -1777,12 +1823,16 @@ const useStore = createWithEqualityFn((set, get) => ({
             ...state.damageScenarios,
             subs: [
               {
-                ...state.damageScenarios.subs[0],
-                ...derivedScenario // Update Derived
+                id: '21',
+                name: 'Damage Scenarios (DS) Derivations',
+                Derivations: [], // Force clear old state
+                ...derivedScenario
               },
               {
-                ...state.damageScenarios.subs[1],
-                ...userDefinedScenario // Update User-defined
+                id: '22',
+                name: 'Damage Scenarios - Impact Ratings',
+                Details: [], // Force clear old state
+                ...userDefinedScenario
               }
             ]
           }
@@ -1794,14 +1844,8 @@ const useStore = createWithEqualityFn((set, get) => ({
         damageScenarios: {
           ...state.damageScenarios,
           subs: [
-            {
-              id: '21',
-              name: 'Damage Scenarios (DS) Derivations'
-            },
-            {
-              id: '22',
-              name: 'Damage Scenarios - Impact Ratings'
-            }
+            { id: '21', name: 'Damage Scenarios (DS) Derivations', Derivations: [] },
+            { id: '22', name: 'Damage Scenarios - Impact Ratings', Details: [] }
           ]
         }
       };
@@ -2303,6 +2347,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   //     throw err; // Re-throwing the error to handle it in calling code if needed
   //   }
   // },
+
   //Delete Section
 
   deleteNode: async (details) => {
@@ -2350,11 +2395,51 @@ const useStore = createWithEqualityFn((set, get) => ({
     const res = await DELETE_CALL(details, url);
     return res;
   },
-  deleteAttacks: async (details) => {
-    let url = `${configuration.apiBaseUrl}v1/delete/attacks`;
-    const res = await ADD_CALL(details, url);
-    return res;
+  // In your store.js or wherever your store is defined
+  deleteAttackScenes: async (payload) => {
+    try {
+      const formData = new FormData();
+      formData.append('model-id', payload['model-id']);
+      formData.append('type', payload.type);
+
+      // Handle both single id and multiple ids dynamically
+      if (payload.ids && Array.isArray(payload.ids) && payload.ids.length > 0) {
+        // Multiple delete - send ids as JSON string or individual fields
+        if (payload.ids.length === 1) {
+          // Single ID in array - treat as single delete
+          formData.append('id', payload.ids[0]);
+        } else {
+          // Multiple IDs - you have two options:
+
+          // Option 1: Send as JSON string (recommended if your backend can parse it)
+          formData.append('ids', JSON.stringify(payload.ids));
+
+          // Option 2: Send multiple id fields (if your backend supports multiple id parameters)
+          // payload.ids.forEach(id => formData.append('id', id));
+        }
+      } else if (payload.id) {
+        // Single delete
+        formData.append('id', payload.id);
+      }
+
+      const response = await fetch(`${configuration.apiBaseUrl}/v1/delete/attacks`, {
+        method: 'POST',
+        body: formData // Using FormData for compatibility with your existing endpoint
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error deleting attack scenes:', error);
+      return { error: error.message };
+    }
   },
+
   deleteGlobalAttackTrees: async (details) => {
     let url = `${configuration.apiBaseUrl}v1/delete/globalAttackTree`;
     const res = await DELETE_CALL(details, url);
@@ -2391,13 +2476,78 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  isNodePasted: true,
+  clearDamageScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/damage_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
 
-  // Function to toggle or set `isNodePasted`
-  setIsNodePasted: (value) =>
-    set(() => {
-      return { isNodePasted: value };
-    })
+    // Clear cached frontend state immediately
+    set((state) => ({
+      damageScenarios: {
+        ...state.damageScenarios,
+        subs: [
+          { id: '21', name: 'Damage Scenarios (DS) Derivations', Derivations: [] },
+          { id: '22', name: 'Damage Scenarios - Impact Ratings', Details: [] }
+        ]
+      }
+    }));
+
+    return res;
+  },
+
+  clearThreatScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/threat_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  // In store.js, locate the `clearAttackScenario` function (around line 1475)
+  // and replace it with the following:
+
+  clearAttackScenario: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/attack_scenario`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+
+    // Clear cached frontend state immediately
+    set((state) => ({
+      attackNodes: [],
+      attackEdges: [],
+      attackScenarios: {
+        ...state.attackScenarios,
+        subs: [
+          { id: '41', name: 'Attack' },
+          { id: '42', name: 'Attack Trees' }
+        ]
+      }
+    }));
+
+    return res;
+  },
+  clearCybersecurity: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/cybersecurity`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  },
+  clearRiskTreatment: async (modelId) => {
+    let url = `${configuration.apiBaseUrl}v1/clear/risk_treatment`;
+    const res = await DELETE_CALL({ 'model-id': modelId }, url);
+    return res;
+  }
 }));
+
+// Initialise the debounced undo helper now that the store exists.
+// It was stored as null in the initial state which caused .cancel() / .flush()
+// to crash on first use.
+const debouncedUndoFn = debounce(() => {
+  const state = useStore.getState();
+  if (state.pendingUndoState) {
+    useStore.setState((s) => ({
+      undoStack: [...s.undoStack, state.pendingUndoState],
+      redoStack: [],
+      isChanged: true,
+      pendingUndoState: null
+    }));
+  }
+}, 300);
+
+useStore.setState({ debouncedAddToUndoStack: debouncedUndoFn });
 
 export default useStore;

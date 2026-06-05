@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,8 @@ import {
   InputLabel,
   CircularProgress,
   Backdrop,
-  IconButton
+  IconButton,
+  Autocomplete // <-- Added Autocomplete
 } from '@mui/material';
 import { createPortal } from 'react-dom';
 import useStore from '../../store/Zustand/store';
@@ -27,13 +28,16 @@ import { nanoid } from 'nanoid';
 import { ADD_CALL } from '../../services/api';
 import { configuration } from '../../services/baseApiService';
 
+// Updated selector to get ECU list state
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
-  systemInputs: state.systemInputs
+  systemInputs: state.systemInputs,
+  getECUList: state.getECUList,
+  ecu_list: state.ecu_list
 });
 
 const GenerateModel = ({ open, handleClose }) => {
-  const { systemInputs, getSystemInputs } = useStore(selector);
+  const { systemInputs, getSystemInputs, getECUList, ecu_list } = useStore(selector);
   const { userDetails } = useSelector((state) => state?.userDetails);
 
   const navigate = useNavigate();
@@ -48,7 +52,18 @@ const GenerateModel = ({ open, handleClose }) => {
     systemName: null
   });
 
-  // console.log('modelMeta', modelMeta);
+  // Fetch ECU List when modal opens
+  useEffect(() => {
+    if (open) {
+      getECUList();
+    }
+  }, [open, getECUList]);
+
+  // Extract ECU names for the Autocomplete
+  const ecuOptions = useMemo(() => {
+    if (!ecu_list || !Array.isArray(ecu_list)) return [];
+    return ecu_list.map((ecu) => ecu.name || ecu.id);
+  }, [ecu_list]);
 
   // 🔑 Base prompts (default values)
   const basePrompts = {
@@ -86,7 +101,8 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     setPromptValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const onClose = () => {
+  const onClose = (e) => {
+    e.stopPropagation();
     setStep(0);
     setStepResult(null);
     setFormValues({ systemName: '' });
@@ -139,25 +155,63 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
     ...promptValues
   });
 
-  const handleGenerateStep = async () => {
+  const handleGenerateStep = async (e) => {
+    e.stopPropagation();
     setGenerating(true);
     try {
       if (step === 1) {
         const itemDef_res = await ADD_CALL(mergedFormValues(), `${configuration.apiBaseUrl}v1/generate/model`);
 
         setStepResult(itemDef_res?.message);
-        navigate(`/Models/${itemDef_res?.model_id}`);
-        dispatch(setModelId(itemDef_res?.model_id));
-        dispatch(closeAll());
 
-        // ✅ Update state object with values
-        setModelMeta({
-          modelId: itemDef_res?.model_id,
-          template: itemDef_res?.template,
-          systemName: itemDef_res?.system_name
-        });
+        // 1. Declare saveResponse outside the block so it's accessible later
+        let saveResponse;
 
-        toast.success('✅ Item Definition generated successfully');
+        // 🆕 Save the template immediately before navigation
+        if (itemDef_res?.template && itemDef_res?.asset_id) {
+          try {
+            const formData = new FormData();
+            formData.append('model-id', itemDef_res?.model_id);
+            formData.append('template', JSON.stringify(itemDef_res.template));
+            formData.append('assetId', itemDef_res.asset_id);
+
+            // 2. Assign to the outer variable (remove 'const')
+            saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'user-id': userDetails?.username || 'system'
+              }
+            });
+
+            if (!saveResponse?.error) {
+              toast.success('✅ Template saved with details');
+            } else {
+              console.warn('Auto-save completed with warning');
+            }
+          } catch (saveError) {
+            console.error('Auto-save failed:', saveError);
+            toast.error('Auto-save failed, but model was created');
+          }
+        }
+
+        // 3. This will now safely evaluate!
+        if (!saveResponse?.error) {
+          // Now navigate and update state
+          navigate(`/Models/${itemDef_res?.model_id}`);
+          dispatch(setModelId(itemDef_res?.model_id));
+          dispatch(closeAll());
+
+          // Update state object with values
+          setModelMeta({
+            modelId: itemDef_res?.model_id,
+            template: itemDef_res?.template,
+            systemName: itemDef_res?.system_name,
+            assetId: itemDef_res?.asset_id
+          });
+
+          toast.success('✅ Item Definition generated successfully');
+        }
       } else if (step === 2) {
         const res = await ADD_CALL(
           {
@@ -206,6 +260,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
       setStep((prev) => prev + 1);
     } catch (err) {
+      console.error('Error in step generation:', err);
       toast.error(err.message || 'Step failed');
     } finally {
       setGenerating(false);
@@ -262,7 +317,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
       <Dialog open={open} onClose={onClose} sx={{ '& .MuiPaper-root': { maxWidth: 700, minWidth: 500 } }}>
         <DialogTitle>
           <Typography variant="h4" color="primary">
-            Create With AI
+            Create With AI 12
           </Typography>
         </DialogTitle>
 
@@ -274,7 +329,19 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
                   <InputLabel>System Name</InputLabel>
                 </Grid>
                 <Grid item xs={8}>
-                  <TextField fullWidth value={formValues.systemName} onChange={handleChange('systemName')} />
+                  {/* Replaced standard TextField with Autocomplete */}
+                  <Autocomplete
+                    freeSolo
+                    options={ecuOptions}
+                    value={formValues.systemName}
+                    onChange={(event, newValue) => {
+                      setFormValues((prev) => ({ ...prev, systemName: newValue || '' }));
+                    }}
+                    onInputChange={(event, newInputValue) => {
+                      setFormValues((prev) => ({ ...prev, systemName: newInputValue || '' }));
+                    }}
+                    renderInput={(params) => <TextField {...params} fullWidth variant="outlined" />}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -287,17 +354,6 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
                     onChange={(e) => setSystemInputPrompt(e.target.value)}
                   />
                 </Grid>
-
-                <Grid item xs={12} display="flex" justifyContent="space-between">
-                  <Button variant="outlined" onClick={handleAddManualField}>
-                    Add Field
-                  </Button>
-                  <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
-                    {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
-                  </Button>
-                </Grid>
-
-                {fieldsVisible && renderDynamicFields()}
               </Grid>
             </Box>
           )}
@@ -392,7 +448,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
             Cancel
           </Button>
           {step === 0 ? (
-            <Button variant="contained" disabled={!fieldsVisible} onClick={() => setStep(1)}>
+            <Button variant="contained" disabled={!formValues?.systemName} onClick={() => setStep(1)}>
               Next
             </Button>
           ) : (

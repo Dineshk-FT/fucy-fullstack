@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,8 @@ import {
   Backdrop,
   Grid,
   InputLabel,
-  IconButton
+  IconButton,
+  Autocomplete // <-- Added Autocomplete
 } from '@mui/material';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
@@ -22,6 +23,10 @@ import { configuration } from '../../services/baseApiService';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { nanoid } from 'nanoid';
 import useStore from '../../store/Zustand/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { setModelId } from '../../store/slices/PageSectionSlice';
+import { closeAll } from '../../store/slices/CurrentIdSlice';
+import { useNavigate } from 'react-router';
 
 const basePrompts = {
   itemDefinitionPrompt: `Define the Item according to ISO/SAE 21434.
@@ -42,6 +47,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
 
 const systemInputPromptDefault = `You are an automotive cybersecurity architect. Based on the given system name, generate a JSON list of the most important system inputs required to perform a Threat Analysis and Risk Assessment (TARA) according to ISO/SAE 21434. Provide 5–6 key inputs with short, realistic example values that reflect the technical elements, operational context, and dependencies of the system and its ecosystem.`;
 
+// Updated selector to get ECU list state
 const selector = (state) => ({
   getSystemInputs: state.getSystemInputs,
   systemInputs: state.systemInputs,
@@ -49,7 +55,9 @@ const selector = (state) => ({
   damageScenarios: state.damageScenarios,
   threatScenarios: state.threatScenarios,
   attackScenarios: state.attackScenarios,
-  cybersecurity: state.cybersecurity
+  cybersecurity: state.cybersecurity,
+  getECUList: state.getECUList,
+  ecu_list: state.ecu_list
 });
 
 const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
@@ -57,15 +65,30 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const [promptValue, setPromptValue] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState(null);
-
+  const { userDetails } = useSelector((state) => state?.userDetails);
   // for item definition extra step
   const [fieldsVisible, setFieldsVisible] = useState(false);
   const [manualFields, setManualFields] = useState([]);
   const [formValues, setFormValues] = useState({ systemName: '' });
   const [systemInputPrompt, setSystemInputPrompt] = useState(systemInputPromptDefault);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity, getECUList, ecu_list } =
+    useStore(selector);
 
-  const { systemInputs, getSystemInputs, assets, damageScenarios, threatScenarios, attackScenarios, cybersecurity } = useStore(selector);
+  // Fetch ECU List when modal opens
+  useEffect(() => {
+    if (open) {
+      getECUList();
+    }
+  }, [open, getECUList]);
+
+  // Extract ECU names for the Autocomplete
+  const ecuOptions = useMemo(() => {
+    if (!ecu_list || !Array.isArray(ecu_list)) return [];
+    return ecu_list.map((ecu) => ecu.name || ecu.id);
+  }, [ecu_list]);
 
   // default prompt setup
   useEffect(() => {
@@ -87,12 +110,14 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   }, [scenarioType]);
 
   // field management (like GenerateModel)
-  const handleAddManualField = () => {
+  const handleAddManualField = (e) => {
+    e.stopPropagation();
     setFieldsVisible(true);
     setManualFields((prev) => [...prev, { id: nanoid(), label: '', value: '' }]);
   };
 
-  const handleManualChange = (id, field, value) => {
+  const handleManualChange = (id, field, value, e) => {
+    e.stopPropagation();
     setManualFields((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: value } : f)));
   };
 
@@ -112,10 +137,12 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   };
 
   const handleChange = (field) => (event) => {
+    event.stopPropagation();
     setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const handleSystemInputs = async () => {
+  const handleSystemInputs = async (e) => {
+    e.stopPropagation();
     setLoading(true);
     await getSystemInputs(formValues.systemName, systemInputPrompt);
     setLoading(false);
@@ -131,6 +158,8 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       setFormValues((prev) => ({ ...prev, ...inputMap }));
     }
   }, [systemInputs]);
+
+  // console.log('modelMeta', modelMeta);
 
   const renderDynamicFields = () => {
     const fetchedFields = systemInputs?.map(({ label }) => (
@@ -152,10 +181,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     const manualInputFields = manualFields.map(({ id, label, value }) => (
       <React.Fragment key={`manual-${id}`}>
         <Grid item xs={4}>
-          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value)} />
+          <TextField fullWidth placeholder="Label" value={label} onChange={(e) => handleManualChange(id, 'label', e.target.value, e)} />
         </Grid>
         <Grid item xs={7}>
-          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value)} />
+          <TextField fullWidth placeholder="Value" value={value} onChange={(e) => handleManualChange(id, 'value', e.target.value, e)} />
         </Grid>
         <Grid item xs={1}>
           <IconButton onClick={() => handleRemoveField(id, true)} color="error">
@@ -172,11 +201,15 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
   const scenarioConfig = {
     item: {
       label: 'Item Definition Prompt',
-      api: `${configuration.apiBaseUrl}v1/generate/item-definition`,
+      api: `${configuration.apiBaseUrl}v1/generate/model`,
+      headers: {
+        'user-id': sessionStorage.getItem('user-id') // or however you access the user ID
+      },
       payload: () => ({
         modelId: modelMeta?.modelId,
         itemDefinitionPrompt: promptValue,
         systemName: formValues.systemName,
+        createdBy: userDetails?.username, // or get the actual username from your auth system
         ...manualFields.reduce((acc, { label, value }) => {
           if (label.trim()) acc[label] = value;
           return acc;
@@ -186,7 +219,13 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
           return acc;
         }, {})
       }),
-      successMsg: '✅ Item definition generated successfully'
+      successMsg: '✅ Item definition generated successfully',
+      refresh: async (res) => {
+        // console.log('refresh', res);
+        navigate(`/Models/${res?.model_id}`);
+        dispatch(setModelId(res?.model_id));
+        dispatch(closeAll());
+      }
     },
     damage: {
       label: 'Damage Scenario Prompt',
@@ -233,7 +272,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
     const config = scenarioConfig[scenarioType];
     if (!config) return;
 
-    // 🔹 Dependency Validation
+    // 🔹 Dependency Validation (Remains consistent with your current logic)
     switch (scenarioType) {
       case 'damage':
         if (!assets?.Details?.length) {
@@ -241,68 +280,119 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
           return;
         }
         break;
-
       case 'threat':
         if (!damageScenarios.subs[0]?.Details?.length) {
           toast.error('Please generate Damage Scenarios first before creating Threat Scenarios.');
           return;
         }
         break;
-
       case 'attack':
         if (!threatScenarios?.subs[0]?.Details?.length) {
           toast.error('Please generate Threat Scenarios first before creating Attack Scenarios.');
           return;
         }
         break;
-
       case 'cybersecurity':
         if (!attackScenarios?.subs[0]?.scenes?.length) {
           toast.error('Please generate Attack Scenarios first before creating Cybersecurity Artifacts.');
           return;
         }
         break;
-
       default:
         break;
     }
 
     try {
       setGenerating(true);
-      const res = await ADD_CALL(config.payload(), config.api);
-      setResult(res?.message);
+
+      const response = await fetch(config.api, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...config.headers
+        },
+        body: JSON.stringify(config.payload())
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      if (res.error || res.message?.toLowerCase().includes('error')) {
+        throw new Error(res.error || res.message);
+      }
+
+      // 🆕 NEW: Asset Update Logic for Item Definition
+      if (scenarioType === 'item' && res.template && res.asset_id) {
+        try {
+          const formData = new FormData();
+          formData.append('model-id', res.model_id);
+          formData.append('template', JSON.stringify(res.template));
+          formData.append('assetId', res.asset_id);
+
+          const saveResponse = await fetch(`${configuration.apiBaseUrl}v1/update/assets`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              // Note: Do NOT set Content-Type header when sending FormData.
+              // The browser handles boundaries automatically.
+              'user-id': userDetails?.username || 'system'
+            }
+          });
+
+          const saveResult = await saveResponse.json();
+          if (!saveResponse.ok || saveResult.error) {
+            console.warn('Auto-save failed but model was created', saveResult.error);
+          } else {
+            toast.success('✅ Template saved with details');
+          }
+        } catch (saveError) {
+          console.error('Auto-save network error:', saveError);
+          toast.error('Template auto-save failed');
+        }
+      }
+
+      setResult(res?.message || res?.data || 'Generation completed successfully');
       toast.success(config.successMsg);
 
-      // ✅ After successful generation, update store data
-      if (modelMeta?.modelId) {
+      // ✅ Update store and handle navigation
+      if (res?.model_id || modelMeta?.modelId) {
+        const currentModelId = res?.model_id || modelMeta?.modelId;
         switch (scenarioType) {
           case 'item':
-            await useStore.getState().getAssets(modelMeta.modelId);
+            await useStore.getState().getAssets(currentModelId);
+            await scenarioConfig?.item?.refresh(res);
             break;
           case 'damage':
-            await useStore.getState().getDamageScenarios(modelMeta.modelId);
+            await useStore.getState().getDamageScenarios(currentModelId);
             break;
           case 'threat':
-            await useStore.getState().getThreatScenario(modelMeta.modelId);
+            await useStore.getState().getThreatScenario(currentModelId);
             break;
           case 'attack':
-            await useStore.getState().getAttackScenario(modelMeta.modelId);
+            await useStore.getState().getAttackScenario(currentModelId);
             break;
           case 'cybersecurity':
-            await useStore.getState().getCyberSecurityScenario(modelMeta.modelId);
+            await useStore.getState().getCyberSecurityScenario(currentModelId);
             break;
           default:
             break;
         }
       }
     } catch (err) {
+      console.error('Generation error:', err);
       toast.error(err.message || 'Generation failed');
+      setResult(`Error: ${err.message}`);
     } finally {
       setGenerating(false);
     }
   };
 
-  const onClose = () => {
+  const onClose = (e) => {
+    e.stopPropagation();
     setPromptValue('');
     setResult(null);
     setStep(0);
@@ -335,10 +425,20 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                     <InputLabel>System Name</InputLabel>
                   </Grid>
                   <Grid item xs={8}>
-                    <TextField
-                      fullWidth
+                    {/* Replaced standard TextField with Autocomplete */}
+                    <Autocomplete
+                      freeSolo
+                      options={ecuOptions}
                       value={formValues.systemName}
-                      onChange={(e) => setFormValues({ ...formValues, systemName: e.target.value })}
+                      onChange={(event, newValue) => {
+                        if (event) event.stopPropagation();
+                        setFormValues((prev) => ({ ...prev, systemName: newValue || '' }));
+                      }}
+                      onInputChange={(event, newInputValue) => {
+                        if (event) event.stopPropagation();
+                        setFormValues((prev) => ({ ...prev, systemName: newInputValue || '' }));
+                      }}
+                      renderInput={(params) => <TextField {...params} fullWidth variant="outlined" />}
                     />
                   </Grid>
 
@@ -349,17 +449,11 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                       minRows={2}
                       label="System Input Prompt"
                       value={systemInputPrompt}
-                      onChange={(e) => setSystemInputPrompt(e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSystemInputPrompt(e.target.value);
+                      }}
                     />
-                  </Grid>
-
-                  <Grid item xs={12} display="flex" justifyContent="space-between">
-                    <Button variant="outlined" onClick={handleAddManualField}>
-                      Add Field
-                    </Button>
-                    <Button variant="contained" onClick={handleSystemInputs} disabled={!formValues.systemName.trim()}>
-                      {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Get Fields'}
-                    </Button>
                   </Grid>
 
                   {fieldsVisible && renderDynamicFields()}
@@ -372,7 +466,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                 minRows={4}
                 label={label}
                 value={promptValue}
-                onChange={(e) => setPromptValue(e.target.value)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setPromptValue(e.target.value);
+                }}
               />
             )
           ) : (
@@ -383,7 +480,10 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
                 minRows={4}
                 label={label}
                 value={promptValue}
-                onChange={(e) => setPromptValue(e.target.value)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setPromptValue(e.target.value);
+                }}
               />
               {result && (
                 <Box

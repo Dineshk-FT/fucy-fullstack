@@ -53,35 +53,35 @@ export default function Event(props) {
     setAttackNodes((nodes) => nodes.filter((node) => node.id !== props.id));
   };
   // console.log('nodes', nodes);
-  // const updateNodeRating = useCallback(() => {
-  //   setAttackNodes((nodes) =>
-  //     nodes.map((node) => {
-  //       const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
-  //       if (attack) {
-  //         // If the node is an attack, set its rating
-  //         return {
-  //           ...node,
-  //           data: {
-  //             ...node.data,
-  //             rating: attack['Attack Feasibilities Rating']
-  //           }
-  //         };
-  //       } else {
-  //         // If not an attack, remove the rating
-  //         const { rating, ...restData } = node.data || {};
-  //         return {
-  //           ...node,
-  //           data: restData
-  //         };
-  //       }
-  //     })
-  //   );
-  // }, [attacks, setAttackNodes]);
+  const updateNodeRating = useCallback(() => {
+    setAttackNodes((nodes) =>
+      nodes.map((node) => {
+        const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
+        if (attack) {
+          // If the node is an attack, set its rating
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              rating: attack['Attack Feasibilities Rating']
+            }
+          };
+        } else {
+          // If not an attack, remove the rating
+          const { rating, ...restData } = node.data || {};
+          return {
+            ...node,
+            data: restData
+          };
+        }
+      })
+    );
+  }, [attacks, setAttackNodes]);
 
-  // // Call this function after rendering or whenever attacks data changes
-  // useEffect(() => {
-  //   updateNodeRating();
-  // }, [updateNodeRating, edges]); // Added edges dependency
+  // Call this function after rendering or whenever attacks data changes
+  useEffect(() => {
+    updateNodeRating();
+  }, [updateNodeRating, edges]); // Added edges dependency
 
   const handleCloseDialog = () => {
     setOpenDialog(false);

@@ -201,8 +201,8 @@ export default function MainCanvas() {
     (state) => state?.canvas
   );
   const { getViewport } = useReactFlow();
-  const anchorElNodeId = document.querySelector(`[data-id="${anchorEl?.node}"]`) || null;
-  const anchorElEdgeId = document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null;
+  const anchorElNodeId = useMemo(() => document.querySelector(`[data-id="${anchorEl?.node}"]`) || null, [anchorEl?.node]);
+  const anchorElEdgeId = useMemo(() => document.querySelector(`[data-testid="${anchorEl?.edge}"]`) || null, [anchorEl?.edge]);
   const [copiedNode, setCopiedNode] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
@@ -210,6 +210,10 @@ export default function MainCanvas() {
   const latestNodesRef = useRef(nodes);
   const anchorRef = useRef(null);
   const [runTour, setRunTour] = useState(false);
+  // Ref to always hold the latest reactFlowInstance — prevents stale closures
+  const reactFlowInstanceRef = useRef(reactFlowInstance);
+  // Ref to hold the pending restore template so beforeunload can't race it
+  const pendingRestoreRef = useRef(null);
 
   const notify = (message, status) => toast[status](message);
 
@@ -218,16 +222,21 @@ export default function MainCanvas() {
     setEdges([]);
   };
 
-  const debouncedFitView = debounce(() => {
-    reactFlowInstance.fitView({
-      padding: 0.2,
-      includeHiddenNodes: true,
-      minZoom: 0.2,
-      maxZoom: 2,
-      duration: 500
-    });
-    setZoomLevel(reactFlowInstance.getZoom());
-  });
+  const debouncedFitViewRef = useRef(
+    debounce(() => {
+      const rf = reactFlowInstanceRef.current;
+      if (!rf) return;
+      rf.fitView({
+        padding: 0.2,
+        includeHiddenNodes: true,
+        minZoom: 0.2,
+        maxZoom: 2,
+        duration: 500
+      });
+      setZoomLevel(rf.getZoom());
+    }, 150)
+  );
+  const debouncedFitView = debouncedFitViewRef.current;
   // console.log('nodes', nodes);
 
   const handleSaveToModel = async (e) => {
@@ -326,26 +335,50 @@ export default function MainCanvas() {
 
   useEffect(() => {
     return () => {
-      // Flush any pending changes when component unmounts
-      flushPendingChanges();
+      // On unmount: cancel any pending restore and do NOT flush pending changes —
+      // flushing here would overwrite the store with the outgoing model's stale nodes/edges,
+      // which would then corrupt the restore when the new model's assets arrive.
+      pendingRestoreRef.current = null;
     };
-  }, [flushPendingChanges]);
+  }, []);
   // console.log('nodes', nodes);
 
   // Auto-fit canvas view on mount and when nodes/edges change
+  // When ReactFlow re-initialises (e.g. after a model switch causes a remount),
+  // re-apply any pending restore so beforeunload can't corrupt the new canvas.
   const onInit = (rf) => {
     setReactFlowInstance(rf);
+    reactFlowInstanceRef.current = rf;
+
+    if (pendingRestoreRef.current !== null) {
+      console.log('Re-applying pending restore on onInit');
+      const template = pendingRestoreRef.current;
+      if (template && template.nodes && template.edges) {
+        safeRestore(template);
+        clearUndoRedo();
+        resetChangedState();
+      } else {
+        handleClear();
+        clearUndoRedo();
+        resetChangedState();
+      }
+      setTimeout(() => {
+        if (reactFlowInstanceRef.current) {
+          debouncedFitView();
+        }
+      }, 100);
+    }
   };
 
-  const checkForNodes = () => {
+  const checkForNodes = useCallback(() => {
     const [intersectingNodesMap, nodes] = getGroupedNodes();
-    let values = Object.values(intersectingNodesMap).flat();
-    let updated = nodes.map((item1) => {
+    const values = Object.values(intersectingNodesMap).flat();
+    const updated = nodes.map((item1) => {
       const match = values.find((item2) => item2.id === item1.id);
       return match ? match : item1;
     });
     setNodes(updated);
-  };
+  }, [getGroupedNodes, setNodes]);
 
   const onNodeDragStart = useCallback(
     (_, node) => {
@@ -354,7 +387,7 @@ export default function MainCanvas() {
       dragRef.current = node;
       latestNodesRef.current = [...nodes]; // Ensures ref is always synced before drag starts
     },
-    [nodes]
+    [nodes, checkForNodes]
   );
 
   const onNodeDrag = useCallback((event, node) => {
@@ -390,19 +423,22 @@ export default function MainCanvas() {
     // Apply all changes
     setNodes((prevNodes) => prevNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n)));
 
-    // Update refs for all moved nodes to prevent delta drift on next frame
-    // nodesRef.current = currentNodes.map((n) => (updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n));
+    // Update ref for all moved nodes to prevent delta drift on the next frame
+    latestNodesRef.current = latestNodesRef.current.map((n) =>
+      updatedPositions.has(n.id) ? { ...n, position: updatedPositions.get(n.id) } : n
+    );
   }, []);
 
   const onNodeDragStop = useCallback(() => {
     latestNodesRef.current = [...nodes];
     checkForNodes(); // ✅ re-evaluate group-child relationships
-  }, [nodes]);
+  }, [nodes, checkForNodes]);
 
   const imageWidth = 1920;
   const imageHeight = 1080;
 
-  const handleDownload = () => {
+  const handleDownload = (e) => {
+    e.stopPropagation();
     const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 1920);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
@@ -465,7 +501,6 @@ export default function MainCanvas() {
 
   const onRestore = useCallback(
     (temp) => {
-      // Check if we have a valid template with nodes and edges
       if (temp && temp.nodes && temp.edges) {
         // Use safeRestore which doesn't trigger undo stack
         safeRestore(temp);
@@ -473,7 +508,7 @@ export default function MainCanvas() {
         resetChangedState();
 
         setTimeout(() => {
-          if (reactFlowInstance) {
+          if (reactFlowInstanceRef.current) {
             debouncedFitView();
           }
         }, 50);
@@ -485,13 +520,14 @@ export default function MainCanvas() {
         resetChangedState();
 
         setTimeout(() => {
-          if (reactFlowInstance) {
+          if (reactFlowInstanceRef.current) {
             debouncedFitView();
           }
         }, 50);
       }
     },
-    [reactFlowInstance, debouncedFitView, clearUndoRedo, resetChangedState, safeRestore]
+    // No reactFlowInstance dependency — we use the ref instead
+    [clearUndoRedo, resetChangedState, safeRestore]
   );
 
   // Update the assets useEffect to be less aggressive
@@ -500,20 +536,23 @@ export default function MainCanvas() {
     setSavedTemplate(template);
     onSaveInitial(template);
 
-    // Always restore when assets change, regardless of isChanged state
-    // This ensures we show the correct template when switching models
+    // Record the desired state in the ref FIRST.
+    // If beforeunload fires after this point and flushPendingChanges writes stale
+    // nodes back into the Zustand store, onInit will re-apply from this ref.
+    pendingRestoreRef.current = template ?? null;
+
     if (template) {
       console.log('Restoring from template (assets changed)');
       onRestore(template);
     } else {
-      // If no template exists, clear the canvas
       console.log('No template found - clearing canvas');
       onRestore(null);
     }
   }, [assets]); // Remove isChanged dependency to ensure proper model switching
 
-  const onLoad = (reactFlowInstance) => {
-    setReactFlowInstance(reactFlowInstance);
+  const onLoad = (rf) => {
+    setReactFlowInstance(rf);
+    reactFlowInstanceRef.current = rf;
     fitView(nodes);
   };
 
@@ -527,6 +566,7 @@ export default function MainCanvas() {
         setDetails({
           ...details,
           name: node?.data?.label ?? '',
+          descripion: node?.data?.description ?? '',
           properties: node?.properties ?? [],
           isAsset: node.isAsset ?? false
         })
@@ -570,6 +610,7 @@ export default function MainCanvas() {
       setEdgeDetails({
         ...details,
         name: edge?.data?.label ?? '',
+        descripion: edge?.data?.description ?? '',
         properties: edge?.properties ?? [],
         isAsset: edge.isAsset ?? false,
         style: edge.data.style ?? {},
@@ -597,6 +638,7 @@ export default function MainCanvas() {
       setEdgeDetails({
         ...details,
         name: edge?.data?.label ?? '',
+        descripion: edge?.data?.description ?? '',
         properties: edge?.properties ?? [],
         isAsset: edge.isAsset ?? false,
         style: edge.data.style ?? {},
@@ -945,7 +987,12 @@ export default function MainCanvas() {
             defaultZoom={1}
             defaultZoomPosition={{ x: 0, y: 0 }}
           >
-            <Panel id="control-panel" position="top-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel
+              id="control-panel"
+              position="top-left"
+              style={{ display: 'flex', gap: 4, padding: '4px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <span ref={anchorRef}>
                 <CanvasToolbar
                   isDark={isDark}
@@ -966,12 +1013,17 @@ export default function MainCanvas() {
                 />
               </span>
             </Panel>
-            <Panel position="top-right">
+            <Panel position="top-right" onClick={(e) => e.stopPropagation()}>
               <IconButton onClick={() => setRunTour(true)} sx={{ color: '#1976d2', ml: 1 }} size="small">
                 <HelpOutlineIcon fontSize="small" />
               </IconButton>
             </Panel>
-            <Panel id="controls" position="bottom-left" style={{ display: 'flex', gap: 4, padding: '4px' }}>
+            <Panel
+              id="controls"
+              position="bottom-left"
+              style={{ display: 'flex', gap: 4, padding: '4px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <ZoomControls isDark={isDark} reactFlowInstance={reactFlowInstance} zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
             </Panel>
             <MiniMap

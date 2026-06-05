@@ -32,7 +32,8 @@ import {
   ExpandLess as ExpandLessIcon,
   Help as HelpIcon,
   Dashboard as DashboardIcon,
-  DirectionsCar as DirectionsCarIcon
+  DirectionsCar as DirectionsCarIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import TemplateList from '../../../../pages/Libraries';
@@ -60,6 +61,7 @@ import GenerateModel from '../../../../components/Modal/GenerateModel';
 import DashboardDialog from '../../../../components/Dashboard';
 import ScenarioAIModal from '../../../../components/Modal/ScenarioAIModal';
 import ConfirmDeleteDialog from '../../../../components/Modal/ConfirmDeleteDialog';
+import CreateFullModelDialog from '../../../../components/Modal/CreateFullModelDialog';
 
 const notify = (message, status) => toast[status](message);
 
@@ -84,7 +86,19 @@ const selector = (state) => ({
   assets: state.assets,
   clearModel: state.clearModel,
   autoGenerateRiskTreatement: state.autoGenerateRiskTreatement,
-  getRiskTreatment: state.getRiskTreatment
+  getRiskTreatment: state.getRiskTreatment,
+  getDamageScenarios: state.getDamageScenarios,
+  getThreatScenarios: state.getThreatScenario,
+  getAttackScenarios: state.getAttackScenario,
+  getCybersecurity: state.getCyberSecurityScenario,
+  clearDamageScenario: state.clearDamageScenario,
+  clearThreatScenario: state.clearThreatScenario,
+  clearAttackScenario: state.clearAttackScenario,
+  clearCybersecurity: state.clearCybersecurity,
+  clearRiskTreatment: state.clearRiskTreatment,
+  setTableLoader: state.setTableLoader,
+  convertToLibrary: state.convertToLibrary,
+  generateItemDamage: state.generateItemDamage
 });
 
 const LeftSection = () => {
@@ -113,7 +127,18 @@ const LeftSection = () => {
     convertToLibrary,
     clearModel,
     autoGenerateRiskTreatement,
-    getRiskTreatment
+    getRiskTreatment,
+    getDamageScenarios,
+    getThreatScenarios,
+    getAttackScenarios,
+    getCybersecurity,
+    clearRiskTreatment,
+    clearThreatScenario,
+    clearAttackScenario,
+    clearDamageScenario,
+    clearCybersecurity,
+    setTableLoader,
+    generateItemDamage
   } = useStore(selector, shallow);
 
   const categories = [
@@ -136,8 +161,14 @@ const LeftSection = () => {
     Delete: false,
     Library: false,
     AttackModal: false,
-    Clear: false,
-    AIModal: false
+    AIModal: false,
+    CreateFullModel: false
+  });
+
+  const [clearConfig, setClearConfig] = useState({
+    open: false,
+    name: '',
+    onConfirm: null
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -157,16 +188,168 @@ const LeftSection = () => {
   const [scenarioType, setScenarioType] = useState(null);
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
 
+  const handleAttackTableClick = useCallback(() => {
+    dispatch(setPreviousTab('Attack'));
+    if (model?._id) {
+      setClickedItem('4');
+      dispatch(setTitle('Attack'));
+      dispatch(setTableOpen('Attack'));
+    }
+  }, [dispatch, model?._id, setClickedItem]);
+  // Define clearable items configuration
+  const clearableItems = useMemo(
+    () => ({
+      model: {
+        name: () => `"${model?.name || 'the current model'}"`,
+        handler: () => clearModel(model?._id),
+        refresh: () => getModelById(model?._id),
+        successMessage: (res) => res?.message ?? 'Model cleared successfully'
+      },
+      'damage-scenarios': {
+        name: 'all damage scenarios',
+        handler: () => clearDamageScenario(model?._id),
+        refresh: () => getDamageScenarios(model?._id),
+        successMessage: (res) => res?.message ?? 'Damage scenarios cleared successfully'
+      },
+      'threat-scenarios': {
+        name: 'all threat scenarios',
+        handler: () => clearThreatScenario(model?._id),
+        refresh: () => {
+          return Promise.all([getThreatScenarios(model?._id), getDamageScenarios(model?._id)]);
+        },
+        successMessage: (res) => res?.message ?? 'Threat scenarios cleared successfully'
+      },
+      'attack-scenarios': {
+        name: 'all attack scenarios',
+        handler: () => clearAttackScenario(model?._id),
+        refresh: () => getAttackScenarios(model?._id),
+        successMessage: (res) => res?.message ?? 'Attack scenarios cleared successfully',
+        onSuccess: () => {
+          // Only trigger navigation if the user is currently in the Attack Path section
+          if (activeTab === 'Attack Path') {
+            handleAttackTableClick();
+          }
+        }
+      },
+      cybersecurity: {
+        name: 'all cybersecurity data',
+        handler: () => clearCybersecurity(model?._id),
+        refresh: () => getCybersecurity(model?._id),
+        successMessage: (res) => res?.message ?? 'Cybersecurity data cleared successfully'
+      },
+      'risk-treatment': {
+        name: 'all risk treatment data',
+        handler: () => clearRiskTreatment(model?._id),
+        refresh: () => getRiskTreatment({ modelId: model?._id }),
+        successMessage: (res) => res?.message ?? 'Risk treatment data cleared successfully'
+      }
+    }),
+    [
+      model,
+      clearModel,
+      getModelById,
+      clearDamageScenario,
+      getDamageScenarios,
+      clearThreatScenario,
+      getThreatScenarios,
+      clearAttackScenario,
+      getAttackScenarios,
+      clearCybersecurity,
+      getCybersecurity,
+      clearRiskTreatment,
+      getRiskTreatment,
+      handleAttackTableClick,
+      activeTab
+    ]
+  );
+
+  // Generic clear handler factory
+  // Update createClearHandler function:
+  const createClearHandler = useCallback(
+    (itemKey) => {
+      const item = clearableItems[itemKey];
+      if (!item) return null;
+
+      return async () => {
+        try {
+          const res = await item.handler();
+          if (!res?.error) {
+            notify(item.successMessage(res), 'success');
+            if (item.refresh) {
+              await item.refresh();
+              // Force a small delay to ensure state updates propagate
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            // Invoke success callback routing
+            if (item.onSuccess) {
+              item.onSuccess();
+            }
+
+            // Refresh all tables that might be affected
+            await getModels();
+          } else {
+            notify(res?.error ?? `Failed to clear ${item.name}`, 'error');
+          }
+        } catch (err) {
+          console.error(`Error clearing ${itemKey}:`, err);
+          notify('Something went wrong', 'error');
+        }
+      };
+    },
+    [clearableItems, getModels]
+  );
+  // Unified function to open clear dialog
+  const openClearDialog = useCallback(
+    (itemKey, event) => {
+      if (event?.stopPropagation) event?.stopPropagation?.();
+      const item = clearableItems[itemKey];
+      if (!item) return;
+
+      const itemName = typeof item.name === 'function' ? item.name() : item.name;
+      const handler = createClearHandler(itemKey);
+
+      setClearConfig({
+        open: true,
+        name: itemName,
+        onConfirm: () => {
+          handler();
+          setClearConfig((prev) => ({ ...prev, open: false }));
+        }
+      });
+    },
+    [clearableItems, createClearHandler]
+  );
+
+  const closeClearDialog = useCallback(() => {
+    setClearConfig((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  const handleOpenCreateFullModel = useCallback((e) => {
+    if (e?.stopPropagation) e?.stopPropagation?.();
+    setOpenModal((prev) => ({ ...prev, CreateFullModel: true }));
+  }, []);
+
+  const handleCloseCreateFullModel = useCallback((e) => {
+    if (e?.stopPropagation) e?.stopPropagation?.();
+    setOpenModal((prev) => ({ ...prev, CreateFullModel: false }));
+  }, []);
+
   const handleOpenScenarioAI = (type, e) => {
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     setScenarioType(type);
     setOpenScenarioModal(true);
   };
 
   const handleCloseScenarioAI = (e) => {
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     setOpenScenarioModal(false);
     setScenarioType(null);
+  };
+
+  const handleModalInteraction = (e) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
   };
 
   const handleMouseEnter = useCallback((tabName) => {
@@ -176,24 +359,22 @@ const LeftSection = () => {
 
   const handleMouseLeave = useCallback(
     (e) => {
-      e.stopPropagation();
-      // Only hide the hovered tab if no modal is open
+      e?.stopPropagation?.();
       if (!openModal.Open && !openModal.Delete && !openModal.Library) {
-        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 2000);
+        hoverTimeoutRef.current = setTimeout(() => setHoveredTab(null), 200);
       }
     },
     [openModal.Open, openModal.Delete, openModal.Library]
   );
 
   const handleTabWrapperMouseEnter = useCallback((e, tabName) => {
-    console.log('enter');
-    e.stopPropagation();
+    e?.stopPropagation?.();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
 
   const handleDropdownMouseEnter = useCallback((e, tabName) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     clearTimeout(hoverTimeoutRef.current);
     setHoveredTab(tabName);
   }, []);
@@ -210,7 +391,7 @@ const LeftSection = () => {
 
   const handleAddNewNode = useCallback(
     (e, name) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       name == 'node' ? dispatch(openAddNodeTab()) : dispatch(openAddDataNodeTab());
     },
     [dispatch]
@@ -224,12 +405,12 @@ const LeftSection = () => {
   };
 
   const handleExportClose = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     setExportAnchorEl(null);
   };
 
   const handleExportJSON = () => {
-    exportProject({ modelId: model?._id })
+    exportProject({ modelId: model?._id, format: 'json' })
       .then((res) => {
         if (!res.error) {
           notify(res?.message ?? 'Exported Successfully', 'success');
@@ -244,7 +425,19 @@ const LeftSection = () => {
     handleExportClose();
   };
 
-  const handleExportPDF = () => {
+  const handleExportBSON = () => {
+    exportProject({ modelId: model?._id, format: 'bson' })
+      .then((res) => {
+        if (!res.error) {
+          notify(res?.message ?? 'Exported Successfully', 'success');
+          if (res.download_url) {
+            window.open(res.download_url, '_blank');
+          }
+        } else {
+          notify(res?.error ?? 'something went wrong', 'error');
+        }
+      })
+      .catch((err) => notify(err?.message ?? 'something went wrong', 'error'));
     handleExportClose();
   };
 
@@ -252,13 +445,11 @@ const LeftSection = () => {
     const fileInput = document.createElement('input');
     const userId = sessionStorage.getItem('user-id');
     fileInput.type = 'file';
-    fileInput.accept = '.bson';
+    fileInput.accept = '.bson,.json';
 
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        console.log('File selected:', file.name);
-
         try {
           const response = await importProject({ userId: userId, file: file });
 
@@ -288,7 +479,7 @@ const LeftSection = () => {
 
   const handleTabChange = useCallback(
     (e, tabName) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -310,25 +501,12 @@ const LeftSection = () => {
 
   const handleToggleCollapse = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       setCollapsed((prev) => !prev);
     },
     [setCollapsed]
   );
-  const handleClear = () => {
-    clearModel(model._id)
-      .then((res) => {
-        // console.log('res', res);
-        if (!res.error) {
-          notify(res.message ?? 'Cleared successfully', 'success');
-          getModelById(model._id);
-        }
-      })
-      .catch((err) => {
-        console.log('err', err);
-        if (err) notify('Something went wrong', 'error');
-      });
-  };
+
   const handleContext = useCallback((name, event) => {
     event.stopPropagation();
     if (name === 'Attack' || name === 'Attack Trees') {
@@ -345,7 +523,7 @@ const LeftSection = () => {
 
   const handleClick = useCallback(
     (e, name, number) => {
-      e.stopPropagation();
+      e?.stopPropagation?.();
       if (isChanged || isAttackChanged) {
         setOpenSave(true);
         return;
@@ -376,15 +554,6 @@ const LeftSection = () => {
     [model?._id, getAttackScenario]
   );
 
-  const handleAttackTableClick = useCallback(() => {
-    dispatch(setPreviousTab('Attack'));
-    if (model?._id) {
-      setClickedItem('4');
-      dispatch(setTitle('Attack'));
-      dispatch(setTableOpen('Attack'));
-    }
-  }, [dispatch, model?._id, setClickedItem]);
-
   const handleGroupDrag = useCallback((event) => {
     const parseFile = JSON.stringify('');
     event.dataTransfer.setData('application/group', parseFile);
@@ -392,8 +561,7 @@ const LeftSection = () => {
   }, []);
 
   const handleOpenModal = (modalKey, e) => {
-    // console.log('modalKey', modalKey);
-    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopPropagation) e?.stopPropagation?.();
     if (isChanged) {
       setOpenSave(true);
       handleMouseLeave(e);
@@ -404,11 +572,11 @@ const LeftSection = () => {
   };
 
   const handleLibraryAdded = useCallback(() => {
-    // Refresh the library list when a new library is added
-    getModels(); // Assuming this refreshes the library list
+    getModels();
   }, [getModels]);
 
   const handleCategoryChange = useCallback((event) => {
+    event.stopPropagation();
     setSelectedCategory(event.target.value);
   }, []);
 
@@ -416,7 +584,8 @@ const LeftSection = () => {
     setCategoryDialogOpen(true);
   }, []);
 
-  const handleCategoryDialogClose = useCallback(() => {
+  const handleCategoryDialogClose = useCallback((e) => {
+    e?.stopPropagation?.();
     setCategoryDialogOpen(false);
   }, []);
 
@@ -428,21 +597,23 @@ const LeftSection = () => {
     [handleCategoryDialogOpen]
   );
 
-  const handleGenerateRisk = (e) => {
-    e.stopPropagation();
-    autoGenerateRiskTreatement({ modelId: model._id })
-      .then((res) => {
-        // console.log('res', res);
-        if (res.status === 200) {
-          notify(res.message ?? 'Risk Treatement generated successfully', 'success');
-          getRiskTreatment({ modelId: model._id });
-        } else {
-          notify('Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
-      });
+  const handleGenerateRisk = async (e) => {
+    e?.stopPropagation?.();
+    setTableLoader(true);
+    try {
+      const res = await autoGenerateRiskTreatement({ modelId: model._id });
+      if (res.status === 200) {
+        notify(res.message ?? 'Risk Treatment generated successfully', 'success');
+        await getRiskTreatment(model?._id);
+      } else {
+        notify('Something went wrong', 'error');
+      }
+    } catch (err) {
+      console.error('Error generating risk treatment:', err);
+      notify(err?.message || 'Something went wrong', 'error');
+    } finally {
+      setTableLoader(false);
+    }
   };
 
   const confirmConvertToLibrary = useCallback(async () => {
@@ -453,7 +624,6 @@ const LeftSection = () => {
     }
 
     try {
-      // Update the model with the selected category before converting to library
       const updatedModel = { ...model, category: selectedCategory };
       useStore.setState({ model: updatedModel });
 
@@ -489,12 +659,17 @@ const LeftSection = () => {
         name: 'Project',
         options: [
           { label: 'New', icon: NewFolderIcon, action: (e) => handleOpenModal('New', e) },
-          { label: 'Rename', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
+          { label: 'Edit Info', icon: RenameIcon, action: (e) => handleOpenModal('Rename', e) },
           { label: 'Open', icon: FolderOpenIcon, action: (e) => handleOpenModal('Open', e) },
-          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => handleOpenModal('Clear', e) },
+          { label: 'Clear Model', icon: BackspaceIcon, action: (e) => openClearDialog('model', e) },
           { label: 'Delete', icon: DeleteIcon, action: (e) => handleOpenModal('Delete', e) },
           { label: 'Export', icon: Export, action: handleExportClick },
           { label: 'Import', icon: Import, action: handleImportClick },
+          // {
+          //   label: 'Create Full Model',
+          //   icon: AutoAwesomeIcon,
+          //   action: (e) => handleOpenCreateFullModel(e)
+          // },
           {
             label: 'Vehicle TARA',
             icon: DirectionsCarIcon,
@@ -579,7 +754,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Damage Scenarios - Impact Ratings')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('damage', e) },
+          { label: 'Clear Damage Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('damage-scenarios', e) }
         ]
       },
       {
@@ -613,7 +789,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Derived Threat Scenarios')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('threat', e) },
+          { label: 'Clear Threat Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('threat-scenarios', e) }
         ]
       },
       {
@@ -637,7 +814,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleContext('AI Assistant', e)
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('attack', e) },
+          { label: 'Clear Attack Scenarios', icon: DeleteIcon, action: (e) => openClearDialog('attack-scenarios', e) }
         ]
       },
       {
@@ -699,7 +877,8 @@ const LeftSection = () => {
             ),
             action: (e) => handleClick(e, 'Cybersecurity Claims')
           },
-          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) }
+          { label: 'Create With AI', icon: AutoModeIcon, action: (e) => handleOpenScenarioAI('cybersecurity', e) },
+          { label: 'Clear Cybersecurity', icon: DeleteIcon, action: (e) => openClearDialog('cybersecurity', e) }
         ]
       },
       {
@@ -732,15 +911,26 @@ const LeftSection = () => {
               />
             ),
             action: (e) => handleGenerateRisk(e)
-          }
+          },
+          { label: 'Clear Risk Treatment', icon: DeleteIcon, action: (e) => openClearDialog('risk-treatment', e) }
         ]
       }
     ],
-    [handleAddNewNode, handleGroupDrag, handleClick, handleAttackTableClick, handleContext, handleAttackTreeClick, handleOpenScenarioAI]
+    [
+      handleAddNewNode,
+      handleGroupDrag,
+      handleClick,
+      handleAttackTableClick,
+      handleContext,
+      handleAttackTreeClick,
+      handleOpenScenarioAI,
+      openClearDialog,
+      handleOpenCreateFullModel
+    ]
   );
 
   const handleCloseModal = useCallback((e, modalKey) => {
-    if (e) e.stopPropagation();
+    if (e) e?.stopPropagation?.();
     setOpenModal((prev) => ({ ...prev, [modalKey]: false }));
   }, []);
 
@@ -863,11 +1053,16 @@ const LeftSection = () => {
 
   return (
     <Box
+      onClick={handleModalInteraction}
+      onMouseDown={handleModalInteraction}
+      onFocus={handleModalInteraction}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 1001,
+        pointerEvents: 'auto'
       }}
     >
       <Box
@@ -893,6 +1088,7 @@ const LeftSection = () => {
             }}
             onMouseEnter={(e) => handleTabWrapperMouseEnter(e, tab.name)}
             onMouseLeave={handleMouseLeave}
+            onClick={handleModalInteraction}
           >
             <Box
               onClick={(e) => handleTabChange(e, tab.name)}
@@ -999,12 +1195,14 @@ const LeftSection = () => {
         }}
       >
         <MenuItem onClick={handleExportJSON}>Export as JSON</MenuItem>
-        <MenuItem onClick={handleExportPDF}>Export as PDF</MenuItem>
+        <MenuItem onClick={handleExportBSON}>Export as BSON</MenuItem>
       </Menu>
 
       {/* Category Selection Dialog */}
-      <Dialog open={categoryDialogOpen} onClose={handleCategoryDialogClose}>
-        <DialogTitle>Select Category</DialogTitle>
+      <Dialog open={categoryDialogOpen} onClose={handleCategoryDialogClose} disablePortal>
+        <DialogTitle variant="h4" color="primary">
+          Select Category
+        </DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2, minWidth: 300 }}>
             <InputLabel id="category-select-label">Category</InputLabel>
@@ -1012,11 +1210,49 @@ const LeftSection = () => {
               labelId="category-select-label"
               value={selectedCategory}
               label="Category"
-              onChange={handleCategoryChange}
+              onChange={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleCategoryChange(e);
+              }}
+              onOpen={(e) => {
+                if (e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
+              onClose={(e) => {
+                if (e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
               sx={{ mt: 1 }}
+              MenuProps={{
+                disablePortal: true,
+                disableScrollLock: true,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  e.nativeEvent.stopImmediatePropagation();
+                },
+                onMouseDown: (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  e.nativeEvent.stopImmediatePropagation();
+                }
+              }}
             >
               {categories?.map((category) => (
-                <MenuItem key={category} value={category}>
+                <MenuItem
+                  key={category}
+                  value={category}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                >
                   {category}
                 </MenuItem>
               ))}
@@ -1024,14 +1260,37 @@ const LeftSection = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCategoryDialogClose}>Cancel</Button>
-          <Button onClick={confirmConvertToLibrary} variant="contained" color="primary">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleCategoryDialogClose();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              confirmConvertToLibrary();
+            }}
+            variant="contained"
+            color="primary"
+          >
             Convert to Library
           </Button>
         </DialogActions>
       </Dialog>
 
       <VehicleTARADialog open={taraDialogOpen} onClose={() => setTaraDialogOpen(false)} />
+
+      {/* Create Full Model Dialog */}
+      <CreateFullModelDialog
+        open={openModal.CreateFullModel}
+        handleClose={handleCloseCreateFullModel}
+        generateFullModel={generateItemDamage}
+      />
 
       {/* Project Modals */}
       <AddModel
@@ -1094,7 +1353,13 @@ const LeftSection = () => {
         style={{ position: 'fixed' }}
       />
       {openModal.AIModal && (
-        <PromptModal open={openModal?.AIModal} handleClose={() => setOpenModal((prev) => ({ ...prev, AIModal: false }))} />
+        <PromptModal
+          open={openModal?.AIModal}
+          handleClose={(e) => {
+            e?.stopPropagation?.();
+            setOpenModal((prev) => ({ ...prev, AIModal: false }));
+          }}
+        />
       )}
       {openTemplateDialog && <TemplateList openDialog={openTemplateDialog} setOpenDialog={setOpenTemplateDialog} />}
       {openComponentsDialog && <Components openDialog={openComponentsDialog} setOpenDialog={setOpenComponentsDialog} />}
@@ -1121,12 +1386,13 @@ const LeftSection = () => {
           controls: model?.controls || []
         }}
       />
-      {openModal?.Clear && (
+      {/* Single ConfirmDeleteDialog for all clear operations */}
+      {clearConfig?.open && (
         <ConfirmDeleteDialog
-          open={openModal?.Clear}
-          onClose={() => setOpenModal((prev) => ({ ...prev, Clear: false }))}
-          onConfirm={handleClear}
-          name={model?.name}
+          open={clearConfig.open}
+          onClose={closeClearDialog}
+          onConfirm={clearConfig.onConfirm}
+          name={clearConfig.name}
           mode="clear"
         />
       )}

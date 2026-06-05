@@ -83,6 +83,7 @@ const TreeItemsRenderer = ({
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })
@@ -330,6 +331,7 @@ const TreeItemsRenderer = ({
                         type === 'edge'
                           ? setEdgeDetails({
                               name: selected?.data?.label ?? '',
+                              description: selected?.data?.description || '',
                               properties: selected?.properties ?? [],
                               isAsset: selected?.isAsset ?? false,
                               style: selected?.style ?? {},
@@ -338,6 +340,7 @@ const TreeItemsRenderer = ({
                             })
                           : setDetails({
                               name: selected?.data?.label ?? '',
+                              description: selected?.data?.description || '',
                               properties: selected?.properties ?? [],
                               isAsset: selected?.isAsset ?? false
                             })

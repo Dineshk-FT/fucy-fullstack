@@ -6,7 +6,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch } from 'react-redux';
-import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
+// import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 import { makeStyles } from '@mui/styles';
 import { products, cybersecurityServices, consulting, academy, contact } from './dropdown-options-data';
 import {
@@ -192,7 +192,7 @@ export default function Header() {
     }
     // Handle specific cases without a direct path
     else if (name === 'TARA-Xpress') {
-      dispatch(changeCanvasPage('canvas'));
+      // dispatch(changeCanvasPage('canvas'));
       navigate('/Models', { replace: true });
     } else if (name === 'Business Enquiry') {
       navigate('/contact', { replace: true });

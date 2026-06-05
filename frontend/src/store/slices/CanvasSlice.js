@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   isCanvasPage: '',
+  isEditPage: false,
   selectedBlock: {},
   drawerwidthChange: 400,
   initialDialogOpen: false,
@@ -17,12 +18,14 @@ const initialState = {
   isHeaderOpen: false,
   details: {
     name: '',
+    description: '',
     properties: [],
     isAsset: false
   },
   edgeDetails: {
     name: '',
     properties: [],
+    description: '',
     isAsset: false,
     style: {}
   }
@@ -56,6 +59,9 @@ const CanvasSlice = createSlice({
     },
     clearAnchorEl: (state) => {
       return { ...state, anchorEl: { node: null, edge: null, sidebar: null } };
+    },
+    setIsEditPage: (state, action) => {
+      return { ...state, isEditPage: action.payload };
     },
     setDetails: (state, action) => {
       if (typeof action.payload === 'function') {
@@ -114,6 +120,7 @@ export const {
   setAnchorEl,
   clearAnchorEl,
   setDetails,
+  setIsEditPage,
   setEdgeDetails,
   openHeader,
   closeHeader,

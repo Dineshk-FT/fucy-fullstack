@@ -148,7 +148,7 @@ export const stakeHeader = [
 ];
 
 export const DSTableHeader = [
-  { id: 1, name: 'ID', w: 70, minW: 60 },
+  { id: 1, name: 'ID', w: 90, minW: 70 },
   { id: 2, name: 'Name', w: 100, minW: 90 },
   { id: 4, name: 'Description/Scalability', w: 120, minW: 100 },
   { id: 5, name: 'Losses of Cybersecurity Properties', w: 250, minW: 200 },
@@ -248,7 +248,7 @@ export const RiskTreatmentHeaderTable = [
   { id: 21, name: 'Residual Financial Risk', w: 100, minW: 80 },
   { id: 22, name: 'Residual Operational Risk', w: 100, minW: 80 },
   { id: 23, name: 'Residual Privacy Risk', w: 100, minW: 80 },
-  { id: 24, name: 'Risk Treatment Options', w: 100, minW: 80 },
+  { id: 24, name: 'Risk Treatment Options', w: 180, minW: 200 },
   { id: 25, name: 'Risk Treatment Justification', w: 100, minW: 80 },
   { id: 26, name: 'Applied Measures', w: 100, minW: 80 },
   { id: 27, name: 'Detailed / Combined Threat Scenarios', w: 100, minW: 80 },
@@ -674,3 +674,30 @@ export const CybersecurityControlsHeader = [
   { id: 4, name: 'Related Cybersecurity Goals' },
   { id: 5, name: 'Related Cybersecurity Requirements' }
 ];
+
+// Add to your constraints.js file
+export const RiskTreatmentOptions = [
+  {
+    value: 'Risk Acceptance',
+    label: 'Risk Acceptance',
+    description: 'No further action to reduce the risk (typically when risk is Low/Insignificant or mitigation cost outweighs impact).'
+  },
+  {
+    value: 'Risk Transfer',
+    label: 'Risk Transfer',
+    description: 'Transfer or share the risk with another party (e.g., insurance, contracts) or shift it to another system/component.'
+  },
+  {
+    value: 'Risk Reduction',
+    label: 'Risk Reduction',
+    description: 'Reduce risk by implementing cybersecurity controls that lower impact and/or attack feasibility.'
+  },
+  {
+    value: 'Risk Avoidance',
+    label: 'Risk Avoidance',
+    description: 'Eliminate the risk by removing the root cause or the functionality creating the threat.'
+  }
+];
+
+// Also add the column to RiskTreatmentHeaderTable if not already present:
+// Make sure "Risk Treatment Option" is included in your RiskTreatmentHeaderTable array

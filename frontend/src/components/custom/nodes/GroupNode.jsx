@@ -102,6 +102,7 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
     dispatch(
       setDetails({
         name: data?.label ?? '',
+        description: data?.description ?? '',
         properties: properties ?? [],
         isAsset: isAsset ?? false
       })

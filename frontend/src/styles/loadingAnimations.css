@@ -1,0 +1,22 @@
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+.loading-spinner {
+  animation: spin 0.8s linear infinite;
+}

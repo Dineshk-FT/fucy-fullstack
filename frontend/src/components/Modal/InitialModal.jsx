@@ -1,15 +1,6 @@
 /*eslint-disable*/
 import React, { useCallback, useState } from 'react';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, MenuItem, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { shallow } from 'zustand/shallow';
 import useStore from '../../store/Zustand/store';
@@ -23,7 +14,7 @@ import LicenseExpiryModal from './LicenseExpiryModal';
 
 const selector = (state) => ({
   Models: state.Models,
-  getModels: state.getModels,
+  getModels: state.getModels
 });
 
 export default React.memo(function InitialModal() {
@@ -33,15 +24,20 @@ export default React.memo(function InitialModal() {
   const { initialDialogOpen } = useSelector((state) => state?.canvas);
   const [open, setOpen] = useState({
     New: false,
-    Open: false,
+    Open: false
   });
 
-  const handleClose = useCallback(() => {
-    setOpen({ New: false, Open: false });
-    dispatch(CloseInitialDialog());
-  }, [dispatch]);
+  const handleClose = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setOpen({ New: false, Open: false });
+      dispatch(CloseInitialDialog());
+    },
+    [dispatch]
+  );
 
-  const handleClick = useCallback((name) => {
+  const handleClick = useCallback((e, name) => {
+    e?.stopPropagation?.();
     setOpen((prev) => ({ ...prev, [name]: true }));
   }, []);
 
@@ -58,8 +54,8 @@ export default React.memo(function InitialModal() {
           '& .MuiPaper-root': {
             background: color?.modalBg,
             width: '475px',
-            borderRadius: '8px',
-          },
+            borderRadius: '8px'
+          }
         }}
       >
         <DialogTitle id="initial-dialog-title" sx={{ cursor: 'move', fontFamily: 'Inter', fontSize: 18 }}>
@@ -68,28 +64,28 @@ export default React.memo(function InitialModal() {
         <DialogContent sx={{ p: 2 }}>
           <DialogContentText>
             <MenuItem
-              onClick={() => handleClick('Open')}
+              onClick={(e) => handleClick(e, 'Open')}
               sx={{
                 fontSize: 15,
                 fontWeight: 600,
                 gap: 1,
                 color: color?.title,
                 py: 1,
-                '&:hover': { bgcolor: 'action.hover' },
+                '&:hover': { bgcolor: 'action.hover' }
               }}
             >
               <ArrowRightAltIcon sx={{ color: color?.iconColor }} />
               Open Existing Project
             </MenuItem>
             <MenuItem
-              onClick={() => handleClick('New')}
+              onClick={(e) => handleClick(e, 'New')}
               sx={{
                 fontSize: 15,
                 fontWeight: 600,
                 gap: 1,
                 color: color?.title,
                 py: 1,
-                '&:hover': { bgcolor: 'action.hover' },
+                '&:hover': { bgcolor: 'action.hover' }
               }}
             >
               <ArrowRightAltIcon sx={{ color: color?.iconColor }} />
@@ -98,12 +94,7 @@ export default React.memo(function InitialModal() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button
-            onClick={handleClose}
-            variant="outlined"
-            color="error"
-            sx={{ textTransform: 'none', minWidth: '80px' }}
-          >
+          <Button onClick={handleClose} variant="outlined" color="error" sx={{ textTransform: 'none', minWidth: '80px' }}>
             Close
           </Button>
         </DialogActions>

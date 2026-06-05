@@ -383,8 +383,8 @@ export default function AttackBlock({ attackScene, color }) {
       const options = isCyberControl
         ? ['Copy', 'Paste', 'Enable']
         : node.type === 'Event'
-        ? ['Copy', 'Paste', 'Attack', 'Requirement']
-        : ['Copy', 'Paste'];
+          ? ['Copy', 'Paste', 'Attack', 'Requirement']
+          : ['Copy', 'Paste'];
 
       setContextMenu({
         visible: true,

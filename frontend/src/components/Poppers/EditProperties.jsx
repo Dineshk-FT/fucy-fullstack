@@ -1,6 +1,18 @@
 /* eslint-disable */
-import React, { useCallback, useMemo } from 'react';
-import { Autocomplete, Avatar, Box, Button, Chip, ClickAwayListener, InputLabel, Paper, Popper, TextField } from '@mui/material';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Autocomplete,
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  ClickAwayListener,
+  InputLabel,
+  Paper,
+  Popper,
+  TextareaAutosize,
+  TextField
+} from '@mui/material';
 import { useSelector, batch } from 'react-redux';
 import toast from 'react-hot-toast';
 import ColorTheme from '../../themes/ColorTheme';
@@ -26,7 +38,6 @@ const PROPERTY_OPTIONS = [
 const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, dispatch, handleSaveEdit, setNodes, setEdges }) => {
   const color = ColorTheme();
   const { selectedBlock } = useSelector((state) => state.canvas);
-
   const updateElement = useCallback(
     (updateFn) => {
       const updater = selectedBlock?.id.includes('reactflow__edge') ? setEdges : setNodes;
@@ -39,6 +50,15 @@ const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, disp
     () => details?.properties?.map((prop) => PROPERTY_OPTIONS.find((p) => p.name === prop) || { name: prop }) || [],
     [details?.properties]
   );
+
+  const handleChangeDesc = (e) => {
+    e.stopPropagation();
+    const value = e.target.value;
+    batch(() => {
+      dispatch(setDetails({ ...details, description: value }));
+      updateElement((el) => ({ ...el, data: { ...el.data, description: value } }));
+    });
+  };
 
   const handleChange = useCallback(
     (event, newValue) => {
@@ -111,7 +131,7 @@ const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, disp
           }}
         >
           <Box display="flex" flexDirection="column" gap={1}>
-            <InputLabel sx={{ fontSize: fontSize - 2, fontWeight: 600 }}>Properties :</InputLabel>
+            <InputLabel sx={{ fontSize: fontSize - 2, color: color?.sidebarContent, fontWeight: 600 }}>Properties :</InputLabel>
             <Autocomplete
               multiple
               options={PROPERTY_OPTIONS}
@@ -136,6 +156,32 @@ const EditProperties = ({ anchorEl, handleClosePopper, details, setDetails, disp
                   aria-label="Element properties"
                 />
               )}
+            />
+          </Box>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <InputLabel sx={{ fontSize: fontSize - 2, fontWeight: 600 }}>Description :</InputLabel>
+            <TextField
+              multiline
+              minRows={3}
+              value={details?.description || ''}
+              onChange={handleChangeDesc}
+              placeholder="Enter description..."
+              variant="outlined"
+              fullWidth
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  backgroundColor: color.inputBg,
+                  '& fieldset': { borderColor: color.border },
+                  '&:hover fieldset': { borderColor: color.primary },
+                  '&.Mui-focused fieldset': { borderColor: color.primary }
+                },
+                '& .MuiInputBase-input': {
+                  fontSize: '14px',
+                  lineHeight: 1.5
+                }
+              }}
             />
           </Box>
 

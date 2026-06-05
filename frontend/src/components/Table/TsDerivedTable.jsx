@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import { tableCellClasses } from '@mui/material/TableCell';
@@ -76,7 +76,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     wordBreak: 'break-word',
     lineHeight: 1.4,
     '&:first-of-type': {
-      borderTopLeftRadius: theme.shape.borderRadius,
+      borderTopLeftRadius: theme.shape.borderRadius
     },
     '&:last-child': {
       borderTopRightRadius: theme.shape.borderRadius,
@@ -103,7 +103,8 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     '&:first-of-type': {
       paddingLeft: '16px'
     }
-}}));
+  }
+}));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
@@ -115,18 +116,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -135,8 +136,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
+      backgroundColor: theme.palette.action.hover
+    }
   },
   '&:last-child td, &:last-child th': { border: 0 }
 }));
@@ -251,15 +252,38 @@ export default function TsDerivedTable() {
   };
 
   useEffect(() => {
-    getDamageScenarios(model?._id);
-  }, []);
+    if (model?._id) {
+      getDamageScenarios(model._id);
+      getThreatScenario(model._id);
+    }
+  }, [model?._id]); // Remove empty dependency array, add model._id dependency
+
+  // UPDATE: Clear local state when model is not available
+  useEffect(() => {
+    if (!model?._id) {
+      setRows([]);
+      setDetails({});
+    }
+  }, [model?._id]);
+
+  // UPDATE: Add refresh function for external calls
+  const refreshTable = useCallback(async () => {
+    if (model?._id) {
+      await Promise.all([getDamageScenarios(model._id), getThreatScenario(model._id)]);
+    }
+  }, [model?._id, getDamageScenarios, getThreatScenario]);
 
   useEffect(() => {
-    if (derived['Details']) {
+    if (model?._id) {
+      refreshTable();
+    }
+  }, [model?._id, refreshTable]);
+
+  useEffect(() => {
+    if (derived?.Details && userDefined?.Details) {
       let id = 0;
       const mappedDetails = Array.isArray(userDefined['Details'])
         ? userDefined['Details'].map((detail, i) => {
-            // console.log('detail', detail);
             return detail && typeof detail === 'object'
               ? {
                   SNo: `TSD${(i + 1).toString().padStart(3, '0')}`,
@@ -272,8 +296,8 @@ export default function TsDerivedTable() {
                   'Losses of Cybersecurity Properties': detail.damage_details
                     ? detail?.damage_details?.flatMap((damage) => damage?.cyberLosses)
                     : detail?.threat_ids
-                    ? detail?.threat_ids
-                    : []
+                      ? detail?.threat_ids
+                      : []
                 }
               : {};
           })
@@ -281,6 +305,10 @@ export default function TsDerivedTable() {
 
       setRows(mappedDetails);
       setDetails(damageScenarios);
+    } else {
+      // Handle cleared/empty state
+      setRows([]);
+      setDetails({});
     }
   }, [derived, userDefined, damageScenarios]);
 
@@ -328,26 +356,28 @@ export default function TsDerivedTable() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     const details = {
       'model-id': model?._id,
       rowDetails: JSON.stringify(selectedRows)
     };
-    deleteThreatScenario(details)
-      .then((res) => {
-        if (!res.error) {
-          notify(res.message ?? 'Deleted successfully', 'success');
-          getDamageScenarios(model?._id);
-          getThreatScenario(model?._id);
-          getRiskTreatment(model?._id);
-          setSelectedRows([]);
-        } else {
-          notify('Something went wrong', 'error');
-        }
-      })
-      .catch((err) => {
-        if (err) notify('Something went wrong', 'error');
-      });
+
+    try {
+      const res = await deleteThreatScenario(details);
+      if (!res.error) {
+        notify(res.message ?? 'Deleted successfully', 'success');
+        // Refresh all related data
+        await Promise.all([getDamageScenarios(model?._id), getThreatScenario(model?._id), getRiskTreatment(model?._id)]);
+        setSelectedRows([]);
+        // Force re-render by resetting page if needed
+        setPage(0);
+      } else {
+        notify(res.error ?? 'Something went wrong', 'error');
+      }
+    } catch (err) {
+      notify('Something went wrong', 'error');
+      console.error('Delete error:', err);
+    }
   };
 
   const toggleRowSelection = (row) => {
@@ -386,7 +416,7 @@ export default function TsDerivedTable() {
       setAnchorEl(event.currentTarget);
     };
 
-    const handleSaveEdit = (e) => {
+    const handleSaveEdit = async (e) => {
       e.stopPropagation();
       if (editingField) {
         if (!editValue.trim()) {
@@ -404,17 +434,18 @@ export default function TsDerivedTable() {
           type: row?.type
         };
 
-        updateName(details)
-          .then((res) => {
-            if (!res.error) {
-              handleClosePopper();
-              notify(res.message ?? 'Deleted successfully', 'success');
-              getThreatScenario(model?._id);
-            } else {
-              notify(res.error ?? 'Something went wrong', 'error');
-            }
-          })
-          .catch((err) => notify(err.message ?? 'Something went wrong', 'error'));
+        try {
+          const res = await updateName(details);
+          if (!res.error) {
+            handleClosePopper();
+            notify(res.message ?? 'Updated successfully', 'success');
+            await getThreatScenario(model?._id);
+          } else {
+            notify(res.error ?? 'Something went wrong', 'error');
+          }
+        } catch (err) {
+          notify(err.message ?? 'Something went wrong', 'error');
+        }
       }
     };
 
@@ -542,8 +573,8 @@ export default function TsDerivedTable() {
                           {damage?.key
                             ? `[DS${(damage?.key).toString().padStart(3, '0')}] ${damage?.name}`
                             : damage?.damage_id
-                            ? `[${damage?.damage_id}] ${damage?.damage_scene}`
-                            : '-'}
+                              ? `[${damage?.damage_id}] ${damage?.damage_scene}`
+                              : '-'}
                         </span>
                       </span>
                     ))

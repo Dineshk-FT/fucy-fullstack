@@ -4,8 +4,10 @@ import Draggable from 'react-draggable';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import { Tooltip, Fab, Box, Popper, Paper, Typography, TextField, IconButton, Chip, ClickAwayListener } from '@mui/material';
-import { ChatbotIcon } from '../../assets/icons'; // Assuming you have a SendIcon
+import { Tooltip, Fab, Box, Popper, Paper, Typography, TextField, IconButton, Chip } from '@mui/material';
+
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import { ChatbotIcon } from '../../assets/icons';
 import { Send2 } from 'iconsax-react';
 
 // ==============================|| LIVE CUSTOMIZATION ||============================== //
@@ -13,23 +15,29 @@ import { Send2 } from 'iconsax-react';
 const Customization = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState(''); // State to manage the message input
-  const buttonRef = useRef(null); // Reference for Popper positioning
+  const [message, setMessage] = useState('');
+  const buttonRef = useRef(null);
 
   const handleToggle = (e) => {
-    // e.stopProgation();
+    e?.stopPropagation();
     setOpen((prev) => !prev);
   };
 
-  const handleOptionClick = (option) => {
-    console.log(`Selected: ${option}`); // Replace with actual functionality
-    setOpen(false); // Close popper after selection
+  const handleClosePopper = (e) => {
+    e?.stopPropagation();
+    setOpen(false);
+  };
+
+  const handleOptionClick = (e, option) => {
+    e?.stopPropagation();
+    console.log(`Selected: ${option}`);
+    setOpen(false);
   };
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      console.log(`Message sent: ${message}`); // Replace with actual functionality
-      setMessage(''); // Clear the input after sending
+      console.log(`Message sent: ${message}`);
+      setMessage('');
     }
   };
 
@@ -50,7 +58,6 @@ const Customization = () => {
             component="div"
             onClick={handleToggle}
             size="small"
-            variant="circular"
             color="warning"
             sx={{
               borderRadius: 0,
@@ -64,60 +71,64 @@ const Customization = () => {
           </Fab>
         </Tooltip>
 
-        {/* Popper for chatbot messages */}
+        {/* Popper for chatbot */}
         <Popper open={open} anchorEl={buttonRef.current} placement="left-start" sx={{ zIndex: 1300 }}>
-          <ClickAwayListener onClickAway={() => setOpen(false)}>
-            <Paper sx={{ p: 2, width: 250, bgcolor: theme.palette.background.paper, boxShadow: 3, borderRadius: 2 }}>
-              <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
+          <Paper
+            sx={{
+              p: 2,
+              width: 260,
+              bgcolor: theme.palette.background.paper,
+              boxShadow: 4,
+              borderRadius: 2
+            }}
+          >
+            {/* Header */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Typography variant="body1" sx={{ fontWeight: 'bold', flexGrow: 1 }}>
                 How can I help?
               </Typography>
+              <IconButton size="small" onClick={handleClosePopper}>
+                <HighlightOffIcon fontSize="small" color="error" />
+              </IconButton>
+            </Box>
 
-              {/* Options as Chips */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                {['Create a Model', 'What should I do?'].map((option, index) => (
-                  <Chip key={index} label={option} onClick={() => handleOptionClick(option)} clickable />
-                ))}
-              </Box>
+            {/* Options */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {['Create a Model', 'What should I do?'].map((option, index) => (
+                <Chip key={index} label={option} onClick={(e) => handleOptionClick(e, option)} clickable size="small" />
+              ))}
+            </Box>
 
-              {/* Text field for messaging */}
-              <Box
+            {/* Message input */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                height: 42,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 1
+              }}
+            >
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Type a message..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: 40,
-                  border: '1px solid', // Add border to the Box
-                  borderColor: 'divider', // Use theme's divider color or specify a custom color
-                  borderRadius: 2, // Add border radius for rounded corners
-                  p: 1 // Add padding inside the Box
+                  mr: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                  '& .MuiInputBase-input': { py: 0.5 }
                 }}
-              >
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSendMessage();
-                    }
-                  }}
-                  sx={{
-                    mr: 1,
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      border: 'none' // Remove border from TextField
-                    },
-                    '& .MuiInputBase-input': {
-                      padding: 0.5
-                    }
-                  }}
-                />
-                <IconButton onClick={handleSendMessage} color="primary">
-                  <Send2 size="32" color="aqua" />
-                </IconButton>
-              </Box>
-            </Paper>
-          </ClickAwayListener>
+              />
+              <IconButton onClick={handleSendMessage} color="primary">
+                <Send2 size="26" />
+              </IconButton>
+            </Box>
+          </Paper>
         </Popper>
       </Box>
     </Draggable>
