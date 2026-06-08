@@ -14,7 +14,11 @@ export const helpData = {
       label: 'How to edit, assign Properties for components/Data?',
       gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif'
     },
-    { id: 'edit_edge', label: 'How to edit, assign Properties?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' }
+    {
+      id: 'edit_edge',
+      label: 'How to edit, assign Properties for a Connector/Edge?',
+      gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif'
+    }
   ],
   'Damage Scenarios and Impact Ratings': {
     'Damage Scenario (Ds) Derivations': [
@@ -54,7 +58,7 @@ export const helpData = {
       }
     ],
     'Derived Threat Scenarios': [
-      { id: 'add_derived_threat', label: 'How to add a derived scene?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
+      { id: 'add_derived_scene', label: 'How to add a derived scene?', gif: 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif' },
       {
         id: 'delete_derived_threat',
         label: 'How to delete a derived scene?',
