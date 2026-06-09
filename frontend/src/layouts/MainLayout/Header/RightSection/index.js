@@ -95,7 +95,8 @@ function RightSection() {
 
   const handleConfirmLogout = useCallback(() => {
     dispatch(logout());
-    dispatch(changeCanvasPage('home'));
+    // dispatch(changeCanvasPage('home'));
+    window.sessionStorage.removeItem('canvasState');
     setOpenLogoutDialog(false);
     navigate('/login');
   }, [dispatch, navigate]);
