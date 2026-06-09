@@ -170,7 +170,8 @@ const FirebaseLogin = ({ ...others }) => {
           setTimeout(() => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
-            dispatch(changeCanvasPage('canvas'));
+            // dispatch(changeCanvasPage('canvas'));
+            window.sessionStorage.setItem('canvasState', 'canvas'); // Set canvas state in session storage
             dispatch(setModelId(res?.payload?.data?.model_id));
             dispatch(OpenInitialDialog());
             dispatch(closeAll());

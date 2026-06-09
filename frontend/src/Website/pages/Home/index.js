@@ -1,9 +1,10 @@
+/*eslint-disable*/
 import React, { useEffect } from 'react';
 import MainSection from '../../components/MainSection';
 import CyberSecuritySection from '../../components/LearnAboutUs';
 import CompliancePage from '../../components/ComplianceSection';
 import WhyComponent from '../../components/WhySection';
-import Contact from './ContactSection'
+import Contact from './ContactSection';
 import { useDispatch } from 'react-redux';
 import { changePage } from '../../../store/slices/PageSectionSlice';
 import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
@@ -12,7 +13,8 @@ export default function HomePage() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(changePage('home'));
-    dispatch(changeCanvasPage('home'));
+    // dispatch(changeCanvasPage('home'));
+    window.sessionStorage.setItem('canvasState', 'home'); // Set canvas state to 'home' when on the home page
     dispatch(logout());
   }, []);
   return (

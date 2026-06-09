@@ -72,27 +72,27 @@ const MainLayout = ({ children }) => {
   const { opened: leftDrawerOpened } = useSelector((state) => state.customization);
   const { isNavbarClose, isDark } = useSelector((state) => state.currentId);
   const { isCanvasPage, initialDialogOpen } = useSelector((state) => state.canvas);
-
+  const canvasState = window.sessionStorage.getItem('canvasState'); // Get canvas state from session storage
   // console.log('isCanvasPage in MainLayout', isCanvasPage);
   const handleLeftDrawerToggle = useCallback(() => {
     dispatch({ type: SET_MENU, opened: !leftDrawerOpened });
   }, [dispatch, leftDrawerOpened]);
 
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      dispatch(changeCanvasPage('home'));
-    };
+  // useEffect(() => {
+  //   const handleBeforeUnload = (event) => {
+  //     dispatch(changeCanvasPage('home'));
+  //   };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, []);
 
   const handleNavbarSlide = () => dispatch(navbarSlide());
 
   // If home page
-  if (isCanvasPage === 'home') {
+  if (canvasState === 'home' || !canvasState) {
     return (
       <FadeInDiv>
         <HeaderSection />
