@@ -38,7 +38,7 @@ import Button from '../../../../components/Buttons/Button';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Google from '../../../../assets/images/icons/social-google.svg';
-import { changeCanvasPage, OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
+import { OpenInitialDialog } from '../../../../store/slices/CanvasSlice';
 import { closeAll } from '../../../../store/slices/CurrentIdSlice';
 import { login, checkUserStatus, CheckUserStatus, forgotPassword } from '../../../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
@@ -170,7 +170,6 @@ const FirebaseLogin = ({ ...others }) => {
           setTimeout(() => {
             sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
-            // dispatch(changeCanvasPage('canvas'));
             window.sessionStorage.setItem('canvasState', 'canvas'); // Set canvas state in session storage
             dispatch(setModelId(res?.payload?.data?.model_id));
             dispatch(OpenInitialDialog());

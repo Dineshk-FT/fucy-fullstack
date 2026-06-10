@@ -33,7 +33,6 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HelpPopper from '../../../../components/Poppers/HelpPopper';
 import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 import ResetPassword from '../../../../Website/pages/authentication/auth-forms/ResetPassword';
-import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 
 function RightSection() {
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
@@ -95,7 +94,6 @@ function RightSection() {
 
   const handleConfirmLogout = useCallback(() => {
     dispatch(logout());
-    // dispatch(changeCanvasPage('home'));
     window.sessionStorage.removeItem('canvasState');
     setOpenLogoutDialog(false);
     navigate('/login');
