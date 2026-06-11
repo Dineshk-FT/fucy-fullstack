@@ -107,8 +107,13 @@ const MainLayout = ({ children }) => {
             bgcolor: color?.navBG,
             height: isNavbarClose ? '0px' : getNavbarHeight(isCollapsed),
             borderBottom: `1px solid ${color?.title}`,
-            transition: leftDrawerOpened ? theme.transitions.create('width') : 'none',
-            zIndex: 1300
+            // ✅ Always apply transition, not conditionally
+            transition: theme.transitions.create(['height', 'width'], {
+              easing: theme.transitions.easing.easeInOut,
+              duration: 600
+            }),
+            zIndex: 1300,
+            overflow: 'visible' // ✅ Prevents content from spilling during collapse
           }}
         >
           {!isNavbarClose && (
@@ -118,18 +123,33 @@ const MainLayout = ({ children }) => {
                 justifyContent: 'space-between',
                 py: 0,
                 overflow: 'visible',
-                zIndex: 1300
+                zIndex: 1300,
+                // ✅ Fade content in/out alongside the height transition
+                opacity: isNavbarClose ? 0 : 1,
+                transition: theme.transitions.create('opacity', {
+                  easing: theme.transitions.easing.easeInOut,
+                  duration: theme.transitions.duration.shorter // 200ms
+                })
               }}
-              onClick={(e) => {
-                // Prevent click events from propagating to the Sidebar
-                e.stopPropagation();
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
               <Header />
             </Toolbar>
           )}
           {isNavbarClose && (
-            <Box display="flex" justifyContent="end" onClick={handleNavbarSlide}>
+            <Box
+              display="flex"
+              justifyContent="end"
+              onClick={handleNavbarSlide}
+              sx={{
+                // ✅ Fade in the toggle arrow smoothly
+                opacity: isNavbarClose ? 1 : 0,
+                transition: theme.transitions.create('opacity', {
+                  easing: theme.transitions.easing.easeInOut,
+                  duration: theme.transitions.duration.shorter
+                })
+              }}
+            >
               <ArrowSquareDown size="20" color={isDark ? 'white' : 'black'} />
             </Box>
           )}
