@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  isCanvasPage: '',
   isEditPage: false,
   selectedBlock: {},
   drawerwidthChange: 400,
@@ -83,9 +82,6 @@ const CanvasSlice = createSlice({
     closeAddDataNodeTab: (state) => {
       return { ...state, addDataNodeTab: false };
     },
-    changeCanvasPage: (state, action) => {
-      return { ...state, isCanvasPage: action.payload };
-    },
     setSelectedBlock: (state, action) => {
       // console.log('action', action);
       state.selectedBlock = typeof action.payload === 'function' ? action.payload(state.selectedBlock) : action.payload;
@@ -107,7 +103,6 @@ const CanvasSlice = createSlice({
 });
 
 export const {
-  changeCanvasPage,
   setSelectedBlock,
   OpenInitialDialog,
   CloseInitialDialog,

@@ -15,13 +15,13 @@ function ContactForm() {
         <TextField required fullWidth label="Email" margin="normal" variant="outlined" />
         <TextField required fullWidth label="How did you hear about us?" margin="normal" variant="outlined" />
         <TextField fullWidth label="Message" margin="normal" variant="outlined" multiline rows={4} />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary" 
-          sx={{ 
-            mt: 2, 
-            width: 'fit-content', 
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          sx={{
+            mt: 2,
+            width: 'fit-content',
             alignSelf: 'center',
             px: 4,
             py: 1.5
@@ -39,7 +39,13 @@ function ContactForm() {
         <Typography variant="body2" fontSize={23} fontWeight={600}>
           Fucy Tech.
         </Typography>
-        <Typography variant="body2">Troy, Michigan 48098, United States.</Typography>
+        {/* <Typography variant="body2">Troy, Michigan 48098, United States.</Typography> */}
+
+        {/* Newly Added Address */}
+        <Typography variant="body2">
+          Mantri Commercio, Tower A, 5th Floor, Survey No. 39/5, Outer Ring Road, Kariyammana Agrahara, Devarabeesanahalli (Bellandur)
+          Bengaluru, Karnataka 560103
+        </Typography>
       </Box>
     </Container>
   );

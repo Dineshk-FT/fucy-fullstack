@@ -7,13 +7,11 @@ import WhyComponent from '../../components/WhySection';
 import Contact from './ContactSection';
 import { useDispatch } from 'react-redux';
 import { changePage } from '../../../store/slices/PageSectionSlice';
-import { changeCanvasPage } from '../../../store/slices/CanvasSlice';
 import { logout } from '../../../store/slices/UserDetailsSlice';
 export default function HomePage() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(changePage('home'));
-    // dispatch(changeCanvasPage('home'));
     window.sessionStorage.setItem('canvasState', 'home'); // Set canvas state to 'home' when on the home page
     dispatch(logout());
   }, []);

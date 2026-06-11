@@ -14,26 +14,26 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   LightMode as LightModeIcon,
   NightsStay as NightsStayIcon,
-  PowerSettingsNew as PowerSettingsNewIcon,
   Key as KeyIcon,
   Logout as LogoutIcon,
   MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useDispatch, useSelector } from 'react-redux';
-import { changeMode, navbarSlide } from '../../../../store/slices/CurrentIdSlice';
+import { changeMode } from '../../../../store/slices/CurrentIdSlice';
 import { logout } from '../../../../store/slices/UserDetailsSlice';
 import { useNavigate } from 'react-router';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HelpPopper from '../../../../components/Poppers/HelpPopper';
 import pdfFile from '../../../../assets/PDF/FucyTech-Doc.pdf';
 import ResetPassword from '../../../../Website/pages/authentication/auth-forms/ResetPassword';
-import { changeCanvasPage } from '../../../../store/slices/CanvasSlice';
 
 function RightSection() {
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
@@ -43,7 +43,10 @@ function RightSection() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isDark, isNavbarClose } = useSelector((state) => state?.currentId);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const { isDark } = useSelector((state) => state?.currentId);
 
   const handleMenuClick = (event) => {
     event.stopPropagation();
@@ -95,7 +98,6 @@ function RightSection() {
 
   const handleConfirmLogout = useCallback(() => {
     dispatch(logout());
-    // dispatch(changeCanvasPage('home'));
     window.sessionStorage.removeItem('canvasState');
     setOpenLogoutDialog(false);
     navigate('/login');
@@ -106,18 +108,11 @@ function RightSection() {
     setOpenResetPasswordDialog(false);
   };
 
-  const toggleNavbar = useCallback(
-    (e) => {
-      e.stopPropagation();
-      dispatch(navbarSlide());
-    },
-    [dispatch]
-  );
-
+  // Scale icon button padding down on mobile
   const iconButtonStyles = useMemo(
     () => ({
       cursor: 'pointer',
-      padding: '6px',
+      padding: isMobile ? '4px' : '6px',
       borderRadius: '6px',
       background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
       transition: 'all 0.3s ease',
@@ -130,25 +125,43 @@ function RightSection() {
         filter: isDark ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
       }
     }),
-    [isDark]
+    [isDark, isMobile]
   );
 
   const iconColor = useMemo(() => (isDark ? '#64b5f6' : '#2196f3'), [isDark]);
 
+  // Icon size scales down on mobile
+  const iconSize = isMobile ? 18 : 20;
+
   return (
     <>
-      <Box display="flex" gap={1.5} alignItems="center" justifyContent="flex-end" mr={2}>
-        <IconButton sx={{ color: '#1976d2', ml: 1 }} onClick={handleHelpClick} size="small">
+      <Box
+        display="flex"
+        // Tighter gap on mobile, normal on larger screens
+        gap={{ xs: 0.75, sm: 1.5 }}
+        alignItems="center"
+        justifyContent="flex-end"
+        // Remove fixed margin; padding is handled by the Header container
+        mr={0}
+      >
+        {/* Help button — hidden on very small screens to save space */}
+        <IconButton sx={{ color: '#1976d2', display: { xs: 'none', sm: 'inline-flex' } }} onClick={handleHelpClick} size="small">
           <HelpOutlineIcon fontSize="small" />
         </IconButton>
 
+        {/* Theme toggle */}
         <Box onClick={handleChangeMode} sx={iconButtonStyles}>
-          {isDark ? <NightsStayIcon sx={{ color: iconColor, fontSize: 20 }} /> : <LightModeIcon sx={{ color: iconColor, fontSize: 20 }} />}
+          {isDark ? (
+            <NightsStayIcon sx={{ color: iconColor, fontSize: iconSize }} />
+          ) : (
+            <LightModeIcon sx={{ color: iconColor, fontSize: iconSize }} />
+          )}
         </Box>
 
-        {/* Menu Button */}
+        {/* Overflow menu */}
         <IconButton
           onClick={handleMenuClick}
+          size={isMobile ? 'small' : 'medium'}
           sx={{
             ...iconButtonStyles,
             '&:hover': {
@@ -157,11 +170,11 @@ function RightSection() {
             }
           }}
         >
-          <MoreVertIcon sx={{ color: iconColor, fontSize: 20 }} />
+          <MoreVertIcon sx={{ color: iconColor, fontSize: iconSize }} />
         </IconButton>
       </Box>
 
-      {/* Menu */}
+      {/* Dropdown menu */}
       <Menu
         anchorEl={menuAnchorEl}
         open={isMenuOpen}
@@ -179,6 +192,20 @@ function RightSection() {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
+        {/* On mobile the help icon is hidden, so expose it in the menu instead */}
+        <MenuItem onClick={handleHelpClick} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+          <ListItemIcon>
+            <HelpOutlineIcon fontSize="small" sx={{ color: iconColor }} />
+          </ListItemIcon>
+          <ListItemText>
+            <Typography variant="body2" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+              Help
+            </Typography>
+          </ListItemText>
+        </MenuItem>
+
+        <Divider sx={{ my: 0.5, opacity: 0.5, display: { xs: 'block', sm: 'none' } }} />
+
         <MenuItem onClick={handleResetPasswordClick}>
           <ListItemIcon>
             <KeyIcon fontSize="small" sx={{ color: iconColor }} />
@@ -204,10 +231,12 @@ function RightSection() {
         </MenuItem>
       </Menu>
 
-      {/* Logout Confirmation Dialog */}
+      {/* Logout confirmation dialog */}
       <Dialog
         open={openLogoutDialog}
         onClose={() => setOpenLogoutDialog(false)}
+        // Full-screen on mobile for easier tap targets
+        fullScreen={isMobile}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
@@ -238,19 +267,26 @@ function RightSection() {
         </DialogActions>
       </Dialog>
 
-      {/* Reset Password Dialog */}
+      {/* Reset password dialog */}
       <Dialog
         open={openResetPasswordDialog}
         onClose={handleResetPasswordClose}
         maxWidth="sm"
         fullWidth
+        // Full-screen on mobile for easier keyboard interaction
+        fullScreen={isMobile}
         PaperProps={{
-          sx: {
-            borderRadius: '12px'
-          }
+          sx: { borderRadius: isMobile ? 0 : '12px' }
         }}
       >
-        <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
           <Typography variant="h4" color="primary" sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>
             Reset Password
           </Typography>

@@ -1794,6 +1794,7 @@ const useStore = createWithEqualityFn((set, get) => ({
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
+
     // Single atomic set — prevents a render between the two updates where
     // assets.Details would be empty (which caused BrowserCard to go blank)
     if (!res.error) {
@@ -1805,7 +1806,15 @@ const useStore = createWithEqualityFn((set, get) => ({
         }
       }));
     } else {
-      set({ originalNodes: [] });
+      // Add the empty assets structure here to clear it on error
+      set({
+        originalNodes: [],
+        assets: {
+          id: '1',
+          name: 'Item Definition',
+          icon: 'ItemIcon'
+        }
+      });
     }
   },
 
