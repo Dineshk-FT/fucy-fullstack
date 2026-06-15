@@ -1791,39 +1791,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
-  generateTestCases: async (payload) => {
-    try {
-      const formData = new FormData();
-      formData.append('modelId', payload.modelId);
-      // Fallbacks added to ensure the backend validation passes if exact data is missing
-      formData.append('asset', payload.asset || 'Vehicle System');
-      formData.append('interface', payload.interface || 'CAN/UDS');
-      formData.append('threat', payload.threat || 'Unauthorized Access');
-      formData.append('attackPath', payload.attackPath || 'External -> Network -> ECU');
-      formData.append('risk', payload.risk || 'High');
-
-      if (payload.userPrompt) {
-        formData.append('userPrompt', payload.userPrompt);
-      }
-
-      const options = {
-        method: 'POST',
-        url: `${configuration.apiBaseUrl}v1/testcases/generate`,
-        headers: {
-          ...createHeaders().headers,
-          'Content-Type': 'multipart/form-data'
-        },
-        data: formData
-      };
-
-      const res = await axios(options);
-      return res.data;
-    } catch (error) {
-      console.error('Error generating test cases:', error);
-      return { error: error.response?.data?.error || error.message };
-    }
-  },
-
   getAssets: async (modelId) => {
     const url = `${configuration.apiBaseUrl}v1/get_details/assets`;
     const res = await GET_CALL(modelId, url);
