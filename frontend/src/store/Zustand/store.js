@@ -2067,7 +2067,80 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  generateTestCases: async (payload) => {
+    try {
+      const formData = new FormData();
+      formData.append('modelId', payload.modelId);
+      // Fallbacks added to ensure the backend validation passes if exact data is missing
+      formData.append('asset', payload.asset || 'Vehicle System');
+      formData.append('interface', payload.interface || 'CAN/UDS');
+      formData.append('threat', payload.threat || 'Unauthorized Access');
+      formData.append('attackPath', payload.attackPath || 'External -> Network -> ECU');
+      formData.append('risk', payload.risk || 'High');
+
+      if (payload.userPrompt) {
+        formData.append('userPrompt', payload.userPrompt);
+      }
+
+      const options = {
+        method: 'POST',
+        url: `${configuration.apiBaseUrl}v1/testcases/generate`,
+        headers: {
+          ...createHeaders().headers,
+          'Content-Type': 'multipart/form-data'
+        },
+        data: formData
+      };
+
+      const res = await axios(options);
+      return res.data;
+    } catch (error) {
+      console.error('Error generating test cases:', error);
+      return { error: error.response?.data?.error || error.message };
+    }
+  },
+
   //Update Section
+
+  submitContactForm: async (formData) => {
+    try {
+      // Note: Update this URL to use `${configuration.apiBaseUrl}contact` if you move the Flask route to your main backend
+      const response = await axios.post(`${configuration.apiBaseUrl}v1/contact`, formData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // axios automatically parses the JSON response into the 'data' property
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+
+      // Axios stores the backend error response in error.response.data
+      const errorMessage = error.response?.data?.message || error.message || 'Something went wrong. Please try again.';
+
+      throw new Error(errorMessage);
+    }
+  },
+
+  submitWorkForm: async (formData) => {
+    try {
+      const response = await axios.post(`${configuration.apiBaseUrl}v1/work`, formData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting work form:', error);
+
+      const errorMessage = error.response?.data?.message || error.message || 'Something went wrong. Please try again.';
+
+      throw new Error(errorMessage);
+    }
+  },
+
   updateModelName: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/model-name`;
     const res = await UPDATE_CALL(details, url);
