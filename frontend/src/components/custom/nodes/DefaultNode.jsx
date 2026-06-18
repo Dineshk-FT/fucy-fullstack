@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
+import { Handle, NodeResizer, Position } from 'reactflow';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
@@ -20,15 +20,26 @@ const selector = (state) => ({
   originalNodes: state.originalNodes,
   selectedNodes: state.selectedNodes,
   setSelectedElement: state.setSelectedElement,
-  setPropertiesOpen: state.setPropertiesOpen
+  setPropertiesOpen: state.setPropertiesOpen,
+  setNodes: state.setNodes
 });
 
 export default React.memo(function DefaultNode({ id, data, type }) {
   const dispatch = useDispatch();
-  const { isNodePasted, nodes, model, assets, getAssets, deleteNode, originalNodes, selectedNodes, setSelectedElement, setPropertiesOpen } =
-    useStore(selector, shallow);
+  const {
+    isNodePasted,
+    nodes,
+    model,
+    assets,
+    getAssets,
+    deleteNode,
+    originalNodes,
+    selectedNodes,
+    setSelectedElement,
+    setPropertiesOpen,
+    setNodes
+  } = useStore(selector, shallow);
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
-  const { setNodes } = useReactFlow();
   const [isVisible, setIsVisible] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const [width, setWidth] = useState(data?.style?.width ?? 120);

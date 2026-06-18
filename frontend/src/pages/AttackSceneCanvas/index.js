@@ -670,12 +670,23 @@ export default function AttackBlock({ attackScene, color }) {
     if (overlappingNode) {
       let condition = true;
 
-      if (overlappingNode.type === 'default' || overlappingNode.type === 'Event') {
-        condition =
-          (overlappingNode.type === 'default' && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type.includes('Gate') && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type === 'Event' && draggedNode.type.includes('Gate')) ||
-          (overlappingNode.type.includes('Gate') && draggedNode.type === 'Event');
+      const overType = overlappingNode.type || '';
+      const dragType = draggedNode.type || '';
+
+      const isOverRestricted = overType === 'default' || overType === 'Event';
+      const isDragRestricted = dragType === 'default' || dragType === 'Event';
+
+      // 1. Prevent default-to-Event, Event-to-default, and Event-to-Event
+      if (isOverRestricted && isDragRestricted) {
+        condition = false;
+      }
+      // 2. If overlapping is restricted, the dragged node MUST be a Gate
+      else if (isOverRestricted && !dragType.includes('Gate')) {
+        condition = false;
+      }
+      // 3. If dragged is restricted, the overlapping node MUST be a Gate
+      else if (isDragRestricted && !overType.includes('Gate')) {
+        condition = false;
       }
 
       const edgeExists = edges.some(

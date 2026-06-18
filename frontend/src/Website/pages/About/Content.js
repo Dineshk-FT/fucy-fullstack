@@ -22,7 +22,13 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '8px',
     textTransform: 'none',
     fontWeight: 600,
-    transition: 'all 0.3s ease'
+    color: '#fff',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: '#1976d2',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)'
+    }
   },
   image: {
     width: '100%',
@@ -46,7 +52,12 @@ export default function ContentPage() {
       <Box>
         <Grid container sx={{ my: 8 }} display="flex" justifyContent="space-evenly">
           <Grid item lg={6}>
-            <Box component="img" src='https://i.pinimg.com/564x/d8/42/82/d842824f28ab05d3ffb1a03f6e7e6297.jpg' alt="Cybersecurity Innovation" className={classes.image} />
+            <Box
+              component="img"
+              src="https://i.pinimg.com/564x/d8/42/82/d842824f28ab05d3ffb1a03f6e7e6297.jpg"
+              alt="Cybersecurity Innovation"
+              className={classes.image}
+            />
           </Grid>
           <Grid item lg={5}>
             <Box className={classes.content}>
@@ -58,12 +69,7 @@ export default function ContentPage() {
                 cybersecurity and provide an automated and autonomous modeling environment built with threat libraries focused on
                 cyber-physical systems.
               </Typography>
-              <Button 
-                variant="contained" 
-                color="primary"
-                className={classes.button}
-                pulse
-              >
+              <Button variant="contained" color="primary" className={classes.button} pulse>
                 Schedule a Demo
               </Button>
             </Box>
@@ -94,7 +100,12 @@ export default function ContentPage() {
       <Box>
         <Grid container sx={{ my: 8 }} display="flex" justifyContent="space-evenly">
           <Grid item lg={6}>
-            <Box component="img" src='https://i.pinimg.com/564x/28/63/08/286308f8de514eb3acbbfcc0da9ec2ed.jpg' alt="Cybersecurity Innovation" className={classes.image} />
+            <Box
+              component="img"
+              src="https://i.pinimg.com/564x/28/63/08/286308f8de514eb3acbbfcc0da9ec2ed.jpg"
+              alt="Cybersecurity Innovation"
+              className={classes.image}
+            />
           </Grid>
           <Grid item lg={5}>
             <Box className={classes.content}>

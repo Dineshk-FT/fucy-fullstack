@@ -54,29 +54,79 @@ export default function Event(props) {
   };
   // console.log('nodes', nodes);
   const updateNodeRating = useCallback(() => {
-    setAttackNodes((nodes) =>
-      nodes.map((node) => {
-        const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
-        if (attack) {
-          // If the node is an attack, set its rating
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              rating: attack['Attack Feasibilities Rating']
+    setAttackNodes((currentNodes) => {
+      let hasChanges = false;
+
+      // 1. Helper to traverse the graph and check for connected enabled controls
+      const hasEnabledControlConnected = (startNodeId, visited = new Set()) => {
+        const queue = [startNodeId];
+        while (queue.length > 0) {
+          const currentId = queue.shift();
+          if (visited.has(currentId)) continue;
+          visited.add(currentId);
+
+          const outgoingEdges = edges.filter((edge) => edge.source === currentId);
+          for (const edge of outgoingEdges) {
+            const targetNode = currentNodes.find((n) => n.id === edge.target);
+            if (!targetNode || visited.has(targetNode.id)) continue;
+
+            // Check if the target is a control and if it is enabled (either locally or in the DB)
+            const matchingControl = controls?.scenes?.find((sub) => sub?.ID === targetNode?.id || sub?.ID === targetNode?.data?.nodeId);
+            const isTargetEnabled = targetNode.isEnabled || matchingControl?.isEnabled;
+
+            if (targetNode.nodeType === 'cybersecurity_controls' && isTargetEnabled) {
+              return true;
             }
-          };
-        } else {
-          // If not an attack, remove the rating
-          const { rating, ...restData } = node.data || {};
-          return {
-            ...node,
-            data: restData
-          };
+
+            // Continue traversing through Gates
+            if (targetNode.type?.toLowerCase()?.includes('gate')) {
+              queue.push(targetNode.id);
+            }
+          }
         }
-      })
-    );
-  }, [attacks, setAttackNodes]);
+        return false;
+      };
+
+      // 2. Map over nodes and assign the correct rating
+      const newNodes = currentNodes.map((node) => {
+        const attack = attacks?.scenes?.find((sub) => sub?.ID === node?.id || sub?.ID === node?.data?.nodeId);
+
+        if (attack) {
+          const originalRating = attack['Attack Feasibilities Rating'];
+          const isMitigated = hasEnabledControlConnected(node.id);
+
+          // If a control is connected and enabled, force it to 'Low', else use the original rating
+          const newRating = isMitigated ? 'Low' : originalRating;
+
+          if (node.data?.rating !== newRating) {
+            hasChanges = true;
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                rating: newRating
+              }
+            };
+          }
+          return node;
+        } else {
+          // If not an attack, ensure rating is removed cleanly
+          if (node.data?.rating !== undefined) {
+            hasChanges = true;
+            const { rating, ...restData } = node.data;
+            return {
+              ...node,
+              data: restData
+            };
+          }
+          return node;
+        }
+      });
+
+      // 3. Only trigger a state update if something actually changed to prevent infinite loops
+      return hasChanges ? newNodes : currentNodes;
+    });
+  }, [attacks, controls, edges, setAttackNodes]); // Added controls & edges to dependencies
 
   // Call this function after rendering or whenever attacks data changes
   useEffect(() => {

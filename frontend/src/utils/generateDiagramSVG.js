@@ -15,11 +15,18 @@ export default function generateDiagramSVG(
 
   const [tx, ty, zoom] = getTransformForBounds(getRectOfNodes(nodes), imageWidth, imageHeight, 0.5, 2);
 
-  const handleMap = { a: 'top', b: 'left', c: 'bottom', d: 'right' };
-  const resolveHandle = (h) => handleMap[h] || h;
+  const handleMap = { a: 'top', b: 'left', c: 'bottom', d: 'right', t: 'top', l: 'left', r: 'right', btm: 'bottom' };
+  const resolveHandle = (h) => handleMap[h?.toLowerCase()] || h;
 
   const escapeXML = (str) =>
     String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
+  // Helper to ensure PDF svglib doesn't break on rgba colors
+  const sanitizeColorForPDF = (colorStr, fallback) => {
+    if (!colorStr) return fallback;
+    if (colorStr.includes('rgba')) return fallback; // SVGLib hates alpha channels
+    return colorStr;
+  };
 
   const getAbsolutePosition = (node) => {
     let x = node.position.x;
@@ -88,7 +95,6 @@ export default function generateDiagramSVG(
     if (targetPosition === 'left') p4x -= offsetX;
     if (targetPosition === 'right') p4x += offsetX;
 
-    // Same-side adjustments
     if ((sourcePosition === 'left' && targetPosition === 'left') || (sourcePosition === 'right' && targetPosition === 'right')) {
       const sourceNode = nodes.find((n) => n.id === edge.source);
       const targetNode = nodes.find((n) => n.id === edge.target);
@@ -164,91 +170,72 @@ export default function generateDiagramSVG(
     return { x: (longestSegment.x1 + longestSegment.x2) / 2, y: (longestSegment.y1 + longestSegment.y2) / 2 };
   };
 
-  const markerMap = new Map();
-  edges.forEach((edge) => {
-    if (edge.style?.start && edge.markerStart?.color) markerMap.set(`start-${edge.id}`, edge.markerStart.color);
-    if (edge.style?.end && edge.markerEnd?.color) markerMap.set(`end-${edge.id}`, edge.markerEnd.color);
-  });
+  // EXPLICIT POLYGON ARROWS
+  const drawArrowHead = (x, y, handleLocation, color) => {
+    const size = 12; // Arrow length
+    const width = 6; // Arrow half-width
 
-  const getMarkerDefs = () => {
-    let defs = '';
-    for (const [id, color] of markerMap.entries()) {
-      const [markerType, ...rest] = id.split('-');
-      const edgeId = rest.join('-');
-      const edge = edges.find((e) => e.id === edgeId);
-      if (!edge) continue;
+    const resolved = resolveHandle(handleLocation);
+    let p1, p2, p3;
 
-      const markerSize = 6;
-      const arrowSize = markerSize / 2;
-
-      const handle = markerType === 'start' ? edge.sourceHandle : edge.targetHandle;
-      const resolved = resolveHandle(handle);
-
-      let path, refX, refY, orient;
-
-      switch (resolved) {
-        case 'right':
-          path = `M0,${arrowSize} L${markerSize},${markerSize} L${markerSize},0 Z`;
-          refX = 0;
-          refY = arrowSize;
-          orient = '0';
-          break;
-        case 'left':
-          path = `M0,0 L${markerSize},${arrowSize} L0,${markerSize} Z`;
-          refX = markerSize;
-          refY = arrowSize;
-          orient = '0';
-          break;
-        case 'top':
-          path = `M0,0 L${arrowSize},${markerSize} L${markerSize},0 Z`;
-          refX = arrowSize;
-          refY = markerSize;
-          orient = '0';
-          break;
-        case 'bottom':
-          path = `M0,${markerSize} L${arrowSize},0 L${markerSize},${markerSize} Z`;
-          refX = arrowSize;
-          refY = 0;
-          orient = '0';
-          break;
-        default:
-          path = `M0,0 L${markerSize},${arrowSize} L0,${markerSize} Z`;
-          refX = 0;
-          refY = arrowSize;
-          orient = 'auto';
-      }
-
-      defs += `<marker id="${id}" markerWidth="${markerSize}" markerHeight="${markerSize}" refX="${refX}" refY="${refY}" orient="${orient}">
-        <path d="${path}" fill="${color}"/></marker>`;
+    if (resolved === 'top') {
+      p1 = `${x},${y}`;
+      p2 = `${x - width},${y - size}`;
+      p3 = `${x + width},${y - size}`;
+    } else if (resolved === 'bottom') {
+      p1 = `${x},${y}`;
+      p2 = `${x - width},${y + size}`;
+      p3 = `${x + width},${y + size}`;
+    } else if (resolved === 'left') {
+      p1 = `${x},${y}`;
+      p2 = `${x - size},${y - width}`;
+      p3 = `${x - size},${y + width}`;
+    } else {
+      // right
+      p1 = `${x},${y}`;
+      p2 = `${x + size},${y - width}`;
+      p3 = `${x + size},${y + width}`;
     }
-    return defs;
+
+    return `<polygon points="${p1} ${p2} ${p3}" fill="${color}" stroke="${color}" stroke-width="1" />`;
   };
 
   const svgParts = [];
   svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${imageWidth}" height="${imageHeight}" style="background: #F5F5F5">`);
-  svgParts.push(`<defs>${getMarkerDefs()}</defs>`);
   svgParts.push(`<g transform="translate(${tx} ${ty}) scale(${zoom})">`);
 
-  // Groups
+  // GROUPS
   nodes
     .filter((n) => n.type === 'group')
     .forEach((group) => {
       const { x, y } = group.position;
       const { width, height } = group.style || group;
-      const bg = group.data?.style?.background || 'rgba(33,150,243,0.05)';
+      const s = group.data?.style || {};
+
+      const rawBg = s.backgroundColor || s.background || '#EFEFEF';
+      const bg = sanitizeColorForPDF(rawBg, '#EFEFEF');
+      const strokeColor = sanitizeColorForPDF(s.borderColor, '#2196F3');
+
+      let strokeDash = '';
+      if (s.borderStyle === 'dashed') strokeDash = 'stroke-dasharray="8,4"';
+      else if (s.borderStyle === 'dotted') strokeDash = 'stroke-dasharray="4,4"';
+      else strokeDash = 'stroke-dasharray="4"'; // fallback
+
+      const borderWidth = s.borderWidth ? parseInt(s.borderWidth, 10) : 2;
+      const labelColor = sanitizeColorForPDF(s.color, '#333333');
+      const fontFamily = s.fontFamily || 'Inter';
+      const fontSize = s.fontSize ? parseInt(s.fontSize, 10) : 14;
+      const fontWeight = s.fontWeight || 'normal';
+
       svgParts.push(
-        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${bg}" stroke="#555" stroke-dasharray="4" rx="8" ry="8"/>`
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${bg}" stroke="${strokeColor}" stroke-width="${borderWidth}" ${strokeDash} rx="8" ry="8"/>`
       );
       svgParts.push(
-        `<text x="${x + width / 2}" y="${
-          y + 20
-        }" font-family="Inter" font-size="16" text-anchor="middle" text-rendering="optimizeLegibility">${escapeXML(
-          group.data?.label || 'Group'
-        )}</text>`
+        `<text x="${x + width / 2}" y="${y + fontSize + 4}" font-family="${fontFamily}" font-size="${fontSize}" fill="${labelColor}" font-weight="${fontWeight}" text-anchor="middle" text-rendering="optimizeLegibility">${escapeXML(group.data?.label || 'Group')}</text>`
       );
     });
 
-  // Edges
+  // EDGES
   edges.forEach((edge) => {
     const s = nodes.find((n) => n.id === edge.source);
     const t = nodes.find((n) => n.id === edge.target);
@@ -272,24 +259,44 @@ export default function generateDiagramSVG(
       edge
     });
 
-    const stroke = edge.style?.stroke || '#000000';
-    const markerStart = edge.style?.start && edge.markerStart?.color ? `url(#start-${edge.id})` : '';
-    const markerEnd = edge.style?.end && edge.markerEnd?.color ? `url(#end-${edge.id})` : '';
+    // 1. Line Styling Extraction
+    const edgeStyle = edge.style || {};
+    const stroke = sanitizeColorForPDF(edgeStyle.stroke, '#808080');
+    const strokeWidth = edgeStyle.strokeWidth || 2;
+
+    let strokeDash = '';
+    if (edgeStyle.strokeDasharray && edgeStyle.strokeDasharray !== '0') {
+      strokeDash = `stroke-dasharray="${edgeStyle.strokeDasharray}"`;
+    }
+
+    // 2. Draw the Line Path
+    svgParts.push(`<path d="${path}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" ${strokeDash} />`);
+
+    // 3. Arrow Boolean Validation (Don't draw if explicitly false)
+    const showStart = edgeStyle.start === true || (edgeStyle.start !== false && !!edge.markerStart);
+    const showEnd = edgeStyle.end === true || (edgeStyle.end !== false && !!edge.markerEnd);
+
+    // 4. Draw Start Arrow (if enabled)
+    if (showStart) {
+      // Prioritize marker color, fallback to line stroke color
+      const color = sanitizeColorForPDF(edge.markerStart?.color, stroke);
+      svgParts.push(drawArrowHead(sx, sy, edge.sourceHandle || 'bottom', color));
+    }
+
+    // 5. Draw End Arrow (if enabled)
+    if (showEnd) {
+      // Prioritize marker color, fallback to line stroke color
+      const color = sanitizeColorForPDF(edge.markerEnd?.color, stroke);
+      svgParts.push(drawArrowHead(tx2, ty2, edge.targetHandle || 'top', color));
+    }
+
     const label = edge.data?.label || '';
     const safeLabel = escapeXML(label);
     const labelPos = getLabelPosition(path);
 
-    svgParts.push(
-      `<path d="${path}" stroke="${stroke}" stroke-width="2" fill="none" ${markerStart ? `marker-start="${markerStart}"` : ''} ${
-        markerEnd ? `marker-end="${markerEnd}"` : ''
-      } />`
-    );
-
     if (label) {
       svgParts.push(
-        `<rect x="${labelPos.x - label.length * 3}" y="${labelPos.y - 8}" width="${
-          label.length * 6
-        }" height="16" rx="3" ry="3" fill="white" fill-opacity="0.85" stroke="none"/>`
+        `<rect x="${labelPos.x - label.length * 3}" y="${labelPos.y - 8}" width="${label.length * 6}" height="16" rx="3" ry="3" fill="white" fill-opacity="0.85" stroke="none"/>`
       );
       svgParts.push(
         `<text x="${labelPos.x}" y="${labelPos.y}" font-family="Inter" font-size="10" fill="#333" text-anchor="middle" dominant-baseline="middle">${safeLabel}</text>`
@@ -297,27 +304,30 @@ export default function generateDiagramSVG(
     }
   });
 
-  // Nodes
+  // NODES (Normal)
   nodes
     .filter((n) => n.type !== 'group')
     .forEach((node) => {
       const { x, y } = node.position;
       const { width, height } = node;
       const s = node.data?.style || {};
-      const {
-        backgroundColor = '#dadada',
-        borderColor = 'gray',
-        borderWidth = 2,
-        color = 'black',
-        fontFamily = 'Inter',
-        fontSize = '12px'
-      } = s;
 
-      const fontSizeNum = parseInt(fontSize) || 12;
+      const backgroundColor = sanitizeColorForPDF(s.backgroundColor, '#dadada');
+      const borderColor = sanitizeColorForPDF(s.borderColor, 'gray');
+      const color = sanitizeColorForPDF(s.color, 'black');
+
+      const borderWidth = s.borderWidth ? parseInt(s.borderWidth, 10) : 2;
+      const fontFamily = s.fontFamily || 'Inter';
+      const fontSizeNum = parseInt(s.fontSize) || 12;
+
       const rx = node.type === 'data' ? height / 2 : 3;
 
+      let strokeDash = '';
+      if (s.borderStyle === 'dashed') strokeDash = 'stroke-dasharray="6,4"';
+      else if (s.borderStyle === 'dotted') strokeDash = 'stroke-dasharray="3,3"';
+
       svgParts.push(
-        `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" ry="${rx}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" />`
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" ry="${rx}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" ${strokeDash} />`
       );
 
       const label = node.data?.label || '';
@@ -344,9 +354,7 @@ export default function generateDiagramSVG(
       const startY = y + height / 2 - totalTextHeight / 2 + fontSizeNum * 0.8;
 
       svgParts.push(
-        `<text x="${
-          x + width / 2
-        }" y="${startY}" font-family="${fontFamily}" font-size="${fontSizeNum}" fill="${color}" text-anchor="middle">`
+        `<text x="${x + width / 2}" y="${startY}" font-family="${fontFamily}" font-size="${fontSizeNum}" fill="${color}" text-anchor="middle">`
       );
       lines.forEach((line, idx) => {
         svgParts.push(`<tspan x="${x + width / 2}" dy="${idx === 0 ? 0 : fontSizeNum}">${escapeXML(line)}</tspan>`);

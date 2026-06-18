@@ -878,10 +878,6 @@ const useStore = createWithEqualityFn((set, get) => ({
     const currentNodes = get().nodes;
     const updatedNodes = applyNodeChanges(changes, currentNodes);
 
-    set((state) => ({
-      nodes: updatedNodes
-    }));
-
     // Filter out UI-only changes more strictly
     const meaningfulChanges = changes.filter((change) => {
       // Ignore selection, dimensions, and position changes from UI interactions
@@ -897,33 +893,39 @@ const useStore = createWithEqualityFn((set, get) => ({
       return true;
     });
 
-    if (meaningfulChanges.length > 0) {
-      set((state) => ({
-        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-        redoStack: [],
-        isChanged: true
-      }));
-    }
+    set((state) => {
+      if (meaningfulChanges.length > 0) {
+        return {
+          nodes: updatedNodes,
+          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+          redoStack: [],
+          isChanged: true
+        };
+      }
+
+      return { nodes: updatedNodes };
+    });
   },
 
   onEdgesChange: (changes) => {
     const currentEdges = get().edges;
     const updatedEdges = applyEdgeChanges(changes, currentEdges);
 
-    set((state) => ({
-      edges: updatedEdges
-    }));
-
     // Only add to undo stack for meaningful changes
     const meaningfulChanges = changes.filter((change) => change.type !== 'select');
 
-    if (meaningfulChanges.length > 0) {
-      set((state) => ({
-        undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
-        redoStack: [],
-        isChanged: true
-      }));
-    }
+    set((state) => {
+      if (meaningfulChanges.length > 0) {
+        return {
+          edges: updatedEdges,
+          undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+          redoStack: [],
+          isChanged: true
+        };
+      }
+
+      return { edges: updatedEdges };
+    });
   },
 
   // Replace onConnect:
@@ -943,65 +945,6 @@ const useStore = createWithEqualityFn((set, get) => ({
       redoStack: [],
       isChanged: true
     }));
-  },
-
-  onConnectAttack: (connection) => {
-    const { attackNodes: nodes, attackEdges: edges } = useStore.getState(); // Access Zustand state
-
-    // Extract source and target nodes from the connection
-    const sourceNode = nodes.find((node) => node.id === connection.source);
-    const targetNode = nodes.find((node) => node.id === connection.target);
-
-    // Ensure sourceNode and targetNode exist
-    if (!sourceNode || !targetNode) {
-      console.log('Connection error: Source or Target node not found.');
-      return;
-    }
-
-    // Check if an edge already exists between source and target
-    const edgeExists = edges.some(
-      (edge) =>
-        (edge.source === connection.source && edge.target === connection.target) ||
-        (edge.source === connection.target && edge.target === connection.source)
-    );
-
-    if (edgeExists) {
-      console.log('Connection already exists between the source and target.');
-      return;
-    }
-
-    // Allow unrestricted connection if both nodes are of type "Gate"
-    if (sourceNode.type.includes('Gate') && targetNode.type.includes('Gate')) {
-      const newConnection = { ...connection, data: { label: '' } };
-
-      // Update Zustand edges state
-      set({
-        isAttackChanged: true,
-        edges: addEdge(newConnection, edges)
-      });
-      return;
-    }
-
-    // Determine the parent node based on which node has data.connections
-    const parent = sourceNode.data?.connections ? sourceNode : targetNode.data?.connections ? targetNode : null;
-    const child = parent === sourceNode ? targetNode : sourceNode;
-
-    // Check if the child node's type matches any type in the parent's connections
-    const isMatchingType = parent.data.connections?.some((conn) => conn.type === child.type);
-
-    if (!isMatchingType) {
-      console.log(`Connection not allowed: Child node type "${child.type}" does not match any type in parent's connections.`);
-      return;
-    }
-
-    // Proceed with creating the connection
-    const newConnection = { ...connection, data: { label: '' } };
-
-    // Update Zustand edges state
-    set({
-      isAttackChanged: true,
-      edges: addEdge(newConnection, edges)
-    });
   },
 
   setSelectedElement: (newNode) => {
@@ -1109,9 +1052,28 @@ const useStore = createWithEqualityFn((set, get) => ({
     });
   },
   onAttackConnect: (connection) => {
+    const { attackNodes: nodes, attackEdges: edges } = get();
+
+    // Extract source and target nodes
+    const sourceNode = nodes.find((node) => node.id === connection.source);
+    const targetNode = nodes.find((node) => node.id === connection.target);
+
+    if (sourceNode && targetNode) {
+      const sourceType = sourceNode.type || '';
+      const targetType = targetNode.type || '';
+
+      const isSourceRestricted = sourceType === 'default' || sourceType === 'Event';
+      const isTargetRestricted = targetType === 'default' || targetType === 'Event';
+
+      // Enforce restrictions
+      if (isSourceRestricted && isTargetRestricted) return; // Prevent Event/default to Event/default
+      if (isSourceRestricted && !targetType.includes('Gate')) return; // Must connect to Gate
+      if (isTargetRestricted && !sourceType.includes('Gate')) return; // Must connect to Gate
+    }
+
     set({
       // isAttackChanged: true,
-      attackEdges: addEdge(connection, get().attackEdges)
+      attackEdges: addEdge(connection, edges)
     });
   },
 
@@ -2067,7 +2029,80 @@ const useStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  generateTestCases: async (payload) => {
+    try {
+      const formData = new FormData();
+      formData.append('modelId', payload.modelId);
+      // Fallbacks added to ensure the backend validation passes if exact data is missing
+      formData.append('asset', payload.asset || 'Vehicle System');
+      formData.append('interface', payload.interface || 'CAN/UDS');
+      formData.append('threat', payload.threat || 'Unauthorized Access');
+      formData.append('attackPath', payload.attackPath || 'External -> Network -> ECU');
+      formData.append('risk', payload.risk || 'High');
+
+      if (payload.userPrompt) {
+        formData.append('userPrompt', payload.userPrompt);
+      }
+
+      const options = {
+        method: 'POST',
+        url: `${configuration.apiBaseUrl}v1/testcases/generate`,
+        headers: {
+          ...createHeaders().headers,
+          'Content-Type': 'multipart/form-data'
+        },
+        data: formData
+      };
+
+      const res = await axios(options);
+      return res.data;
+    } catch (error) {
+      console.error('Error generating test cases:', error);
+      return { error: error.response?.data?.error || error.message };
+    }
+  },
+
   //Update Section
+
+  submitContactForm: async (formData) => {
+    try {
+      // Note: Update this URL to use `${configuration.apiBaseUrl}contact` if you move the Flask route to your main backend
+      const response = await axios.post(`${configuration.apiBaseUrl}v1/contact`, formData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // axios automatically parses the JSON response into the 'data' property
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+
+      // Axios stores the backend error response in error.response.data
+      const errorMessage = error.response?.data?.message || error.message || 'Something went wrong. Please try again.';
+
+      throw new Error(errorMessage);
+    }
+  },
+
+  submitWorkForm: async (formData) => {
+    try {
+      const response = await axios.post(`${configuration.apiBaseUrl}v1/work`, formData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting work form:', error);
+
+      const errorMessage = error.response?.data?.message || error.message || 'Something went wrong. Please try again.';
+
+      throw new Error(errorMessage);
+    }
+  },
+
   updateModelName: async (details) => {
     const url = `${configuration.apiBaseUrl}v1/update/model-name`;
     const res = await UPDATE_CALL(details, url);

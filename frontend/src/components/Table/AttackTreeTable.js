@@ -53,7 +53,8 @@ const selector = (state) => ({
   model: state.model,
   update: state.updateAttackScenario,
   getAttackScenario: state.getAttackScenario,
-  attacks: state.attackScenarios['subs'][0],
+  // FIXED: Added optional chaining to prevent TypeError crashes
+  attacks: state.attackScenarios?.subs?.[0],
   addScene: state.addAttackScene,
   deleteAttackScenes: state.deleteAttackScenes
 });
@@ -346,7 +347,8 @@ const RenderTableRow = React.memo(
   (prevProps, nextProps) => {
     // Custom comparison for memoization
     return (
-      prevProps.row.ID === nextProps.row.ID &&
+      // FIXED: We must compare the actual row data to detect dropdown/rating changes
+      JSON.stringify(prevProps.row) === JSON.stringify(nextProps.row) &&
       prevProps.selectedRows.length === nextProps.selectedRows.length &&
       prevProps.selectedRows.includes(prevProps.row.ID) === nextProps.selectedRows.includes(nextProps.row.ID) &&
       JSON.stringify(prevProps.columnWidths) === JSON.stringify(nextProps.columnWidths) &&
@@ -485,6 +487,61 @@ export default function AttackTreeTable() {
     return filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   }, [filteredRows, page, rowsPerPage]);
 
+  const handleChange = useCallback(
+    (e, row) => {
+      e.stopPropagation();
+      const { name, value } = e.target;
+
+      // 1. Calculate the new row directly from the 'row' parameter to avoid undefined crashes
+      const tempRow = { ...row, [name]: value };
+
+      const calculateAverageRating = (r) => {
+        const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
+        let totalRating = 0;
+        categories.forEach((category) => {
+          const selectedOption = options[category]?.find((option) => option.value === r[category]);
+          if (selectedOption) {
+            totalRating += selectedOption.rating;
+          }
+        });
+        return totalRating;
+      };
+
+      const averageRating = calculateAverageRating(tempRow);
+      const finalRating = getRating(averageRating);
+
+      const updatedRow = {
+        ...tempRow,
+        'Attack Feasibilities Rating': finalRating
+      };
+
+      // 2. Use a functional state update to completely bypass stale closure issues
+      setRows((prevRows) => prevRows.map((r) => (r.ID === row.ID ? updatedRow : r)));
+
+      const details = {
+        modelId: model?._id,
+        type: 'attack',
+        id: row?.ID,
+        [`${name}`]: value,
+        'Attack Feasibilities Rating': finalRating
+      };
+
+      update(details)
+        .then((res) => {
+          if (res) {
+            getAttackScenario(model?._id);
+          }
+        })
+        .catch((err) => {
+          console.log('err', err);
+          // 3. Revert back to the original row if the API call fails
+          setRows((prevRows) => prevRows.map((r) => (r.ID === row.ID ? row : r)));
+        });
+    },
+    // FIXED: Removed 'rows' from the dependency array so this function never goes stale
+    [update, model?._id, getAttackScenario]
+  );
+
   // Memoized row renderer to avoid recreating on every render
   const renderRow = useCallback(
     (row, index) => (
@@ -505,58 +562,6 @@ export default function AttackTreeTable() {
   );
 
   // Rest of your handlers (handleChange, handleSaveNewRow, etc.) remain the same
-  const handleChange = useCallback(
-    (e, row) => {
-      e.stopPropagation();
-      const { name, value } = e.target;
-      const previousRows = [...rows];
-
-      const updatedRows = rows.map((r) => {
-        if (r.ID === row.ID) {
-          return { ...r, [name]: value };
-        }
-        return r;
-      });
-
-      setRows(updatedRows);
-
-      const calculateAverageRating = (row) => {
-        const categories = ['Elapsed Time', 'Expertise', 'Knowledge of the Item', 'Window of Opportunity', 'Equipment'];
-        let totalRating = 0;
-        categories.forEach((category) => {
-          const selectedOption = options[category]?.find((option) => option.value === row[category]);
-          if (selectedOption) {
-            totalRating += selectedOption.rating;
-          }
-        });
-        return totalRating;
-      };
-
-      const updatedRow = updatedRows.find((r) => r.ID === row.ID);
-      const averageRating = calculateAverageRating(updatedRow);
-      updatedRow['Attack Feasibilities Rating'] = getRating(averageRating);
-
-      const details = {
-        modelId: model?._id,
-        type: 'attack',
-        id: row?.ID,
-        [`${name}`]: value,
-        'Attack Feasibilities Rating': getRating(averageRating)
-      };
-
-      update(details)
-        .then((res) => {
-          if (res) {
-            getAttackScenario(model?._id);
-          }
-        })
-        .catch((err) => {
-          console.log('err', err);
-          setRows(previousRows);
-        });
-    },
-    [rows, update, model?._id, getAttackScenario]
-  );
 
   const handleSaveNewRow = useCallback(() => {
     if (!newRowData.Name.trim()) {
@@ -635,10 +640,16 @@ export default function AttackTreeTable() {
   );
 
   useEffect(() => {
+    if (model?._id) {
+      getAttackScenario(model._id);
+    }
+  }, [model?._id, getAttackScenario]);
+
+  useEffect(() => {
     if (attacks?.scenes && attacks.scenes.length > 0) {
       const mod1 = attacks.scenes.map((dt, i) => ({
         SNO: `AT${(i + 1).toString().padStart(3, '0')}`,
-        ID: dt.id || dt?.ID,
+        ID: dt._id || dt.id || dt?.ID,
         Name: dt.name || dt?.Name,
         Description: dt?.description || dt?.Description || `This is the description for ${dt.Name || dt?.name}`,
         'Elapsed Time': dt['Elapsed Time'] ?? '',
