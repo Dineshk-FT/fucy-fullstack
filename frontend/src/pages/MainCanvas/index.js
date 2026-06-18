@@ -324,6 +324,11 @@ export default function MainCanvas() {
     setNodeTypes(newNodeTypes);
     dispatch(setAttackScene({}));
 
+    // 👉 ADD THESE 3 LINES: Clear all lingering selection states on mount
+    dispatch(clearAnchorEl());
+    dispatch(setSelectedBlock({}));
+    setSelectedElement({});
+
     // Only clear if we don't have changes and no assets template
     if (!isChanged && (!assets?.template || !assets.template.nodes || assets.template.nodes.length === 0)) {
       setNodes([]);
@@ -439,18 +444,30 @@ export default function MainCanvas() {
 
   const handleDownload = (e) => {
     e.stopPropagation();
-    const svgString = generateDiagramSVG(nodes, edges, getRectOfNodes, getTransformForBounds, 1920);
+
+    // 1. Deep clone nodes and edges to prevent `generateDiagramSVG`
+    // from accidentally mutating your active Zustand state.
+    const clonedNodes = JSON.parse(JSON.stringify(nodes));
+    const clonedEdges = JSON.parse(JSON.stringify(edges));
+
+    const svgString = generateDiagramSVG(clonedNodes, clonedEdges, getRectOfNodes, getTransformForBounds, 1920);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
     a.href = url;
     a.download = 'final-diagram.svg';
+
+    // 2. Prevent the native programmatic click from bubbling up
+    // to document.body and triggering React Flow's global click/deselect listeners.
+    a.addEventListener('click', (ev) => ev.stopPropagation());
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -620,6 +637,7 @@ export default function MainCanvas() {
     );
   };
 
+  // console.log('isPropertiesOpen', isPropertiesOpen);
   const handleClosePopper = (e) => {
     // console.log('close popper');
     e.stopPropagation();
@@ -866,7 +884,6 @@ export default function MainCanvas() {
   }, []);
 
   const popperComponent = useMemo(() => {
-    // console.log('nodes', nodes);
     if (anchorElNodeId) {
       return isPropertiesOpen ? (
         <EditProperties

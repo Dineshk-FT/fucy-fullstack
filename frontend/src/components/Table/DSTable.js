@@ -57,9 +57,10 @@ const selector = (state) => ({
   getThreatScenario: state.getThreatScenario,
   getDamageScenarios: state.getDamageScenarios,
   getRiskTreatment: state.getRiskTreatment,
-  damageScenarios: state.damageScenarios['subs'][1],
-  Details: state.damageScenarios['subs'][0]['Details'],
-  damageID: state.damageScenarios['subs'][1]['_id'],
+  // FIXED: Added optional chaining to prevent TypeError crashes during reload/clear
+  damageScenarios: state.damageScenarios?.subs?.[1],
+  Details: state.damageScenarios?.subs?.[0]?.Details,
+  damageID: state.damageScenarios?.subs?.[1]?._id,
   deleteDamageScenario: state.deleteDamageScenario,
   updateName: state.updateName$DescriptionforDamage,
   addScene: state.addDamageScene
@@ -476,6 +477,13 @@ export default function DsTable() {
       setSelectedRows([]);
     }
   }, [damageScenarios, Details]);
+
+  // Add this effect to guarantee data fetches on a hard page reload
+  useEffect(() => {
+    if (model?._id) {
+      getDamageScenarios(model._id);
+    }
+  }, [model?._id, getDamageScenarios]);
 
   const refreshAPI = () => {
     getDamageScenarios(model?._id);

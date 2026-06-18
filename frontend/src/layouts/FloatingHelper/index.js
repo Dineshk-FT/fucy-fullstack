@@ -237,11 +237,17 @@ const FloatingHelper = () => {
             >
               {selectedQuestion?.gif && (
                 <video
-                  src={selectedQuestion?.gif}
+                  key={selectedQuestion.gif} // Forces a clean remount for new videos
+                  src={selectedQuestion.gif}
                   controls
                   autoPlay
                   muted
+                  preload="metadata" // Optimizes initial network load
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={(e) => {
+                    console.error('Video failed to load. The token might be expired or network is down.');
+                    // Optional: You could trigger getGuides() here to refresh tokens on failure
+                  }}
                 />
               )}
             </ResizableBox>

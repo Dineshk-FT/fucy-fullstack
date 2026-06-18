@@ -209,13 +209,26 @@ export default React.memo(function StepEdge({
       const nextIndex = (currentIndex + 1) % markerStates.length;
       const newState = markerStates[nextIndex];
 
+      // Re-inject the marker configurations so React Flow ALWAYS generates the SVG definitions
       updateEdgeData({
-        style: { ...style, ...newState }
+        style: { ...style, ...newState },
+        markerStart: {
+          type: 'arrowclosed',
+          orient: 'auto-start-reverse', // Crucial: forces the start arrow to point away from the node
+          width: 18,
+          height: 18,
+          color: '#64B5F6'
+        },
+        markerEnd: {
+          type: 'arrowclosed',
+          width: 18,
+          height: 18,
+          color: '#64B5F6'
+        }
       });
     },
     [isMarkerVisible, style, updateEdgeData]
   );
-
   const onEditEdge = useCallback(
     (e) => {
       e.stopPropagation();

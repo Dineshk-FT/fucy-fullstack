@@ -106,23 +106,28 @@ export default function StepEdgeAttackTree({
   const renderButton = () => {
     const { start, end } = isMarkerVisible;
 
-    let Icon = ArrowSwapHorizontal;
-    let iconProps = { className: 'icons' };
-    // If not, use `size` prop
-    iconProps.size = 15;
-
+    // Both directions
     if (start && end) {
-      Icon = ArrowRightAltIcon;
-    } else if (end) {
-      Icon = ArrowRightAltIcon;
-      if (Icon.muiName) {
-        iconProps.sx = { ...iconProps.sx, transform: 'rotate(180deg)' };
-      }
+      return (
+        <button className="edgebutton">
+          <ArrowSwapHorizontal className="icons" size={15} />
+        </button>
+      );
     }
 
+    // Backward (Source/Start only)
+    if (start && !end) {
+      return (
+        <button className="edgebutton">
+          <ArrowRightAltIcon className="icons" style={{ fontSize: '18px', transform: 'rotate(180deg)' }} />
+        </button>
+      );
+    }
+
+    // Forward (Target/End only) AND Default fallback (no arrows)
     return (
       <button className="edgebutton">
-        <Icon {...iconProps} />
+        <ArrowRightAltIcon className="icons" style={{ fontSize: '18px' }} />
       </button>
     );
   };

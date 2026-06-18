@@ -49,7 +49,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     wordBreak: 'break-word',
     lineHeight: 1.4,
     '&:first-of-type': {
-      borderTopLeftRadius: theme.shape.borderRadius,
+      borderTopLeftRadius: theme.shape.borderRadius
     },
     '&:last-child': {
       borderTopRightRadius: theme.shape.borderRadius,
@@ -89,18 +89,18 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
       zIndex: 1,
       '&:first-of-type': {
         borderTopLeftRadius: '4px',
-        borderBottomLeftRadius: '4px',
+        borderBottomLeftRadius: '4px'
       },
       '&:last-child': {
         borderTopRightRadius: '4px',
-        borderBottomRightRadius: '4px',
+        borderBottomRightRadius: '4px'
       }
     }
   },
   '&.Mui-selected': {
     backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
     '&:hover': {
-      backgroundColor: 'rgba(25, 118, 210, 0.12) !important',
+      backgroundColor: 'rgba(25, 118, 210, 0.12) !important'
     },
     '& td': {
       color: theme.palette.primary.main,
@@ -109,14 +109,15 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
   '&.MuiTableRow-hover': {
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
+      backgroundColor: theme.palette.action.hover
     }
   },
   '&:last-child td, &:last-child th': { border: 0 }
 }));
 
 const selector = (state) => ({
-  damageScenarios: state.damageScenarios['subs'][0],
+  // FIXED: Added optional chaining to prevent TypeError crashes during reload/clear
+  damageScenarios: state.damageScenarios?.subs?.[0],
   update: state.updateDerivedDamageScenario,
   modelId: state?.model?._id,
   getDamageScenarios: state?.getDamageScenarios
@@ -162,6 +163,13 @@ const DsDerivationTable = () => {
       setRows([]);
     }
   }, [damageScenarios]);
+
+  // Add this effect to guarantee data fetches on a hard page reload
+  useEffect(() => {
+    if (modelId) {
+      getDamageScenarios(modelId);
+    }
+  }, [modelId, getDamageScenarios]);
 
   // Sorting function
   const stableSort = (array, comparator) => {
