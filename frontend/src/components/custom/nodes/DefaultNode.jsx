@@ -1,6 +1,6 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Handle, NodeResizer, Position } from 'reactflow';
+import { Handle, NodeResizer, Position, useEdges, useUpdateNodeInternals } from 'reactflow';
 import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField, Tooltip } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
@@ -89,6 +89,36 @@ export default React.memo(function DefaultNode({ id, data, type }) {
       { id: 'left-bottom', position: Position.Left, offset: 20 }
     ]
   );
+
+  // --- Dynamic Handle Visibility Logic ---
+  const edges = useEdges();
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // Grouping primary handle IDs and their aliases
+  const topIds = ['top', 'a', 't'];
+  const rightIds = ['right', 'd', 'r'];
+  const bottomIds = ['bottom', 'b'];
+  const leftIds = ['left', 'c', 'l'];
+
+  // Check if a specific side has an active connection
+  const isHandleConnected = useCallback(
+    (handleIds) => {
+      return edges.some(
+        (e) => (e.source === id && handleIds.includes(e.sourceHandle)) || (e.target === id && handleIds.includes(e.targetHandle))
+      );
+    },
+    [edges, id]
+  );
+
+  // Boolean flag determining if all 4 primary sides are connected
+  const allPrimaryConnected =
+    isHandleConnected(topIds) && isHandleConnected(rightIds) && isHandleConnected(bottomIds) && isHandleConnected(leftIds);
+
+  // Notify React Flow when handles are added/removed to prevent visual bugs
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [allPrimaryConnected, id, updateNodeInternals]);
+  // ---------------------------------------
 
   const handleSwapType = (e) => {
     e.stopPropagation();
@@ -341,16 +371,25 @@ export default React.memo(function DefaultNode({ id, data, type }) {
           }}
         >
           {/* Dynamic Handles */}
-          {handles.map((handle) => (
-            <Handle
-              key={handle.id}
-              id={handle.id}
-              position={handle.position}
-              style={getHandleStyle(handle)}
-              className="handle"
-              isConnectable={true}
-            />
-          ))}
+          {handles.map((handle) => {
+            const isExtraHandle = !!handle.offset;
+
+            // Hide the offset handles until all 4 primary center sides are connected
+            if (isExtraHandle && !allPrimaryConnected) {
+              return null;
+            }
+
+            return (
+              <Handle
+                key={handle.id}
+                id={handle.id}
+                position={handle.position}
+                style={getHandleStyle(handle)}
+                className="handle"
+                isConnectable={true}
+              />
+            );
+          })}
 
           {isEditing ? (
             <TextField
