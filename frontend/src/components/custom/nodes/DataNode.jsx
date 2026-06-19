@@ -1,7 +1,7 @@
 /*eslint-disable*/
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Handle, NodeResizer, Position, useReactFlow } from 'reactflow';
-import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
+import { Box, ClickAwayListener, Dialog, DialogActions, DialogContent, TextField, Tooltip } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import EditIcon from '@mui/icons-material/Edit';
 import { iconStyle } from '../../../themes/constant';
@@ -10,6 +10,7 @@ import { shallow } from 'zustand/shallow';
 import useStore from '../../../store/Zustand/store';
 import DetailsIcon from '@mui/icons-material/Details';
 import CloseIcon from '@mui/icons-material/Close';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 const selector = (state) => ({
   nodes: state.nodes,
@@ -40,6 +41,10 @@ export default function DataNode({ id, data, isConnectable, type }) {
   const inputRef = useRef(null);
   const isMounted = useRef(true);
 
+  const handleSwapType = (e) => {
+    e.stopPropagation();
+    setNodes((nds) => nds.map((node) => (node.id === id ? { ...node, type: 'default' } : node)));
+  };
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -276,8 +281,8 @@ export default function DataNode({ id, data, isConnectable, type }) {
             boxShadow: selectedNodes.some((node) => node.id === id)
               ? '0px 0px 7px 3px #32ed0f'
               : isSelected
-              ? '0px 0px 7px 3px violet'
-              : 'none',
+                ? '0px 0px 7px 3px violet'
+                : 'none',
             width: width,
             height: height,
             display: 'flex',
@@ -375,6 +380,15 @@ export default function DataNode({ id, data, isConnectable, type }) {
           >
             <DetailsIcon sx={{ fontSize: '0.9rem', mb: 0.3 }} />
           </div>
+          <Tooltip title="Switch to Component" placement="top">
+            <div
+              onClick={handleSwapType}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{ ...iconStyle, left: '36px', display: isSelected ? 'flex' : 'none' }}
+            >
+              <SwapHorizIcon sx={{ fontSize: '1rem', mb: 0.1 }} />
+            </div>
+          </Tooltip>
           <div
             className="delete-icon"
             onClick={(e) => {
