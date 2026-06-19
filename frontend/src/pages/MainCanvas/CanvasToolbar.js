@@ -7,6 +7,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
 import CircularProgress from '@mui/material/CircularProgress';
+import PaletteIcon from '@mui/icons-material/Palette';
 
 export default function CanvasToolbar({
   isDark,
@@ -23,7 +24,8 @@ export default function CanvasToolbar({
   redoStack,
   assets,
   handleDownload,
-  loading
+  loading,
+  handleAutoColorFill
 }) {
   return (
     <Box
@@ -131,16 +133,16 @@ export default function CanvasToolbar({
                   undoStack.length === 0
                     ? 'transparent'
                     : isDark == true
-                    ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                    : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
                 transform: undoStack.length === 0 ? 'none' : 'scale(1.1)',
                 boxShadow: undoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
                 filter:
                   undoStack.length === 0
                     ? 'none'
                     : isDark == true
-                    ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                    : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
               },
               '&:focus': {
                 outline: undoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
@@ -167,16 +169,16 @@ export default function CanvasToolbar({
                   redoStack.length === 0
                     ? 'transparent'
                     : isDark == true
-                    ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
-                    : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                      ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                      : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
                 transform: redoStack.length === 0 ? 'none' : 'scale(1.1)',
                 boxShadow: redoStack.length === 0 ? 'none' : isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
                 filter:
                   redoStack.length === 0
                     ? 'none'
                     : isDark == true
-                    ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
-                    : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+                      ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))'
+                      : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
               },
               '&:focus': {
                 outline: redoStack.length === 0 ? 'none' : `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
@@ -214,6 +216,32 @@ export default function CanvasToolbar({
           aria-label="Download canvas as PNG"
         >
           <DownloadIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Auto Color Fill">
+        <IconButton
+          onClick={handleAutoColorFill}
+          sx={{
+            color: isDark == true ? '#64B5F6' : '#2196F3',
+            padding: '4px',
+            '&:hover': {
+              background:
+                isDark == true
+                  ? 'linear-gradient(90deg, rgba(100,181,246,0.15) 0%, rgba(100,181,246,0.03) 100%)'
+                  : 'linear-gradient(90deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+              transform: 'scale(1.1)',
+              boxShadow: isDark == true ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+              filter: isDark == true ? 'drop-shadow(0 0 6px rgba(100,181,246,0.25))' : 'drop-shadow(0 0 6px rgba(33,150,243,0.15))'
+            },
+            '&:focus': {
+              outline: `2px solid ${isDark == true ? '#64B5F6' : '#2196F3'}`,
+              outlineOffset: '2px'
+            }
+          }}
+          tabIndex={0}
+          aria-label="Auto color fill nodes"
+        >
+          <PaletteIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Tooltip>
     </Box>

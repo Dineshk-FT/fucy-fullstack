@@ -2031,27 +2031,14 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   generateTestCases: async (payload) => {
     try {
-      const formData = new FormData();
-      formData.append('modelId', payload.modelId);
-      // Fallbacks added to ensure the backend validation passes if exact data is missing
-      formData.append('asset', payload.asset || 'Vehicle System');
-      formData.append('interface', payload.interface || 'CAN/UDS');
-      formData.append('threat', payload.threat || 'Unauthorized Access');
-      formData.append('attackPath', payload.attackPath || 'External -> Network -> ECU');
-      formData.append('risk', payload.risk || 'High');
-
-      if (payload.userPrompt) {
-        formData.append('userPrompt', payload.userPrompt);
-      }
-
       const options = {
         method: 'POST',
         url: `${configuration.apiBaseUrl}v1/testcases/generate`,
         headers: {
           ...createHeaders().headers,
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         },
-        data: formData
+        data: payload
       };
 
       const res = await axios(options);

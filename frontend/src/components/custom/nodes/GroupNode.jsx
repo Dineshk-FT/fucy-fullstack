@@ -28,15 +28,27 @@ const CustomGroupNode = ({ data, id, isConnectable }) => {
   const { nodes, setSelectedElement, setPropertiesOpen, deleteNode, getAssets, assets, model } = useStore(selector, shallow);
   const { setNodes } = useReactFlow();
   const { selectedBlock } = useSelector((state) => state?.canvas);
+
+  const nodeDimensions = useStore(
+    useCallback(
+      (state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        return { width: node?.width, height: node?.height };
+      },
+      [id]
+    )
+  );
+
+  // Then use nodeDimensions.width and nodeDimensions.height
   const [dimensions, setDimensions] = useState({
-    width: data?.style?.width || 200,
-    height: data?.style?.height || 200
+    width: data?.style?.width || nodeDimensions.width || 200,
+    height: data?.style?.height || nodeDimensions.height || 200
   });
 
   const [isVisible, setIsVisible] = useState(false);
   const isSelected = selectedBlock?.id === id;
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
-  const [value, setValue] = useState(data?.label || '');
+  const [value, setValue] = useState(data?.label || data?.name || '');
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
   const isMounted = useRef(true);
 

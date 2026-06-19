@@ -42,8 +42,17 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const { selectedBlock, details } = useSelector((state) => state?.canvas);
   const [isVisible, setIsVisible] = useState(false);
   const [isUnsavedDialogVisible, setIsUnsavedDialogVisible] = useState(false);
-  const [width, setWidth] = useState(data?.style?.width ?? 120);
-  const [height, setHeight] = useState(() => data?.style?.height ?? 40);
+  const nodeDimensions = useStore(
+    useCallback(
+      (state) => {
+        const node = state.nodes.find((n) => n.id === id);
+        return { width: node?.width, height: node?.height };
+      },
+      [id]
+    )
+  );
+  const [width, setWidth] = useState(data?.style?.width || nodeDimensions.width || 120);
+  const [height, setHeight] = useState(() => data?.style?.height || nodeDimensions.height || 40);
   const [isEditing, setIsEditing] = useState(false);
   const [labelValue, setLabelValue] = useState(data?.label || '');
   const [tempLabelValue, setTempLabelValue] = useState(data?.label || '');
@@ -91,9 +100,9 @@ export default React.memo(function DefaultNode({ id, data, type }) {
   const bgColor = isSelected ? '#784be8' : '#A9A9A9';
 
   useEffect(() => {
-    setLabelValue(data?.label || '');
-    setTempLabelValue(data?.label || '');
-  }, [data?.label]);
+    setLabelValue(data?.label || data?.name || '');
+    setTempLabelValue(data?.label || data?.name || '');
+  }, [data?.label, data?.name]);
 
   const handleResize = (_, { width: newWidth, height: newHeight }) => {
     requestAnimationFrame(() => {

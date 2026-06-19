@@ -15,7 +15,8 @@ import {
   Button,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  CircularProgress
 } from '@mui/material';
 import {
   FolderOpen as FolderOpenIcon,
@@ -98,7 +99,8 @@ const selector = (state) => ({
   clearRiskTreatment: state.clearRiskTreatment,
   setTableLoader: state.setTableLoader,
   convertToLibrary: state.convertToLibrary,
-  generateItemDamage: state.generateItemDamage
+  generateItemDamage: state.generateItemDamage,
+  generateTestCases: state.generateTestCases
 });
 
 const LeftSection = () => {
@@ -138,7 +140,8 @@ const LeftSection = () => {
     clearDamageScenario,
     clearCybersecurity,
     setTableLoader,
-    generateItemDamage
+    generateItemDamage,
+    generateTestCases
   } = useStore(selector, shallow);
 
   const categories = [
@@ -187,6 +190,45 @@ const LeftSection = () => {
   const hoverTimeoutRef = useRef(null);
   const [scenarioType, setScenarioType] = useState(null);
   const [openScenarioModal, setOpenScenarioModal] = useState(false);
+  const [isGeneratingTC, setIsGeneratingTC] = useState(false);
+  const [tcResults, setTcResults] = useState(null);
+
+  const handleGenerateTestCases = async (e) => {
+    e?.stopPropagation();
+    if (!model?._id) {
+      notify('No active model selected', 'error');
+      return;
+    }
+
+    setIsGeneratingTC(true);
+
+    // Simplified Payload: Only sending the modelId
+    const payload = {
+      modelId: model._id
+    };
+
+    const res = await generateTestCases(payload);
+    setIsGeneratingTC(false);
+
+    if (res && !res.error) {
+      setTcResults(res.test_cases || res);
+      notify(res.message || 'Successfully generated test cases', 'success');
+    } else {
+      notify(res?.error || 'Failed to generate test cases', 'error');
+    }
+  };
+
+  // Function to download the JSON results
+  const handleDownloadTestCases = () => {
+    if (!tcResults) return;
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(tcResults, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute('download', `test_cases_${model?._id || 'export'}.json`);
+    document.body.appendChild(downloadAnchorNode); // Required for Firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
 
   const handleAttackTableClick = useCallback(() => {
     dispatch(setPreviousTab('Attack'));
@@ -914,6 +956,16 @@ const LeftSection = () => {
           },
           { label: 'Clear Risk Treatment', icon: DeleteIcon, action: (e) => openClearDialog('risk-treatment', e) }
         ]
+      },
+      {
+        name: 'Test Cases',
+        options: [
+          {
+            label: 'Create Test Cases With AI',
+            icon: AutoModeIcon,
+            action: handleGenerateTestCases // <--- Updated here
+          }
+        ]
       }
     ],
     [
@@ -1396,6 +1448,41 @@ const LeftSection = () => {
           mode="clear"
         />
       )}
+      {/* 1. Loading Dialog for API Call */}
+      <Dialog open={isGeneratingTC} disableEscapeKeyDown disablePortal>
+        <DialogContent sx={{ display: 'flex', alignItems: 'center', gap: 3, minWidth: '300px', py: 4 }}>
+          <CircularProgress size={30} />
+          <Typography variant="body1">Generating Test Cases with AI...</Typography>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Results Dialog with JSON view and Download/Cancel buttons */}
+      <Dialog open={Boolean(tcResults)} onClose={() => setTcResults(null)} maxWidth="md" fullWidth disablePortal>
+        <DialogTitle sx={{ color: color?.primary || '#1e88e5' }}>Generated Test Cases</DialogTitle>
+        <DialogContent dividers>
+          <Box
+            sx={{
+              backgroundColor: isDark ? '#1e1e1e' : '#f5f5f5',
+              p: 2,
+              borderRadius: 1,
+              overflow: 'auto',
+              maxHeight: '500px'
+            }}
+          >
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontSize: '13px' }}>
+              {JSON.stringify(tcResults, null, 2)}
+            </pre>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setTcResults(null)} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleDownloadTestCases} variant="contained" color="primary" disableElevation>
+            Download JSON
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

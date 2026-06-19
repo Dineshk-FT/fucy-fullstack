@@ -138,7 +138,8 @@ const CustomStepEdge = (props) => {
 
 const edgeTypes = {
   custom: CustomEdge,
-  step: CustomStepEdge
+  step: CustomStepEdge,
+  systemEdge: CustomStepEdge
 };
 
 const flowKey = 'example-flow';
@@ -438,6 +439,51 @@ export default function MainCanvas() {
     latestNodesRef.current = [...nodes];
     checkForNodes(); // ✅ re-evaluate group-child relationships
   }, [nodes, checkForNodes]);
+
+  // Add this inside MainCanvas, above the return statement
+  const handleAutoColorFill = useCallback(
+    (e) => {
+      e.stopPropagation();
+
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          // Generate a random hex color
+          const randomHex = Math.floor(Math.random() * 16777215)
+            .toString(16)
+            .padStart(6, '0');
+          const randomColor = `#${randomHex}`;
+
+          // Add transparency for group nodes
+          const finalColor = node.type === 'group' ? `${randomColor}33` : randomColor;
+
+          return {
+            ...node,
+            // 1. Standard React Flow style prop
+            style: {
+              ...(node.style || {}),
+              backgroundColor: finalColor,
+              background: finalColor
+            },
+            data: {
+              ...node.data,
+              // 2. Direct data props (common for custom nodes)
+              color: finalColor,
+              bgColor: finalColor,
+              // 3. Nested style props (common for custom nodes)
+              style: {
+                ...(node.data?.style || {}),
+                backgroundColor: finalColor,
+                background: finalColor
+              }
+            }
+          };
+        })
+      );
+
+      notify('Auto colored all nodes!', 'success');
+    },
+    [setNodes]
+  );
 
   const imageWidth = 1920;
   const imageHeight = 1080;
@@ -1027,6 +1073,7 @@ export default function MainCanvas() {
                   redoStack={redoStack}
                   handleDownload={handleDownload}
                   assets={assets}
+                  handleAutoColorFill={handleAutoColorFill}
                 />
               </span>
             </Panel>

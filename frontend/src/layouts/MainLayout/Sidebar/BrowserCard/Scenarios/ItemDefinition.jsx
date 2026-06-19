@@ -43,10 +43,11 @@ const ItemDefinition = ({
 
   const { edgesDetail, nodesDetail, dataDetail } = useMemo(() => {
     const details = data?.Details || [];
-    // console.log('details', details);
     return {
-      edgesDetail: details?.filter((d) => (d.nodeId?.includes('reactflow__edge') && d.name) || d.type === 'smoothstep') ?? [],
-      nodesDetail: details?.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data') ?? [],
+      edgesDetail:
+        details?.filter((d) => (d.nodeId?.includes('reactflow__edge') && d.name) || d.type === 'smoothstep' || d.type === 'systemEdge') ??
+        [],
+      nodesDetail: details?.filter((d) => !d.nodeId?.includes('reactflow__edge') && d.type !== 'data' && d.type !== 'systemEdge') ?? [],
       dataDetail: details?.filter((d) => d.type === 'data') ?? []
     };
   }, [data.Details]);
@@ -155,7 +156,7 @@ const ItemDefinition = ({
       const isNodeSection = sectionId === 'nodes_section';
       const isDataSection = sectionId === 'data_section';
       const showAdd = (isNodeSection && hovered.node) || (isDataSection && hovered.data);
-
+      // console.log('details', details);
       return (
         <MemoizedDraggableTreeItem
           nodeId={sectionId}

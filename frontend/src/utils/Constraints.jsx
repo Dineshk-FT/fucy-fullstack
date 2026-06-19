@@ -68,6 +68,7 @@ export const pageNodeTypes = {
     input: InputNode,
     output: OutputNode,
     default: DefaultNode,
+    systemNode: DefaultNode,
     data: DataNode,
     receiver: CustomNode,
     signal: CustomNode,
@@ -77,6 +78,7 @@ export const pageNodeTypes = {
     mcu: MicroController,
     memory: Memory,
     group: CustomGroupNode,
+    taraBoundary: CustomGroupNode,
     multihandle: MultiHandleNode,
     carImage: CarImageNode
   },
