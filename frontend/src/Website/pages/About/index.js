@@ -10,7 +10,7 @@ export default function AboutPage() {
     dispatch(changePage('about'));
   }, []);
   return (
-    <Box sx={{ marginTop: '8rem' }}>
+    <Box sx={{ mt: 1 }}>
       <ContentPage />
     </Box>
   );

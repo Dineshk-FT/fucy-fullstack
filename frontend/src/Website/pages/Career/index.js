@@ -23,7 +23,7 @@ export default function CareerPage() {
     dispatch(changePage('career'));
   }, []);
   return (
-    <Box sx={{ height: '70svh', marginTop: '6rem' }}>
+    <Box sx={{ height: '70svh', mt: 2 }}>
       <Box textAlign="center" my={4}>
         <Typography variant="h3" align="left" gutterBottom fontWeight={700} className={classes.head}>
           No Open Position At This Time

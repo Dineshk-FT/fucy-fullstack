@@ -244,7 +244,7 @@ export default function Header() {
 
   return (
     <>
-      <AppBar position="fixed" style={{ background: 'rgba(0, 0, 0, 0.9)' }}>
+      <AppBar position="sticky" style={{ background: 'rgba(0, 0, 0, 0.9)' }}>
         <Toolbar className={classes.navbarLayout}>
           <Box className={classes.titleContainer}>
             <Typography variant="h5" className={classes.title}>

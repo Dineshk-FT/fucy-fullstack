@@ -2,7 +2,8 @@ import React from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import Button from '../../../components/Buttons/Button';
 import { makeStyles } from '@mui/styles';
-import mainImage from '../../../../src/assets/images/others/MainImg.jpeg';
+// import mainImage from '../../../../src/assets/images/others/MainImg.jpeg';
+import mainImage from '../../../../src/assets/images/others/fucytech_present.jpeg';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -21,7 +22,10 @@ const useStyles = makeStyles((theme) => ({
       left: 0,
       backgroundImage: `url(${mainImage})`,
       backgroundRepeat: 'no-repeat',
-      backgroundSize: 'cover',
+
+      // Forces the image to stretch to exact width and height
+      backgroundSize: '100% 100%',
+
       backgroundPosition: 'center',
       filter: 'brightness(60%)',
       zIndex: 1
@@ -107,11 +111,7 @@ export default function MainSection() {
               <Typography variant="h5" textAlign="left" paragraph color="inherit" fontSize={20}>
                 TARA-Xpress, BOM and vulnerability management, cybersecurity monitoring, and more.
               </Typography>
-              <Button 
-                variant="contained" 
-                className={classes.help}
-                pulse
-              >
+              <Button variant="contained" className={classes.help} pulse>
                 How Can We Help?
               </Button>
             </Box>

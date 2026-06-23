@@ -32,7 +32,7 @@ const props = {
 const DashBoard = () => {
   return (
     <>
-      <Box sx={{ flexGrow: 1, mt: 20, mx: 5 }}>
+      <Box sx={{ flexGrow: 1, mt: 2, mx: 5 }}>
         <Grid container spacing={2}>
           <Grid item xs={4}>
             <Item elevation={2}>

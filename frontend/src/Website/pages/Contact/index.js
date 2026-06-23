@@ -24,7 +24,7 @@ export default function ContactPage() {
     dispatch(changePage('contact'));
   }, []);
   return (
-    <Box sx={{ marginTop: '6rem' }}>
+    <Box sx={{ mt: 2 }}>
       <Box textAlign="center" my={4}>
         <Typography variant="h3" align="left" gutterBottom fontWeight={700} className={classes.head}>
           Contact us
