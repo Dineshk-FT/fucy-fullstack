@@ -90,6 +90,7 @@ const FirebaseLogin = ({ ...others }) => {
       // console.log('response', response);
       const data = response.data;
 
+      // 1. Handle Not Found / Errors
       if (!data.exists) {
         setLicenseWarning({
           severity: 'error',
@@ -98,6 +99,7 @@ const FirebaseLogin = ({ ...others }) => {
         return;
       }
 
+      // (Optional) Fallback for specific message just in case exists isn't mapped properly
       if (data.message === 'User not found in this organization') {
         setLicenseWarning({
           severity: 'error',
@@ -106,6 +108,7 @@ const FirebaseLogin = ({ ...others }) => {
         return;
       }
 
+      // 2. Handle Trial License Logic
       if (data.trialUsed && data.license_end) {
         const expirationDate = new Date(data.license_end);
         const today = new Date();
@@ -123,8 +126,18 @@ const FirebaseLogin = ({ ...others }) => {
             message: `Your trial license expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
           });
         } else {
-          setLicenseWarning(null);
+          // Success: Valid trial user with more than 14 days left
+          setLicenseWarning({
+            severity: 'success',
+            message: data.message || 'Valid trial license'
+          });
         }
+      } else {
+        // 3. Success: Valid standard user or Admin
+        setLicenseWarning({
+          severity: 'success',
+          message: data.message || 'User verified successfully'
+        });
       }
     } catch (error) {
       console.log('error', error);
