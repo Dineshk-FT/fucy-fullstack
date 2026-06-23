@@ -24,12 +24,13 @@ import HeaderSection from '../../Website/pages/Landing/HeaderSection';
 import useStore from '../../store/Zustand/store';
 import { shallow } from 'zustand/shallow';
 import FloatingHelper from '../FloatingHelper';
+import Footer from '../../Website/components/Footer';
 
 const selector = (state) => ({
   isCollapsed: state.isCollapsed
 });
 
-const Footer = lazy(() => import('../../Website/components/Footer'));
+// const Footer = lazy(() => import('../../Website/components/Footer'));
 
 // ==============================|| MAIN LAYOUT ||============================== //
 const Main = styled('main', {
@@ -83,13 +84,13 @@ const MainLayout = ({ children }) => {
     return (
       <FadeInDiv>
         <HeaderSection />
-        <Box>
+        {/* FIX 1: Add a minHeight so the space doesn't collapse to 0px during route transitions */}
+        <Box sx={{ minHeight: 'calc(100vh - 100px)' }}>
           {children}
           <Outlet />
         </Box>
-        <Suspense fallback={<div>Loading Footer...</div>}>
-          <Footer />
-        </Suspense>
+        {/* FIX 2: Replace the text fallback with an empty Box (or remove lazy loading entirely) */}
+        <Footer />
       </FadeInDiv>
     );
   }
