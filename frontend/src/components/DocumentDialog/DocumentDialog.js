@@ -298,7 +298,7 @@ const DocumentDialog = ({ open, onClose }) => {
 
   const getNodeSize = (node) => {
     if (['AND Gate', 'OR Gate', 'Voting Gate', 'Transfer Gate'].includes(node.type)) {
-      return { width: 100, height: 100 };
+      return { width: node.width || 100, height: node.height || 100 };
     }
     const styleWidth = node.data?.style?.width ? parseInt(node.data.style.width, 10) : null;
     const styleHeight = node.data?.style?.height ? parseInt(node.data.style.height, 10) : null;
@@ -410,16 +410,7 @@ const DocumentDialog = ({ open, onClose }) => {
               finalHeight = Math.floor(contentHeight * scale);
             }
 
-            const svgStringTree = generateDiagramAttackTree(
-              safeTreeNodes,
-              safeTreeEdges,
-              finalWidth,
-              finalHeight,
-              overallRating,
-              attacks,
-              requirements
-            );
-
+            const svgStringTree = generateDiagramAttackTree(safeTreeNodes, safeTreeEdges, overallRating, attacks, requirements);
             if (!svgStringTree || !svgStringTree.includes('<svg')) {
               console.error(`Invalid SVG generated for tree ${index}`);
               return;
