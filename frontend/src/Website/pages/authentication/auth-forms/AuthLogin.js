@@ -151,6 +151,14 @@ const FirebaseLogin = ({ ...others }) => {
   }, []);
 
   useEffect(() => {
+    const authRedirectMessage = sessionStorage.getItem('authRedirectMessage');
+    if (authRedirectMessage) {
+      notify(authRedirectMessage, 'error');
+      sessionStorage.removeItem('authRedirectMessage');
+    }
+  }, []);
+
+  useEffect(() => {
     if (!orgInput) return;
 
     const timer = setTimeout(() => {
@@ -173,17 +181,17 @@ const FirebaseLogin = ({ ...others }) => {
     )
       .then((res) => {
         if (res.payload.status === 200 || res.payload.status === 201) {
+          console.log('Login successful:', res.payload.data);
           notify('Login Successfully', 'success');
 
-          // Show license warning if needed (will be handled by the login thunk)
-          if (res.payload.data?.license?.isExpiring) {
-            // The warning is already dispatched by the login thunk
-          }
+          // 1. SAVE CREDENTIALS IMMEDIATELY (Outside the timeout)
+          sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
+          sessionStorage.setItem('token', res?.payload?.data['token']);
+          window.sessionStorage.setItem('canvasState', 'canvas');
 
+          // 2. Delay the redirect and UI state changes
           setTimeout(() => {
-            sessionStorage.setItem('user-id', res?.payload?.data['user-id']);
             window.location.href = `/Models/${res?.payload?.data?.model_id}`;
-            window.sessionStorage.setItem('canvasState', 'canvas'); // Set canvas state in session storage
             dispatch(setModelId(res?.payload?.data?.model_id));
             dispatch(OpenInitialDialog());
             dispatch(closeAll());

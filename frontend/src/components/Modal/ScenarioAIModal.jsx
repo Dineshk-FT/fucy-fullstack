@@ -203,7 +203,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
       label: 'Item Definition Prompt',
       api: `${configuration.apiBaseUrl}v1/generate/model`,
       headers: {
-        'user-id': sessionStorage.getItem('user-id') // or however you access the user ID
+        Authorization: `Bearer ${sessionStorage.getItem('token')}` // or however you access the user ID
       },
       payload: () => ({
         modelId: modelMeta?.modelId,
@@ -339,7 +339,7 @@ const ScenarioAIModal = ({ open, handleClose, scenarioType, modelMeta }) => {
             headers: {
               // Note: Do NOT set Content-Type header when sending FormData.
               // The browser handles boundaries automatically.
-              'user-id': userDetails?.username || 'system'
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`
             }
           });
 

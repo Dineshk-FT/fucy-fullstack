@@ -29,15 +29,15 @@ import {
 import { debounce } from 'lodash';
 
 export const createHeaders = () => {
-  const userId = sessionStorage.getItem('user-id');
+  const token = sessionStorage.getItem('token');
 
   let headers = {};
 
-  if (!userId) {
-    console.error('No  user Id found');
+  if (!token) {
+    console.error('No  token found');
   } else {
     // headers['Content-Type'] = `application/json`;
-    headers['user-id'] = userId;
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   headers['Cache-Control'] = 'no-cache';
@@ -46,15 +46,15 @@ export const createHeaders = () => {
 };
 
 export const createHeadersForJson = () => {
-  const userId = sessionStorage.getItem('user-id');
+  const token = sessionStorage.getItem('token');
 
   let headers = {};
 
-  if (!userId) {
-    console.error('No  user Id found');
+  if (!token) {
+    console.error('No  token found');
   } else {
     headers['Content-Type'] = `application/json`;
-    headers['user-id'] = userId;
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   headers['Cache-Control'] = 'no-cache';
@@ -1382,7 +1382,16 @@ const useStore = createWithEqualityFn((set, get) => ({
 
   getECUList: async () => {
     try {
-      const res = await axios.get(`${configuration?.apiBaseUrl}v1/guides/rag`);
+      // 1. Grab the token from sessionStorage
+      const token = sessionStorage.getItem('token');
+
+      // 2. Pass it in the headers config
+      const res = await axios.get(`${configuration?.apiBaseUrl}v1/guides/rag`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
       // console.log('ECU List Response:', res);
       set({
         ecu_list: res?.data?.ecus || []
@@ -2019,8 +2028,15 @@ const useStore = createWithEqualityFn((set, get) => ({
   getGuides: async () => {
     const url = `${configuration.apiBaseUrl}v1/guides/videos`;
     try {
-      const res = await axios.get(url);
-      // console.log('res', res);
+      // 1. Grab from sessionStorage using the exact key your login form uses
+      const token = sessionStorage.getItem('token');
+
+      const res = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
       set({
         guides: res?.data ?? []
       });

@@ -180,7 +180,7 @@ Each goal should link to a damage/threat/attack scenario and include objectives 
               method: 'POST',
               body: formData,
               headers: {
-                'user-id': userDetails?.username || 'system'
+                Authorization: `Bearer ${sessionStorage.getItem('token')}`
               }
             });
 

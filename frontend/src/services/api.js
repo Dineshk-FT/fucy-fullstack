@@ -7,6 +7,37 @@ import { isLicenseExpiring, getExpiryMessage } from '../utils/licenseUtils';
 
 const FormData = require('form-data');
 
+// ==========================================================================
+// GLOBAL AUTH INTERCEPTOR
+//
+// The backend's require_auth decorator returns 401s that carry a "reason"
+// field ("token_expired" | "token_missing" | "token_invalid") whenever the
+// Bearer token is missing/expired/invalid. Plain login-failure 401s (wrong
+// username/password) do NOT carry this field, so we only act on the ones
+// that do - this avoids redirecting the user away from the login form when
+// they just typed the wrong password.
+// ==========================================================================
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const reason = error?.response?.data?.reason;
+
+    if (status === 401 && reason) {
+      sessionStorage.removeItem('token');
+
+      const message = reason === 'token_expired' ? 'Your session has expired. Please log in again.' : 'Please log in to continue.';
+
+      if (!window.location.pathname.toLowerCase().includes('login')) {
+        sessionStorage.setItem('authRedirectMessage', message);
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 // TARA Model API functions
 export const storeTaraModel = async (modelId, nodes, edges, viewport) => {
   const formData = new FormData();
@@ -106,7 +137,7 @@ export const login = createAsyncThunk('login', async ({ username, password, org 
         });
       }
     }
-
+    console.log('res', res);
     return res;
   } catch (error) {
     if (error) return thunkAPI.rejectWithValue({ ...error.response, name: 'login' });
